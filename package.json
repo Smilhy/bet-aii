@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-1849-pl-en-only",
-  "version": "1.8.4.9",
+  "name": "betai-wersja-1850-full-english-dashboard",
+  "version": "1.8.5.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",

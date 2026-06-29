@@ -375,6 +375,296 @@ const BETAI_FULL_TRANSLATIONS_V1824 = {
   }
 }
 
+
+
+// WERSJA 1850 — pełne uzupełnienie angielskiego interfejsu Dashboardu.
+// Tylko warstwa tekstowa: bez zmian logiki typów, Supabase, Stripe i rozliczeń.
+const BETAI_EN_DASHBOARD_FIX_TRANSLATIONS_V1850 = {
+  en: {
+    // Lewy panel i nawigacja
+    'Kupione single': 'Purchased singles',
+    'Artykuły/TV Live': 'Articles/Live TV',
+    'Nagrody/Bonusy': 'Rewards/Bonuses',
+    'Kupony admin': 'Admin coupons',
+    'AI Typy bez limitu': 'Unlimited AI picks',
+    'Szczegółowe analizy': 'Detailed analyses',
+    'Statystyki premium': 'Premium statistics',
+    'Brak reklam': 'No ads',
+    'Portfel i coiny': 'Wallet and coins',
+    'Powiadomienia Bet+AI': 'Bet+AI notifications',
+    'Wiadomości użytkowników': 'User messages',
+    'Użytkownik': 'User',
+    'Gość': 'Guest',
+    'Polski': 'Polish',
+
+    // Sporty i kraje
+    'Piłka nożna': 'Football',
+    'Koszykówka': 'Basketball',
+    'Siatkówka': 'Volleyball',
+    'Hokej': 'Hockey',
+    'Tenis': 'Tennis',
+    'Boks': 'Boxing',
+    'Sporty': 'Sports',
+    'Języki': 'Languages',
+    'Niemcy': 'Germany',
+    'Paragwaj': 'Paraguay',
+    'Polska': 'Poland',
+    'Portugalia': 'Portugal',
+    'Hiszpania': 'Spain',
+    'Włochy': 'Italy',
+    'Anglia': 'England',
+    'Francja': 'France',
+    'Holandia': 'Netherlands',
+    'Belgia': 'Belgium',
+    'Chorwacja': 'Croatia',
+    'Szwajcaria': 'Switzerland',
+    'Dania': 'Denmark',
+    'Szwecja': 'Sweden',
+    'Norwegia': 'Norway',
+    'Finlandia': 'Finland',
+    'Irlandia': 'Ireland',
+    'Szkocja': 'Scotland',
+    'Walia': 'Wales',
+    'Czechy': 'Czechia',
+    'Słowacja': 'Slovakia',
+    'Węgry': 'Hungary',
+    'Rumunia': 'Romania',
+    'Bułgaria': 'Bulgaria',
+    'Ukraina': 'Ukraine',
+    'Turcja': 'Türkiye',
+    'Grecja': 'Greece',
+    'Gruzja': 'Georgia',
+    'Azerbejdżan': 'Azerbaijan',
+    'Brazylia': 'Brazil',
+    'Argentyna': 'Argentina',
+    'Urugwaj': 'Uruguay',
+    'Kolumbia': 'Colombia',
+    'Ekwador': 'Ecuador',
+    'Boliwia': 'Bolivia',
+    'Wenezuela': 'Venezuela',
+    'Meksyk': 'Mexico',
+    'Kanada': 'Canada',
+    'Japonia': 'Japan',
+    'Chiny': 'China',
+    'Korea Południowa': 'South Korea',
+    'Nowa Zelandia': 'New Zealand',
+    'Arabia Saudyjska': 'Saudi Arabia',
+    'Maroko': 'Morocco',
+    'Tunezja': 'Tunisia',
+    'Algieria': 'Algeria',
+    'Egipt': 'Egypt',
+    'Kamerun': 'Cameroon',
+    'Republika Południowej Afryki': 'South Africa',
+
+    // Dashboard i feed
+    'Aktywne typy': 'Active picks',
+    'Rozstrzygnięte albo zgłoszone do rozliczenia typy znikają z dashboardu i zostają w historii/Wynikach, żeby nikt nie kupił zakończonego kuponu.': 'Settled picks or picks submitted for settlement disappear from the dashboard and remain in History/Results so nobody can buy a finished coupon.',
+    'Brak typów typerów na dziś.': 'No tipster picks today.',
+    'Pokazano wszystkie typy': 'All picks are shown',
+    'Pokaż kolejne typy': 'Show more picks',
+    'Zwiń typy': 'Collapse picks',
+    'pozostało': 'remaining',
+    'typów': 'picks',
+    'typerów': 'tipsters',
+    'DARMOWY': 'FREE',
+    'Singiel': 'Single',
+    'AKO darmowy': 'Free accumulator',
+    'AKO premium': 'Premium accumulator',
+    'Kupon AKO': 'Accumulator coupon',
+    'Typ ukryty': 'Hidden pick',
+    'Po zakupie': 'After purchase',
+    'Brak osobnej listy zdarzeń dla starego kuponu.': 'No separate event list is available for this older coupon.',
+    'więcej zdarzeń': 'more events',
+    'zdarzenia': 'events',
+    'typy ukryte': 'hidden picks',
+    'kurs całkowity': 'total odds',
+    'Kurs całkowity': 'Total odds',
+    'Gospodarze': 'Home team',
+    'Goście': 'Away team',
+    'TYP': 'PICK',
+    'STAWKA': 'STAKE',
+    'KURS': 'ODDS',
+    'ANALIZA': 'ANALYSIS',
+    'ANALIZA TYPU': 'PICK ANALYSIS',
+    'Ta analiza premium jest zablokowana': 'This premium analysis is locked',
+    'Ta analiza premium jest zablokowana. Odblokuj typ, aby przeczytać całość.': 'This premium analysis is locked. Unlock the pick to read the full analysis.',
+    'Zgłoś wpis': 'Report post',
+    'Dodaj analizę': 'Add analysis',
+    'Kup kupon AKO': 'Buy accumulator coupon',
+    'Kup singiel': 'Buy single',
+    'Typ już się rozpoczął': 'This pick has already started',
+    'Forma z ostatnich 6 rozliczonych typów': 'Form from the last 6 settled picks',
+    'Komentarze:': 'Comments:',
+    'łącznie': 'total',
+    'Dodaj komentarz do tego typu...': 'Add a comment to this pick...',
+    'Otwórz komentarze': 'Open comments',
+    'Zamknij komentarze': 'Close comments',
+    'Zamknij analizę': 'Close analysis',
+    'Analiza typu': 'Pick analysis',
+    'Liga': 'League',
+    'Forma': 'Form',
+    'Stawka': 'Stake',
+    'Analiza': 'Analysis',
+    'Wynik do przerwy': 'Half-time result',
+    'wygra do przerwy': 'to win at half-time',
+    'Remis do przerwy': 'Draw at half-time',
+    'Drużyna wygra jedną z połów': 'Team to win either half',
+    'Gole w 1. połowie': 'First-half goals',
+    'Połowy': 'Halves',
+    'Połowa': 'Half',
+    'DNB / Remis nie ma zakładu': 'DNB / Draw no bet',
+    'Kartki': 'Cards',
+    'Rogi': 'Corners',
+    'Gole': 'Goals',
+    'Remis': 'Draw',
+    'wygra': 'to win',
+    'lub remis': 'or draw',
+    'min temu': 'min ago',
+    'minut temu': 'minutes ago',
+    'h temu': 'h ago',
+    'godzin temu': 'hours ago',
+    'Teraz': 'Now',
+    'teraz': 'now',
+
+    // Prawa kolumna i live chat
+    'Top aktywność': 'Top activity',
+    'wiadomości': 'messages',
+    'lider czatu o 00:00': 'chat leader at 00:00',
+    'Brak wiadomości. Napisz pierwszą wiadomość i uruchom live chat.': 'No messages yet. Write the first message to start the live chat.',
+    'Załącznik': 'Attachment',
+    'Otwórz załącznik': 'Open attachment',
+    'Usuń załącznik': 'Remove attachment',
+    'Dodaj załącznik': 'Add attachment',
+    'Emotki': 'Emojis',
+    'Tip możesz wysłać przy wiadomości innego użytkownika.': 'You can send a tip from another user’s message.',
+    'Brak danych rankingu. Dodaj typy i wyniki, aby ranking się naliczył.': 'No ranking data yet. Add picks and results to build the ranking.',
+    'Otwórz profil typera': 'Open tipster profile',
+    'Typ:': 'Pick:',
+    'Kurs:': 'Odds:',
+
+    // Opinie
+    'Opinie Bet+AI': 'Bet+AI reviews',
+    'Opinie użytkowników Bet+AI': 'Bet+AI user reviews',
+    'Live oceny użytkowników': 'Live user ratings',
+    'opinia live': 'live review',
+    'opinii live': 'live reviews',
+    'Twoja nazwa': 'Your name',
+    'Twój email': 'Your email',
+    'Twoja ocena': 'Your rating',
+    'Napisz swoją opinię...': 'Write your review...',
+    'Zapisywanie...': 'Saving...',
+    'Dodaj opinię': 'Add review',
+    'Zamknij opinie': 'Close reviews',
+    'Otwórz opinie': 'Open reviews',
+    'Oceń': 'Rate',
+    'gwiazdek': 'stars',
+    'Bądź pierwszy — dodaj opinię i ocenę gwiazdkami.': 'Be the first — add a review and star rating.',
+    'Napisz krótki komentarz do opinii.': 'Write a short review comment.',
+    'Wpisz email, żeby dodać opinię jako gość.': 'Enter an email address to add a review as a guest.',
+    'Zapisywanie opinii live...': 'Saving the live review...',
+    'Dziękujemy! Twoja opinia została dodana live.': 'Thank you! Your review has been added live.',
+    'Nie udało się zapisać opinii. Uruchom SUPABASE_SITE_REVIEWS_512.sql i spróbuj ponownie.': 'The review could not be saved. Run SUPABASE_SITE_REVIEWS_512.sql and try again.',
+    'Opinie wymagają uruchomienia pliku SUPABASE_SITE_REVIEWS_512.sql.': 'Reviews require the SUPABASE_SITE_REVIEWS_512.sql file to be run.',
+
+    // Centrum wsparcia
+    'Centrum wsparcia': 'Support center',
+    'Wsparcie Bet+AI': 'Bet+AI support',
+    'Panel admina live': 'Live admin panel',
+    'Natychmiastowa odpowiedź live': 'Instant live response',
+    'Wsparcie Bet+AI live': 'Live Bet+AI support',
+    'Zamknij czat': 'Close chat',
+    'Brak rozmów': 'No conversations',
+    'brak e-mail': 'no email',
+    'Cześć! Jak mogę Ci dzisiaj pomóc?': 'Hi! How can I help you today?',
+    'Wiadomość trafia wyłącznie do: smilhytv / smilhytv@gmail.com': 'Your message goes only to: smilhytv / smilhytv@gmail.com',
+    'Napisz odpowiedź...': 'Write a reply...',
+    'Wpisz swoją wiadomość...': 'Enter your message...',
+    'Wyślij wiadomość': 'Send message',
+    'Otwórz czat pomocy': 'Open support chat',
+    'Usuń wiadomość': 'Delete message',
+    'Usunąć tę wiadomość z centrum wsparcia?': 'Delete this message from the support center?',
+    'Odpowiedź wysłana do użytkownika.': 'The reply was sent to the user.',
+    'Wiadomość wysłana do admina. Odpowiedź pojawi się tutaj live.': 'The message was sent to the admin. The reply will appear here live.',
+    'Nie udało się wysłać wiadomości. Spróbuj ponownie za chwilę.': 'The message could not be sent. Try again in a moment.',
+    'Wiadomość usunięta.': 'Message deleted.',
+    'Nie udało się usunąć wiadomości. Sprawdź uprawnienia RLS dla support_messages.': 'The message could not be deleted. Check the RLS permissions for support_messages.',
+
+    // Dodatkowe etykiety pojawiające się na Dashboardzie
+    'Pokażano': 'Shown',
+    'Pokazano': 'Showing',
+    'Pokaż kolejne': 'Show next',
+    'Zwiń do': 'Collapse to',
+    'Wyniki': 'Results',
+    'Historia': 'History',
+    'Brak rozpoczętych typów na dziś.': 'No started picks today.',
+    'Zamknij powiadomienie': 'Close notification',
+    'Powiadomienie znika automatycznie po 5 sekundach': 'The notification disappears automatically after 5 seconds',
+    'Typy dnia': 'Picks of the day',
+    'Najmocniejszy typ AI': 'Strongest AI pick',
+    'Suma goli': 'Total goals',
+    'Poniżej 3.5 gola': 'Under 3.5 goals',
+    'Powyżej 1.5 gola': 'Over 1.5 goals',
+    'Wygrany typ': 'Winning pick',
+    'Przegrany typ': 'Losing pick',
+    'Brak rozliczonego typu': 'No settled pick',
+    'Komentarz dodany': 'Comment added',
+    'Twój komentarz został dodany do typu.': 'Your comment was added to the pick.',
+    'Masz czasową blokadę czatu za przekleństwa.': 'You have a temporary chat ban for profanity.',
+    'Załącznik: wybierz JPG, PNG, WEBP, GIF albo PDF.': 'Attachment: choose a JPG, PNG, WEBP, GIF or PDF file.',
+    'Załącznik może mieć maksymalnie 4 MB.': 'The attachment can be up to 4 MB.',
+    'Wysyłanie załącznika...': 'Uploading attachment...',
+    'Wiadomość wysłana na live chat.': 'Message sent to the live chat.',
+    'Nie udało się wysłać wiadomości lub załącznika. Spróbuj ponownie.': 'The message or attachment could not be sent. Try again.',
+    'Tipy wymagają połączenia z Supabase.': 'Tips require a Supabase connection.',
+    'Nie udało się wysłać tipa albo zapisać salda.': 'The tip could not be sent or the balance could not be saved.',
+    'Nowy typ': 'New pick'
+  }
+}
+
+function translateBetaiDynamicTemplateV1850(value, lang) {
+  const text = String(value || '').trim()
+  if (!text) return text
+
+  if (lang === 'en') {
+    let match
+    if ((match = text.match(/^Pokazano\s+(\d+)\s+z\s+(\d+)\s+typów$/i))) return `Showing ${match[1]} of ${match[2]} picks`
+    if ((match = text.match(/^Pokazano\s+(\d+)\s+z\s+(\d+)\s+typerów$/i))) return `Showing ${match[1]} of ${match[2]} tipsters`
+    if ((match = text.match(/^Pokaż kolejne\s+(\d+)\s+typy\s+\((\d+)\s+pozostało\)$/i))) return `Show next ${match[1]} picks (${match[2]} remaining)`
+    if ((match = text.match(/^Zwiń do\s+(\d+)\s+typów$/i))) return `Collapse to ${match[1]} picks`
+    if ((match = text.match(/^Top\s+(\d+)\s+z\s+(\d+)$/i))) return `Top ${match[1]} of ${match[2]}`
+    if ((match = text.match(/^(\d+)\s+min(?:ut(?:a|y)?|uty|uta)?\s+temu$/i))) return `${match[1]} min ago`
+    if ((match = text.match(/^(\d+)\s*min\s+temu$/i))) return `${match[1]} min ago`
+    if ((match = text.match(/^(\d+)\s*h\s+temu$/i))) return `${match[1]}h ago`
+    if ((match = text.match(/^(\d+)\s+godzin(?:a|y)?\s+temu$/i))) return `${match[1]} hours ago`
+    if ((match = text.match(/^(\d+)\s+dni?\s+temu$/i))) return `${match[1]} days ago`
+    if ((match = text.match(/^(\d+)\s+wiadomości\s+dziś$/i))) return `${match[1]} messages today`
+    if ((match = text.match(/^(\d+)\s+wiadomości$/i))) return `${match[1]} messages`
+    if ((match = text.match(/^(\d+)\s+zdarzenia$/i))) return `${match[1]} events`
+    if ((match = text.match(/^(\d+)\s+łącznie$/i))) return `${match[1]} total`
+    if ((match = text.match(/^Typ:\s*(.+?)\s+•\s+Kurs:\s*(.+)$/i))) return `Pick: ${match[1]} • Odds: ${match[2]}`
+    if ((match = text.match(/^Kurs\s+(.+)$/i))) return `Odds ${match[1]}`
+    if ((match = text.match(/^(.+?)\s+wygra\s+do\s+przerwy$/i))) return `${match[1]} to win at half-time`
+    if ((match = text.match(/^(.+?)\s+lub\s+remis$/i))) return `${match[1]} or draw`
+    if ((match = text.match(/^(.+?)\s+wygra$/i))) return `${match[1]} to win`
+    if ((match = text.match(/^\+(\d+)\s+więcej\s+zdarzeń$/i))) return `+${match[1]} more events`
+  }
+
+  if (lang === 'pl') {
+    let match
+    if ((match = text.match(/^Showing\s+(\d+)\s+of\s+(\d+)\s+picks$/i))) return `Pokazano ${match[1]} z ${match[2]} typów`
+    if ((match = text.match(/^Showing\s+(\d+)\s+of\s+(\d+)\s+tipsters$/i))) return `Pokazano ${match[1]} z ${match[2]} typerów`
+    if ((match = text.match(/^Show next\s+(\d+)\s+picks\s+\((\d+)\s+remaining\)$/i))) return `Pokaż kolejne ${match[1]} typy (${match[2]} pozostało)`
+    if ((match = text.match(/^Collapse to\s+(\d+)\s+picks$/i))) return `Zwiń do ${match[1]} typów`
+    if ((match = text.match(/^(\d+)\s+min\s+ago$/i))) return `${match[1]} min temu`
+    if ((match = text.match(/^(\d+)h\s+ago$/i))) return `${match[1]}h temu`
+    if ((match = text.match(/^(.+?)\s+to\s+win\s+at\s+half-time$/i))) return `${match[1]} wygra do przerwy`
+    if ((match = text.match(/^(.+?)\s+or\s+draw$/i))) return `${match[1]} lub remis`
+    if ((match = text.match(/^(.+?)\s+to\s+win$/i))) return `${match[1]} wygra`
+  }
+
+  return text
+}
+
 const BETAI_STARTED_FILTER_TRANSLATIONS_V1833 = {
   en: {
     'Rozpoczęte': 'Started',
@@ -396,6 +686,7 @@ function buildBetaiTranslationDictionary(lang) {
     BETAI_DASHBOARD_TRANSLATIONS,
     BETAI_EXTRA_DASHBOARD_TRANSLATIONS,
     BETAI_FULL_TRANSLATIONS_V1824,
+    BETAI_EN_DASHBOARD_FIX_TRANSLATIONS_V1850,
     BETAI_STARTED_FILTER_TRANSLATIONS_V1833
   ]
   const allTargetDictionaries = allSources.map(source => source?.[lang] || {})
@@ -430,6 +721,8 @@ function translateBetaiTextValue(value, lang) {
   const raw = String(value || '')
   const trimmed = raw.trim()
   if (!trimmed) return value
+  const dynamicDirectV1850 = translateBetaiDynamicTemplateV1850(trimmed, lang)
+  if (dynamicDirectV1850 !== trimmed) return raw.replace(trimmed, dynamicDirectV1850)
   const dictionary = buildBetaiTranslationDictionary(lang)
   const direct = dictionary[trimmed]
   if (direct) return raw.replace(trimmed, direct)
@@ -2915,6 +3208,7 @@ function splitSidebarLabel(label = '') {
 }
 
 function LockedSidebarMenuButton({ item, view, setView }) {
+  const lang = useBetaiLanguageState()
   const activeViews = Array.isArray(item.activeViews) ? item.activeViews : [item.id]
   const { icon, text } = splitSidebarLabel(item.label)
   const handleClick = () => {
@@ -2925,12 +3219,14 @@ function LockedSidebarMenuButton({ item, view, setView }) {
   return (
     <button className={activeViews.includes(view) ? 'active' : ''} onClick={handleClick}>
       <span className="betai-sidebar-nav-icon" aria-hidden="true"><span>{icon}</span></span>
-      <span className="betai-sidebar-nav-label">{text}</span>
+      <span className="betai-sidebar-nav-label">{translateBetaiTextValue(text, lang)}</span>
     </button>
   )
 }
 
 function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notificationsCount = 0, onTopUp, user, userPlan = 'free', onLogout }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   const profile = getUserProfileView(user)
   const openPremiumCheckout = () => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))
   const lockedMenuItems = isAdminUser(user)
@@ -2966,17 +3262,17 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
             </div>
           </div>
 
-          <div className="wallet-row betai-premium-stat-row"><span><i>💰</i>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
+          <div className="wallet-row betai-premium-stat-row"><span><i>💰</i>{t('Saldo')}</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
           <div className="wallet-row wallet-row-tokens betai-premium-stat-row"><span><i className="betai-coin-mini"><img src="/betai-coin-icon.png" alt="" /></i>Coin</span><b>{Number(tokenBalance || 0)}</b></div>
-          <button type="button" className="wallet-row wallet-row-clickable unlocked-row-v951 betai-premium-stat-row" onClick={() => setView('unlockedTips')}><span><i>🔓</i>Odblokowane</span><b>{unlockedCount || 0}</b></button>
+          <button type="button" className="wallet-row wallet-row-clickable unlocked-row-v951 betai-premium-stat-row" onClick={() => setView('unlockedTips')}><span><i>🔓</i>{t('Odblokowane')}</span><b>{unlockedCount || 0}</b></button>
 
           <button className="outline-btn betai-premium-upgrade-btn" onClick={openPremiumCheckout}>
             <span className="betai-premium-btn-icon">↗</span>
-            <span className="betai-premium-btn-label">Ulepsz konto</span>
+            <span className="betai-premium-btn-label">{t('Ulepsz konto')}</span>
           </button>
           <button className="logout-btn betai-premium-logout-btn" onClick={onLogout}>
             <span className="betai-premium-btn-icon">⏻</span>
-            <span className="betai-premium-btn-label">Wyloguj</span>
+            <span className="betai-premium-btn-label">{t('Wyloguj')}</span>
           </button>
         </div>
 
@@ -2989,12 +3285,12 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
 
       <div className="premium-box sidebar-premium-detached">
         <h3> Bet+AI Premium</h3>
-        <p>✓ AI Typy bez limitu</p>
-        <p>✓ Szczegółowe analizy</p>
-        <p>✓ Statystyki premium</p>
-        <p>✓ Typy premium</p>
-        <p>✓ Brak reklam</p>
-        <button onClick={openPremiumCheckout}>Kup Premium</button>
+        <p>{t('✓ AI Typy bez limitu')}</p>
+        <p>{t('✓ Szczegółowe analizy')}</p>
+        <p>{t('✓ Statystyki premium')}</p>
+        <p>{t('✓ Typy premium')}</p>
+        <p>{t('✓ Brak reklam')}</p>
+        <button onClick={openPremiumCheckout}>{t('Kup Premium')}</button>
       </div>
     </div>
   )
@@ -3396,6 +3692,8 @@ function serializeBetaiLiveChatMessageV1836(message = '', attachment = null) {
 }
 
 function LiveChatPanel({ user }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
   const [status, setStatus] = useState('🎁 Tip na czacie = max 1 nagroda / 24h')
@@ -3947,11 +4245,11 @@ function LiveChatPanel({ user }) {
 
       <div className="betai-chat-stats-final">
         <div className="livechat226-stat betai-chat-stat-final">
-          <span>TOP UŻYTKOWNIK (24H)</span>
-          <div className="betai-stat-user-final"><b className="betai-trophy-final">🏆</b><div><strong>{leader?.name || 'Brak lidera'}</strong><small>{leader ? `${leader.count} wiadomości` : `${todayCount} wiadomości dziś`}</small></div></div>
+          <span>{t('TOP UŻYTKOWNIK (24H)')}</span>
+          <div className="betai-stat-user-final"><b className="betai-trophy-final">🏆</b><div><strong>{leader?.name || t('Brak lidera')}</strong><small>{t(leader ? `${leader.count} wiadomości` : `${todayCount} wiadomości dziś`)}</small></div></div>
         </div>
-        <div className="livechat226-stat betai-chat-stat-final"><span>NAGRODA DNIA</span><strong>🪙 FREE +1 / PREMIUM +2</strong><small>lider czatu o 00:00</small></div>
-        <div className="livechat226-stat betai-chat-stat-final"><span>AKTYWNI TERAZ</span><strong>👥 {onlineCount}</strong></div>
+        <div className="livechat226-stat betai-chat-stat-final"><span>{t('NAGRODA DNIA')}</span><strong>🪙 FREE +1 / PREMIUM +2</strong><small>{t('lider czatu o 00:00')}</small></div>
+        <div className="livechat226-stat betai-chat-stat-final"><span>{t('AKTYWNI TERAZ')}</span><strong>👥 {onlineCount}</strong></div>
       </div>
 
 
@@ -3974,10 +4272,10 @@ function LiveChatPanel({ user }) {
                 <div className="livechat226-meta">
                   <span className="livechat226-name">{name}</span>
                   {isAdmin && <span className="livechat226-badge admin">Admin</span>}
-                  {isLeader && <span className="livechat226-badge leader">Top aktywność</span>}
+                  {isLeader && <span className="livechat226-badge leader">{t('Top aktywność')}</span>}
                   <span className="livechat226-time">{msg.created_at ? new Date(msg.created_at).toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : '--:--'}</span>
                 </div>
-                {messageParts.text ? <div className="livechat226-text">{messageParts.text}</div> : null}
+                {messageParts.text ? <div className="livechat226-text" data-no-translate="true">{messageParts.text}</div> : null}
                 {messageParts.attachment ? (
                   <a
                     className={`livechat226-attachment-v1834 ${String(messageParts.attachment.type || '').startsWith('image/') ? 'is-image' : 'is-file'}`}
@@ -4002,7 +4300,7 @@ function LiveChatPanel({ user }) {
               </div>
             </div>
           )
-        }) : <div className="livechat226-empty">Brak wiadomości. Napisz pierwszą wiadomość i uruchom live chat.</div>}
+        }) : <div className="livechat226-empty">{t('Brak wiadomości. Napisz pierwszą wiadomość i uruchom live chat.')}</div>}
       </div>
 
       <div className="livechat226-composer betai-composer-final">
@@ -4022,19 +4320,19 @@ function LiveChatPanel({ user }) {
               <strong>{chatAttachment.name}</strong>
               <small>{Math.max(1, Math.round(Number(chatAttachment.size || 0) / 1024))} KB</small>
             </div>
-            <button type="button" onClick={clearChatAttachment} aria-label="Usuń załącznik" title="Usuń załącznik">×</button>
+            <button type="button" onClick={clearChatAttachment} aria-label={t('Usuń załącznik')} title={t('Usuń załącznik')}>×</button>
           </div>
         ) : null}
         <div className="livechat226-input-wrap betai-input-wrap-final betai-input-actions-final">
-          <input className="livechat226-input" maxLength={240} value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage() } }} placeholder="Napisz wiadomość..." />
+          <input className="livechat226-input" maxLength={240} value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage() } }} placeholder={t('Napisz wiadomość...')} />
 
           <button
             className={`betai-attachment-toggle-v1834 ${chatAttachment ? 'active' : ''}`}
             type="button"
             onClick={chooseChatAttachment}
             disabled={sending}
-            aria-label="Dodaj załącznik"
-            title="Dodaj załącznik"
+            aria-label={t('Dodaj załącznik')}
+            title={t('Dodaj załącznik')}
           >
             📎
           </button>
@@ -4045,8 +4343,8 @@ function LiveChatPanel({ user }) {
               type="button"
               onClick={() => setShowEmojiPicker(prev => !prev)}
               aria-expanded={showEmojiPicker}
-              aria-label="Pokaż emotki"
-              title="Emotki"
+              aria-label={t('Pokaż emotki')}
+              title={t('Emotki')}
             >
               😊
             </button>
@@ -4063,7 +4361,7 @@ function LiveChatPanel({ user }) {
           <button className="livechat226-send betai-send-final" type="button" onClick={() => sendMessage()} disabled={sending || (!text.trim() && !chatAttachment)}>{sending ? '...' : '➤'}</button>
         </div>
         {status && !String(status).startsWith('Live chat połączony') && !String(status).startsWith('🎁 Tip') ? (
-          <div className={`livechat226-status-v1836 ${/nie udało|błąd|blocked|blokad|maksymalnie|wybierz/i.test(String(status)) ? 'is-error' : ''}`}>{status}</div>
+          <div className={`livechat226-status-v1836 ${/nie udało|błąd|blocked|blokad|maksymalnie|wybierz/i.test(String(status)) ? 'is-error' : ''}`}>{t(status)}</div>
         ) : null}
         
       </div>    </section>
@@ -4531,6 +4829,8 @@ function buildBetAiRightPickV1156(match = {}, index = 0, dayKey = getBetAiWarsaw
 }
 
 function DailyAiPicksRightPanelV1156() {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   const [dayKey, setDayKey] = useState(getBetAiWarsawDayKeyV1156())
   const [picks, setPicks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -4580,9 +4880,9 @@ function DailyAiPicksRightPanelV1156() {
 
   return (
     <section className="panel ai-day-panel-right ai-day-panel-real-v1156 ai-day-panel-real-v1706">
-      <div className="panel-head"><h2><span className="ai-day-title-accent">AI</span> Typy dnia</h2><a>{dayKey}</a></div>
+      <div className="panel-head"><h2><span className="ai-day-title-accent">AI</span> {t('Typy dnia')}</h2><a>{dayKey}</a></div>
       {loading && !picks.length ? (
-        <div className="empty-mini">Ładowanie typów AI pre-match z get-ai-bets...</div>
+        <div className="empty-mini">{t('Ładowanie typów AI pre-match z get-ai-bets...')}</div>
       ) : picks.length ? picks.map((pick, index) => (
         <div className="ai-pick ai-pick-real-v1156 ai-pick-real-v1162 ai-pick-real-v1163 ai-pick-real-v1706" key={`${pick.id}-${index}`}>
           <div className="ai-day-pick-body-v1163">
@@ -4594,18 +4894,20 @@ function DailyAiPicksRightPanelV1156() {
               <TipTeamLogo logo={pick.awayLogo || pick.away_logo} teamId={pick.awayTeamId || pick.away_team_id} name={pick.away} />
             </div>
             <small>{pick.league}</small>
-            <small>Typ: {pick.pick} • Kurs: {Number(pick.odds || 0).toFixed(2)}</small>
+            <small>{t(`Typ: ${pick.pick} • Kurs: ${Number(pick.odds || 0).toFixed(2)}`)}</small>
             <div className="tiny-progress"><i style={{width:`${Math.max(5, Math.min(100, Number(pick.confidence || 0)))}%`}}></i></div>
           </div>
           <strong>{Number(pick.confidence || 0)}%</strong>
         </div>
       )) : (
-        <div className="empty-mini">{notice || 'Brak typów AI pre-match.'}</div>
+        <div className="empty-mini">{t(notice || 'Brak typów AI pre-match.')}</div>
       )}
     </section>
   )
 }
 function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   cacheBetaiCurrentUserAvatar(user)
 
   // WERSJA 1798 — prawa kolumna Dashboardu korzysta z tego samego kanonu
@@ -4708,7 +5010,7 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
     <aside className="rightbar">
       <LiveChatPanel user={user} />
       <section className="panel real-ranking-panel real-ranking-panel-v19">
-        <div className="panel-head"><h2>🏆 Top typerzy</h2><a>Ranking real</a></div>
+        <div className="panel-head"><h2>🏆 {t('Top typerzy')}</h2><a>{t('Ranking real')}</a></div>
         {rightRankingRows.length ? rightRankingRows.slice(0, 4).map((row, index) => {
           const rowName = formatRankingName(row)
           const rowRef = row.tipster_id || row.id || row.user_id || row.author_id || row.email || row.username || rowName
@@ -4745,11 +5047,11 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
                   <strong>{yieldValue.toFixed(2)}%</strong>
                 </div>
                 <div>
-                  <small>Typy</small>
+                  <small>{t('Typy')}</small>
                   <strong className="rank-types-v19">{totalTips}</strong>
                 </div>
                 <div>
-                  <small>Bilans</small>
+                  <small>{t('Bilans')}</small>
                   <strong className="rank-balance-v19"><span className="wins">{wins}</span><span className="sep"> – </span><span className="losses">{losses}</span><span className="sep"> – </span><span className="voids">{voids}</span></strong>
                 </div>
               </div>
@@ -4761,7 +5063,7 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
           </button>
           )
         }) : (
-          <div className="empty-mini">Brak danych rankingu. Dodaj typy i wyniki, aby ranking się naliczył.</div>
+          <div className="empty-mini">{t('Brak danych rankingu. Dodaj typy i wyniki, aby ranking się naliczył.')}</div>
         )}
       </section>
 
@@ -12289,6 +12591,8 @@ function TipAnalysisModalPortal({ onClose, children }) {
 }
 
 function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast, allTips = [], startedReadOnly = false }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   const isPremium = tip.access_type === 'premium'
   const adminSubscriptionBypassV1710 = isAdminUser(currentUser) || isSmilhytvLifetimePremium(currentUser)
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive && !adminSubscriptionBypassV1710
@@ -12544,8 +12848,8 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           {dashboardAuthorStats?.totalTipsLabel ? (
             <div className="ticket-mini-stats-v876">
               <span>Yield: <b className={getMetricToneClassV1801(dashboardAuthorStats.yieldValue, dashboardAuthorStats.yieldLabel)}>{dashboardAuthorStats.yieldLabel}</b></span>
-              <span>Oddane typy: <b>{dashboardAuthorStats.totalTipsLabel}</b></span>
-              <span>Bilans: <b className={getMetricToneClassV1801(dashboardAuthorStats.profitValue, dashboardAuthorStats.profitLabel)}>{dashboardAuthorStats.profitLabel}</b></span>
+              <span>{t('Oddane typy')}: <b>{dashboardAuthorStats.totalTipsLabel}</b></span>
+              <span>{t('Bilans')}: <b className={getMetricToneClassV1801(dashboardAuthorStats.profitValue, dashboardAuthorStats.profitLabel)}>{dashboardAuthorStats.profitLabel}</b></span>
             </div>
           ) : null}
         </div>
@@ -12554,12 +12858,12 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           className={`profile-ticket-v6-access ${isPremium ? 'premium' : 'free'}`}
           onClick={() => isPremium && !startedReadOnly && onSubscribeToTipster?.(tip)}
           disabled={Boolean(isPremium && startedReadOnly)}
-          title={isPremium && startedReadOnly ? 'Typ już się rozpoczął' : undefined}
+          title={isPremium && startedReadOnly ? t('Typ już się rozpoczął') : undefined}
         >
-          {isPremium ? '♕ PREMIUM' : '🎁 DARMOWY'}
+          {isPremium ? '♕ PREMIUM' : `🎁 ${t('DARMOWY')}`}
         </button>
-        <div className="ticket-form-strip-v1811" aria-label="Forma z ostatnich 6 rozliczonych typów">
-          <span className="ticket-form-strip-label-v1811">FORMA</span>
+        <div className="ticket-form-strip-v1811" aria-label={t('Forma z ostatnich 6 rozliczonych typów')}>
+          <span className="ticket-form-strip-label-v1811">{t('FORMA')}</span>
           <div className="ticket-form-strip-dots-v1811">
             {tipsterRecentForm.map((entry, index) => (
               <span
@@ -12576,26 +12880,26 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       </div>
 
       <div className="profile-ticket-v6-main">
-        <div className="profile-ticket-v6-sport-row"><span className="profile-ticket-v6-sport-badge"><span aria-hidden="true">⚽</span><strong>Piłka nożna</strong></span><span className="profile-ticket-v6-league"><strong>{isAkoCard ? 'Kupon AKO' : tip.league}</strong></span></div>
+        <div className="profile-ticket-v6-sport-row"><span className="profile-ticket-v6-sport-badge"><span aria-hidden="true">⚽</span><strong>{t('Piłka nożna')}</strong></span><span className="profile-ticket-v6-league"><strong>{t(isAkoCard ? 'Kupon AKO' : tip.league)}</strong></span></div>
         {isAkoCard ? (
           <div className="profile-ticket-v6-ako-main">
             <div className="profile-ticket-v6-ako-head">
               <span className="profile-ticket-v6-ako-icon">AKO</span>
               <div>
-                <strong>Kupon AKO</strong>
-                <small>{akoLegsCount} zdarzenia{effectiveIsLocked ? ' • typy ukryte' : ` • kurs całkowity ${Number(tip.odds || 0).toFixed(2)}`}</small>
+                <strong>{t('Kupon AKO')}</strong>
+                <small>{t(`${akoLegsCount} zdarzenia`)}{effectiveIsLocked ? ` • ${t('typy ukryte')}` : ` • ${t('kurs całkowity')} ${Number(tip.odds || 0).toFixed(2)}`}</small>
               </div>
             </div>
             <div className="profile-ticket-v6-ako-legs">
               {akoLegs.length ? (akoExpanded ? akoLegs : akoLegs.slice(0, 3)).map((leg, index) => (
                 <div className="profile-ticket-v6-ako-leg" key={leg.key}>
                   <b>{index + 1}</b>
-                  <span>{leg.home} - {leg.away}</span>
-                  <strong>{effectiveIsLocked ? 'Typ ukryty' : `${leg.pick}${leg.odds ? ` @ ${leg.odds.toFixed(2)}` : ''}`}</strong>
-                  <i className={`profile-ticket-v6-ako-leg-status ${getAkoLegStatusLabel(leg).tone}`}>{effectiveIsLocked ? 'Po zakupie' : `${getAkoLegStatusLabel(leg).text}${leg.score ? ` ${leg.score}` : ''}`}</i>
+                  <span>{t(leg.home)} - {t(leg.away)}</span>
+                  <strong>{effectiveIsLocked ? t('Typ ukryty') : `${t(leg.pick)}${leg.odds ? ` @ ${leg.odds.toFixed(2)}` : ''}`}</strong>
+                  <i className={`profile-ticket-v6-ako-leg-status ${getAkoLegStatusLabel(leg).tone}`}>{effectiveIsLocked ? t('Po zakupie') : `${t(getAkoLegStatusLabel(leg).text)}${leg.score ? ` ${leg.score}` : ''}`}</i>
                 </div>
               )) : (
-                <div className="profile-ticket-v6-ako-leg empty"><span>Brak osobnej listy zdarzeń dla starego kuponu.</span></div>
+                <div className="profile-ticket-v6-ako-leg empty"><span>{t('Brak osobnej listy zdarzeń dla starego kuponu.')}</span></div>
               )}
               {akoLegs.length > 3 ? (
                 <button
@@ -12603,7 +12907,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
                   className="profile-ticket-v6-ako-toggle"
                   onClick={() => setAkoExpanded(prev => !prev)}
                 >
-                  {akoExpanded ? 'Pokaż mniej' : `+${akoLegs.length - 3} więcej zdarzeń`}
+                  {t(akoExpanded ? 'Pokaż mniej' : `+${akoLegs.length - 3} więcej zdarzeń`)}
                 </button>
               ) : null}
             </div>
@@ -12611,9 +12915,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         ) : (
           <>
             <div className="profile-ticket-v6-match">
-              <div><TipTeamLogo logo={tip.home_logo || tip.homeLogo} teamId={tip.home_team_id || tip.homeTeamId} name={cardHome} /><strong>{cardHome}</strong></div>
+              <div><TipTeamLogo logo={tip.home_logo || tip.homeLogo} teamId={tip.home_team_id || tip.homeTeamId} name={cardHome} /><strong>{t(cardHome)}</strong></div>
               <span>vs</span>
-              <div><TipTeamLogo logo={tip.away_logo || tip.awayLogo} teamId={tip.away_team_id || tip.awayTeamId} name={cardAway} /><strong>{cardAway}</strong></div>
+              <div><TipTeamLogo logo={tip.away_logo || tip.awayLogo} teamId={tip.away_team_id || tip.awayTeamId} name={cardAway} /><strong>{t(cardAway)}</strong></div>
             </div>
             <small>{cardMatchLabel}</small>
           </>
@@ -12621,47 +12925,47 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       </div>
 
       <div className="profile-ticket-v6-field">
-        <small>TYP</small>
+        <small>{t('TYP')}</small>
         {!effectiveIsLocked && cardMarketLabelV1711 && cardMarketLabelV1711 !== cardPick && (
-          <em className="ticket-market-label-v1711">{cardMarketLabelV1711}</em>
+          <em className="ticket-market-label-v1711">{t(cardMarketLabelV1711)}</em>
         )}
-        <strong className="ticket-pick-emphasis-v1803">{effectiveIsLocked ? 'Typ premium' : cardPick}</strong>
-        <span>{isAkoCard ? (isPremium ? 'AKO premium' : 'AKO darmowy') : (isPremium ? 'Singiel' : 'Darmowy typ')}</span>
+        <strong className="ticket-pick-emphasis-v1803">{t(effectiveIsLocked ? 'Typ premium' : cardPick)}</strong>
+        <span>{t(isAkoCard ? (isPremium ? 'AKO premium' : 'AKO darmowy') : (isPremium ? 'Singiel' : 'Darmowy typ'))}</span>
       </div>
 
       <div className="profile-ticket-v6-field stake">
-        <small>STAWKA</small>
+        <small>{t('STAWKA')}</small>
         <strong className="profile-ticket-v6-stake-value">{stakeLabel}</strong>
         <i><b style={{ width: `${Math.max(3, Math.min(100, (Number(stakeValue || 0) / 1000) * 100))}%` }} /></i>
       </div>
 
       <div className="profile-ticket-v6-field odds">
-        <small>KURS</small>
+        <small>{t('KURS')}</small>
         <strong>{effectiveIsLocked ? '—' : Number(tip.odds || 0).toFixed(2)}</strong>
       </div>
 
       <div className={`profile-ticket-v6-analysis ${effectiveIsLocked ? 'locked' : ''}`}>
-        <small>ANALIZA</small>
-        <p>{effectiveIsLocked ? 'Ta analiza premium jest zablokowana' : cardAnalysis}</p>
-        {(!effectiveIsLocked && cardAnalysis) ? <button type="button" onClick={() => setAnalysisModalOpen(true)}>Czytaj więcej⌄</button> : null}
+        <small>{t('ANALIZA')}</small>
+        <p>{effectiveIsLocked ? t('Ta analiza premium jest zablokowana') : cardAnalysis}</p>
+        {(!effectiveIsLocked && cardAnalysis) ? <button type="button" onClick={() => setAnalysisModalOpen(true)}>{t('Czytaj więcej')}⌄</button> : null}
       </div>
 
       <div className="profile-ticket-v6-buy">
         <div className="profile-ticket-v6-corner">
-          <span>{createdAgo}</span>
+          <span>{t(createdAgo)}</span>
           <button type="button" onClick={() => setMenuOpen(prev => !prev)}>⋮</button>
           {menuOpen && (
             <div className="profile-ticket-v6-menu">
-              <button type="button" onClick={reportDashboardTip}>⚠ Zgłoś wpis</button>
-              {isOwnTip ? <button type="button" onClick={addDashboardAnalysis}>📝 Dodaj analizę</button> : null}
-              <button type="button" onClick={shareDashboardTip}>↗ Udostępnij</button>
+              <button type="button" onClick={reportDashboardTip}>⚠ {t('Zgłoś wpis')}</button>
+              {isOwnTip ? <button type="button" onClick={addDashboardAnalysis}>📝 {t('Dodaj analizę')}</button> : null}
+              <button type="button" onClick={shareDashboardTip}>↗ {t('Udostępnij')}</button>
             </div>
           )}
         </div>
-        <span className={`status-${cardStatusLabel.toLowerCase()}`}>✓ {cardStatusLabel}</span>
+        <span className={`status-${cardStatusLabel.toLowerCase()}`}>✓ {t(cardStatusLabel)}</span>
         {effectiveIsLocked && !startedReadOnly ? (
           <>
-            <button type="button" onClick={() => onUnlock(tip)}>{isAkoCard ? 'Kup kupon AKO' : 'Kup singiel'}</button>
+            <button type="button" onClick={() => onUnlock(tip)}>{t(isAkoCard ? 'Kup kupon AKO' : 'Kup singiel')}</button>
             <strong>{Number(tip.price || 29).toFixed(2)} zł</strong>
           </>
         ) : null}
@@ -12673,7 +12977,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
             <TipActionLikeIcon />
             <b>{feedback.likes}</b>
           </button>
-          <button type="button" className={`ticket-action-btn-v877 ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen(prev => !prev)} aria-label={commentsOpen ? 'Zamknij komentarze' : 'Otwórz komentarze'}>
+          <button type="button" className={`ticket-action-btn-v877 ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen(prev => !prev)} aria-label={t(commentsOpen ? 'Zamknij komentarze' : 'Otwórz komentarze')}>
             <TipActionCommentIcon />
             <b>{commentCount}</b>
           </button>
@@ -12689,9 +12993,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
                 event.stopPropagation()
                 onToggleFollow?.(followLookupKey || author || cardAuthor, author || cardAuthor)
               }}
-              aria-label={isFollowing ? 'Obserwujesz typera' : 'Obserwuj typera'}
+              aria-label={t(isFollowing ? 'Obserwujesz typera' : 'Obserwuj typera')}
             >
-              {isFollowing ? '✓ Obserwujesz' : 'Obserwuj'}
+              {t(isFollowing ? '✓ Obserwujesz' : 'Obserwuj')}
             </button>
           ) : null}
         </div>
@@ -12699,24 +13003,24 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
       {analysisModalOpen && (
         <TipAnalysisModalPortal onClose={() => setAnalysisModalOpen(false)}>
-          <button type="button" className="tip-analysis-modal-close" onClick={() => setAnalysisModalOpen(false)} aria-label="Zamknij analizę">×</button>
-          <div className="tip-analysis-modal-kicker">ANALIZA TYPU</div>
-          <h3>{isAkoCard ? `Kupon AKO • ${akoLegsCount} zdarzenia` : `${cardHome} vs ${cardAway}`}</h3>
+          <button type="button" className="tip-analysis-modal-close" onClick={() => setAnalysisModalOpen(false)} aria-label={t('Zamknij analizę')}>×</button>
+          <div className="tip-analysis-modal-kicker">{t('ANALIZA TYPU')}</div>
+          <h3>{t(isAkoCard ? `Kupon AKO • ${akoLegsCount} zdarzenia` : `${cardHome} vs ${cardAway}`)}</h3>
           <div className="tip-analysis-modal-meta">
-            <span>{isAkoCard ? 'Kupon AKO' : (tip.league || 'Liga')}</span>
-            <span>{effectiveIsLocked ? 'Typ premium' : cardPick}</span>
-            <span>Kurs {effectiveIsLocked ? '—' : Number(tip.odds || 0).toFixed(2)}</span>
+            <span>{t(isAkoCard ? 'Kupon AKO' : (tip.league || 'Liga'))}</span>
+            <span>{t(effectiveIsLocked ? 'Typ premium' : cardPick)}</span>
+            <span>{t(`Kurs ${effectiveIsLocked ? '—' : Number(tip.odds || 0).toFixed(2)}`)}</span>
           </div>
-          <p>{effectiveIsLocked ? 'Ta analiza premium jest zablokowana. Odblokuj typ, aby przeczytać całość.' : cardAnalysis}</p>
+          <p>{effectiveIsLocked ? t('Ta analiza premium jest zablokowana. Odblokuj typ, aby przeczytać całość.') : cardAnalysis}</p>
         </TipAnalysisModalPortal>
       )}
 
       {commentsOpen && (
         <div className="tip-comments-panel profile-ticket-v6-comments">
           <div className="tip-comments-head">
-            <strong>Komentarze:</strong>
-            <span>{commentCount} łącznie</span>
-            <button type="button" className="tip-comments-close" onClick={() => setCommentsOpen(false)} aria-label="Zamknij komentarze">×</button>
+            <strong>{t('Komentarze:')}</strong>
+            <span>{t(`${commentCount} łącznie`)}</span>
+            <button type="button" className="tip-comments-close" onClick={() => setCommentsOpen(false)} aria-label={t('Zamknij komentarze')}>×</button>
           </div>
           <div className="tip-comment-form">
             <input
@@ -12724,10 +13028,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
               value={commentDraft}
               onChange={(e) => setCommentDraft(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitComment() } }}
-              placeholder="Dodaj komentarz do tego typu..."
+              placeholder={t('Dodaj komentarz do tego typu...')}
               maxLength={280}
             />
-            <button type="button" className="tip-comment-submit" onClick={submitComment}>Dodaj komentarz</button>
+            <button type="button" className="tip-comment-submit" onClick={submitComment}>{t('Dodaj komentarz')}</button>
           </div>
           {feedback.comments.length > 0 ? (
             <div className="tip-comment-list">
@@ -12735,8 +13039,8 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
                 <div key={comment.id} className="tip-comment-item">
                   <div className="tip-comment-avatar">{String(comment.author || 'G').slice(0, 1).toUpperCase()}</div>
                   <div className="tip-comment-body">
-                    <div className="tip-comment-meta"><strong>{comment.author}</strong><span>{new Date(comment.created_at).toLocaleString('pl-PL')}</span></div>
-                    <p>{comment.text}</p>
+                    <div className="tip-comment-meta"><strong>{comment.author}</strong><span>{new Date(comment.created_at).toLocaleString(lang === 'en' ? 'en-GB' : 'pl-PL')}</span></div>
+                    <p data-no-translate="true">{comment.text}</p>
                   </div>
                 </div>
               ))}
@@ -16663,7 +16967,7 @@ function UserMessagesPopup({ open, user = null, dmUnreadCount = 0, onDmUnreadCha
 
 
 function StatPill({ label, value, tone = '' }) {
-  return <div className={`stat-pro-card ${tone}`}><span>{label}</span><b>{value}</b></div>
+  return <div className={`stat-pro-card ${tone}`}><span>{tApp(label)}</span><b>{value}</b></div>
 }
 
 function StatsView({ tips = [] }) {
@@ -20033,6 +20337,8 @@ function getBetaiGuestSessionId() {
 }
 
 function SiteReviewsWidget({ user }) {
+  const lang = useBetaiLanguageState()
+  const t = value => translateBetaiTextValue(value, lang)
   const [open, setOpen] = useState(false)
   const [reviews, setReviews] = useState([])
   const [rating, setRating] = useState(5)
@@ -20167,7 +20473,7 @@ function SiteReviewsWidget({ user }) {
             onClick={() => interactive && setRating(star)}
             onMouseEnter={() => interactive && setHoverRating(star)}
             onMouseLeave={() => interactive && setHoverRating(0)}
-            aria-label={`${star} gwiazdek`}
+            aria-label={`${star} ${t('gwiazdek')}`}
           >
            
           ★</button>
@@ -20179,13 +20485,13 @@ function SiteReviewsWidget({ user }) {
   return (
     <div className={`reviews512 ${open ? 'is-open' : ''}`}>
       {open ? (
-        <section className="reviews512-panel" aria-label="Opinie użytkowników Bet+AI">
+        <section className="reviews512-panel" aria-label={t('Opinie użytkowników Bet+AI')}>
           <header className="reviews512-head">
             <div>
-              <strong>Opinie Bet+AI</strong>
-              <span><i /> Live oceny użytkowników</span>
+              <strong>{t('Opinie Bet+AI')}</strong>
+              <span><i /> {t('Live oceny użytkowników')}</span>
             </div>
-            <button type="button" onClick={() => setOpen(false)} aria-label="Zamknij opinie">×</button>
+            <button type="button" onClick={() => setOpen(false)} aria-label={t('Zamknij opinie')}>×</button>
           </header>
 
           <div className="reviews512-summary">
@@ -20195,57 +20501,57 @@ function SiteReviewsWidget({ user }) {
             </div>
             <div>
               <strong>{ratingCount}</strong>
-              <span>{ratingCount === 1 ? 'opinia live' : 'opinii live'}</span>
+              <span>{t(ratingCount === 1 ? 'opinia live' : 'opinii live')}</span>
             </div>
           </div>
 
           <div className="reviews512-form">
             {!email ? (
               <div className="reviews512-guest-fields">
-                <input value={guestName} onChange={event => setGuestName(event.target.value)} placeholder="Twoja nazwa" />
-                <input value={guestEmail} onChange={event => setGuestEmail(event.target.value)} placeholder="Twój email" type="email" />
+                <input value={guestName} onChange={event => setGuestName(event.target.value)} placeholder={t('Twoja nazwa')} />
+                <input value={guestEmail} onChange={event => setGuestEmail(event.target.value)} placeholder={t('Twój email')} type="email" />
               </div>
             ) : null}
 
             <div className="reviews512-rate-row">
-              <span>Twoja ocena</span>
+              <span>{t('Twoja ocena')}</span>
               <Stars interactive />
             </div>
 
             <textarea
               value={comment}
               onChange={event => setComment(event.target.value)}
-              placeholder="Napisz swoją opinię..."
+              placeholder={t('Napisz swoją opinię...')}
               maxLength={500}
             />
             <button type="button" onClick={submitReview} disabled={loading || !comment.trim()}>
-              {loading ? 'Zapisywanie...' : 'Dodaj opinię'}
+              {t(loading ? 'Zapisywanie...' : 'Dodaj opinię')}
             </button>
           </div>
 
-          {status ? <div className="reviews512-status">{status}</div> : null}
+          {status ? <div className="reviews512-status">{t(status)}</div> : null}
 
           <div className="reviews512-list">
             {latestReviews.length ? latestReviews.map(review => (
               <article key={review.id || review.created_at} className="reviews512-item">
                 <div>
-                  <strong>{review.user_name || (review.user_email ? String(review.user_email).split('@')[0] : 'Użytkownik')}</strong>
+                  <strong>{review.user_name || (review.user_email ? String(review.user_email).split('@')[0] : t('Użytkownik'))}</strong>
                   <Stars value={Number(review.rating) || 5} small />
                 </div>
-                <p>{review.comment}</p>
-                <span>{review.created_at ? new Date(review.created_at).toLocaleString('pl-PL') : 'teraz'}</span>
+                <p data-no-translate="true">{review.comment}</p>
+                <span>{review.created_at ? new Date(review.created_at).toLocaleString(lang === 'en' ? 'en-GB' : 'pl-PL') : t('teraz')}</span>
               </article>
             )) : (
-              <div className="reviews512-empty">Bądź pierwszy — dodaj opinię i ocenę gwiazdkami.</div>
+              <div className="reviews512-empty">{t('Bądź pierwszy — dodaj opinię i ocenę gwiazdkami.')}</div>
             )}
           </div>
 
         </section>
       ) : null}
 
-      <button type="button" className="reviews512-fab" onClick={() => setOpen(prev => !prev)} aria-label="Otwórz opinie">
+      <button type="button" className="reviews512-fab" onClick={() => setOpen(prev => !prev)} aria-label={t('Otwórz opinie')}>
         <span className="reviews512-fab-stars">★★★★★</span>
-        <b>{averageRating ? averageRating.toFixed(1) : 'Oceń'}</b>
+        <b>{averageRating ? averageRating.toFixed(1) : t('Oceń')}</b>
         {!open ? <i /> : null}
       </button>
     </div>
@@ -20253,6 +20559,8 @@ function SiteReviewsWidget({ user }) {
 }
 
 function SupportChatWidget({ user }) {
+  const lang = useBetaiLanguageState()
+  const t = value => translateBetaiTextValue(value, lang)
   const adminEmail = 'smilhytv@gmail.com'
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([])
@@ -20401,7 +20709,7 @@ function SupportChatWidget({ user }) {
 
   async function deleteSupportMessage(message) {
     if (!adminMode || !message || !isSupabaseConfigured || !supabase) return
-    const ok = window.confirm('Usunąć tę wiadomość z centrum wsparcia?')
+    const ok = window.confirm(t('Usunąć tę wiadomość z centrum wsparcia?'))
     if (!ok) return
     try {
       setLoading(true)
@@ -20432,20 +20740,20 @@ function SupportChatWidget({ user }) {
   return (
     <div className={`support510 ${adminMode ? 'is-admin' : ''} ${open ? 'is-open' : ''}`}>
       {open ? (
-        <section className="support510-panel" aria-label="Wsparcie Bet+AI live">
+        <section className="support510-panel" aria-label={t('Wsparcie Bet+AI live')}>
           <header className="support510-head">
             <div>
-              <strong>{adminMode ? 'Centrum wsparcia' : 'Wsparcie Bet+AI'}</strong>
-              <span><i /> {adminMode ? 'Panel admina live' : 'Natychmiastowa odpowiedź live'}</span>
+              <strong>{t(adminMode ? 'Centrum wsparcia' : 'Wsparcie Bet+AI')}</strong>
+              <span><i /> {t(adminMode ? 'Panel admina live' : 'Natychmiastowa odpowiedź live')}</span>
             </div>
-            <button type="button" onClick={() => setOpen(false)} aria-label="Zamknij czat">×</button>
+            <button type="button" onClick={() => setOpen(false)} aria-label={t('Zamknij czat')}>×</button>
           </header>
 
           {adminMode ? (
             <div className="support510-admin-tabs">
               {conversations.length ? conversations.slice(0, 8).map(item => {
-                const label = item.name || item.email || 'Użytkownik'
-                const mail = item.email || 'brak e-mail'
+                const label = item.name || item.email || t('Użytkownik')
+                const mail = item.email || t('brak e-mail')
                 const avatar = String(label).trim().slice(0, 1).toUpperCase()
                 const isActive = (selectedKey || conversations[0]?.key) === item.key
                 return (
@@ -20458,15 +20766,15 @@ function SupportChatWidget({ user }) {
                     {item.unread ? <span className="support510-thread-badge">{item.unread}</span> : null}
                   </button>
                 )
-              }) : <span className="support510-empty-mini">Brak rozmów</span>}
+              }) : <span className="support510-empty-mini">{t('Brak rozmów')}</span>}
             </div>
           ) : null}
 
           <div className="support510-body">
             {!visibleMessages.length ? (
               <div className="support510-welcome">
-                <strong>Cześć! Jak mogę Ci dzisiaj pomóc?</strong>
-                <span>Wiadomość trafia wyłącznie do: smilhytv / smilhytv@gmail.com</span>
+                <strong>{t('Cześć! Jak mogę Ci dzisiaj pomóc?')}</strong>
+                <span>{t('Wiadomość trafia wyłącznie do: smilhytv / smilhytv@gmail.com')}</span>
               </div>
             ) : visibleMessages.map(message => {
               const mine = normalizeEmail(message.sender_email) === email
@@ -20478,32 +20786,32 @@ function SupportChatWidget({ user }) {
                       type="button"
                       className="support510-msg-delete"
                       onClick={() => deleteSupportMessage(message)}
-                      aria-label="Usuń wiadomość"
-                      title="Usuń wiadomość"
+                      aria-label={t('Usuń wiadomość')}
+                      title={t('Usuń wiadomość')}
                     >×</button>
                   ) : null}
-                  <p>{message.message}</p>
-                  <span>{isAdminMessage ? 'Admin' : (message.sender_name || message.user_name || 'Użytkownik')} · {message.created_at ? new Date(message.created_at).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : 'teraz'}</span>
+                  <p data-no-translate="true">{message.message}</p>
+                  <span>{isAdminMessage ? 'Admin' : (message.sender_name || message.user_name || t('Użytkownik'))} · {message.created_at ? new Date(message.created_at).toLocaleTimeString(lang === 'en' ? 'en-GB' : 'pl-PL', { hour: '2-digit', minute: '2-digit' }) : t('teraz')}</span>
                 </div>
               )
             })}
           </div>
 
-          {status ? <div className="support510-status">{status}</div> : null}
+          {status ? <div className="support510-status">{t(status)}</div> : null}
 
           <footer className="support510-compose">
-            <textarea value={text} onChange={event => setText(event.target.value)} placeholder={adminMode ? 'Napisz odpowiedź...' : 'Wpisz swoją wiadomość...'} onKeyDown={event => {
+            <textarea value={text} onChange={event => setText(event.target.value)} placeholder={t(adminMode ? 'Napisz odpowiedź...' : 'Wpisz swoją wiadomość...')} onKeyDown={event => {
               if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault()
                 sendSupportMessage()
               }
             }} />
-            <button type="button" onClick={sendSupportMessage} disabled={loading || !text.trim()} aria-label="Wyślij wiadomość">➤</button>
+            <button type="button" onClick={sendSupportMessage} disabled={loading || !text.trim()} aria-label={t('Wyślij wiadomość')}>➤</button>
           </footer>
         </section>
       ) : null}
 
-      <button type="button" className="support510-fab" onClick={() => setOpen(prev => !prev)} aria-label="Otwórz czat pomocy">
+      <button type="button" className="support510-fab" onClick={() => setOpen(prev => !prev)} aria-label={t('Otwórz czat pomocy')}>
         {open ? '×' : '💬'}
         <span className="support510-fab-badge">{Number(supportUnreadCount || 0)}</span>
         {!open ? <span className="support510-fab-pulse" /> : null}
@@ -21864,7 +22172,7 @@ function TipsterPricingSettings({ user, onToast }) {
           <span>Premium wymagane</span>
         </div>
         <p>Konto FREE nie może sprzedawać subskrypcji profilu, blokować wyników ani ukrywać statystyk. Kup Premium, żeby odblokować płatny profil typera.</p>
-        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Kup Premium</button>
+        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>{tApp('Kup Premium')}</button>
       </div>
     )
   }
@@ -23072,8 +23380,8 @@ function ProfileLiveTipCard({
                 <div key={comment.id} className="tip-comment-item">
                   <div className="tip-comment-avatar">{String(comment.author || 'G').slice(0, 1).toUpperCase()}</div>
                   <div className="tip-comment-body">
-                    <div className="tip-comment-meta"><strong>{comment.author}</strong><span>{new Date(comment.created_at).toLocaleString('pl-PL')}</span></div>
-                    <p>{comment.text}</p>
+                    <div className="tip-comment-meta"><strong>{comment.author}</strong><span>{new Date(comment.created_at).toLocaleString(lang === 'en' ? 'en-GB' : 'pl-PL')}</span></div>
+                    <p data-no-translate="true">{comment.text}</p>
                   </div>
                 </div>
               ))}
@@ -25824,7 +26132,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                             className="feed-load-less-btn"
                             onClick={() => setProfileTipsVisibleCount(3)}
                           >
-                            Zwiń do 3 typów
+                            {tApp('Zwiń do 3 typów')}
                           </button>
                         ) : null}
                       </div>
@@ -25853,7 +26161,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                           className="feed-load-less-btn"
                           onClick={() => setProfileTipsVisibleCount(3)}
                         >
-                          Zwiń do 3 typów
+                          {tApp('Zwiń do 3 typów')}
                         </button>
                       ) : null}
                     </div>
@@ -28547,11 +28855,12 @@ function DashboardAutoTranslator({ lang }) {
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.documentElement.lang = lang || 'pl'
-    const skipTags = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'SELECT', 'OPTION'])
+    const skipTags = new Set(['SCRIPT', 'STYLE'])
     const translateText = (value) => translateBetaiTextValue(value, lang)
     const translateNode = (node) => {
       if (!node) return
       if (node.nodeType === Node.TEXT_NODE) {
+        if (node.parentElement?.closest?.('[data-no-translate="true"]')) return
         const next = translateText(node.nodeValue)
         if (next !== node.nodeValue) node.nodeValue = next
         return
@@ -28559,6 +28868,8 @@ function DashboardAutoTranslator({ lang }) {
       if (node.nodeType !== Node.ELEMENT_NODE) return
       if (skipTags.has(node.tagName)) return
       if (node.getAttribute?.('data-no-translate') === 'true') return
+      // WERSJA 1850: placeholdery i etykiety pól muszą się tłumaczyć także
+      // w INPUT/TEXTAREA/SELECT. Nie dotykamy właściwości value użytkownika.
       ;['placeholder', 'aria-label', 'title', 'alt'].forEach(attr => {
         if (node.hasAttribute?.(attr)) {
           const current = node.getAttribute(attr)
@@ -28566,6 +28877,7 @@ function DashboardAutoTranslator({ lang }) {
           if (next !== current) node.setAttribute(attr, next)
         }
       })
+      if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') return
       node.childNodes?.forEach(child => translateNode(child))
     }
 
@@ -29885,6 +30197,7 @@ function App() {
     return match ? decodeURIComponent(match[1]) : null
   })
   const [appLang, setAppLang] = useState(getInitialBetaiLanguage)
+  const tApp = value => translateBetaiTextValue(value, appLang)
   const [liveTipPopup, setLiveTipPopup] = useState(null)
   const [liveTipPopupVisible, setLiveTipPopupVisible] = useState(false)
   const liveTipPopupTimerRef = useRef(null)
@@ -33375,13 +33688,13 @@ function App() {
             <AnimatedDashboardHero />
             <div className="monetization-panel">
               <div>
-                <strong>💰 Marketplace premium</strong>
-                <span>Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.</span>
-                <button type="button" className="premium-banner-cta" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Kup Premium</button>
+                <strong>💰 {tApp('Marketplace premium')}</strong>
+                <span>{tApp('Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.')}</span>
+                <button type="button" className="premium-banner-cta" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>{tApp('Kup Premium')}</button>
               </div>
               <div className="monetization-stats">
                 <b>{feedCounts.premium}</b>
-                <small>typów premium</small>
+                <small>{tApp('typów premium')}</small>
               </div>
             </div>
 
@@ -33392,34 +33705,34 @@ function App() {
                   className={activeFilter === key ? 'active' : ''}
                   onClick={() => setActiveFilter(key)}
                 >
-                  <span>{label}</span>
+                  <span>{tApp(label)}</span>
                   <b>{feedCounts[key]}</b>
                 </button>
               ))}
-              <button type="button" className="feed-add-tip-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
+              <button type="button" className="feed-add-tip-btn" onClick={() => setView('add')}>+ {tApp('Dodaj typ')}</button>
             </div>
 
 
             {activeFilter === 'started' ? (
               <div className="dashboard-started-feed-note-v1833">
-                <strong>Rozpoczęte</strong>
-                <span>Rozpoczęte typy z dzisiejszych meczów. Po rozpoczęciu nie można ich kupić ani odblokować.</span>
+                <strong>{tApp('Rozpoczęte')}</strong>
+                <span>{tApp('Rozpoczęte typy z dzisiejszych meczów. Po rozpoczęciu nie można ich kupić ani odblokować.')}</span>
               </div>
             ) : hiddenSettledDashboardTipsCount > 0 ? (
               <div className="dashboard-active-feed-note-v956">
-                <strong>Aktywne typy</strong>
-                <span>Rozstrzygnięte albo zgłoszone do rozliczenia typy znikają z dashboardu i zostają w historii/Wynikach, żeby nikt nie kupił zakończonego kuponu.</span>
+                <strong>{tApp('Aktywne typy')}</strong>
+                <span>{tApp('Rozstrzygnięte albo zgłoszone do rozliczenia typy znikają z dashboardu i zostają w historii/Wynikach, żeby nikt nie kupił zakończonego kuponu.')}</span>
               </div>
             ) : null}
 
             <div className="feed">
               {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} allTips={tips} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={openTipsterProfile} onToast={showToast} startedReadOnly={activeFilter === 'started'} />) : (
-                <div className="empty-state">{activeFilter === 'started' ? 'Brak rozpoczętych typów na dziś.' : 'Brak typów typerów na dziś.'}</div>
+                <div className="empty-state">{tApp(activeFilter === 'started' ? 'Brak rozpoczętych typów na dziś.' : 'Brak typów typerów na dziś.')}</div>
               )}
             </div>
 
             {filteredTips.length ? (
-              <div className="feed-visible-counter">Pokazano {Math.min(dashboardVisibleTips, filteredTips.length)} z {filteredTips.length} typów</div>
+              <div className="feed-visible-counter">{tApp(`Pokazano ${Math.min(dashboardVisibleTips, filteredTips.length)} z ${filteredTips.length} typów`)}</div>
             ) : null}
 
             {filteredTips.length > 3 ? (
@@ -33430,7 +33743,7 @@ function App() {
                   onClick={() => setDashboardVisibleTips(prev => prev + 3)}
                   disabled={!hasMoreDashboardTips}
                 >
-                  {hasMoreDashboardTips ? `Pokaż kolejne 3 typy (${Math.max(filteredTips.length - dashboardVisibleTips, 0)} pozostało)` : 'Pokazano wszystkie typy'}
+                  {tApp(hasMoreDashboardTips ? `Pokaż kolejne 3 typy (${Math.max(filteredTips.length - dashboardVisibleTips, 0)} pozostało)` : 'Pokazano wszystkie typy')}
                 </button>
                 {hasExpandedDashboardTips ? (
                   <button
@@ -33438,7 +33751,7 @@ function App() {
                     className="feed-load-less-btn"
                     onClick={() => setDashboardVisibleTips(3)}
                   >
-                    Zwiń do 3 typów
+                    {tApp('Zwiń do 3 typów')}
                   </button>
                 ) : null}
               </div>
