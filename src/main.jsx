@@ -1438,6 +1438,13 @@ function normalizeBetTypeForStats(marketValue = '', pickValue = '', source = {})
   const numberMatch = combined.match(/(\d+(?:[.,]\d+)?)/)
   const line = numberMatch ? numberMatch[1].replace(',', '.') : ''
 
+  if (hasAny('wynik do przerwy', 'first half winner', 'half time result', 'halftime result')) return 'Wynik do przerwy'
+  if (hasAny('wygra jedną z połów', 'wygra jedna z polow', 'win either half', 'to win either half')) return 'Drużyna wygra jedną z połów'
+  if (hasAny('gole w 1. połowie', 'gole w 1 polowie', 'goals over/under first half', 'over/under first half')) {
+    if (hasAny('under', 'poniżej', 'mniej')) return line ? `Under ${line} gola — 1. połowa` : 'Under gole — 1. połowa'
+    if (hasAny('over', 'powyżej', 'więcej')) return line ? `Over ${line} gola — 1. połowa` : 'Over gole — 1. połowa'
+    return 'Gole — 1. połowa'
+  }
   if (hasAny('dnb', 'draw no bet', 'bez remisu')) return 'DNB'
   if (hasAny('podwójna szansa', 'double chance') || /\b1x\b|\bx2\b|\b12\b/.test(combined)) return 'Podwójna szansa'
   if (hasAny('handicap', 'azjatycki')) return 'Handicap'
@@ -5690,8 +5697,11 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
 // V1663: tylko 9 popularnych rynków piłkarskich + bezpieczne klucze rozliczania.
 const BETAI_ALLOWED_FOOTBALL_MARKETS_V1663 = new Set([
   '1X2',
+  'Wynik do przerwy',
+  'Drużyna wygra jedną z połów',
   'Podwójna szansa',
   'Gole',
+  'Gole w 1. połowie',
   'BTTS',
   'Handicap',
   'DNB / Remis nie ma zakładu',
@@ -5713,6 +5723,31 @@ function betaiCanonicalMarketLabelV1663(rawMarket = '', rawPick = '') {
   // WERSJA 1664: Dokładny wynik musi być osobną zakładką.
   // Nie wolno wrzucać wyników typu 1:0 / 2:3 do grupy 1X2.
   if (text.includes('exact score') || text.includes('correct score') || text.includes('dokladny') || looksLikeScore) return 'Dokładny wynik'
+
+  // WERSJA 1847: trzy realne rynki połowowe z API-FOOTBALL.
+  // Muszą zostać rozpoznane przed ogólnymi regułami "winner" i "goals".
+  if (
+    text.includes('wynik do przerwy') ||
+    text.includes('first half winner') ||
+    text.includes('1st half winner') ||
+    text.includes('half time result') ||
+    text.includes('halftime result') ||
+    text.includes('1x2 (1st half)') ||
+    text.includes('1x2 first half')
+  ) return 'Wynik do przerwy'
+  if (
+    text.includes('wygra jedna z polow') ||
+    text.includes('wygra co najmniej jedna polowe') ||
+    text.includes('win either half') ||
+    text.includes('to win either half')
+  ) return 'Drużyna wygra jedną z połów'
+  if (
+    text.includes('gole w 1. polowie') ||
+    text.includes('goals over/under first half') ||
+    text.includes('over/under first half') ||
+    text.includes('over/under (1st half)') ||
+    text.includes('over/under line (1st half)')
+  ) return 'Gole w 1. połowie'
 
   if (text === '1x2' || text.includes('match winner') || text.includes('wynik') || text.includes('winner')) return '1X2'
   if (text.includes('podwojna') || text.includes('double chance')) return 'Podwójna szansa'
@@ -5745,6 +5780,19 @@ function betaiIsSafePopularFootballPickV1664(market = '', pick = '', home = '', 
     return Boolean(isHome || isAway || isDraw) && !/\d+\s*[:\-]\s*\d+/.test(text)
   }
 
+  if (label === 'Wynik do przerwy') {
+    const isHome = homeText && text.includes(homeText) && (text.includes('do przerwy') || text.includes('home') || text.includes('wygra'))
+    const isAway = awayText && text.includes(awayText) && (text.includes('do przerwy') || text.includes('away') || text.includes('wygra'))
+    const isDraw = text.includes('remis do przerwy') || text === 'draw' || text === 'x'
+    return Boolean(isHome || isAway || isDraw) && !/\d+\s*[:\-]\s*\d+/.test(text)
+  }
+
+  if (label === 'Drużyna wygra jedną z połów') {
+    const isHome = homeText && text.includes(homeText)
+    const isAway = awayText && text.includes(awayText)
+    return Boolean(isHome || isAway) && (text.includes('polow') || text.includes('half') || text.includes('wygra'))
+  }
+
   if (label === 'Podwójna szansa') {
     return compact === '1x' || compact === 'x2' || compact === '12' || text.includes('home/draw') || text.includes('draw/away') || text.includes('home/away')
   }
@@ -5756,7 +5804,7 @@ function betaiIsSafePopularFootballPickV1664(market = '', pick = '', home = '', 
     return Boolean(isYes || isNo)
   }
 
-  if (label === 'Gole') {
+  if (label === 'Gole' || label === 'Gole w 1. połowie') {
     return hasLine && (text.includes('powyzej') || text.includes('ponizej') || text.includes('over') || text.includes('under'))
   }
 
@@ -5792,6 +5840,15 @@ function betaiCanonicalPickV1663(market = '', pick = '', home = '', away = '') {
     if (['away', '2'].includes(text)) return `${away} wygra`
     if (['draw', 'x'].includes(text)) return 'Remis'
   }
+  if (label === 'Wynik do przerwy') {
+    if (['home', '1'].includes(text)) return `${home} wygra do przerwy`
+    if (['away', '2'].includes(text)) return `${away} wygra do przerwy`
+    if (['draw', 'x'].includes(text)) return 'Remis do przerwy'
+  }
+  if (label === 'Drużyna wygra jedną z połów') {
+    if (['home', '1'].includes(text)) return `${home} wygra co najmniej jedną połowę`
+    if (['away', '2'].includes(text)) return `${away} wygra co najmniej jedną połowę`
+  }
   if (label === 'Podwójna szansa') {
     if (text.includes('home/draw')) return '1X'
     if (text.includes('draw/away')) return 'X2'
@@ -5801,8 +5858,14 @@ function betaiCanonicalPickV1663(market = '', pick = '', home = '', away = '') {
     if (text === 'yes' || text.includes('tak')) return 'Obie drużyny strzelą: TAK'
     if (text === 'no' || text.includes('nie')) return 'Obie drużyny strzelą: NIE'
   }
-  if (label === 'Gole' || label === 'Rogi' || label === 'Kartki') {
-    const suffix = label === 'Gole' ? 'gola' : label === 'Rogi' ? 'rożnych' : 'kartek'
+  if (label === 'Gole' || label === 'Gole w 1. połowie' || label === 'Rogi' || label === 'Kartki') {
+    const suffix = label === 'Gole'
+      ? 'gola'
+      : label === 'Gole w 1. połowie'
+        ? 'gola w 1. połowie'
+        : label === 'Rogi'
+          ? 'rożnych'
+          : 'kartek'
     const line = text.match(/([0-9]+(?:[\.,][0-9]+)?)/)?.[1]
     if ((text.includes('over') || text.includes('powyzej')) && line) return `Powyżej ${line.replace(',', '.')} ${suffix}`
     if ((text.includes('under') || text.includes('ponizej')) && line) return `Poniżej ${line.replace(',', '.')} ${suffix}`
@@ -5829,6 +5892,19 @@ function betaiBuildSettlementKeysV1663(market = '', pick = '', home = '', away =
     else if (awayCompact && compact.includes(awayCompact)) selectionKey = 'away'
     else if (compact === '1' || compact.endsWith('home')) selectionKey = 'home'
     else if (compact === '2' || compact.endsWith('away')) selectionKey = 'away'
+  } else if (label === 'Wynik do przerwy') {
+    marketKey = 'half_time_result'
+    if (text.includes('remis') || text.includes('draw') || compact === 'x') selectionKey = 'draw'
+    else if (homeCompact && compact.includes(homeCompact)) selectionKey = 'home'
+    else if (awayCompact && compact.includes(awayCompact)) selectionKey = 'away'
+    else if (compact === '1' || compact.endsWith('home')) selectionKey = 'home'
+    else if (compact === '2' || compact.endsWith('away')) selectionKey = 'away'
+  } else if (label === 'Drużyna wygra jedną z połów') {
+    marketKey = 'team_win_either_half'
+    if (awayCompact && compact.includes(awayCompact)) selectionKey = 'away'
+    else if (homeCompact && compact.includes(homeCompact)) selectionKey = 'home'
+    else if (compact === '2' || compact.endsWith('away')) selectionKey = 'away'
+    else if (compact === '1' || compact.endsWith('home')) selectionKey = 'home'
   } else if (label === 'Podwójna szansa') {
     marketKey = 'double_chance'
     if (compact.includes('1x') || compact.includes('homedraw')) selectionKey = '1x'
@@ -5836,6 +5912,9 @@ function betaiBuildSettlementKeysV1663(market = '', pick = '', home = '', away =
     else if (compact.includes('12') || compact.includes('homeaway')) selectionKey = '12'
   } else if (label === 'Gole') {
     marketKey = 'goals_total'
+    selectionKey = `${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${unsignedLine || ''}`
+  } else if (label === 'Gole w 1. połowie') {
+    marketKey = 'first_half_goals_total'
     selectionKey = `${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${unsignedLine || ''}`
   } else if (label === 'BTTS') {
     marketKey = 'btts'
@@ -10180,7 +10259,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const isBasketball = sportLabel.includes('koszyk') || sportLabel.includes('basketball') || sportLabel.includes('nba') || sportLabel.includes('ncaa basketball')
     const isHockey = sportLabel.includes('hokej') || sportLabel.includes('hockey') || sportLabel.includes('nhl')
 
-    const footballOnlyMarkets = ['BTTS', 'Kartki', 'Rogi', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Handicap', 'Dokładny wynik', 'Połowy', 'Połowa']
+    const footballOnlyMarkets = ['BTTS', 'Kartki', 'Rogi', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Gole w 1. połowie', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Handicap', 'Dokładny wynik', 'Połowy', 'Połowa']
     const base = (Array.isArray(sourceMarkets) ? sourceMarkets : [])
       .map(item => {
         const rawPick = item.pick || item.value || item.name || ''
@@ -10337,7 +10416,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     groups[label].push({ ...item, __index: index })
     return groups
   }, {})
-  const marketGroupOrder = ['1X2', 'Podwójna szansa', 'Gole', 'BTTS', 'Handicap', 'DNB / Remis nie ma zakładu', 'Dokładny wynik', 'Rogi', 'Kartki']
+  const marketGroupOrder = ['1X2', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Podwójna szansa', 'Gole', 'Gole w 1. połowie', 'BTTS', 'Handicap', 'DNB / Remis nie ma zakładu', 'Dokładny wynik', 'Rogi', 'Kartki']
   const orderedMarketGroups = Object.entries(groupedMarketOptions).sort(([a], [b]) => {
     const ai = marketGroupOrder.indexOf(a)
     const bi = marketGroupOrder.indexOf(b)
@@ -12237,7 +12316,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 )}
                 {effectiveSelectedMatch && visibleMarketGroups.map(([groupLabel, items]) => {
                   const expanded = expandedMarketGroup === groupLabel
-                  const isGoalsGroup = groupLabel === 'Gole'
+                  const isGoalsGroup = groupLabel === 'Gole' || groupLabel === 'Gole w 1. połowie'
                   const parseGoalLineValueV1704 = (item) => {
                     const rawText = `${item?.pick || ''} ${item?.market || ''}`
                     const match = rawText.match(/(\d+(?:[\.,]\d+)?)/)
@@ -12278,7 +12357,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                           <div className="betfolio-goals-split-v1704">
                             <div className="betfolio-goals-column-v1704 under">
                               <div className="betfolio-goals-column-head-v1704">
-                                <strong>Gole PONIŻEJ</strong>
+                                <strong>{groupLabel === 'Gole w 1. połowie' ? '1. połowa — PONIŻEJ' : 'Gole PONIŻEJ'}</strong>
                                 <span>{underGoalItems.length} opcji</span>
                               </div>
                               <div className="betfolio-market-options board-options goals-column-options-v1704">
@@ -12287,7 +12366,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                             </div>
                             <div className="betfolio-goals-column-v1704 over">
                               <div className="betfolio-goals-column-head-v1704">
-                                <strong>Gole POWYŻEJ</strong>
+                                <strong>{groupLabel === 'Gole w 1. połowie' ? '1. połowa — POWYŻEJ' : 'Gole POWYŻEJ'}</strong>
                                 <span>{overGoalItems.length} opcji</span>
                               </div>
                               <div className="betfolio-market-options board-options goals-column-options-v1704">

@@ -389,11 +389,14 @@ exports.handler = async function(event) {
     return `${name}${pointLabel}`
   }
 
-  // V1663: ograniczamy piłkę nożną do 9 popularnych rynków, bez strzelca gola.
+  // WERSJA 1847: popularne rynki piłkarskie + trzy rynki połowowe.
   const allowedFootballMarketsV1663 = new Set([
     '1X2',
+    'Wynik do przerwy',
+    'Drużyna wygra jedną z połów',
     'Podwójna szansa',
     'Gole',
+    'Gole w 1. połowie',
     'BTTS',
     'Handicap',
     'DNB / Remis nie ma zakładu',
@@ -982,9 +985,36 @@ exports.handler = async function(event) {
   }
 
 
-  const apiFootballBetLabel = (rawName) => {
+  const apiFootballBetLabel = (rawName, rawId) => {
     const name = String(rawName || '').trim()
     const lower = name.toLowerCase()
+    const betId = Number(rawId)
+
+    // WERSJA 1847: te reguły muszą być przed ogólnym "winner" i "over/under".
+    // Oficjalne nazwy API-FOOTBALL obejmują m.in. First Half Winner (id 13)
+    // i Goals Over/Under First Half (id 6). Obsługujemy też warianty nazw dostawców.
+    if (
+      betId === 13 ||
+      lower === 'first half winner' ||
+      lower === '1st half winner' ||
+      lower === 'half time result' ||
+      lower === 'halftime result' ||
+      lower === '1x2 (1st half)' ||
+      lower === '1x2 first half'
+    ) return 'Wynik do przerwy'
+    if (
+      lower.includes('win either half') ||
+      lower.includes('to win either half')
+    ) return 'Drużyna wygra jedną z połów'
+    if (
+      betId === 6 ||
+      lower === 'goals over/under first half' ||
+      lower === 'goals over under first half' ||
+      lower === 'over/under first half' ||
+      lower === 'over/under (1st half)' ||
+      lower === 'over/under line (1st half)'
+    ) return 'Gole w 1. połowie'
+
     if (lower === 'match winner' || lower === 'winner') return '1X2'
     if (lower.includes('double chance')) return 'Podwójna szansa'
     if (lower.includes('both teams score') || lower.includes('both teams to score')) return 'BTTS'
@@ -997,13 +1027,33 @@ exports.handler = async function(event) {
     return name || 'Rynek'
   }
 
-  const normalizeApiFootballOddPick = (market, rawValue, home, away) => {
+  const normalizeApiFootballOddPick = (market, rawValue, home, away, rawBetName = '', rawBetId = null) => {
     const value = String(rawValue || '').trim()
     const lower = value.toLowerCase()
+    const betName = String(rawBetName || '').trim().toLowerCase()
     if (market === '1X2') {
       if (lower === 'home') return `${home} wygra`
       if (lower === 'draw') return 'Remis'
       if (lower === 'away') return `${away} wygra`
+    }
+    if (market === 'Wynik do przerwy') {
+      if (lower === 'home' || lower === '1') return `${home} wygra do przerwy`
+      if (lower === 'draw' || lower === 'x') return 'Remis do przerwy'
+      if (lower === 'away' || lower === '2') return `${away} wygra do przerwy`
+    }
+    if (market === 'Drużyna wygra jedną z połów') {
+      const homeMarket = betName.includes('home team') || betName.startsWith('home ')
+      const awayMarket = betName.includes('away team') || betName.startsWith('away ')
+      if (homeMarket) {
+        if (['yes', 'tak', 'home', '1'].includes(lower)) return `${home} wygra co najmniej jedną połowę`
+        return ''
+      }
+      if (awayMarket) {
+        if (['yes', 'tak', 'away', '2'].includes(lower)) return `${away} wygra co najmniej jedną połowę`
+        return ''
+      }
+      if (lower === 'home' || lower === '1') return `${home} wygra co najmniej jedną połowę`
+      if (lower === 'away' || lower === '2') return `${away} wygra co najmniej jedną połowę`
     }
     if (market === 'Podwójna szansa') {
       if (lower === 'home/draw') return '1X'
@@ -1021,6 +1071,10 @@ exports.handler = async function(event) {
     if (market === 'Gole') {
       if (lower.startsWith('over ')) return `Powyżej ${value.slice(5)} gola`
       if (lower.startsWith('under ')) return `Poniżej ${value.slice(6)} gola`
+    }
+    if (market === 'Gole w 1. połowie') {
+      if (lower.startsWith('over ')) return `Powyżej ${value.slice(5)} gola w 1. połowie`
+      if (lower.startsWith('under ')) return `Poniżej ${value.slice(6)} gola w 1. połowie`
     }
     if (market === 'Rogi') {
       if (lower.startsWith('over ')) return `Powyżej ${value.slice(5)} rożnych`
@@ -1042,12 +1096,12 @@ exports.handler = async function(event) {
     ;(Array.isArray(rows) ? rows : []).forEach(row => {
       ;(Array.isArray(row?.bookmakers) ? row.bookmakers : []).forEach(bookmaker => {
         ;(Array.isArray(bookmaker?.bets) ? bookmaker.bets : []).forEach(bet => {
-          const market = apiFootballBetLabel(bet?.name)
+          const market = apiFootballBetLabel(bet?.name, bet?.id)
           if (!isAllowedFootballMarketV1663(market)) return
           ;(Array.isArray(bet?.values) ? bet.values : []).forEach(value => {
             const rawOdd = Number(value?.odd)
             if (!Number.isFinite(rawOdd) || rawOdd <= 1) return
-            const pick = normalizeApiFootballOddPick(market, value?.value, home, away)
+            const pick = normalizeApiFootballOddPick(market, value?.value, home, away, bet?.name, bet?.id)
             if (!pick) return
             const key = `${market}|${pick}`.toLowerCase()
             if (seen.has(key)) return

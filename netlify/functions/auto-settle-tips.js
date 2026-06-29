@@ -73,6 +73,17 @@ function textOf(tip) {
   ].filter(Boolean).join(' '))
 }
 
+function pickTextOf(tip) {
+  return norm([
+    tip.bet_type,
+    tip.prediction,
+    tip.selection,
+    tip.pick,
+    tip.value,
+    tip.tip
+  ].filter(Boolean).join(' '))
+}
+
 function resultOf(h, a) {
   if (h > a) return 'home'
   if (a > h) return 'away'
@@ -178,43 +189,87 @@ function pickLooksLikeTeam(textCompact, teamName) {
 function inferPolishSettlementKeysV1723(tip) {
   const t = textOf(tip)
   const c = compact(t)
+  const pickText = pickTextOf(tip)
+  const pickC = compact(pickText)
   const teams = teamNamesFromTip(tip)
   const home = teams.home
   const away = teams.away
   const homeC = compact(home)
   const awayC = compact(away)
 
+  // Rynki połowowe muszą być rozpoznane przed zwykłym 1X2 i pełnym over/under.
+  const isFirstHalfText =
+    c.includes('doprzerwy') ||
+    c.includes('pierwszejpolowie') ||
+    c.includes('1polowie') ||
+    c.includes('firsthalf') ||
+    c.includes('1sthalf') ||
+    c.includes('halftimeresult') ||
+    c.includes('halftimeresult')
+
+  if (isFirstHalfText && (pickC.includes('powyzej') || pickC.includes('over'))) {
+    return { market: 'first_half_goals_total', selection: 'over_' + onlyLine(pickText || t) }
+  }
+  if (isFirstHalfText && (pickC.includes('ponizej') || pickC.includes('under'))) {
+    return { market: 'first_half_goals_total', selection: 'under_' + onlyLine(pickText || t) }
+  }
+
+  if (
+    c.includes('jednazpolow') ||
+    c.includes('conajmniejjednapolowe') ||
+    c.includes('wineitherhalf') ||
+    c.includes('towineitherhalf')
+  ) {
+    if (awayC && pickC.includes(awayC)) return { market: 'team_win_either_half', selection: 'away' }
+    if (homeC && pickC.includes(homeC)) return { market: 'team_win_either_half', selection: 'home' }
+    if (pickC === 'away' || pickC === '2' || pickC.includes('away')) return { market: 'team_win_either_half', selection: 'away' }
+    if (pickC === 'home' || pickC === '1' || pickC.includes('home')) return { market: 'team_win_either_half', selection: 'home' }
+  }
+
+  if (
+    c.includes('doprzerwy') ||
+    c.includes('firsthalfwinner') ||
+    c.includes('halftimeresult') ||
+    c.includes('halftimeresult')
+  ) {
+    if (pickC.includes('remis') || pickC.includes('draw') || pickC === 'x') return { market: 'half_time_result', selection: 'draw' }
+    if (awayC && pickC.includes(awayC)) return { market: 'half_time_result', selection: 'away' }
+    if (homeC && pickC.includes(homeC)) return { market: 'half_time_result', selection: 'home' }
+    if (pickC === 'away' || pickC === '2' || pickC.includes('away')) return { market: 'half_time_result', selection: 'away' }
+    if (pickC === 'home' || pickC === '1' || pickC.includes('home')) return { market: 'half_time_result', selection: 'home' }
+  }
+
   // "Serbia U19 lub remis" => 1X, "Moldova lub remis" => X2
   if (c.includes('lubremis') || c.includes('nieremis') || c.includes('podwojnaszansa')) {
-    if (homeC && c.includes(homeC)) return { market: 'double_chance', selection: '1x' }
-    if (awayC && c.includes(awayC)) return { market: 'double_chance', selection: 'x2' }
-    if (c === '1x' || c.includes('1x')) return { market: 'double_chance', selection: '1x' }
-    if (c === 'x2' || c.includes('x2')) return { market: 'double_chance', selection: 'x2' }
-    if (c === '12' || c.includes('12')) return { market: 'double_chance', selection: '12' }
+    if (homeC && pickC.includes(homeC)) return { market: 'double_chance', selection: '1x' }
+    if (awayC && pickC.includes(awayC)) return { market: 'double_chance', selection: 'x2' }
+    if (pickC === '1x' || pickC.includes('1x')) return { market: 'double_chance', selection: '1x' }
+    if (pickC === 'x2' || pickC.includes('x2')) return { market: 'double_chance', selection: 'x2' }
+    if (pickC === '12' || pickC.includes('12')) return { market: 'double_chance', selection: '12' }
   }
 
   // "Powyżej 2.5 gola" / "Ponizej 3.5 gola"
-  if (c.includes('powyzej') || c.includes('over')) {
-    return { market: 'goals_over_under', selection: 'over_' + onlyLine(t) }
+  if (pickC.includes('powyzej') || pickC.includes('over')) {
+    return { market: 'goals_over_under', selection: 'over_' + onlyLine(pickText || t) }
   }
-  if (c.includes('ponizej') || c.includes('under')) {
-    return { market: 'goals_over_under', selection: 'under_' + onlyLine(t) }
+  if (pickC.includes('ponizej') || pickC.includes('under')) {
+    return { market: 'goals_over_under', selection: 'under_' + onlyLine(pickText || t) }
   }
 
   // "Obie drużyny strzelą: TAK/NIE"
   if (c.includes('obiedruzynystrzela') || c.includes('btts')) {
-    return { market: 'btts', selection: (c.includes('nie') || c.includes('no')) ? 'no' : 'yes' }
+    return { market: 'btts', selection: (pickC.includes('nie') || pickC.includes('no')) ? 'no' : 'yes' }
   }
 
   // "Drużyna wygra"
-  if (c.includes('wygra') || c.includes('win')) {
-    if (homeC && c.includes(homeC)) return { market: 'match_winner', selection: 'home' }
-    if (awayC && c.includes(awayC)) return { market: 'match_winner', selection: 'away' }
+  if (pickC.includes('wygra') || pickC.includes('win')) {
+    if (awayC && pickC.includes(awayC)) return { market: 'match_winner', selection: 'away' }
+    if (homeC && pickC.includes(homeC)) return { market: 'match_winner', selection: 'home' }
   }
 
   // Same pick as just team name.
-  if (homeC && c === homeC) return { market: 'match_winner', selection: 'home' }
-  if (awayC && c === awayC) return { market: 'match_winner', selection: 'away' }
+  if (homeC && pickC === homeC) return { market: 'match_winner', selection: 'home' }
+  if (awayC && pickC === awayC) return { market: 'match_winner', selection: 'away' }
 
   return { market: '', selection: '' }
 }
@@ -273,12 +328,40 @@ function onlyLine(text) {
   return out ? out.replace('.', '_') : ''
 }
 
-function settleByKeys(tip, homeGoals, awayGoals, fixtureStats) {
+function settleByKeys(tip, homeGoals, awayGoals, fixtureStats, periodScores = {}) {
   const keys = fallbackKeys(tip)
   const market = norm(keys.market)
   const selection = norm(keys.selection)
   const result = resultOf(homeGoals, awayGoals)
   const total = homeGoals + awayGoals
+  const halfHome = periodScores.halfHome
+  const halfAway = periodScores.halfAway
+  const secondHome = periodScores.secondHome
+  const secondAway = periodScores.secondAway
+
+  if (market === 'half_time_result') {
+    if (halfHome == null || halfAway == null) return { status: 'pending_admin_review', reason: 'Wynik do przerwy: API nie zwrocilo wyniku 1. polowy' }
+    if (!['home','draw','away'].includes(selection)) return { status: 'pending_admin_review', reason: 'Wynik do przerwy: zly selection_key=' + selection }
+    const halfResult = resultOf(halfHome, halfAway)
+    return { status: selection === halfResult ? 'won' : 'lost', reason: 'HT 1X2 ' + selection + ' wynik=' + halfResult + ' (' + halfHome + ':' + halfAway + ')' }
+  }
+  if (market === 'first_half_goals_total') {
+    if (halfHome == null || halfAway == null) return { status: 'pending_admin_review', reason: 'Gole 1. polowa: API nie zwrocilo wyniku do przerwy' }
+    return overUnder(selection, halfHome + halfAway, 'Gole 1. polowa')
+  }
+  if (market === 'team_win_either_half') {
+    if (!['home','away'].includes(selection)) return { status: 'pending_admin_review', reason: 'Wygra jedna z polow: zly selection_key=' + selection }
+    if (halfHome == null || halfAway == null || secondHome == null || secondAway == null) {
+      return { status: 'pending_admin_review', reason: 'Wygra jedna z polow: brak pelnych wynikow polow w API' }
+    }
+    const chosenWon = selection === 'home'
+      ? (halfHome > halfAway || secondHome > secondAway)
+      : (halfAway > halfHome || secondAway > secondHome)
+    return {
+      status: chosenWon ? 'won' : 'lost',
+      reason: 'Wygra jedna z polow ' + selection + ', 1H=' + halfHome + ':' + halfAway + ', 2H=' + secondHome + ':' + secondAway
+    }
+  }
 
   if (market === 'match_winner') {
     if (!['home','draw','away'].includes(selection)) return { status: 'pending_admin_review', reason: '1X2: zly selection_key=' + selection }
@@ -338,7 +421,26 @@ async function fetchStats(id) {
   } catch (_) { return [] }
 }
 
+function periodScoresFromFixture(fix) {
+  const half = fix && fix.score && fix.score.halftime ? fix.score.halftime : {}
+  const full = fix && fix.score && fix.score.fulltime ? fix.score.fulltime : {}
+  const goals = fix && fix.goals ? fix.goals : {}
+
+  const halfHome = half.home == null ? null : toNum(half.home, 0)
+  const halfAway = half.away == null ? null : toNum(half.away, 0)
+  const fullHomeRaw = full.home != null ? full.home : goals.home
+  const fullAwayRaw = full.away != null ? full.away : goals.away
+  const fullHome = fullHomeRaw == null ? null : toNum(fullHomeRaw, 0)
+  const fullAway = fullAwayRaw == null ? null : toNum(fullAwayRaw, 0)
+  const secondHome = halfHome == null || fullHome == null ? null : Math.max(0, fullHome - halfHome)
+  const secondAway = halfAway == null || fullAway == null ? null : Math.max(0, fullAway - halfAway)
+
+  return { halfHome, halfAway, fullHome, fullAway, secondHome, secondAway }
+}
+
 function scoreFromFixture(fix) {
+  // Zachowujemy dotychczasową logikę rozliczania istniejących rynków.
+  // Wyniki okresów są używane wyłącznie przez nowe zakłady połowowe.
   const goals = fix && fix.goals ? fix.goals : {}
   const score = fix && fix.score && fix.score.fulltime ? fix.score.fulltime : {}
   const h = goals.home != null ? goals.home : score.home
@@ -355,10 +457,11 @@ async function settleTip(tip) {
   if (VOIDED.includes(st)) return { status: 'void', reason: 'Mecz void status=' + st }
   if (!FINISHED.includes(st)) return { status: 'pending', reason: 'Mecz nie jest zakonczony status=' + st }
   const sc = scoreFromFixture(fix)
+  const periods = periodScoresFromFixture(fix)
   const keys = fallbackKeys(tip)
   let stats = []
   if (norm(keys.market).includes('corner') || norm(keys.market).includes('card')) stats = await fetchStats(id)
-  return settleByKeys(tip, sc.h, sc.a, stats)
+  return settleByKeys(tip, sc.h, sc.a, stats, periods)
 }
 
 function isAkoTip(tip) {
@@ -447,11 +550,12 @@ async function settleAkoLeg(leg) {
   }
 
   const sc = scoreFromFixture(fix)
+  const periods = periodScoresFromFixture(fix)
   const keys = fallbackKeys(normalizedLeg)
   let stats = []
   if (norm(keys.market).includes('corner') || norm(keys.market).includes('card')) stats = await fetchStats(id)
 
-  const res = settleByKeys(normalizedLeg, sc.h, sc.a, stats)
+  const res = settleByKeys(normalizedLeg, sc.h, sc.a, stats, periods)
   const finalStatus = ['won','lost','void'].includes(res.status) ? res.status : 'pending'
   return {
     ...leg,
@@ -585,5 +689,5 @@ exports.handler = async function(event) {
       skipped.push({ id: tip.id, reason: e.message || String(e) })
     }
   }
-  return json(200, { ok: true, version: '1823-auto-settle-decimal-lines-fixed', checked: checked.length, settled, skipped, sample: checked.slice(0, 20) })
+  return json(200, { ok: true, version: '1847-auto-settle-half-markets-v1', checked: checked.length, settled, skipped, sample: checked.slice(0, 20) })
 }
