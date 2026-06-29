@@ -684,6 +684,7 @@ function translateBetaiDynamicTemplateV1850(value, lang) {
     if ((match = text.match(/^Pozostało dziś:\s*(\d+)$/i))) return `Remaining today: ${match[1]}`
     if ((match = text.match(/^(\d+)\s+(mecz|mecze|meczów)$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'match' : 'matches'}`
     if ((match = text.match(/^(\d+)\s+wydarzeń\s+•\s+godziny rosnąco$/i))) return `${match[1]} events • time ascending`
+    if ((match = text.match(/^(\d+)\s+wydarze(?:nie|nia|ń)$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'event' : 'events'}`
     if ((match = text.match(/^Najbliższe mecze\s+•\s+(.+?)\s+•\s+(.+)$/i))) return `Upcoming matches • ${match[1]} • ${match[2]}`
     if ((match = text.match(/^AKO\s+(\d+)\s+zdarzenia?$/i))) return `Accumulator ${match[1]} events`
     if ((match = text.match(/^Kupon AKO\s*\((\d+)\)$/i))) return `Accumulator coupon (${match[1]})`
@@ -12473,7 +12474,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                           <div className="betfolio-goals-split-v1704">
                             <div className="betfolio-goals-column-v1704 under">
                               <div className="betfolio-goals-column-head-v1704">
-                                <strong>{groupLabel === 'Gole w 1. połowie' ? '1. połowa — PONIŻEJ' : 'Gole PONIŻEJ'}</strong>
+                                <strong><span className="betfolio-goal-direction-arrow down" aria-hidden="true">↓</span>{groupLabel === 'Gole w 1. połowie' ? '1. połowa — PONIŻEJ' : 'Gole PONIŻEJ'}</strong>
                                 <span>{underGoalItems.length} opcji</span>
                               </div>
                               <div className="betfolio-market-options board-options goals-column-options-v1704">
@@ -12482,7 +12483,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                             </div>
                             <div className="betfolio-goals-column-v1704 over">
                               <div className="betfolio-goals-column-head-v1704">
-                                <strong>{groupLabel === 'Gole w 1. połowie' ? '1. połowa — POWYŻEJ' : 'Gole POWYŻEJ'}</strong>
+                                <strong><span className="betfolio-goal-direction-arrow up" aria-hidden="true">↑</span>{groupLabel === 'Gole w 1. połowie' ? '1. połowa — POWYŻEJ' : 'Gole POWYŻEJ'}</strong>
                                 <span>{overGoalItems.length} opcji</span>
                               </div>
                               <div className="betfolio-market-options board-options goals-column-options-v1704">

@@ -76382,3 +76382,15 @@ body > .tip-analysis-modal-backdrop > .tip-analysis-modal{
 .app-shell[data-betai-lang="pl"] .betai-sidebar-premium-v8 .betai-premium-logout-btn::after{
   content:"Wyloguj"!important;
 }
+
+/* WERSJA 1854 — czytelne kierunki rynków goli */
+.betfolio-goal-direction-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  font-size: 1.2em;
+  font-weight: 900;
+  line-height: 1;
+  transform: translateY(-1px);
+}
