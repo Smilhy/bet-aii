@@ -1647,6 +1647,22 @@ const BETAI_PROFILE_TRANSLATIONS_V1857 = {
 }
 }
 
+const BETAI_UNLOCKED_TIPS_TRANSLATIONS_V1858 = {
+  en: {
+    'Moje zakupy': 'MY PURCHASES',
+    'Tutaj widzisz wszystkie kupione single. Singiel odblokowuje tylko jeden konkretny kupon — nie odblokowuje całego profilu ani zakładki Wyniki typera.': 'Here you can see all purchased singles. A single unlocks only one specific coupon — it does not unlock the entire profile or the tipster’s Results tab.',
+    'Single access': 'SINGLE ACCESS',
+    'kupionych singli': 'purchased singles',
+    'Wygrane': 'Won',
+    'Przegrane': 'Lost',
+    'Oczekujące': 'Pending',
+    'Odblokowany singiel': 'Unlocked single',
+    'Nie masz jeszcze kupionych singli': 'You have not purchased any singles yet',
+    'Kup pojedynczy typ premium, a pojawi się tutaj z wynikiem, statusem rozliczenia i szybkim dostępem do kuponu.': 'Buy a premium single and it will appear here with its result, settlement status and quick access to the coupon.',
+    'Zobacz typy premium': 'View premium picks'
+  }
+}
+
 const BETAI_TRANSLATION_DICTIONARY_CACHE = new Map()
 const BETAI_TRANSLATION_KEYS_CACHE = new Map()
 
@@ -1662,6 +1678,7 @@ function buildBetaiTranslationDictionary(lang) {
     BETAI_EN_DASHBOARD_FIX_TRANSLATIONS_V1850,
     BETAI_STARTED_FILTER_TRANSLATIONS_V1833,
     BETAI_ADD_PICK_TRANSLATIONS_V1853,
+    BETAI_UNLOCKED_TIPS_TRANSLATIONS_V1858,
     BETAI_FINANCE_TRANSLATIONS_V1856,
     BETAI_PROFILE_TRANSLATIONS_V1857
   ]
@@ -28023,6 +28040,8 @@ function PayoutsView({ user, payoutRequests = [], onRequestPayout, userPlan = 'f
 
 
 function UnlockedTipsView({ tips = [], unlockedTips = new Set(), currentUser, followingTipsters = new Set(), onToggleFollow, onOpenTipster, onUnlock, onSubscribeToTipster, onToast, onViewChange }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   const [filter, setFilter] = useState('all')
   const unlockedIds = new Set([...unlockedTips].map(value => String(value)))
   const unlockedRows = (Array.isArray(tips) ? tips : [])
@@ -28046,9 +28065,9 @@ function UnlockedTipsView({ tips = [], unlockedTips = new Set(), currentUser, fo
     <section className="unlocked-tips-page-v951">
       <div className="unlocked-tips-hero-v951 unlocked-tips-hero-premium-v1382 glass-v2-panel">
         <div className="unlocked-hero-copy-v1382">
-          <span>Moje zakupy</span>
-          <h1>Odblokowane <em>typy</em></h1>
-          <p>Tutaj widzisz wszystkie kupione single. Singiel odblokowuje tylko jeden konkretny kupon — nie odblokowuje całego profilu ani zakładki Wyniki typera.</p>
+          <span>{t('Moje zakupy')}</span>
+          <h1>{lang === 'en' ? <>Unlocked <em>picks</em></> : <>Odblokowane <em>typy</em></>}</h1>
+          <p>{t('Tutaj widzisz wszystkie kupione single. Singiel odblokowuje tylko jeden konkretny kupon — nie odblokowuje całego profilu ani zakładki Wyniki typera.')}</p>
         </div>
 
         <div className="unlocked-hero-art-v1382" aria-hidden="true">
@@ -28064,33 +28083,33 @@ function UnlockedTipsView({ tips = [], unlockedTips = new Set(), currentUser, fo
           </div>
 
           <div className="unlocked-access-card-v1382">
-            <small>Single access</small>
-            <strong>Odblokowuje<br />jeden konkretny kupon</strong>
+            <small>{t('Single access')}</small>
+            <strong>{lang === 'en' ? <>Unlocks<br />one specific coupon</> : <>Odblokowuje<br />jeden konkretny kupon</>}</strong>
             <b>{unlockedRows.length}</b>
-            <em>kupionych singli</em>
+            <em>{t('kupionych singli')}</em>
           </div>
         </div>
       </div>
 
       <div className="unlocked-tips-stats-v951">
-        <article><small>Wszystkie</small><strong>{unlockedRows.length}</strong></article>
-        <article className="success"><small>Wygrane</small><strong>{wonRows.length}</strong></article>
-        <article className="danger"><small>Przegrane</small><strong>{lostRows.length}</strong></article>
-        <article className="warning"><small>Oczekujące</small><strong>{pendingRows.length}</strong></article>
+        <article><small>{t('Wszystkie')}</small><strong>{unlockedRows.length}</strong></article>
+        <article className="success"><small>{t('Wygrane')}</small><strong>{wonRows.length}</strong></article>
+        <article className="danger"><small>{t('Przegrane')}</small><strong>{lostRows.length}</strong></article>
+        <article className="warning"><small>{t('Oczekujące')}</small><strong>{pendingRows.length}</strong></article>
       </div>
 
       <div className="unlocked-tips-filter-v951">
-        <button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>Wszystkie <b>{unlockedRows.length}</b></button>
-        <button className={filter === 'won' ? 'active' : ''} onClick={() => setFilter('won')}>Wygrane <b>{wonRows.length}</b></button>
-        <button className={filter === 'lost' ? 'active' : ''} onClick={() => setFilter('lost')}>Przegrane <b>{lostRows.length}</b></button>
-        <button className={filter === 'pending' ? 'active' : ''} onClick={() => setFilter('pending')}>Oczekujące <b>{pendingRows.length}</b></button>
+        <button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>{t('Wszystkie')} <b>{unlockedRows.length}</b></button>
+        <button className={filter === 'won' ? 'active' : ''} onClick={() => setFilter('won')}>{t('Wygrane')} <b>{wonRows.length}</b></button>
+        <button className={filter === 'lost' ? 'active' : ''} onClick={() => setFilter('lost')}>{t('Przegrane')} <b>{lostRows.length}</b></button>
+        <button className={filter === 'pending' ? 'active' : ''} onClick={() => setFilter('pending')}>{t('Oczekujące')} <b>{pendingRows.length}</b></button>
       </div>
 
       {visibleRows.length ? (
         <div className="unlocked-tips-list-v951">
           {visibleRows.map(tip => (
             <div className="unlocked-tip-card-wrap-v951" key={tip.id}>
-              <div className="unlocked-single-badge-v951">🔓 Odblokowany singiel</div>
+              <div className="unlocked-single-badge-v951">🔓 {t('Odblokowany singiel')}</div>
               <TipCard
                 tip={tip}
                 allTips={tips}
@@ -28111,10 +28130,10 @@ function UnlockedTipsView({ tips = [], unlockedTips = new Set(), currentUser, fo
         <div className="unlocked-tips-empty-v951 unlocked-tips-empty-premium-v1380 glass-v2-panel">
           <div className="unlocked-empty-orb-v1380">🎫</div>
           <div>
-            <strong>Nie masz jeszcze kupionych singli</strong>
-            <span>Kup pojedynczy typ premium, a pojawi się tutaj z wynikiem, statusem rozliczenia i szybkim dostępem do kuponu.</span>
+            <strong>{t('Nie masz jeszcze kupionych singli')}</strong>
+            <span>{t('Kup pojedynczy typ premium, a pojawi się tutaj z wynikiem, statusem rozliczenia i szybkim dostępem do kuponu.')}</span>
           </div>
-          <button type="button" onClick={() => onViewChange?.('dashboard')}>Zobacz typy premium</button>
+          <button type="button" onClick={() => onViewChange?.('dashboard')}>{t('Zobacz typy premium')}</button>
         </div>
       )}
     </section>
