@@ -712,6 +712,23 @@ function translateBetaiDynamicTemplateV1850(value, lang) {
     if ((match = text.match(/^(.+?)\s+oczekuje na obsługę\.$/i))) return `${match[1]} is awaiting processing.`
     if ((match = text.match(/^Łącznie\s+(.+?)\s+realnego przychodu\.$/i))) return `Total real revenue: ${match[1]}.`
     if ((match = text.match(/^(\d+)\s+łącznie$/i))) return `${match[1]} total`
+    if ((match = text.match(/^Pokazano\s+(\d+)\s+z\s+(\d+)$/i))) return `Showing ${match[1]} of ${match[2]}`
+    if ((match = text.match(/^(\d+)\s+opinii$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'review' : 'reviews'}`
+    if ((match = text.match(/^Na podstawie\s+(\d+)\s+opinii$/i))) return `Based on ${match[1]} ${Number(match[1]) === 1 ? 'review' : 'reviews'}`
+    if ((match = text.match(/^(\d+)\s+pozycji$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'entry' : 'entries'}`
+    if ((match = text.match(/^(\d+)\s+aktywne pakiety$/i))) return `${match[1]} active packages`
+    if ((match = text.match(/^(\d+)\s+dni dostępu$/i))) return `${match[1]} days of access`
+    if ((match = text.match(/^Zostało\s+(\d+)\s+dni dostępu$/i))) return `${match[1]} days of access left`
+    if ((match = text.match(/^Następna:\s*(.+)$/i))) return `Next: ${match[1]}`
+    if ((match = text.match(/^Pokaż kolejne\s+(\d+)$/i))) return `Show next ${match[1]}`
+    if ((match = text.match(/^Pokaż kolejne\s+(\d+)\s+typy\s*\((\d+)\s+pozostało\)$/i))) return `Show next ${match[1]} picks (${match[2]} remaining)`
+    if ((match = text.match(/^(\d+)\/500 znaków$/i))) return `${match[1]}/500 characters`
+    if ((match = text.match(/^(.+?)\s+•\s+ważne do\s+(.+)$/i))) return `${match[1]} • valid until ${match[2]}`
+    if ((match = text.match(/^Pokazano\s+(\d+)$/i))) return `Showing ${match[1]}`
+    if ((match = text.match(/^Zgłoszono\s+(wygraną|przegraną|zwrot)\.\s*Typ zostaje widoczny jako oczekujący, a statystyki dopiszą się dopiero po zatwierdzeniu admina\.$/i))) {
+      const result = match[1].toLowerCase() === 'wygraną' ? 'a win' : match[1].toLowerCase() === 'przegraną' ? 'a loss' : 'a void'
+      return `Submitted ${result}. The pick remains pending and statistics will be added only after admin approval.`
+    }
     if ((match = text.match(/^(.+?)\s+wygra\s+do\s+przerwy$/i))) return `${match[1]} to win at half-time`
     if ((match = text.match(/^(.+?)\s+lub\s+remis$/i))) return `${match[1]} or draw`
     if ((match = text.match(/^(.+?)\s+wygra$/i))) return `${match[1]} to win`
@@ -1347,6 +1364,289 @@ const BETAI_FINANCE_TRANSLATIONS_V1856 = {
 }
 }
 
+const BETAI_PROFILE_TRANSLATIONS_V1857 = {
+  en: {
+  "Mój profil": "My profile",
+  "Zarządzaj Stripe": "Manage Stripe",
+  "Dokończ Stripe": "Finish Stripe setup",
+  "Podłącz Stripe": "Connect Stripe",
+  "Kliknij, aby dodać lub zmienić avatar": "Click to add or change your avatar",
+  "TYPER": "TIPSTER",
+  "AKTYWNY": "ACTIVE",
+  "Anuluj": "Cancel",
+  "Zapisuję...": "Saving...",
+  "Zapisz opis": "Save bio",
+  "Kliknij, aby zmienić opis profilu": "Click to edit profile bio",
+  "Opis profilu typera": "Tipster profile bio",
+  "Obserwujesz": "Following",
+  "Obserwuj": "Follow",
+  "Wiadomości": "Messages",
+  "Wsparcie tipami": "Support with tips",
+  "Konto FREE nie może przyjmować wsparcia": "A FREE account cannot receive support",
+  "FREE bez wsparcia": "FREE — no support",
+  "ROZWÓJ PROFILU TYPERA": "TIPSTER PROFILE PROGRESS",
+  "Masz najwyższą rangę profilu.": "You have reached the highest profile rank.",
+  "Ranga rośnie dzięki aktywności, typom, profitowi i skuteczności.": "Your rank grows through activity, picks, profit and accuracy.",
+  "Postęp": "Progress",
+  "Aktualizuję...": "Updating...",
+  "Maksymalna ranga": "Maximum rank",
+  "Następna": "Next",
+  "Twoje statystyki": "Your statistics",
+  "Yield": "Yield",
+  "Bilans na plus": "Positive balance",
+  "Bilans na minus": "Negative balance",
+  "Bilans zerowy": "Zero balance",
+  "Typy": "Picks",
+  "Oddane typy": "Published picks",
+  "Wygrane": "Won",
+  "Rozliczone na plus": "Settled as wins",
+  "Przegrane": "Lost",
+  "Rozliczone na minus": "Settled as losses",
+  "Oczekujący": "Pending",
+  "Czekają na wynik": "Awaiting result",
+  "Stawki": "Stakes",
+  "Łącznie zagrane": "Total staked",
+  "Śr. kurs": "Avg. odds",
+  "Średnia kursów": "Average odds",
+  "Max kurs": "Max odds",
+  "Najwyższy kurs": "Highest odds",
+  "Wsparcie": "Support",
+  "Napiwki od społeczności": "Community tips",
+  "Wyniki": "Results",
+  "Statystyki": "Statistics",
+  "Historia": "History",
+  "Opinie": "Reviews",
+  "Cennik subskrypcji": "Subscription pricing",
+  "Darmowe": "Free",
+  "Kupione single": "Purchased singles",
+  "Widok aktywnych typów": "Active picks view",
+  "Rozstrzygnięte typy automatycznie znikają z Darmowe/Premium i zostają zapisane w zakładce Wyniki.": "Settled picks automatically disappear from Free/Premium and are saved in the Results tab.",
+  "Premium aktywne": "Premium active",
+  "ważne do": "valid until",
+  "Zakładka Premium jest zablokowana.": "The Premium tab is locked.",
+  "Kup subskrypcję profilu na 30 dni, aby zobaczyć i rozszyfrować typy premium tego typera. Po 30 dniach dostęp automatycznie wygaśnie i trzeba będzie przedłużyć subskrypcję.": "Buy a 30-day profile subscription to view and unlock this tipster's premium picks. Access expires automatically after 30 days and must then be renewed.",
+  "Kup subskrypcję 30 dni": "Buy a 30-day subscription",
+  "Nie masz jeszcze kupionych singli. Kup pojedynczy typ premium, a pojawi się tutaj.": "You have not purchased any singles yet. Buy a premium single and it will appear here.",
+  "Zakładka Premium jest zablokowana. Kup subskrypcję profilu, aby zobaczyć typy premium.": "The Premium tab is locked. Buy a profile subscription to view premium picks.",
+  "Brak aktywnych typów w tej kategorii. Rozstrzygnięte typy znajdziesz w zakładce Wyniki.": "There are no active picks in this category. Settled picks are available in the Results tab.",
+  "Pokazano wszystkie typy": "All picks are shown",
+  "Pokaż mniej": "Show less",
+  "Zwiń do 3 typów": "Collapse to 3 picks",
+  "Wyniki typera są zablokowane": "Tipster results are locked",
+  "Chcesz zobaczyć pełną historię wyników, rozliczone mecze i szczegóły tego typera? Kup subskrypcję profilu.": "Want to see the full results history, settled matches and this tipster's details? Buy a profile subscription.",
+  "Bez dostępu pokazujemy tylko publiczne darmowe typy. Wyniki i pełna historia są ukryte.": "Without access, only public free picks are shown. Results and full history remain hidden.",
+  "Wykres salda": "Balance chart",
+  "Zakres wykresu": "Chart range",
+  "Zakres wykresu statystyk": "Statistics chart range",
+  "Wszystko": "All",
+  "Bilans kumulacyjny": "Cumulative balance",
+  "Bilans okresowy": "Period balance",
+  "Typ": "Pick",
+  "Kurs": "Odds",
+  "Profit / strata": "Profit / loss",
+  "Bilans po typie": "Balance after pick",
+  "Zmiana salda": "Balance change",
+  "Najwyższy bilans": "Highest balance",
+  "Najniższy bilans": "Lowest balance",
+  "Średni poziom": "Average level",
+  "Rozliczone typy": "Settled picks",
+  "Zwroty": "Voids",
+  "Do rozliczenia": "To settle",
+  "Czeka na admina": "Awaiting admin",
+  "Automatyczne": "Automatic",
+  "Odrzucone": "Rejected",
+  "Logika wyników:": "Results logic:",
+  "Typy automatyczne rozlicza system po wyniku meczu. Ręczna przegrana rozlicza się od razu, a wygrana i zwrot czekają na zatwierdzenie admina.": "Automatic picks are settled by the system after the match result. A manual loss is settled immediately, while a win or void awaits admin approval.",
+  "Data / godzina": "Date / time",
+  "Mecz": "Match",
+  "Stawka": "Stake",
+  "Wynik": "Result",
+  "Akcja": "Action",
+  "Typ premium": "Premium pick",
+  "Wygrana": "Win",
+  "Przegrana": "Loss",
+  "Zwrot": "Void",
+  "Czeka na zatwierdzenie admina": "Awaiting admin approval",
+  "Rozliczone automatycznie": "Settled automatically",
+  "Brak wyników w tej kategorii.": "No results in this category.",
+  "Skuteczność wg typu kuponu": "Performance by coupon type",
+  "Typ kuponu": "Coupon type",
+  "Ilość kuponów": "Number of coupons",
+  "Yield płaska stawka": "Flat-stake yield",
+  "Śr. stawka": "Avg. stake",
+  "Statystyki typów kuponów": "Coupon pick statistics",
+  "Statystyki dla sportów": "Statistics by sport",
+  "Liczba kuponów": "Number of coupons",
+  "Stawka rozliczona": "Settled stake",
+  "Statystyki według lig": "Statistics by league",
+  "Liga": "League",
+  "Kraj": "Country",
+  "Statystyki rodzajów typów": "Pick-type statistics",
+  "Rodzaj typu": "Pick type",
+  "Statystyki zakresów kursów": "Odds-range statistics",
+  "Statystyki godzin dodawania kuponów": "Statistics by time added",
+  "Godziny": "Hours",
+  "Statystyki poszczególnych miesięcy": "Monthly statistics",
+  "Data": "Date",
+  "Publiczny": "Public",
+  "Płatny": "Paid",
+  "SOLO": "SOLO",
+  "AKO": "Accumulator",
+  "ANALIZA LIGI PROFILU": "PROFILE LEAGUE ANALYSIS",
+  "Podział typów z tej ligi na profilu: liczba kuponów, stawka rozliczona, bilans, yield i W/L/P.": "Breakdown of profile picks from this league: number of coupons, settled stake, balance, yield and W/L/P.",
+  "Typów": "Picks",
+  "Ilość": "Count",
+  "Brak danych dla tej ligi.": "No data for this league.",
+  "Historia aktywności": "Activity history",
+  "Dzisiaj": "Today",
+  "Wczoraj": "Yesterday",
+  "Opublikowano typ": "Pick published",
+  "Rozliczono typ": "Pick settled",
+  "Brak aktywności do pokazania.": "No activity to display.",
+  "Pokaż kolejne": "Show next",
+  "Podsumowanie opinii": "Review summary",
+  "Brak opinii profilu": "No profile reviews",
+  "Dodaj opinię": "Add review",
+  "Wymagane logowanie": "Login required",
+  "Ocena profilu": "Profile rating",
+  "gwiazdek": "stars",
+  "Napisz opinię o tym typerze...": "Write a review about this tipster...",
+  "znaków": "characters",
+  "pozycji": "entries",
+  "Nie ma jeszcze opinii dla tego profilu.": "There are no reviews for this profile yet.",
+  "Użytkownik": "User",
+  "Cennik subskrypcji profilu": "Profile subscription pricing",
+  "Premium wymagane": "Premium required",
+  "Konto FREE nie może sprzedawać subskrypcji profilu, blokować wyników ani ukrywać statystyk. Kup Premium, żeby odblokować płatny profil typera.": "A FREE account cannot sell profile subscriptions, lock results or hide statistics. Buy Premium to unlock a paid tipster profile.",
+  "Monetyzacja profilu": "Profile monetization",
+  "Ustaw ceny, za które inni użytkownicy mogą kupić dostęp do Twojego profilu, statystyk i typów premium.": "Set prices at which other users can buy access to your profile, statistics and premium picks.",
+  "Status": "Status",
+  "Ładowanie...": "Loading...",
+  "Dla kupujących": "For buyers",
+  "Najczęściej wybierane": "Most popular",
+  "dni dostępu": "days of access",
+  "Wyłącz plan": "Disable plan",
+  "Włącz plan": "Enable plan",
+  "Aktywny": "Active",
+  "Wyłączony": "Disabled",
+  "Dostęp do typów premium": "Access to premium picks",
+  "Podgląd profilu typera": "View tipster profile",
+  "aktywne pakiety": "active packages",
+  "Zmiany będą widoczne dla kupujących po zapisaniu cennika.": "Changes will be visible to buyers after the pricing is saved.",
+  "Zapisz cennik": "Save pricing",
+  "Cennik subskrypcji jest dostępny tylko dla właściciela profilu": "Subscription pricing is available only to the profile owner",
+  "Inni użytkownicy mogą kupić dostęp przez przycisk subskrypcji, ale nie mogą edytować cennika typera.": "Other users can buy access through the subscription button, but they cannot edit the tipster's pricing.",
+  "Wróć do typów": "Back to picks",
+  "1 tydzień": "1 week",
+  "1 miesiąc": "1 month",
+  "6 miesięcy": "6 months",
+  "1 rok": "1 year",
+  "Ostatnie typy PREMIUM": "Latest PREMIUM picks",
+  "Ostatnie typy FREE": "Latest FREE picks",
+  "Zobacz wszystkie": "View all",
+  "Brak typów premium.": "No premium picks.",
+  "Brak darmowych typów.": "No free picks.",
+  "Podsumowanie": "Summary",
+  "Użytkownik od": "User since",
+  "Ostatnia aktywność": "Last activity",
+  "Poziom": "Level",
+  "Ranking globalny": "Global ranking",
+  "Preferowane dyscypliny": "Preferred sports",
+  "Brak danych": "No data",
+  "Teraz online": "Online now",
+  "Społeczność": "Community",
+  "Obserwujący": "Followers",
+  "Obserwowani": "Following",
+  "Poleceni": "Referrals",
+  "Osiągnięcia Typera": "Tipster achievements",
+  "odblokowanych": "unlocked",
+  "Zobacz historię": "View history",
+  "Odblokowane": "Unlocked",
+  "Fanatyk": "Fanatic",
+  "Dodaj 1000 typów": "Add 1,000 picks",
+  "Prawdziwy Wygrany": "True Winner",
+  "Wygraj 500 typów": "Win 500 picks",
+  "Nieustraszony": "Fearless",
+  "Dodaj 100 typów z kursem > 3.00": "Add 100 picks with odds > 3.00",
+  "Lojalny": "Loyal",
+  "Dodawaj typy przez 180 różnych dni": "Add picks on 180 different days",
+  "Członek Rodziny": "Family Member",
+  "Poleć 10 znajomych": "Refer 10 friends",
+  "Łowca Bonusów": "Bonus Hunter",
+  "Odbierz 100 bonusów w sekcji Nagrody/Bonusy": "Claim 100 bonuses in Rewards/Bonuses",
+  "Bogaty": "Wealthy",
+  "Zdobądź 10 000 monet": "Earn 10,000 coins",
+  "Sławny": "Famous",
+  "Zdobądź 500 obserwujących": "Gain 500 followers",
+  "Krytyk Bukmacherski": "Betting Critic",
+  "Oceń 50 profili typerów": "Rate 50 tipster profiles",
+  "Oceny i opinie": "Ratings and reviews",
+  "Zobacz opinie": "View reviews",
+  "Na podstawie": "Based on",
+  "Brak ocen profilu": "No profile ratings",
+  "Cennik zapisany": "Pricing saved",
+  "Ceny zostały zapisane i będą widoczne dla kupujących po odświeżeniu/ponownym wejściu.": "Prices were saved and will be visible to buyers after refreshing or reopening the page.",
+  "Cennik zapisany lokalnie": "Pricing saved locally",
+  "Nie udało się zapisać w Supabase. Sprawdź SQL/RLS tabeli tipster_plans.": "Could not save to Supabase. Check the SQL/RLS rules for the tipster_plans table.",
+  "Nie udało się zapisać cennika.": "Could not save pricing.",
+  "Subskrypcja aktywna": "Subscription active",
+  "Został 1 dzień dostępu": "1 day of access left",
+  "Wysłano do admina": "Sent to admin",
+  "Błąd zgłoszenia": "Request error",
+  "Subskrypcja niedostępna": "Subscription unavailable",
+  "Wsparcie niedostępne": "Support unavailable",
+  "Brak daty": "No date",
+  "Bieżący miesiąc": "Current month",
+  "Wszystkie typy": "All picks",
+  "Brak analiz — dodaj pierwszy typ, aby zbudować historię profilu.": "No analysis yet — add your first pick to build profile history.",
+  "Void na plus": "Void / returned stake",
+  "Profit na plus": "Positive profit",
+  "All dodane": "All published",
+  "Wszystkie dodane": "All published",
+  "kurs": "odds",
+  "Poniżej 2.5 gola": "Under 2.5 goals",
+  "Poniżej 3.5 gola": "Under 3.5 goals",
+  "Poniżej 1.5 gola": "Under 1.5 goals",
+  "Powyżej 1.5 gola": "Over 1.5 goals",
+  "Powyżej 3.5 gola": "Over 3.5 goals",
+  "Over 2.5 gola": "Over 2.5 goals",
+  "Over 1.5 gola": "Over 1.5 goals",
+  "Under 2.5 gola": "Under 2.5 goals",
+  "Under 3.5 gola": "Under 3.5 goals",
+  "Podwójna szansa": "Double chance",
+  "Wynik do przerwy": "Half-time result",
+  "Statystyki picks kuponów": "Coupon pick statistics",
+  "Statystyki rodzajów picks": "Pick-type statistics",
+  "Pick kuponu": "Coupon type",
+  "Stake rozliczona": "Settled stake",
+  "Liczba coupons": "Number of coupons",
+  "Ilość coupons": "Number of coupons",
+  "Śr. stake": "Avg. stake",
+  "Śr. odds": "Avg. odds",
+  "Yield płaska stake": "Flat-stake yield",
+  "Pokaż następne 3": "Show next 3",
+  "Pokaż następne 1": "Show next 1",
+  "1 opinii": "1 review",
+  "Konto FREE nie może sprzedawać subskrypcji profilu. Kup Premium, aby odblokować cennik i płatny dostęp.": "A FREE account cannot sell profile subscriptions. Buy Premium to unlock pricing and paid access.",
+  "Ten użytkownik ma konto FREE, więc nie może sprzedawać subskrypcji profilu.": "This user has a FREE account and cannot sell profile subscriptions.",
+  "Ten użytkownik ma konto FREE, więc nie może przyjmować wsparcia.": "This user has a FREE account and cannot receive support.",
+  "Brak konta": "No account",
+  "Wygrany": "Won",
+  "Przegrany": "Lost",
+  "Odrzucony": "Rejected",
+  "Typ meczowy": "Match pick",
+  "Brak typów": "No picks",
+  "Dodaj pierwszy typ, aby zbudować aktywność profilu": "Add your first pick to build profile activity",
+  "Opis profilu": "Profile bio",
+  "Opis zapisany": "Bio saved",
+  "Błąd opisu": "Bio error",
+  "Avatar zapisany": "Avatar saved",
+  "Błąd avatara": "Avatar error",
+  "Opinia zapisana": "Review saved",
+  "Błąd opinii": "Review error"
+}
+}
+
 const BETAI_TRANSLATION_DICTIONARY_CACHE = new Map()
 const BETAI_TRANSLATION_KEYS_CACHE = new Map()
 
@@ -1362,7 +1662,8 @@ function buildBetaiTranslationDictionary(lang) {
     BETAI_EN_DASHBOARD_FIX_TRANSLATIONS_V1850,
     BETAI_STARTED_FILTER_TRANSLATIONS_V1833,
     BETAI_ADD_PICK_TRANSLATIONS_V1853,
-    BETAI_FINANCE_TRANSLATIONS_V1856
+    BETAI_FINANCE_TRANSLATIONS_V1856,
+    BETAI_PROFILE_TRANSLATIONS_V1857
   ]
   const allTargetDictionaries = allSources.map(source => source?.[lang] || {})
   const target = Object.assign({}, ...allTargetDictionaries)
@@ -22793,6 +23094,8 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
 }
 
 function TipsterPricingSettings({ user, onToast }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   const canSellProfileSubscriptions = isPremiumSellerProfile(user, user?.plan || user?.subscription_status || user?.status)
   const [plans, setPlans] = useState(TIPSTER_PLAN_OPTIONS.map(option => ({
     ...option,
@@ -22830,20 +23133,20 @@ function TipsterPricingSettings({ user, onToast }) {
 
   const savePlans = async () => {
     if (!canSellProfileSubscriptions) {
-      onToast?.({ type: 'premium', title: 'Premium wymagane', message: 'Konto FREE nie może sprzedawać subskrypcji profilu. Kup Premium, aby odblokować cennik i płatny dostęp.' })
+      onToast?.({ type: 'premium', title: t('Premium wymagane'), message: t('Konto FREE nie może sprzedawać subskrypcji profilu. Kup Premium, aby odblokować cennik i płatny dostęp.') })
       return
     }
     if (!user?.id && !user?.email && !user?.username) {
-      onToast?.({ type: 'error', title: 'Brak konta', message: 'Nie udało się zapisać cennika.' })
+      onToast?.({ type: 'error', title: t('Brak konta'), message: t('Nie udało się zapisać cennika.') })
       return
     }
     setSaving(true)
     try {
       await saveTipsterPlansForSource(user, plans)
-      onToast?.({ type: 'success', title: 'Cennik zapisany', message: 'Ceny zostały zapisane i będą widoczne dla kupujących po odświeżeniu/ponownym wejściu.' })
+      onToast?.({ type: 'success', title: t('Cennik zapisany'), message: t('Ceny zostały zapisane i będą widoczne dla kupujących po odświeżeniu/ponownym wejściu.') })
     } catch (error) {
       writeLocalTipsterPlans(getTipsterPricingKeys(user), plans)
-      onToast?.({ type: 'warning', title: 'Cennik zapisany lokalnie', message: 'Nie udało się zapisać w Supabase. Sprawdź SQL/RLS tabeli tipster_plans.' })
+      onToast?.({ type: 'warning', title: t('Cennik zapisany lokalnie'), message: t('Nie udało się zapisać w Supabase. Sprawdź SQL/RLS tabeli tipster_plans.') })
     } finally {
       setSaving(false)
     }
@@ -22853,10 +23156,10 @@ function TipsterPricingSettings({ user, onToast }) {
     return (
       <div className="glass-profile-v3 tipster-pricing-settings tipster-pricing-locked-free-v1037">
         <div className="profile-v3-card-head">
-          <h3>Cennik subskrypcji profilu</h3>
-          <span>Premium wymagane</span>
+          <h3>{t('Cennik subskrypcji profilu')}</h3>
+          <span>{t('Premium wymagane')}</span>
         </div>
-        <p>Konto FREE nie może sprzedawać subskrypcji profilu, blokować wyników ani ukrywać statystyk. Kup Premium, żeby odblokować płatny profil typera.</p>
+        <p>{t('Konto FREE nie może sprzedawać subskrypcji profilu, blokować wyników ani ukrywać statystyk. Kup Premium, żeby odblokować płatny profil typera.')}</p>
         <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>{tApp('Kup Premium')}</button>
       </div>
     )
@@ -22866,13 +23169,13 @@ function TipsterPricingSettings({ user, onToast }) {
     <div className="glass-profile-v3 tipster-pricing-settings tipster-pricing-premium-v1374">
       <div className="tipster-pricing-hero-v1374">
         <div>
-          <span className="tipster-pricing-kicker-v1374">💎 Monetizacja profilu</span>
-          <h3>Cennik subskrypcji profilu</h3>
-          <p>Ustaw ceny, za które inni użytkownicy mogą kupić dostęp do Twojego profilu, statystyk i typów premium.</p>
+          <span className="tipster-pricing-kicker-v1374">💎 {t('Monetyzacja profilu')}</span>
+          <h3>{t('Cennik subskrypcji profilu')}</h3>
+          <p>{t('Ustaw ceny, za które inni użytkownicy mogą kupić dostęp do Twojego profilu, statystyk i typów premium.')}</p>
         </div>
         <div className="tipster-pricing-status-v1374">
-          <small>Status</small>
-          <strong>{loading ? 'Ładowanie...' : 'Dla kupujących'}</strong>
+          <small>{t('Status')}</small>
+          <strong>{t(loading ? 'Ładowanie...' : 'Dla kupujących')}</strong>
         </div>
       </div>
 
@@ -22881,20 +23184,20 @@ function TipsterPricingSettings({ user, onToast }) {
           const recommended = plan.key === 'month' || plan.durationDays === 30
           return (
             <label key={plan.key} className={`tipster-plan-card-v1374 ${plan.active ? 'active' : 'inactive'} ${recommended ? 'recommended' : ''}`}>
-              {recommended ? <i className="tipster-plan-recommended-v1374">Najczęściej wybierane</i> : null}
+              {recommended ? <i className="tipster-plan-recommended-v1374">{t('Najczęściej wybierane')}</i> : null}
               <div className="tipster-plan-top-v1374">
                 <div>
-                  <strong>{plan.label}</strong>
-                  <span>{plan.durationDays} dni dostępu</span>
+                  <strong>{t(plan.label)}</strong>
+                  <span>{t(`${plan.durationDays} dni dostępu`)}</span>
                 </div>
                 <button
                   type="button"
                   className={`tipster-plan-toggle-v1374 ${plan.active ? 'on' : 'off'}`}
                   onClick={() => updatePlan(plan.key, { active: !plan.active })}
-                  aria-label={plan.active ? 'Wyłącz plan' : 'Włącz plan'}
+                  aria-label={t(plan.active ? 'Wyłącz plan' : 'Włącz plan')}
                 >
                   <b />
-                  <em>{plan.active ? 'Aktywny' : 'Wyłączony'}</em>
+                  <em>{t(plan.active ? 'Aktywny' : 'Wyłączony')}</em>
                 </button>
               </div>
 
@@ -22906,12 +23209,12 @@ function TipsterPricingSettings({ user, onToast }) {
                   value={plan.price}
                   onChange={event => updatePlan(plan.key, { price: Math.max(0, Number(event.target.value || 0)) })}
                 />
-                <span>zł</span>
+                <span>{lang === 'en' ? 'PLN' : 'zł'}</span>
               </div>
 
               <div className="tipster-plan-foot-v1374">
-                <small>✓ Dostęp do typów premium</small>
-                <small>✓ Podgląd profilu typera</small>
+                <small>✓ {t('Dostęp do typów premium')}</small>
+                <small>✓ {t('Podgląd profilu typera')}</small>
               </div>
 
               <input
@@ -22927,11 +23230,11 @@ function TipsterPricingSettings({ user, onToast }) {
 
       <div className="tipster-pricing-savebar-v1374">
         <div>
-          <strong>{plans.filter(plan => plan.active).length} aktywne pakiety</strong>
-          <span>Zmiany będą widoczne dla kupujących po zapisaniu cennika.</span>
+          <strong>{t(`${plans.filter(plan => plan.active).length} aktywne pakiety`)}</strong>
+          <span>{t('Zmiany będą widoczne dla kupujących po zapisaniu cennika.')}</span>
         </div>
         <button type="button" onClick={savePlans} disabled={saving}>
-          {saving ? 'Zapisuję...' : 'Zapisz cennik'}
+          {t(saving ? 'Zapisuję...' : 'Zapisz cennik')}
         </button>
       </div>
     </div>
@@ -23021,7 +23324,7 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
         <div className="profile-sub-grid">
           {plans.map(plan => (
             <button key={plan.key} className="profile-sub-option" type="button" onClick={() => buy(plan)} disabled={Boolean(loadingKey)}>
-              <strong>{plan.label}</strong>
+              <strong>{t(plan.label)}</strong>
               <b>{Number(plan.price || 0).toFixed(2)} zł</b>
               <span>Typer: {(Number(plan.price || 0) * 0.8).toFixed(2)} zł • Platforma: {(Number(plan.price || 0) * 0.2).toFixed(2)} zł</span>
               <em>{loadingKey === plan.key ? 'Łączenie...' : 'Kup subskrypcję'}</em>
@@ -24089,6 +24392,8 @@ function ProfileLiveTipCard({
 
 
 function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 7, rowKeys = [], onRowClick = null }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   const [expanded, setExpanded] = useState(false)
   const safeRows = Array.isArray(rows) ? rows : []
   const visibleLimit = Math.max(1, Number(initialLimit || 7) || 7)
@@ -24112,11 +24417,11 @@ function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 
   return (
     <section className={`glass-profile-v3 profile-v3-card profile-v4-stats-table ${wide ? 'wide' : ''} ${hasMoreRows ? 'has-expand-v1356' : ''}`}>
       <div className="profile-v3-card-head">
-        <h3>{title}</h3>
-        {hasMoreRows ? <span>{expanded ? `Pokazano ${safeRows.length}` : `Top ${visibleLimit} z ${safeRows.length}`}</span> : null}
+        <h3>{t(title)}</h3>
+        {hasMoreRows ? <span>{t(expanded ? `Pokazano ${safeRows.length}` : `Top ${visibleLimit} z ${safeRows.length}`)}</span> : null}
       </div>
       <div className="profile-v4-data-table" style={{ '--cols': columns.length }}>
-        <div>{columns.map(column => <b key={column}>{column}</b>)}</div>
+        <div>{columns.map(column => <b key={column}>{t(column)}</b>)}</div>
         {visibleRows.map((row, index) => {
           const rowKey = rowKeys[index] ?? row?.[0]
           const clickable = Boolean(onRowClick && rowKey)
@@ -24137,7 +24442,7 @@ function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 
               const toneClass = isSignedCell && numericValue !== null
                 ? (numericValue > 0 ? 'positive' : numericValue < 0 ? 'negative' : 'neutral')
                 : ''
-              return <span key={`${title}-${index}-${cellIndex}`} className={toneClass ? `stats-cell-signed-v1359 ${toneClass}` : ''}>{cell}</span>
+              return <span key={`${title}-${index}-${cellIndex}`} className={toneClass ? `stats-cell-signed-v1359 ${toneClass}` : ''}>{typeof cell === 'string' ? t(cell) : cell}</span>
             })}
           </div>
           )
@@ -24145,7 +24450,7 @@ function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 
       </div>
       {hasMoreRows ? (
         <button type="button" className="profile-stats-expand-v1356" onClick={() => setExpanded(prev => !prev)}>
-          {expanded ? 'Pokaż mniej' : `Pokaż kolejne ${Math.min(visibleLimit, safeRows.length - visibleLimit)}`}
+          {t(expanded ? 'Pokaż mniej' : `Pokaż kolejne ${Math.min(visibleLimit, safeRows.length - visibleLimit)}`)}
         </button>
       ) : null}
     </section>
@@ -24383,6 +24688,8 @@ function formatProfileRankMetricV1557(item = {}) {
 }
 
 function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], followingTipsters = new Set(), followStats = {}, onToggleFollow = null, viewerUser = null, isPublicProfile = false, userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null, onOpenDirectMessage = null, referralData = null, referralLoading = false }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
   const username = resolveRealProfileUsername({ ...(user || {}), email: profile.email || user?.email, username: profile.username })
@@ -24422,7 +24729,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     ? (profileSubscriptionDaysLeft === null ? 'Subskrypcja aktywna' : profileSubscriptionDaysLeft === 1 ? 'Został 1 dzień dostępu' : `Zostało ${profileSubscriptionDaysLeft} dni dostępu`)
     : ''
   const profileSubscriptionExpiresLabel = activeProfileSubscription?.expires_at
-    ? new Date(activeProfileSubscription.expires_at).toLocaleDateString('pl-PL')
+    ? new Date(activeProfileSubscription.expires_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL')
     : ''
   const profileSubPurchasePayload = {
     ...user,
@@ -24474,7 +24781,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     setLocalSettlementPatches(prev => ({ ...prev, [String(tip.id)]: patch }))
     try {
       await updateTipField(tip.id, patch)
-      onToast?.({ type: 'success', title: 'Wysłano do admina', message: `Zgłoszono ${normalizeManualResultLabel(clean)}. Typ zostaje widoczny jako oczekujący, a statystyki dopiszą się dopiero po zatwierdzeniu admina.` })
+      onToast?.({ type: 'success', title: t('Wysłano do admina'), message: t(`Zgłoszono ${normalizeManualResultLabel(clean)}. Typ zostaje widoczny jako oczekujący, a statystyki dopiszą się dopiero po zatwierdzeniu admina.`) })
       window.dispatchEvent(new CustomEvent('betai:admin-coupon-approval-changed'))
     } catch (error) {
       onToast?.({ type: 'error', title: 'Błąd zgłoszenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać rozliczenia. Uruchom SQL wersji 945.') })
@@ -24482,14 +24789,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   }
   const handleProfileSubscribeClick = () => {
     if (!canMonetizeProfile) {
-      onToast?.({ type: 'warning', title: 'Subskrypcja niedostępna', message: 'Ten użytkownik ma konto FREE, więc nie może sprzedawać subskrypcji profilu.' })
+      onToast?.({ type: 'warning', title: t('Subskrypcja niedostępna'), message: t('Ten użytkownik ma konto FREE, więc nie może sprzedawać subskrypcji profilu.') })
       return
     }
     onSubscribeToTipster?.(profileSubPurchasePayload)
   }
   const handleTipsterSupportClick = () => {
     if (!canMonetizeProfile) {
-      onToast?.({ type: 'warning', title: 'Wsparcie niedostępne', message: 'Ten użytkownik ma konto FREE, więc nie może przyjmować wsparcia.' })
+      onToast?.({ type: 'warning', title: t('Wsparcie niedostępne'), message: t('Ten użytkownik ma konto FREE, więc nie może przyjmować wsparcia.') })
       return
     }
     setTipsterSupportOpen(true)
@@ -24497,7 +24804,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const handleName = username.startsWith('@') ? username : `@${username}`
   const initials = (username || email || 'U').replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, '').slice(0, 2).toUpperCase() || 'U'
   const profileCreatedAt = user?.created_at || user?.createdAt || user?.profile_created_at || user?.author_created_at || user?.updated_at || ''
-  const createdLabel = profileCreatedAt ? new Date(profileCreatedAt).toLocaleDateString('pl-PL') : 'Brak danych'
+  const createdLabel = profileCreatedAt ? new Date(profileCreatedAt).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL') : 'Brak danych'
   const admin = isAdminUser(user) || Boolean(user?.is_admin)
   const premium = isPremiumSellerProfile(user, userPlan) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
   const canMonetizeProfile = Boolean(admin || premium)
@@ -25169,7 +25476,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const odds = Number(normalized.odds || 0) ? Number(normalized.odds || 0).toFixed(2) : '—'
     const confidence = `${getAiConfidence(normalized) || 0}%`
     const access = isTipPremium(normalized) || fallbackPremium ? 'Premium' : 'FREE'
-    return [home, away, `${league} • ${timeLabel}`, pick, odds, confidence, access, String(Number(normalized.likes || normalized.hearts || 0) || 0), normalized.created_at ? new Date(normalized.created_at).toLocaleDateString('pl-PL') : 'Teraz']
+    return [home, away, `${league} • ${timeLabel}`, pick, odds, confidence, access, String(Number(normalized.likes || normalized.hearts || 0) || 0), normalized.created_at ? new Date(normalized.created_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL') : 'Teraz']
   }
 
   const buildProfileTipCard = (tip) => {
@@ -25261,7 +25568,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   ]
   const analysisRows = userTips.slice(0, 3).map(tip => {
     const normalized = normalizeTipRow(tip)
-    return [normalized.analysis || normalized.description || `Analiza: ${normalized.home_team || 'Mecz'} vs ${normalized.away_team || ''}`.trim(), normalized.created_at ? new Date(normalized.created_at).toLocaleDateString('pl-PL') : 'Bet+AI']
+    return [normalized.analysis || normalized.description || `Analiza: ${normalized.home_team || 'Mecz'} vs ${normalized.away_team || ''}`.trim(), normalized.created_at ? new Date(normalized.created_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL') : 'Bet+AI']
   })
   if (!analysisRows.length) analysisRows.push(['Brak analiz — dodaj pierwszy typ, aby zbudować historię profilu.', 'Bet+AI'])
 
@@ -25316,15 +25623,15 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const yesterday = new Date(today)
     yesterday.setDate(today.getDate() - 1)
     if (date.toDateString() === yesterday.toDateString()) return 'Wczoraj'
-    return date.toLocaleDateString('pl-PL')
+    return date.toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL')
   }
   const formatProfileDateTime = (value) => {
     if (!value) return { date: 'Brak daty', time: '—' }
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return { date: 'Brak daty', time: '—' }
     return {
-      date: date.toLocaleDateString('pl-PL'),
-      time: date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+      date: date.toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL'),
+      time: date.toLocaleTimeString(lang === 'en' ? 'en-GB' : 'pl-PL', { hour: '2-digit', minute: '2-digit' })
     }
   }
   const getTipEventDateTime = (tip) => formatProfileDateTime(
@@ -26164,7 +26471,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const date = dateLike instanceof Date ? dateLike : new Date(dateLike)
     if (!Number.isFinite(date.getTime())) return ''
     return withTime
-      ? date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+      ? date.toLocaleTimeString(lang === 'en' ? 'en-GB' : 'pl-PL', { hour: '2-digit', minute: '2-digit' })
       : date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })
   }
   const isSameCalendarDay = (a, b) => {
@@ -26629,7 +26936,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const unifiedTip = buildUnifiedProfileTipForCard(tip, raw)
     return (
       <div className="profile-purchased-single-wrap-v952" key={tip.id}>
-        <div className="profile-purchased-single-badge-v952">🔓 Kupiony singiel</div>
+        <div className="profile-purchased-single-badge-v952">🔓 {t('Kupiony singiel')}</div>
         <TipCard
           tip={unifiedTip}
           allTips={tips}
@@ -26648,7 +26955,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   }
 
   return (
-    <section className={`profile-page profile-ultra-pro-v988 profile-static-v3 ${(profileTab === 'overview' || profileTab === 'tips') ? '' : 'profile-v4-wide-mode'}`} aria-label="Mój profil">
+    <section className={`profile-page profile-ultra-pro-v988 profile-static-v3 ${(profileTab === 'overview' || profileTab === 'tips') ? '' : 'profile-v4-wide-mode'}`} aria-label={t('Mój profil')}>
       <TipsterSupportModalV1349 open={tipsterSupportOpen} tipster={user} viewer={viewerProfile} onClose={() => setTipsterSupportOpen(false)} onToast={onToast} />
       <div className="profile-v3-layout">
         <div className="profile-v3-main">
@@ -26659,14 +26966,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               className={`profile-hero-stripe-btn ${stripeConnectStatus?.payouts_enabled ? 'ready' : stripeConnectStatus?.stripe_account_id ? 'pending' : 'empty'}`}
               onClick={() => onConnectStripe?.()}
             >
-              {stripeConnectStatus?.payouts_enabled ? 'Zarządzaj Stripe' : stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Podłącz Stripe'}
+              {t(stripeConnectStatus?.payouts_enabled ? 'Zarządzaj Stripe' : stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Podłącz Stripe')}
             </button>
             <div className="profile-v3-user-row">
               <button
                 type="button"
                 className={`profile-v3-avatar profile-v3-avatar-editable ${avatarUrl ? 'has-avatar' : ''} ${avatarUploading ? 'is-uploading' : ''}`}
                 onClick={chooseAvatar}
-                title="Kliknij, aby dodać lub zmienić avatar"
+                title={t('Kliknij, aby dodać lub zmienić avatar')}
                 style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}
               >
                 {avatarUrl ? '' : initials}
@@ -26687,8 +26994,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 <small>{handleName}</small>
                 <div className="profile-v3-badges">
                   <span>{roleLabel}</span>
-                  <span>TYPER</span>
-                  {totalTips > 0 && <span>AKTYWNY</span>}
+                  <span>{t('TYPER')}</span>
+                  {totalTips > 0 && <span>{t('AKTYWNY')}</span>}
                 </div>
                 {bioEditing ? (
                   <div className="profile-v3-bio-editor">
@@ -26703,30 +27010,30 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                       <button type="button" onClick={() => {
                         setBioDraft(profileBio)
                         setBioEditing(false)
-                      }}>Anuluj</button>
-                      <button type="button" className="primary" onClick={saveBio} disabled={bioSaving}>{bioSaving ? 'Zapisuję...' : 'Zapisz opis'}</button>
+                      }}>{t('Anuluj')}</button>
+                      <button type="button" className="primary" onClick={saveBio} disabled={bioSaving}>{t(bioSaving ? 'Zapisuję...' : 'Zapisz opis')}</button>
                     </div>
                   </div>
                 ) : profileIsOwnForViewer ? (
-                  <button type="button" className="profile-v3-bio-click" onClick={() => setBioEditing(true)} title="Kliknij, aby zmienić opis profilu">
+                  <button type="button" className="profile-v3-bio-click" onClick={() => setBioEditing(true)} title={t('Kliknij, aby zmienić opis profilu')}>
                     {profileBio}
                     <span>✎</span>
                   </button>
                 ) : (
-                  <div className="profile-v3-bio-click profile-v3-bio-readonly-v975" title="Opis profilu typera">
+                  <div className="profile-v3-bio-click profile-v3-bio-readonly-v975" title={t('Opis profilu typera')}>
                     {profileBio}
                   </div>
                 )}
                 <div className="profile-v3-actions">
                   {isPublicProfile && !profileIsOwnForViewer ? (
                     <button type="button" className={profileIsFollowing ? 'primary active' : 'primary'} onClick={() => onToggleFollow?.(viewedUsernameKey || username || viewedIdKey, username)}>
-                      {profileIsFollowing ? '✓ Obserwujesz' : '+ Obserwuj'}
+                      {profileIsFollowing ? `✓ ${t('Obserwujesz')}` : `+ ${t('Obserwuj')}`}
                     </button>
                   ) : (
-                    <button type="button" className="primary">Mój profil</button>
+                    <button type="button" className="primary">{t('Mój profil')}</button>
                   )}
-                  <button type="button" className="profile-message-btn-v1346" onClick={() => onOpenDirectMessage?.({ id: viewedIdKey, email, username, name: displayName })}><span className="profile-message-icon-v1346">✉</span> Wiadomości</button>
-                  {canMonetizeProfile ? <button type="button" onClick={handleTipsterSupportClick}>🏆 Wsparcie tipami</button> : <button type="button" className="profile-action-disabled-v1037" title="Konto FREE nie może przyjmować wsparcia">FREE bez wsparcia</button>}
+                  <button type="button" className="profile-message-btn-v1346" onClick={() => onOpenDirectMessage?.({ id: viewedIdKey, email, username, name: displayName })}><span className="profile-message-icon-v1346">✉</span> {t('Wiadomości')}</button>
+                  {canMonetizeProfile ? <button type="button" onClick={handleTipsterSupportClick}>🏆 {t('Wsparcie tipami')}</button> : <button type="button" className="profile-action-disabled-v1037" title={t('Konto FREE nie może przyjmować wsparcia')}>{t('FREE bez wsparcia')}</button>}
                 </div>
               </div>
             </div>
@@ -26736,14 +27043,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             <div className="profile-rank-main-v1557">
               <div className="profile-rank-orb-v1557"><span>{profileRank.rank_icon || '🥉'}</span></div>
               <div className="profile-rank-copy-v1557">
-                <small>ROZWÓJ PROFILU TYPERA</small>
+                <small>{t('ROZWÓJ PROFILU TYPERA')}</small>
                 <h3>{profileRank.rank_label || 'Bronze'}</h3>
-                <p>{profileRank.is_max_rank ? 'Masz najwyższą rangę profilu.' : `Ranga rośnie dzięki aktywności, typom, profitowi i skuteczności.`}</p>
+                <p>{t(profileRank.is_max_rank ? 'Masz najwyższą rangę profilu.' : 'Ranga rośnie dzięki aktywności, typom, profitowi i skuteczności.')}</p>
               </div>
               <div className="profile-rank-score-v1557">
-                <span>Postęp</span>
+                <span>{t('Postęp')}</span>
                 <strong>{Math.max(0, Math.min(100, Math.round(Number(profileRank.progress_percent || 0))))}%</strong>
-                <em>{profileRankLoading ? 'Aktualizuję...' : (profileRank.is_max_rank ? 'Maksymalna ranga' : `Następna: ${profileRank.next_rank_label || 'Silver'}`)}</em>
+                <em>{t(profileRankLoading ? 'Aktualizuję...' : (profileRank.is_max_rank ? 'Maksymalna ranga' : `Następna: ${profileRank.next_rank_label || 'Silver'}`))}</em>
               </div>
             </div>
             <div className="profile-rank-progress-v1557"><i style={{ width: `${Math.max(0, Math.min(100, Number(profileRank.progress_percent || 0)))}%` }} /></div>
@@ -26751,7 +27058,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
           <section className="glass-profile-v3 profile-v3-card profile-stats-cards-section">
             <div className="profile-v3-card-head">
-              <h3>📊 Twoje statystyki</h3>
+              <h3>📊 {t('Twoje statystyki')}</h3>
             </div>
             <div className="profile-stats-cards-grid">
               {statsCards.map((card) => (
@@ -26759,57 +27066,57 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   key={card.label}
                   className={`profile-stat-card profile-stat-card-${card.tone} ${card.accent ? 'is-accent' : ''}`}
                 >
-                  <small>{card.label}</small>
+                  <small>{t(card.label)}</small>
                   <strong>{card.value}</strong>
-                  <span>{card.sub}</span>
+                  <span>{t(card.sub)}</span>
                 </article>
               ))}
             </div>
           </section>
 
           <div className="profile-v3-tabs glass-profile-v3 profile-v4-tabs">
-            <button type="button" className={profileTab === 'tips' ? 'active' : ''} onClick={() => setProfileTab('tips')}><span>◉</span> Typy <b>{totalTips}</b></button>
-            <button type="button" className={profileTab === 'results' ? 'active' : ''} onClick={() => setProfileTab('results')}><span>↗</span> Wyniki</button>
-            <button type="button" className={profileTab === 'stats' ? 'active' : ''} onClick={() => setProfileTab('stats')}><span>▮▮</span> Statystyki</button>
-            <button type="button" className={profileTab === 'history' ? 'active' : ''} onClick={() => setProfileTab('history')}><span>◷</span> Historia</button>
-            <button type="button" className={profileTab === 'opinions' ? 'active' : ''} onClick={() => setProfileTab('opinions')}><span>☁</span> Opinie</button>
+            <button type="button" className={profileTab === 'tips' ? 'active' : ''} onClick={() => setProfileTab('tips')}><span>◉</span> {t('Typy')} <b>{totalTips}</b></button>
+            <button type="button" className={profileTab === 'results' ? 'active' : ''} onClick={() => setProfileTab('results')}><span>↗</span> {t('Wyniki')}</button>
+            <button type="button" className={profileTab === 'stats' ? 'active' : ''} onClick={() => setProfileTab('stats')}><span>▮▮</span> {t('Statystyki')}</button>
+            <button type="button" className={profileTab === 'history' ? 'active' : ''} onClick={() => setProfileTab('history')}><span>◷</span> {t('Historia')}</button>
+            <button type="button" className={profileTab === 'opinions' ? 'active' : ''} onClick={() => setProfileTab('opinions')}><span>☁</span> {t('Opinie')}</button>
             {profileIsOwnForViewer && canMonetizeProfile ? (
-              <button type="button" className={profileTab === 'pricing' ? 'active' : ''} onClick={() => setProfileTab('pricing')}><span>▣</span> Cennik subskrypcji</button>
+              <button type="button" className={profileTab === 'pricing' ? 'active' : ''} onClick={() => setProfileTab('pricing')}><span>▣</span> {t('Cennik subskrypcji')}</button>
             ) : null}
           </div>
 
           {profileTab === 'tips' && (
             <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-tips-page">
-              <div className="profile-v3-card-head profile-v4-tips-head"><h3>◉ Typy</h3></div>
+              <div className="profile-v3-card-head profile-v4-tips-head"><h3>◉ {t('Typy')}</h3></div>
               <div className="profile-v4-filter-row profile-v4-filter-row-paid-access">
-                <button type="button" className={`filter-pill-v872 free ${profileTipsFilter === 'free' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('free')}><span className="filter-icon-v872">🎁</span><span>Darmowe</span><b>{freeTipCardsAll.length}</b></button>
+                <button type="button" className={`filter-pill-v872 free ${profileTipsFilter === 'free' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('free')}><span className="filter-icon-v872">🎁</span><span>{t('Darmowe')}</span><b>{freeTipCardsAll.length}</b></button>
                 <button type="button" className={`filter-pill-v872 premium ${profileTipsFilter === 'premium' ? 'active' : ''} ${!profileAccessUnlocked ? 'locked' : ''}`} onClick={handlePremiumProfileTabClick}><span className="filter-icon-v872">♕</span><span>Premium</span><b>{profileAccessUnlocked ? premiumTipCardsAll.length : '🔒'}</b></button>
                 {profileIsOwnForViewer ? (
-                  <button type="button" className={`filter-pill-v872 purchased ${profileTipsFilter === 'purchased' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('purchased')}><span className="filter-icon-v872">🔓</span><span>Kupione single</span><b>{purchasedSingleCards.length}</b></button>
+                  <button type="button" className={`filter-pill-v872 purchased ${profileTipsFilter === 'purchased' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('purchased')}><span className="filter-icon-v872">🔓</span><span>{t('Kupione single')}</span><b>{purchasedSingleCards.length}</b></button>
                 ) : null}
               </div>
               <div className="profile-active-tips-note-v954">
-                <strong>Widok aktywnych typów</strong>
-                <span>Rozstrzygnięte typy automatycznie znikają z Darmowe/Premium i zostają zapisane w zakładce Wyniki.</span>
+                <strong>{t('Widok aktywnych typów')}</strong>
+                <span>{t('Rozstrzygnięte typy automatycznie znikają z Darmowe/Premium i zostają zapisane w zakładce Wyniki.')}</span>
               </div>
               {!profileIsOwnForViewer && profileSubscriptionActive ? (
                 <div className="profile-subscription-active-note">
-                  <strong>Premium aktywne</strong>
-                  <span>{profileSubscriptionTimeLabel}{profileSubscriptionExpiresLabel ? ` • ważne do ${profileSubscriptionExpiresLabel}` : ''}</span>
+                  <strong>{t('Premium aktywne')}</strong>
+                  <span>{t(profileSubscriptionTimeLabel)}{profileSubscriptionExpiresLabel ? ` • ${t('ważne do')} ${profileSubscriptionExpiresLabel}` : ''}</span>
                 </div>
               ) : null}
               {!profileIsOwnForViewer && canMonetizeProfile && !profileAccessUnlocked && premiumCards.length > 0 ? (
                 <div className="profile-premium-tab-lock-note">
-                  <strong>Zakładka Premium jest zablokowana.</strong>
-                  <span>Kup subskrypcję profilu na 30 dni, aby zobaczyć i rozszyfrować typy premium tego typera. Po 30 dniach dostęp automatycznie wygaśnie i trzeba będzie przedłużyć subskrypcję.</span>
-                  <button type="button" onClick={handleProfileSubscribeClick}>Kup subskrypcję 30 dni</button>
+                  <strong>{t('Zakładka Premium jest zablokowana.')}</strong>
+                  <span>{t('Kup subskrypcję profilu na 30 dni, aby zobaczyć i rozszyfrować typy premium tego typera. Po 30 dniach dostęp automatycznie wygaśnie i trzeba będzie przedłużyć subskrypcję.')}</span>
+                  <button type="button" onClick={handleProfileSubscribeClick}>{t('Kup subskrypcję 30 dni')}</button>
                 </div>
               ) : null}
               {profileTipsFilter === 'purchased' ? (
                 profileVisibleTipCardsBase.length ? (
                   <>
                     <div className="profile-all-tips-list profile-purchased-singles-list-v952">{profileVisibleTipCards.map(renderPurchasedSingleCard)}</div>
-                    <div className="feed-visible-counter">Pokazano {Math.min(profileTipsVisibleCount, profileVisibleTipCardsBase.length)} z {profileVisibleTipCardsBase.length} typów</div>
+                    <div className="feed-visible-counter">{t(`Pokazano ${Math.min(profileTipsVisibleCount, profileVisibleTipCardsBase.length)} z ${profileVisibleTipCardsBase.length} typów`)}</div>
                     {profileVisibleTipCardsBase.length > 3 ? (
                       <div className="feed-load-more-wrap">
                         <button
@@ -26818,7 +27125,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                           onClick={() => setProfileTipsVisibleCount(prev => prev + 3)}
                           disabled={!profileHasMoreTipCards}
                         >
-                          {profileHasMoreTipCards ? `Pokaż kolejne 3 typy (${Math.max(profileVisibleTipCardsBase.length - profileTipsVisibleCount, 0)} pozostało)` : 'Pokazano wszystkie typy'}
+                          {t(profileHasMoreTipCards ? `Pokaż kolejne 3 typy (${Math.max(profileVisibleTipCardsBase.length - profileTipsVisibleCount, 0)} pozostało)` : 'Pokazano wszystkie typy')}
                         </button>
                         {profileHasExpandedTipCards ? (
                           <button
@@ -26833,12 +27140,12 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                     ) : null}
                   </>
                 ) : (
-                  <div className="profile-live-tip-empty">Nie masz jeszcze kupionych singli. Kup pojedynczy typ premium, a pojawi się tutaj.</div>
+                  <div className="profile-live-tip-empty">{t('Nie masz jeszcze kupionych singli. Kup pojedynczy typ premium, a pojawi się tutaj.')}</div>
                 )
               ) : profileVisibleTipCardsBase.length ? (
                 <>
                   <div className="profile-all-tips-list">{profileVisibleTipCards.map(renderProfileTipCard)}</div>
-                  <div className="feed-visible-counter">Pokazano {Math.min(profileTipsVisibleCount, profileVisibleTipCardsBase.length)} z {profileVisibleTipCardsBase.length} typów</div>
+                  <div className="feed-visible-counter">{t(`Pokazano ${Math.min(profileTipsVisibleCount, profileVisibleTipCardsBase.length)} z ${profileVisibleTipCardsBase.length} typów`)}</div>
                   {profileVisibleTipCardsBase.length > 3 ? (
                     <div className="feed-load-more-wrap">
                       <button
@@ -26847,7 +27154,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                         onClick={() => setProfileTipsVisibleCount(prev => prev + 3)}
                         disabled={!profileHasMoreTipCards}
                       >
-                        {profileHasMoreTipCards ? `Pokaż kolejne 3 typy (${Math.max(profileVisibleTipCardsBase.length - profileTipsVisibleCount, 0)} pozostało)` : 'Pokazano wszystkie typy'}
+                        {t(profileHasMoreTipCards ? `Pokaż kolejne 3 typy (${Math.max(profileVisibleTipCardsBase.length - profileTipsVisibleCount, 0)} pozostało)` : 'Pokazano wszystkie typy')}
                       </button>
                       {profileHasExpandedTipCards ? (
                         <button
@@ -26862,7 +27169,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   ) : null}
                 </>
               ) : (
-                <div className="profile-live-tip-empty">{profileTipsFilter === 'premium' && !profileAccessUnlocked ? 'Zakładka Premium jest zablokowana. Kup subskrypcję profilu, aby zobaczyć typy premium.' : 'Brak aktywnych typów w tej kategorii. Rozstrzygnięte typy znajdziesz w zakładce Wyniki.'}</div>
+                <div className="profile-live-tip-empty">{t(profileTipsFilter === 'premium' && !profileAccessUnlocked ? 'Zakładka Premium jest zablokowana. Kup subskrypcję profilu, aby zobaczyć typy premium.' : 'Brak aktywnych typów w tej kategorii. Rozstrzygnięte typy znajdziesz w zakładce Wyniki.')}</div>
               )}
             </section>
           )}
@@ -26874,11 +27181,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 <div className="profile-results-locked-box-v950">
                   <div className="profile-results-locked-icon-v950">🔒</div>
                   <div>
-                    <h3>Wyniki typera są zablokowane</h3>
-                    <p>Chcesz zobaczyć pełną historię wyników, rozliczone mecze i szczegóły tego typera? Kup subskrypcję profilu.</p>
-                    <small>Bez dostępu pokazujemy tylko publiczne darmowe typy. Wyniki i pełna historia są ukryte.</small>
+                    <h3>{t('Wyniki typera są zablokowane')}</h3>
+                    <p>{t('Chcesz zobaczyć pełną historię wyników, rozliczone mecze i szczegóły tego typera? Kup subskrypcję profilu.')}</p>
+                    <small>{t('Bez dostępu pokazujemy tylko publiczne darmowe typy. Wyniki i pełna historia są ukryte.')}</small>
                   </div>
-                  <button type="button" onClick={handleProfileSubscribeClick}>Kup subskrypcję 30 dni</button>
+                  <button type="button" onClick={handleProfileSubscribeClick}>{t('Kup subskrypcję 30 dni')}</button>
                 </div>
               </section>
             ) : (
@@ -26886,10 +27193,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card profile-results-chart-v961 profile-live-balance-chart-v1809">
                 <div className="profile-results-chart-head-v961">
                   <div>
-                    <h3>Wykres salda</h3>
+                    <h3>{t('Wykres salda')}</h3>
                   </div>
                   <select className="profile-chart-mode-v961" value={profileChartMode} onChange={(event) => setProfileChartMode(event.target.value)}>
-                    {profileChartModes.map(mode => <option key={mode.key} value={mode.key}>{mode.label}</option>)}
+                    {profileChartModes.map(mode => <option key={mode.key} value={mode.key}>{t(mode.label)}</option>)}
                   </select>
                 </div>
 
@@ -26901,7 +27208,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                       className={profileChartRange === range.key ? 'active' : ''}
                       onClick={() => setProfileChartRange(range.key)}
                     >
-                      {range.label}
+                      {t(range.label)}
                     </button>
                   ))}
                 </div>
@@ -26947,10 +27254,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                       <div className="profile-chart-tooltip-v1366" style={{ left: `${Math.min(86, Math.max(8, profileChartHover.row.x))}%`, top: `${Math.min(78, Math.max(8, profileChartHover.row.y))}%` }}>
                         <strong>{profileChartHover.row.home && profileChartHover.row.away ? `${profileChartHover.row.home} — ${profileChartHover.row.away}` : profileChartHover.row.label}</strong>
                         <span>{profileChartHover.row.date ? `${formatChartDateLabel(profileChartHover.row.date)} ${formatChartDateLabel(profileChartHover.row.date, true)}` : ''}</span>
-                        {profileChartHover.row.pick && <span>Typ: {profileChartHover.row.pick}</span>}
-                        {Number.isFinite(profileChartHover.row.odds) && profileChartHover.row.odds > 0 && <span>Kurs: {Number(profileChartHover.row.odds).toFixed(2)}</span>}
-                        <span>Profit / strata: {formatChartSummaryNumber(profileChartHover.row.profit)}</span>
-                        <span>Bilans po typie: {formatChartSummaryNumber(profileChartHover.row.cumulativeValue)}</span>
+                        {profileChartHover.row.pick && <span>{t('Typ')}: {t(profileChartHover.row.pick)}</span>}
+                        {Number.isFinite(profileChartHover.row.odds) && profileChartHover.row.odds > 0 && <span>{t('Kurs')}: {Number(profileChartHover.row.odds).toFixed(2)}</span>}
+                        <span>{t('Profit / strata')}: {formatChartSummaryNumber(profileChartHover.row.profit)}</span>
+                        <span>{t('Bilans po typie')}: {formatChartSummaryNumber(profileChartHover.row.cumulativeValue)}</span>
                       </div>
                     )}
                   </div>
@@ -26961,30 +27268,30 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 </div>
 
                 <div className="profile-chart-summary-v1366">
-                  <article><small>Zmiana salda</small><strong className={chartSummary.totalProfit < 0 ? 'neg' : 'pos'}>{formatChartSummaryNumber(chartSummary.totalProfit)}</strong></article>
-                  <article><small>Najwyższy bilans</small><strong>{formatChartSummaryNumber(chartSummary.highest)}</strong></article>
-                  <article><small>Najniższy bilans</small><strong className={chartSummary.lowest < 0 ? 'neg' : ''}>{formatChartSummaryNumber(chartSummary.lowest)}</strong></article>
-                  <article><small>Średni poziom</small><strong>{formatChartSummaryNumber(chartSummary.average)}</strong></article>
-                  <article><small>Rozliczone typy</small><strong>{chartSummary.settledCount}</strong></article>
+                  <article><small>{t('Zmiana salda')}</small><strong className={chartSummary.totalProfit < 0 ? 'neg' : 'pos'}>{formatChartSummaryNumber(chartSummary.totalProfit)}</strong></article>
+                  <article><small>{t('Najwyższy bilans')}</small><strong>{formatChartSummaryNumber(chartSummary.highest)}</strong></article>
+                  <article><small>{t('Najniższy bilans')}</small><strong className={chartSummary.lowest < 0 ? 'neg' : ''}>{formatChartSummaryNumber(chartSummary.lowest)}</strong></article>
+                  <article><small>{t('Średni poziom')}</small><strong>{formatChartSummaryNumber(chartSummary.average)}</strong></article>
+                  <article><small>{t('Rozliczone typy')}</small><strong>{chartSummary.settledCount}</strong></article>
                 </div>
               </section>
               <section className="glass-profile-v3 profile-v3-card profile-v4-table-card">
                 <div className="profile-v4-filter-row profile-results-filter-row-v945">
-                  <button type="button" className={profileResultsFilter === 'all' ? 'active' : ''} onClick={() => setProfileResultsFilter('all')}>Wszystkie</button>
-                  <button type="button" className={profileResultsFilter === 'won' ? 'active' : ''} onClick={() => setProfileResultsFilter('won')}>Wygrane</button>
-                  <button type="button" className={profileResultsFilter === 'lost' ? 'active' : ''} onClick={() => setProfileResultsFilter('lost')}>Przegrane</button>
-                  <button type="button" className={profileResultsFilter === 'void' ? 'active' : ''} onClick={() => setProfileResultsFilter('void')}>Zwroty</button>
-                  <button type="button" className={profileResultsFilter === 'pending' ? 'active' : ''} onClick={() => setProfileResultsFilter('pending')}>Do rozliczenia</button>
-                  <button type="button" className={profileResultsFilter === 'admin' ? 'active' : ''} onClick={() => setProfileResultsFilter('admin')}>Czeka na admina <b>{adminPendingResultsCount}</b></button>
-                  <button type="button" className={profileResultsFilter === 'auto' ? 'active' : ''} onClick={() => setProfileResultsFilter('auto')}>Automatyczne <b>{autoResultsCount}</b></button>
-                  <button type="button" className={profileResultsFilter === 'rejected' ? 'active' : ''} onClick={() => setProfileResultsFilter('rejected')}>Odrzucone <b>{rejectedResultsCount}</b></button>
+                  <button type="button" className={profileResultsFilter === 'all' ? 'active' : ''} onClick={() => setProfileResultsFilter('all')}>{t('Wszystkie')}</button>
+                  <button type="button" className={profileResultsFilter === 'won' ? 'active' : ''} onClick={() => setProfileResultsFilter('won')}>{t('Wygrane')}</button>
+                  <button type="button" className={profileResultsFilter === 'lost' ? 'active' : ''} onClick={() => setProfileResultsFilter('lost')}>{t('Przegrane')}</button>
+                  <button type="button" className={profileResultsFilter === 'void' ? 'active' : ''} onClick={() => setProfileResultsFilter('void')}>{t('Zwroty')}</button>
+                  <button type="button" className={profileResultsFilter === 'pending' ? 'active' : ''} onClick={() => setProfileResultsFilter('pending')}>{t('Do rozliczenia')}</button>
+                  <button type="button" className={profileResultsFilter === 'admin' ? 'active' : ''} onClick={() => setProfileResultsFilter('admin')}>{t('Czeka na admina')} <b>{adminPendingResultsCount}</b></button>
+                  <button type="button" className={profileResultsFilter === 'auto' ? 'active' : ''} onClick={() => setProfileResultsFilter('auto')}>{t('Automatyczne')} <b>{autoResultsCount}</b></button>
+                  <button type="button" className={profileResultsFilter === 'rejected' ? 'active' : ''} onClick={() => setProfileResultsFilter('rejected')}>{t('Odrzucone')} <b>{rejectedResultsCount}</b></button>
                 </div>
                 <div className="profile-results-logic-note-v945">
-                  <strong>Logika wyników:</strong>
-                  <span>Typy automatyczne rozlicza system po wyniku meczu. Ręczna przegrana rozlicza się od razu, a wygrana i zwrot czekają na zatwierdzenie admina.</span>
+                  <strong>{t('Logika wyników:')}</strong>
+                  <span>{t('Typy automatyczne rozlicza system po wyniku meczu. Ręczna przegrana rozlicza się od razu, a wygrana i zwrot czekają na zatwierdzenie admina.')}</span>
                 </div>
                 <div className="profile-v4-results-table profile-v4-results-table-v945">
-                  <div><b>Data / godzina</b><b>Mecz</b><b>Typ</b><b>Kurs</b><b>Stawka</b><b>Wynik</b><b>Akcja</b></div>
+                  <div><b>{t('Data / godzina')}</b><b>{t('Mecz')}</b><b>{t('Typ')}</b><b>{t('Kurs')}</b><b>{t('Stawka')}</b><b>{t('Wynik')}</b><b>{t('Akcja')}</b></div>
                   {resultTipRows.length ? resultTipRows.map(tip => {
                     const sourceRowTip = tip.rawTip || tip
                     const canRequestSettlement = profileIsOwnForViewer && ['Oczekujący', 'Odrzucony'].includes(tip.statusLabel)
@@ -26997,28 +27304,28 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                       <div key={tip.id}>
                         <span className="profile-result-date-time-v964"><b>{eventDateTime.date}</b><small>{eventDateTime.time}</small></span>
                         <span>{tip.home} — {tip.away}</span>
-                        <span>{rowIsUnlocked ? tip.pick : 'Typ premium'}</span>
+                        <span>{rowIsUnlocked ? t(tip.pick) : t('Typ premium')}</span>
                         <span>{rowIsUnlocked ? tip.odds : '—'}</span>
                         <span>{tip.stake.toFixed(2)}</span>
-                        <em className={tip.statusLabel === 'Wygrany' ? 'pos' : tip.statusLabel === 'Przegrany' ? 'neg' : tip.statusLabel === 'Zwrot' ? 'void' : tip.statusLabel === 'Czeka na admina' ? 'admin' : 'wait'}>{tip.statusLabel}</em>
+                        <em className={tip.statusLabel === 'Wygrany' ? 'pos' : tip.statusLabel === 'Przegrany' ? 'neg' : tip.statusLabel === 'Zwrot' ? 'void' : tip.statusLabel === 'Czeka na admina' ? 'admin' : 'wait'}>{t(tip.statusLabel)}</em>
                         <span className="manual-settle-actions-v945">
                           {canRequestSettlement ? (
                             <>
-                              <button type="button" className="won" onClick={() => submitManualSettlementRequest(tip.rawTip || tip, 'won')}>Wygrana</button>
-                              <button type="button" className="lost" onClick={() => submitManualSettlementRequest(tip.rawTip || tip, 'lost')}>Przegrana</button>
-                              <button type="button" className="void" onClick={() => submitManualSettlementRequest(tip.rawTip || tip, 'void')}>Zwrot</button>
+                              <button type="button" className="won" onClick={() => submitManualSettlementRequest(tip.rawTip || tip, 'won')}>{t('Wygrana')}</button>
+                              <button type="button" className="lost" onClick={() => submitManualSettlementRequest(tip.rawTip || tip, 'lost')}>{t('Przegrana')}</button>
+                              <button type="button" className="void" onClick={() => submitManualSettlementRequest(tip.rawTip || tip, 'void')}>{t('Zwrot')}</button>
                             </>
                           ) : tip.statusLabel === 'Czeka na admina' ? (
-                            <small>Czeka na zatwierdzenie admina</small>
+                            <small>{t('Czeka na zatwierdzenie admina')}</small>
                           ) : String(tip.settlementSource || '').includes('auto') ? (
-                            <small>Rozliczone automatycznie</small>
+                            <small>{t('Rozliczone automatycznie')}</small>
                           ) : (
                             <small>—</small>
                           )}
                         </span>
                       </div>
                     )
-                  }) : <p>Brak wyników w tej kategorii.</p>}
+                  }) : <p>{t('Brak wyników w tej kategorii.')}</p>}
                 </div>
               </section>
             </section>
@@ -27031,10 +27338,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card profile-results-chart-v961 profile-stats-chart-v1361 profile-live-balance-chart-v1809">
                 <div className="profile-results-chart-head-v961">
                   <div>
-                    <h3>Wykres salda</h3>
+                    <h3>{t('Wykres salda')}</h3>
                   </div>
                   <select className="profile-chart-mode-v961" value={profileChartMode} onChange={(event) => setProfileChartMode(event.target.value)}>
-                    {profileChartModes.map(mode => <option key={`stats-${mode.key}`} value={mode.key}>{mode.label}</option>)}
+                    {profileChartModes.map(mode => <option key={`stats-${mode.key}`} value={mode.key}>{t(mode.label)}</option>)}
                   </select>
                 </div>
 
@@ -27046,7 +27353,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                       className={profileChartRange === range.key ? 'active' : ''}
                       onClick={() => setProfileChartRange(range.key)}
                     >
-                      {range.label}
+                      {t(range.label)}
                     </button>
                   ))}
                 </div>
@@ -27092,10 +27399,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                       <div className="profile-chart-tooltip-v1366" style={{ left: `${Math.min(86, Math.max(8, profileChartHover.row.x))}%`, top: `${Math.min(78, Math.max(8, profileChartHover.row.y))}%` }}>
                         <strong>{profileChartHover.row.home && profileChartHover.row.away ? `${profileChartHover.row.home} — ${profileChartHover.row.away}` : profileChartHover.row.label}</strong>
                         <span>{profileChartHover.row.date ? `${formatChartDateLabel(profileChartHover.row.date)} ${formatChartDateLabel(profileChartHover.row.date, true)}` : ''}</span>
-                        {profileChartHover.row.pick && <span>Typ: {profileChartHover.row.pick}</span>}
-                        {Number.isFinite(profileChartHover.row.odds) && profileChartHover.row.odds > 0 && <span>Kurs: {Number(profileChartHover.row.odds).toFixed(2)}</span>}
-                        <span>Profit / strata: {formatChartSummaryNumber(profileChartHover.row.profit)}</span>
-                        <span>Bilans po typie: {formatChartSummaryNumber(profileChartHover.row.cumulativeValue)}</span>
+                        {profileChartHover.row.pick && <span>{t('Typ')}: {t(profileChartHover.row.pick)}</span>}
+                        {Number.isFinite(profileChartHover.row.odds) && profileChartHover.row.odds > 0 && <span>{t('Kurs')}: {Number(profileChartHover.row.odds).toFixed(2)}</span>}
+                        <span>{t('Profit / strata')}: {formatChartSummaryNumber(profileChartHover.row.profit)}</span>
+                        <span>{t('Bilans po typie')}: {formatChartSummaryNumber(profileChartHover.row.cumulativeValue)}</span>
                       </div>
                     )}
                   </div>
@@ -27106,11 +27413,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 </div>
 
                 <div className="profile-chart-summary-v1366">
-                  <article><small>Zmiana salda</small><strong className={chartSummary.totalProfit < 0 ? 'neg' : 'pos'}>{formatChartSummaryNumber(chartSummary.totalProfit)}</strong></article>
-                  <article><small>Najwyższy bilans</small><strong>{formatChartSummaryNumber(chartSummary.highest)}</strong></article>
-                  <article><small>Najniższy bilans</small><strong className={chartSummary.lowest < 0 ? 'neg' : ''}>{formatChartSummaryNumber(chartSummary.lowest)}</strong></article>
-                  <article><small>Średni poziom</small><strong>{formatChartSummaryNumber(chartSummary.average)}</strong></article>
-                  <article><small>Rozliczone typy</small><strong>{chartSummary.settledCount}</strong></article>
+                  <article><small>{t('Zmiana salda')}</small><strong className={chartSummary.totalProfit < 0 ? 'neg' : 'pos'}>{formatChartSummaryNumber(chartSummary.totalProfit)}</strong></article>
+                  <article><small>{t('Najwyższy bilans')}</small><strong>{formatChartSummaryNumber(chartSummary.highest)}</strong></article>
+                  <article><small>{t('Najniższy bilans')}</small><strong className={chartSummary.lowest < 0 ? 'neg' : ''}>{formatChartSummaryNumber(chartSummary.lowest)}</strong></article>
+                  <article><small>{t('Średni poziom')}</small><strong>{formatChartSummaryNumber(chartSummary.average)}</strong></article>
+                  <article><small>{t('Rozliczone typy')}</small><strong>{chartSummary.settledCount}</strong></article>
                 </div>
               </section>
               <div className="profile-v4-stats-grid">
@@ -27122,7 +27429,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   columns={['Liga', 'Kraj', 'Ilość kuponów', 'Stawka rozliczona', 'Bilans', 'Yield', 'Śr. kurs']}
                   rows={liveLeagueStatsRows.map(row => [
                     row.label,
-                    <span className="profile-country-badge-v1648">{row.country || 'World'}</span>,
+                    <span className="profile-country-badge-v1648">{t(row.country || 'World')}</span>,
                     row.coupons,
                     formatStatValue(row.stake),
                     formatStatValue(row.profit),
@@ -27145,22 +27452,22 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               <div className="ai-league-modal-v1497 profile-league-modal-v1646" onClick={event => event.stopPropagation()}>
                 <button type="button" className="ai-league-modal-close-v1497" onClick={() => setProfileSelectedLeagueDetail(null)}>×</button>
                 <div className="ai-league-modal-head-v1497">
-                  <span>ANALIZA LIGI PROFILU</span>
+                  <span>{t('ANALIZA LIGI PROFILU')}</span>
                   <h3>{profileSelectedLeagueDetail}</h3>
-                  <p>Podział typów z tej ligi na profilu: liczba kuponów, stawka rozliczona, bilans, yield i W/L/P.</p>
+                  <p>{t('Podział typów z tej ligi na profilu: liczba kuponów, stawka rozliczona, bilans, yield i W/L/P.')}</p>
                 </div>
                 <div className="ai-league-modal-summary-v1497">
-                  <div><small>Typów</small><b>{profileSelectedLeagueSummary.coupons}</b></div>
-                  <div><small>Stawka</small><b>{formatStatValue(profileSelectedLeagueSummary.stake)}</b></div>
-                  <div><small>Bilans</small><b className={profileSelectedLeagueSummary.profit < 0 ? 'neg' : profileSelectedLeagueSummary.profit > 0 ? 'pos' : ''}>{formatStatValue(profileSelectedLeagueSummary.profit)}</b></div>
+                  <div><small>{t('Typów')}</small><b>{profileSelectedLeagueSummary.coupons}</b></div>
+                  <div><small>{t('Stawka')}</small><b>{formatStatValue(profileSelectedLeagueSummary.stake)}</b></div>
+                  <div><small>{t('Bilans')}</small><b className={profileSelectedLeagueSummary.profit < 0 ? 'neg' : profileSelectedLeagueSummary.profit > 0 ? 'pos' : ''}>{formatStatValue(profileSelectedLeagueSummary.profit)}</b></div>
                   <div><small>Yield</small><b className={profileSelectedLeagueSummary.yield < 0 ? 'neg' : profileSelectedLeagueSummary.yield > 0 ? 'pos' : ''}>{formatStatValue(profileSelectedLeagueSummary.yield)}%</b></div>
                   <div><small>W/L/P</small><b>{profileSelectedLeagueSummary.won}/{profileSelectedLeagueSummary.lost}/{profileSelectedLeagueSummary.pending}</b></div>
                 </div>
                 <div className="ai-league-modal-table-v1497">
-                  <div className="head"><b>Rodzaj typu</b><b>Ilość</b><b>Stawka</b><b>Bilans</b><b>Yield</b><b>Śr. kurs</b><b>W/L/P</b></div>
+                  <div className="head"><b>{t('Rodzaj typu')}</b><b>{t('Ilość')}</b><b>{t('Stawka')}</b><b>{t('Bilans')}</b><b>Yield</b><b>{t('Śr. kurs')}</b><b>W/L/P</b></div>
                   {profileSelectedLeagueTypeRows.length ? profileSelectedLeagueTypeRows.map(row => (
                     <div className="row" key={row.label}>
-                      <span>{row.label}</span>
+                      <span>{t(row.label)}</span>
                       <span>{row.coupons}</span>
                       <span>{formatStatValue(row.stake)}</span>
                       <span className={row.profit < 0 ? 'neg' : row.profit > 0 ? 'pos' : ''}>{formatStatValue(row.profit)}</span>
@@ -27168,7 +27475,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                       <span>{formatStatValue(row.avgOdds)}</span>
                       <span>{row.won}/{row.lost}/{row.pending}</span>
                     </div>
-                  )) : <div className="empty">Brak danych dla tej ligi.</div>}
+                  )) : <div className="empty">{t('Brak danych dla tej ligi.')}</div>}
                 </div>
               </div>
             </div>
@@ -27176,11 +27483,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
           {profileTab === 'history' && (
             <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-history-page">
-              <div className="profile-v3-card-head"><h3>Historia aktywności</h3><span>{historyEvents.length ? `Pokazano ${Math.min(profileHistoryVisibleCount, historyEvents.length)} z ${historyEvents.length}` : '0 zdarzeń'}</span></div>
+              <div className="profile-v3-card-head"><h3>{t('Historia aktywności')}</h3><span>{t(historyEvents.length ? `Pokazano ${Math.min(profileHistoryVisibleCount, historyEvents.length)} z ${historyEvents.length}` : '0 zdarzeń')}</span></div>
               <div className="profile-v4-history-timeline">
                 {groupedHistoryEvents.length ? groupedHistoryEvents.map(group => (
                   <section key={group.label} className="profile-v4-history-group">
-                    <div className="profile-v4-history-group-label">{group.label}</div>
+                    <div className="profile-v4-history-group-label">{t(group.label)}</div>
                     <div className="profile-v4-history-group-list">
                       {group.items.map((event, index) => (
                         <article key={`${event.id}-${index}`} className={`history-event-v1369 ${event.tone}`}>
@@ -27190,27 +27497,27 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                           </div>
                           <div className="history-event-body-v1369">
                             <div className="history-event-topline-v1369">
-                              <strong>{event.title}</strong>
-                              <span className={`history-status-badge-v1369 ${event.tone}`}>{event.statusLabel}</span>
+                              <strong>{t(event.title)}</strong>
+                              <span className={`history-status-badge-v1369 ${event.tone}`}>{t(event.statusLabel)}</span>
                             </div>
-                            <span>{event.detail}</span>
+                            <span>{t(event.detail)}</span>
                           </div>
                           {event.amountLabel ? <b className={`history-event-amount-v1369 ${event.tone} ${event.amountValue === 0 ? 'neutral' : ''}`}>{event.amountLabel}</b> : <b className="history-event-amount-v1369 muted">—</b>}
                         </article>
                       ))}
                     </div>
                   </section>
-                )) : <p>Brak aktywności do pokazania.</p>}
+                )) : <p>{t('Brak aktywności do pokazania.')}</p>}
               </div>
               {historyEvents.length > 7 ? (
                 <div className="profile-history-expand-wrap-v1369">
                   {historyHasMore ? (
                     <button type="button" className="profile-stats-expand-v1356" onClick={() => setProfileHistoryVisibleCount(prev => Math.min(prev + 7, historyEvents.length))}>
-                      Pokaż kolejne {Math.min(7, Math.max(historyEvents.length - profileHistoryVisibleCount, 0))}
+                      {t(`Pokaż kolejne ${Math.min(7, Math.max(historyEvents.length - profileHistoryVisibleCount, 0))}`)}
                     </button>
                   ) : null}
                   {historyCanCollapse ? (
-                    <button type="button" className="feed-load-less-btn" onClick={() => setProfileHistoryVisibleCount(7)}>Pokaż mniej</button>
+                    <button type="button" className="feed-load-less-btn" onClick={() => setProfileHistoryVisibleCount(7)}>{t('Pokaż mniej')}</button>
                   ) : null}
                 </div>
               ) : null}
@@ -27221,23 +27528,23 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             <section className="profile-v4-page profile-v4-opinions-page profile-reviews-v985">
               <div className="glass-profile-v3 profile-v3-card profile-v4-opinion-summary">
                 <div>
-                  <small>Podsumowanie opinii</small>
+                  <small>{t('Podsumowanie opinii')}</small>
                   <strong>{profileRatingCount ? profileRatingAverage.toFixed(1) : '0.0'}</strong>
-                  <span>{profileRatingCount ? `${profileRatingCount} opinii` : 'Brak opinii profilu'}</span>
+                  <span>{t(profileRatingCount ? `${profileRatingCount} opinii` : 'Brak opinii profilu')}</span>
                 </div>
                 <div className="profile-v4-rating-bars">
                   {ratingBars.map(row => (
-                    <label key={row.label}><span>{row.label}</span><i><b style={{ width: `${row.width}%` }} /></i><em>{row.count}</em></label>
+                    <label key={row.label}><span>{t(row.label)}</span><i><b style={{ width: `${row.width}%` }} /></i><em>{row.count}</em></label>
                   ))}
                 </div>
               </div>
 
               <section className="glass-profile-v3 profile-v3-card profile-review-form-v985">
                 <div className="profile-v3-card-head">
-                  <h3>Dodaj opinię</h3>
-                  <span>{viewerIdForReview ? `Jako ${viewerNameForReview}` : 'Wymagane logowanie'}</span>
+                  <h3>{t('Dodaj opinię')}</h3>
+                  <span>{viewerIdForReview ? `${t('As')} ${viewerNameForReview}` : t('Wymagane logowanie')}</span>
                 </div>
-                <div className="profile-review-stars-v985" aria-label="Ocena profilu">
+                <div className="profile-review-stars-v985" aria-label={t('Ocena profilu')}>
                   {[1,2,3,4,5].map(score => {
                     const activeScore = profileReviewHover || profileReviewRating
                     return (
@@ -27248,7 +27555,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                         onMouseEnter={() => setProfileReviewHover(score)}
                         onMouseLeave={() => setProfileReviewHover(0)}
                         onClick={() => setProfileReviewRating(score)}
-                        title={`${score} gwiazdek`}
+                        title={`${score} ${t('gwiazdek')}`}
                       >
                        
                       ★</button>
@@ -27259,28 +27566,28 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 <textarea
                   value={profileReviewComment}
                   onChange={(event) => setProfileReviewComment(event.target.value.slice(0, 500))}
-                  placeholder="Napisz opinię o tym typerze..."
+                  placeholder={t('Napisz opinię o tym typerze...')}
                   maxLength={500}
                 />
                 <div className="profile-review-form-actions-v985">
-                  <small>{profileReviewStatus || `${profileReviewComment.length}/500 znaków`}</small>
+                  <small>{profileReviewStatus ? t(profileReviewStatus) : t(`${profileReviewComment.length}/500 znaków`)}</small>
                   <button type="button" onClick={submitProfileReview} disabled={profileReviewSaving || !viewerIdForReview}>
-                    {profileReviewSaving ? 'Zapisuję...' : 'Dodaj opinię'}
+                    {t(profileReviewSaving ? 'Zapisuję...' : 'Dodaj opinię')}
                   </button>
                 </div>
               </section>
 
               <section className="glass-profile-v3 profile-v3-card profile-v4-reviews-list profile-reviews-list-v985">
-                <div className="profile-v3-card-head"><h3>Opinie</h3><span>{reviewRows.length} pozycji</span></div>
+                <div className="profile-v3-card-head"><h3>{t('Opinie')}</h3><span>{t(`${reviewRows.length} pozycji`)}</span></div>
                 {reviewRows.length ? reviewRows.map((review, index) => (
                   <article key={review.id || index}>
                     <div>
-                      <strong>{review.reviewer_name || review.author_name || 'Użytkownik'}</strong>
-                      <small>{new Date(review.created_at || Date.now()).toLocaleDateString('pl-PL')} • {Number(review.rating || 0).toFixed(0)}/5</small>
+                      <strong>{review.reviewer_name || review.author_name || t('Użytkownik')}</strong>
+                      <small>{new Date(review.created_at || Date.now()).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL')} • {Number(review.rating || 0).toFixed(0)}/5</small>
                     </div>
                     <span>{review.comment || review.body || ''}</span>
                   </article>
-                )) : <div className="profile-live-tip-empty">Nie ma jeszcze opinii dla tego profilu.</div>}
+                )) : <div className="profile-live-tip-empty">{t('Nie ma jeszcze opinii dla tego profilu.')}</div>}
               </section>
             </section>
           )}
@@ -27290,9 +27597,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
           )}
           {profileTab === 'pricing' && !profileIsOwnForViewer && (
             <section className="glass-profile-v3 profile-v3-card profile-pricing-locked-v955">
-              <h3>Cennik subskrypcji jest dostępny tylko dla właściciela profilu</h3>
-              <p>Inni użytkownicy mogą kupić dostęp przez przycisk subskrypcji, ale nie mogą edytować cennika typera.</p>
-              <button type="button" onClick={() => setProfileTab('tips')}>Wróć do typów</button>
+              <h3>{t('Cennik subskrypcji jest dostępny tylko dla właściciela profilu')}</h3>
+              <p>{t('Inni użytkownicy mogą kupić dostęp przez przycisk subskrypcji, ale nie mogą edytować cennika typera.')}</p>
+              <button type="button" onClick={() => setProfileTab('tips')}>{t('Wróć do typów')}</button>
             </section>
           )}
 
@@ -27301,16 +27608,16 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
           <div className="profile-v3-content-grid">
             <div className="profile-v3-left-col profile-live-tip-sections">
               <section className="glass-profile-v3 profile-v3-card profile-live-tip-section">
-                <div className="profile-v3-card-head"><h3>🏆 Ostatnie typy PREMIUM</h3><button type="button" onClick={() => setProfileTab('tips')}>Zobacz wszystkie</button></div>
+                <div className="profile-v3-card-head"><h3>🏆 {t('Ostatnie typy PREMIUM')}</h3><button type="button" onClick={() => setProfileTab('tips')}>{t('Zobacz wszystkie')}</button></div>
                 {premiumCards.length ? premiumCards.map(renderProfileTipCard) : (
-                  <div className="profile-live-tip-empty">Brak typów premium.</div>
+                  <div className="profile-live-tip-empty">{t('Brak typów premium.')}</div>
                 )}
               </section>
 
               <section className="glass-profile-v3 profile-v3-card profile-live-tip-section">
-                <div className="profile-v3-card-head"><h3>🟢 Ostatnie typy FREE</h3><button type="button" onClick={() => setProfileTab('tips')}>Zobacz wszystkie</button></div>
+                <div className="profile-v3-card-head"><h3>🟢 {t('Ostatnie typy FREE')}</h3><button type="button" onClick={() => setProfileTab('tips')}>{t('Zobacz wszystkie')}</button></div>
                 {freeCards.length ? freeCards.map(renderProfileTipCard) : (
-                  <div className="profile-live-tip-empty">Brak darmowych typów.</div>
+                  <div className="profile-live-tip-empty">{t('Brak darmowych typów.')}</div>
                 )}
               </section>
             </div>
@@ -27321,28 +27628,28 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
         {(profileTab === 'overview' || profileTab === 'tips') && <aside className="profile-v3-sidebar profile-v4-shared-sidebar">
           <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Podsumowanie</h3><span>• ONLINE ●</span></div>
+            <div className="side-card-head-v3"><h3>{t('Podsumowanie')}</h3><span>• ONLINE ●</span></div>
             <div className="key-list-v3">
-              {summaryRows.map((row, idx) => <div key={idx}><span>{row[0]}</span><b>{row[1]}</b></div>)}
+              {summaryRows.map((row, idx) => <div key={idx}><span>{t(row[0])}</span><b>{t(row[1])}</b></div>)}
             </div>
           </div>
 
           <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Społeczność</h3></div>
+            <div className="side-card-head-v3"><h3>{t('Społeczność')}</h3></div>
             <div className="community-v3 profile-community-referrals-v1393">
-              <div><span>👥 Obserwujący</span><b>{followersCount}</b></div>
-              <div><span>👤 Obserwowani</span><b>{followingCount}</b></div>
-              <div className="profile-referral-row-v1396"><span><i className="profile-referral-purple-icon-v1396" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M10.2 13.8a3.2 3.2 0 0 0 4.5.1l2.7-2.7a3.2 3.2 0 1 0-4.5-4.5l-.7.7" /><path d="M13.8 10.2a3.2 3.2 0 0 0-4.5-.1l-2.7 2.7a3.2 3.2 0 1 0 4.5 4.5l.7-.7" /></svg></i> Poleceni</span><b>{referralLoading ? '...' : profileReferralCount}</b></div>
+              <div><span>👥 {t('Obserwujący')}</span><b>{followersCount}</b></div>
+              <div><span>👤 {t('Obserwowani')}</span><b>{followingCount}</b></div>
+              <div className="profile-referral-row-v1396"><span><i className="profile-referral-purple-icon-v1396" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M10.2 13.8a3.2 3.2 0 0 0 4.5.1l2.7-2.7a3.2 3.2 0 1 0-4.5-4.5l-.7.7" /><path d="M13.8 10.2a3.2 3.2 0 0 0-4.5-.1l-2.7 2.7a3.2 3.2 0 1 0 4.5 4.5l.7-.7" /></svg></i> {t('Poleceni')}</span><b>{referralLoading ? '...' : profileReferralCount}</b></div>
             </div>
           </div>
 
           <div className="glass-profile-v3 side-card-v3 side-badges-v3 profile-achievements-panel-v1768">
             <div className="side-card-head-v3 profile-achievements-head-v1768">
               <div>
-                <h3>★ Osiągnięcia Typera</h3>
-                <small>{achievementsUnlockedV1768}/{profileAchievements.length} odblokowanych</small>
+                <h3>★ {t('Osiągnięcia Typera')}</h3>
+                <small>{achievementsUnlockedV1768}/{profileAchievements.length} {t('odblokowanych')}</small>
               </div>
-              <button type="button" onClick={() => setProfileTab('history')}>Zobacz historię</button>
+              <button type="button" onClick={() => setProfileTab('history')}>{t('Zobacz historię')}</button>
             </div>
 
             <div className="profile-achievements-list-v1768">
@@ -27357,10 +27664,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
                   <div className="profile-achievement-content-v1768">
                     <div className="profile-achievement-title-v1768">
-                      <strong>{achievement.title}</strong>
-                      {achievement.achieved ? <i aria-label="Odblokowane">✓</i> : null}
+                      <strong>{t(achievement.title)}</strong>
+                      {achievement.achieved ? <i aria-label={t('Odblokowane')}>✓</i> : null}
                     </div>
-                    <small>{achievement.description}</small>
+                    <small>{t(achievement.description)}</small>
                     <div className="profile-achievement-progress-row-v1768">
                       <div className="profile-achievement-progress-v1768">
                         <span style={{ width: `${achievement.percent}%` }}></span>
@@ -27378,15 +27685,15 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
           </div>
 
           <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Oceny i opinie</h3><button type="button" onClick={() => setProfileTab('opinions')}>Zobacz opinie</button></div>
+            <div className="side-card-head-v3"><h3>{t('Oceny i opinie')}</h3><button type="button" onClick={() => setProfileTab('opinions')}>{t('Zobacz opinie')}</button></div>
             <div className="ratings-v3">
               <div className="rating-score">
                 <strong>{profileRatingCount ? profileRatingAverage.toFixed(1) : '0.0'}</strong>
                 <span>{profileRatingCount ? '' : '☆☆☆☆☆'}</span>
-                <small>{profileRatingCount ? `Na podstawie ${profileRatingCount} opinii` : 'Brak ocen profilu'}</small>
+                <small>{t(profileRatingCount ? `Na podstawie ${profileRatingCount} opinii` : 'Brak ocen profilu')}</small>
               </div>
               <div className="rating-bars">
-                {ratingBars.map((row, idx) => <div key={idx}><span>{row.label}</span><div className="rate-bar"><i style={{width: `${row.width}%`}}></i></div><b>{row.count}</b></div>)}
+                {ratingBars.map((row, idx) => <div key={idx}><span>{t(row.label)}</span><div className="rate-bar"><i style={{width: `${row.width}%`}}></i></div><b>{row.count}</b></div>)}
               </div>
             </div>
           </div>
