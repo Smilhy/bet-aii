@@ -2383,6 +2383,7 @@ function resolveRealProfileUsername(user) {
     .replace(/^@/, '')
     .replace(/[_\s]+/g, '-'))
   if (identityValuesV1838.includes('typer-expert')) return 'Typer Expert'
+  if (identityValuesV1838.includes('ograc-buka')) return 'Ograć Buka'
 
   // 🔒 ZABLOKOWANA LOGIKA TOŻSAMOŚCI v981
   // Nie wolno traktować "user/użytkownik" jako prawdziwego nicku.
@@ -2417,8 +2418,8 @@ function getUserProfileView(user) {
   }
 }
 
-// WERSJA 1837 — wirtualny profil systemowy Typer Expert.
-// Jest widoczny od razu w rankingu, a statystyki są liczone wyłącznie z jego własnych typów.
+// WERSJA 1846 — wirtualne profile systemowych typerów.
+// Są widoczne od razu w rankingu, a statystyki są liczone wyłącznie z ich własnych typów.
 const BETAI_SYSTEM_TIPSTER_PROFILES_V1837 = [{
   id: 'lookup:typer-expert',
   tipster_id: 'lookup:typer-expert',
@@ -2434,6 +2435,22 @@ const BETAI_SYSTEM_TIPSTER_PROFILES_V1837 = [{
   description: '🎯 Typer Expert korzysta wyłącznie z API-Football: porównuje kursy kilku bukmacherów, sprawdza prognozy algorytmiczne, formę, porównanie drużyn i zgłoszone absencje. Publikuje tylko wybory potwierdzone jednocześnie przez rynek i dane API oraz dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.',
   about: '🎯 Typer Expert korzysta wyłącznie z API-Football: porównuje kursy kilku bukmacherów, sprawdza prognozy algorytmiczne, formę, porównanie drużyn i zgłoszone absencje. Publikuje tylko wybory potwierdzone jednocześnie przez rynek i dane API oraz dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.',
   created_at: '2026-06-28T00:00:00.000Z',
+  is_system_tipster: true,
+}, {
+  id: 'lookup:ograc-buka',
+  tipster_id: 'lookup:ograc-buka',
+  username: 'Ograć Buka',
+  author_name: 'Ograć Buka',
+  public_slug: 'ograc-buka',
+  role: 'tipster',
+  is_tipster: true,
+  plan: 'free',
+  subscription_status: 'inactive',
+  preferred_sport: 'Piłka nożna',
+  bio: '📊 Ograć Buka to selektywny model value oparty wyłącznie na API-Football. Porównuje realne kursy kilku bukmacherów z prognozą API, formą, H2H i zgłoszonymi absencjami. Publikuje maksymalnie jeden mocny typ w danym okresie, zawsze ze stałą wirtualną stawką 1 — bez progresji i gonienia strat. Wyniki nie są gwarantowane.',
+  description: '📊 Ograć Buka to selektywny model value oparty wyłącznie na API-Football. Porównuje realne kursy kilku bukmacherów z prognozą API, formą, H2H i zgłoszonymi absencjami. Publikuje maksymalnie jeden mocny typ w danym okresie, zawsze ze stałą wirtualną stawką 1 — bez progresji i gonienia strat. Wyniki nie są gwarantowane.',
+  about: '📊 Ograć Buka to selektywny model value oparty wyłącznie na API-Football. Porównuje realne kursy kilku bukmacherów z prognozą API, formą, H2H i zgłoszonymi absencjami. Publikuje maksymalnie jeden mocny typ w danym okresie, zawsze ze stałą wirtualną stawką 1 — bez progresji i gonienia strat. Wyniki nie są gwarantowane.',
+  created_at: '2026-06-29T00:00:00.000Z',
   is_system_tipster: true,
 }]
 
@@ -2452,15 +2469,19 @@ function getBetaiSystemTipsterProfileV1838(...values) {
       return decoded.replace(/^@/, '').replace(/[_\s]+/g, '-')
     })
 
-  if (!normalized.includes('typer-expert')) return null
-  const base = BETAI_SYSTEM_TIPSTER_PROFILES_V1837[0]
+  const profile = BETAI_SYSTEM_TIPSTER_PROFILES_V1837.find(item => {
+    const slug = String(item.public_slug || '').trim().toLowerCase()
+    const usernameSlug = String(item.username || '').trim().toLowerCase().replace(/[_\s]+/g, '-')
+    return normalized.includes(slug) || normalized.includes(usernameSlug)
+  })
+  if (!profile) return null
   return {
-    ...base,
-    display_name: 'Typer Expert',
-    profile_name: 'Typer Expert',
-    username: 'Typer Expert',
-    author_name: 'Typer Expert',
-    public_slug: 'typer-expert',
+    ...profile,
+    display_name: profile.username,
+    profile_name: profile.username,
+    username: profile.username,
+    author_name: profile.author_name || profile.username,
+    public_slug: profile.public_slug,
   }
 }
 
@@ -2491,6 +2512,22 @@ function getPublicProfileOverride(profileLike = {}) {
       description: text,
       about: text,
       created_at: '2026-06-28T00:00:00.000Z',
+      plan: 'free',
+      subscription_status: 'inactive',
+      role: 'tipster',
+      is_tipster: true,
+      preferred_sport: 'Piłka nożna',
+    }
+  }
+  if (['ograc-buka', 'ograć buka', 'ograc buka', '@ograc-buka'].includes(username)) {
+    const text = '📊 Ograć Buka to selektywny model value oparty wyłącznie na API-Football. Porównuje realne kursy kilku bukmacherów z prognozą API, formą, H2H i zgłoszonymi absencjami. Publikuje maksymalnie jeden mocny typ w danym okresie, zawsze ze stałą wirtualną stawką 1 — bez progresji i gonienia strat. Wyniki nie są gwarantowane.'
+    return {
+      username: 'Ograć Buka',
+      public_slug: 'ograc-buka',
+      bio: text,
+      description: text,
+      about: text,
+      created_at: '2026-06-29T00:00:00.000Z',
       plan: 'free',
       subscription_status: 'inactive',
       role: 'tipster',

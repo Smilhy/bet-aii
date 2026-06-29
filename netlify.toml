@@ -35,3 +35,13 @@
 # Typer Expert — rozliczanie wyłącznie tego profilu co godzinę.
 [functions."settle-typer-expert"]
   schedule = "37 * * * *"
+
+# WERSJA 1846 — Ograć Buka: selektywny model value, tylko API-Football.
+# Skan co 3 godziny, 10 minut po pełnej godzinie, aby nie dublować obciążenia z Typer Expert.
+[functions."publish-ograc-buka"]
+  schedule = "10 */3 * * *"
+
+# Ograć Buka — automatyczne rozliczanie wyłącznie tego profilu co godzinę.
+[functions."settle-ograc-buka"]
+  schedule = "52 * * * *"
+
