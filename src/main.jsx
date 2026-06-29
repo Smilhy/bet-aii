@@ -1663,6 +1663,83 @@ const BETAI_UNLOCKED_TIPS_TRANSLATIONS_V1858 = {
   }
 }
 
+const BETAI_RANKING_TRANSLATIONS_V1859 = {
+  en: {
+    'LIVE LEADERBOARD • BET+AI COMMUNITY': 'LIVE LEADERBOARD • BET+AI COMMUNITY',
+    'Śledź najlepszych typerów, rosnący profit i aktywność społeczności w czasie rzeczywistym. Szybki podgląd liderów, formy i wyników.': 'Follow the best tipsters, rising profits and community activity in real time. Get a quick view of leaders, form and results.',
+    'Top typerzy': 'Top tipsters',
+    'Najlepsze profile według profitu': 'Best profiles by profit',
+    'Live profit': 'Live profit',
+    'Wyniki i forma w jednym miejscu': 'Results and form in one place',
+    'Społeczność': 'Community',
+    'Obserwuj liderów rankingu': 'Follow the ranking leaders',
+    'Typerów w tabeli': 'Tipsters in the table',
+    'Top profit': 'Top profit',
+    'Twoje polecenia': 'Your referrals',
+    'AKTYWNI': 'ACTIVE',
+    'zarejestrowanych typerów w tabeli': 'registered tipsters in the table',
+    'Typer': 'Tipster',
+    'TYPY': 'PICKS',
+    'OBSERWUJĄCY': 'FOLLOWERS',
+    'RANGI': 'BADGES',
+    'NAGRODY': 'REWARDS',
+    'Nagroda pieniężna': 'Cash reward',
+    'Obserwujesz': 'Following',
+    'Obserwuj': 'Follow',
+    'Brak danych': 'No data',
+    'Pokaż kolejne 5': 'Show next 5',
+    'Zwiń ranking': 'Collapse ranking',
+    'Galeria sławy': 'Hall of Fame',
+    'Legendy Bet+AI': 'Bet+AI Legends',
+    'Najlepsi typerzy, najwyższy profit i historyczne wyniki.': 'The best tipsters, highest profits and historic results.',
+    'Zobacz całą galerię': 'View the full gallery',
+    'Wyzwania tygodniowe': 'Weekly challenges',
+    'Nagroda za każde:': 'Reward for each:',
+    'Król trafień': 'Accuracy King',
+    'Osiągnij 85% skuteczności w typach': 'Reach an 85% pick win rate',
+    'Seria zwycięstw': 'Winning streak',
+    'Wygraj 10 typów w zestawieniu': 'Win 10 picks in the ranking',
+    'Value Hunter': 'Value Hunter',
+    'Osiągnij ROI powyżej 20%': 'Reach ROI above 20%',
+    'Odebrano': 'Claimed',
+    'Odbierz': 'Claim',
+    'Zobacz wszystkie wyzwania': 'View all challenges',
+    'Wyzwania': 'Challenges',
+    'Wyzwania są liczone na żywo z Twojego rankingu.': 'Challenges are calculated live from your ranking.',
+    'MIESIĘCZNA PULA NAGRÓD': 'MONTHLY PRIZE POOL',
+    'WKRÓTCE': 'COMING SOON',
+    'DOŁĄCZ TERAZ': 'JOIN NOW',
+    'Miesięczna pula nagród': 'Monthly prize pool',
+    'Pula nagród pojawi się wkrótce.': 'The prize pool is coming soon.',
+    'WYPŁACILIŚMY NASZYM TYPEROM': 'PAID OUT TO OUR TIPSTERS',
+    'SPORT': 'SPORT',
+    'WYPŁACONE': 'PAID OUT',
+    'Piłka nożna': 'Football',
+    'Koszykówka': 'Basketball',
+    'Hokej na lodzie': 'Ice hockey',
+    'Tenis': 'Tennis',
+    'Futbol amerykański': 'American football',
+    'Wszystkie': 'All',
+    'Kod polecający': 'Referral code',
+    'Postęp do kolejnego bonusu': 'Progress to the next bonus',
+    '10 poleceń': '10 referrals',
+    '50 poleceń': '50 referrals',
+    '150 poleceń': '150 referrals',
+    '300 poleceń': '300 referrals',
+    'Pobierz link polecający': 'Copy referral link',
+    'Polecenia': 'Referrals',
+    'Link polecający skopiowany.': 'Referral link copied.',
+    'Lider profitu': 'Profit leader',
+    'Drugie miejsce': 'Second place',
+    'Trzecie miejsce': 'Third place',
+    'Profit na plusie': 'Positive profit',
+    'ROI powyżej 20%': 'ROI above 20%',
+    'Minimum 10 wygranych': 'At least 10 wins',
+    'Aktywny typer': 'Active tipster',
+    'Uczestnik rankingu': 'Ranking participant'
+  }
+}
+
 const BETAI_TRANSLATION_DICTIONARY_CACHE = new Map()
 const BETAI_TRANSLATION_KEYS_CACHE = new Map()
 
@@ -1680,7 +1757,8 @@ function buildBetaiTranslationDictionary(lang) {
     BETAI_ADD_PICK_TRANSLATIONS_V1853,
     BETAI_UNLOCKED_TIPS_TRANSLATIONS_V1858,
     BETAI_FINANCE_TRANSLATIONS_V1856,
-    BETAI_PROFILE_TRANSLATIONS_V1857
+    BETAI_PROFILE_TRANSLATIONS_V1857,
+    BETAI_RANKING_TRANSLATIONS_V1859
   ]
   const allTargetDictionaries = allSources.map(source => source?.[lang] || {})
   const target = Object.assign({}, ...allTargetDictionaries)
@@ -20822,6 +20900,8 @@ function LeaderboardView({
   onChallengeReward = null,
   userChallengeClaims = []
 }) {
+  const lang = useBetaiLanguageState()
+  const t = value => translateBetaiTextValue(value, lang)
   const [activeTab, setActiveTab] = useState('ranking')
   const [sidebarTab, setSidebarTab] = useState('top')
   const [periodFilter, setPeriodFilter] = useState('all')
@@ -20989,8 +21069,8 @@ function LeaderboardView({
       {
         key: 'weekly_accuracy_85',
         icon: '📈',
-        title: 'Król trafień',
-        desc: 'Osiągnij 85% skuteczności w typach',
+        title: t('Król trafień'),
+        desc: t('Osiągnij 85% skuteczności w typach'),
         value: Math.min(100, Math.max(0, winrate)),
         label: `${Math.round(winrate)}%`,
         targetLabel: '85%',
@@ -20999,8 +21079,8 @@ function LeaderboardView({
       {
         key: 'weekly_win_streak_10',
         icon: '🏆',
-        title: 'Seria zwycięstw',
-        desc: 'Wygraj 10 typów w zestawieniu',
+        title: t('Seria zwycięstw'),
+        desc: t('Wygraj 10 typów w zestawieniu'),
         value: Math.min(100, (wins / 10) * 100),
         label: `${wins}/10`,
         targetLabel: '10',
@@ -21009,8 +21089,8 @@ function LeaderboardView({
       {
         key: 'weekly_roi_20',
         icon: '💎',
-        title: 'Value Hunter',
-        desc: 'Osiągnij ROI powyżej 20%',
+        title: t('Value Hunter'),
+        desc: t('Osiągnij ROI powyżej 20%'),
         value: Math.min(100, Math.max(0, (roi / 20) * 100)),
         label: `${Number(roi || 0).toFixed(1)}%`,
         targetLabel: '20%',
@@ -21025,25 +21105,25 @@ function LeaderboardView({
   const referralCode = String(referralData?.referral_code || user?.username || user?.email?.split('@')?.[0] || 'BETAI').toUpperCase()
   const referralProgress = Math.min(100, (referralCount / 10) * 100)
   const referralBonuses = [
-    ['10 poleceń', '+10 coin', referralCount >= 10],
-    ['50 poleceń', '+100 coin', referralCount >= 50],
-    ['150 poleceń', '+1000 coin', referralCount >= 150],
-    ['300 poleceń', '+10000 coin', referralCount >= 300],
+    [t('10 poleceń'), '+10 coin', referralCount >= 10],
+    [t('50 poleceń'), '+100 coin', referralCount >= 50],
+    [t('150 poleceń'), '+1000 coin', referralCount >= 150],
+    [t('300 poleceń'), '+10000 coin', referralCount >= 300],
   ]
 
   const rankingPayoutRows = [
-    { icon: '⚽', label: 'Piłka nożna', amount: 0 },
-    { icon: '🏀', label: 'Koszykówka', amount: 0 },
-    { icon: '🏒', label: 'Hokej na lodzie', amount: 0 },
-    { icon: '🎾', label: 'Tenis', amount: 0 },
+    { icon: '⚽', label: t('Piłka nożna'), amount: 0 },
+    { icon: '🏀', label: t('Koszykówka'), amount: 0 },
+    { icon: '🏒', label: t('Hokej na lodzie'), amount: 0 },
+    { icon: '🎾', label: t('Tenis'), amount: 0 },
     { icon: '🎯', label: 'Counter-Strike', amount: 0 },
     { icon: '🕹️', label: 'League of Legends', amount: 0 },
     { icon: '🎮', label: 'Dota 2', amount: 0 },
     { icon: '⚾', label: 'Baseball', amount: 0 },
     { icon: '🏉', label: 'Rugby', amount: 0 },
     { icon: '🧩', label: 'Esport', amount: 0 },
-    { icon: '🏈', label: 'Futbol amerykański', amount: 0 },
-    { icon: '🚴', label: 'Wszystkie', amount: 0 },
+    { icon: '🏈', label: t('Futbol amerykański'), amount: 0 },
+    { icon: '🚴', label: t('Wszystkie'), amount: 0 },
   ]
   const rankingPayoutTotal = rankingPayoutRows.reduce((sum, row) => sum + Number(row.amount || 0), 0)
 
@@ -21057,9 +21137,9 @@ function LeaderboardView({
     const link = `${origin}/?ref=${encodeURIComponent(referralCode)}`
     try {
       await navigator.clipboard?.writeText(link)
-      onToast?.({ type: 'success', title: 'Polecenia', message: 'Link polecający skopiowany.' })
+      onToast?.({ type: 'success', title: t('Polecenia'), message: t('Link polecający skopiowany.') })
     } catch (_) {
-      onToast?.({ type: 'info', title: 'Polecenia', message: link })
+      onToast?.({ type: 'info', title: t('Polecenia'), message: link })
     }
   }
 
@@ -21077,14 +21157,14 @@ function LeaderboardView({
       <div className="ranking-v4-table">
         <div className="ranking-v4-row head">
           <span>#</span>
-          <span>Typer</span>
+          <span>{t('Typer')}</span>
           <span>WIN RATE</span>
           <span>YIELD</span>
-          <span>TYPY</span>
-          <span>OBSERWUJĄCY</span>
+          <span>{t('TYPY')}</span>
+          <span>{t('OBSERWUJĄCY')}</span>
           <span>PROFIT</span>
-          <span>RANGI</span>
-          <span>NAGRODY</span>
+          <span>{t('RANGI')}</span>
+          <span>{t('NAGRODY')}</span>
           <span></span>
         </div>
         {rows.map((row, idx) => {
@@ -21107,10 +21187,10 @@ function LeaderboardView({
               <span>{Number(row.totalTips || row.total_tips || 0)}</span>
               <span>{Number(row.followers || 0)}</span>
               <span className={`profit-v4 ${profitToneClass}`}>{profitValue >= 0 ? '+' : ''}{formatRankingAmount(profitValue)}</span>
-              <span className="badges-cell-v4">{row.displayBadges.map((badge, bIdx) => <i key={bIdx} title={badge.label}>{badge.icon}</i>)}</span>
+              <span className="badges-cell-v4">{row.displayBadges.map((badge, bIdx) => <i key={bIdx} title={t(badge.label)}>{badge.icon}</i>)}</span>
               <span className="ranking-reward-cell-v1779">
                 {row.liveRank <= 3 ? (
-                  <b className="ranking-reward-pill-v1779" title="Nagroda pieniężna">
+                  <b className="ranking-reward-pill-v1779" title={t('Nagroda pieniężna')}>
                     <span className="ranking-reward-currency-v1780">$</span>
                     <span>0</span>
                   </b>
@@ -21120,20 +21200,20 @@ function LeaderboardView({
               </span>
               <span>
                 <button type="button" className={`follow-btn-v4 ${row.isFollowing ? 'is-following' : ''}`} onClick={(event) => followRow(event, row)}>
-                  {row.isFollowing ? 'Obserwujesz' : 'Obserwuj'}
+                  {row.isFollowing ? t('Obserwujesz') : t('Obserwuj')}
                 </button>
               </span>
             </button>
           )
         })}
-        {!rows.length && <div className="ranking-v4-row"><span>1</span><span>Brak danych</span><span>-</span><span>-</span><span>0</span><span>0</span><span>0.00</span><span>-</span><span>—</span><span></span></div>}
+        {!rows.length && <div className="ranking-v4-row"><span>1</span><span>{t('Brak danych')}</span><span>-</span><span>-</span><span>0</span><span>0</span><span>0.00</span><span>-</span><span>—</span><span></span></div>}
       </div>
       <div className="ranking-loadmore-v1407">
-        <span>Pokazano <b>{Math.min(rows.length, leaderboardRows.length)}</b> z <b>{leaderboardRows.length}</b> typerów</span>
+        <span>{t(`Pokazano ${Math.min(rows.length, leaderboardRows.length)} z ${leaderboardRows.length} typerów`)}</span>
         {rankingVisibleCount < leaderboardRows.length ? (
-          <button type="button" onClick={() => setRankingVisibleCount(prev => Math.min(prev + 5, leaderboardRows.length))}>Pokaż kolejne 5</button>
+          <button type="button" onClick={() => setRankingVisibleCount(prev => Math.min(prev + 5, leaderboardRows.length))}>{t('Pokaż kolejne 5')}</button>
         ) : leaderboardRows.length > 10 ? (
-          <button type="button" onClick={() => setRankingVisibleCount(10)}>Zwiń ranking</button>
+          <button type="button" onClick={() => setRankingVisibleCount(10)}>{t('Zwiń ranking')}</button>
         ) : null}
       </div>
     </div>
@@ -21153,25 +21233,25 @@ function LeaderboardView({
         <div className="ranking-v4-main">
           <div className="ranking-v4-hero ranking-v1398-hero">
             <div className="ranking-v1398-copy">
-              <span className="ranking-v1398-eyebrow">LIVE LEADERBOARD • BET+AI COMMUNITY</span>
+              <span className="ranking-v1398-eyebrow">{t('LIVE LEADERBOARD • BET+AI COMMUNITY')}</span>
               <h1>Ranking <span>Bet+AI</span></h1>
-              <p>Śledź najlepszych typerów, rosnący profit i aktywność społeczności w czasie rzeczywistym. Szybki podgląd liderów, formy i wyników.</p>
+              <p>{t('Śledź najlepszych typerów, rosnący profit i aktywność społeczności w czasie rzeczywistym. Szybki podgląd liderów, formy i wyników.')}</p>
 
               <div className="ranking-v1398-features">
                 <div>
                   <i>🏆</i>
-                  <strong>Top typerzy</strong>
-                  <small>Najlepsze profile według profitu</small>
+                  <strong>{t('Top typerzy')}</strong>
+                  <small>{t('Najlepsze profile według profitu')}</small>
                 </div>
                 <div>
                   <i>📈</i>
-                  <strong>Live profit</strong>
-                  <small>Wyniki i forma w jednym miejscu</small>
+                  <strong>{t('Live profit')}</strong>
+                  <small>{t('Wyniki i forma w jednym miejscu')}</small>
                 </div>
                 <div>
                   <i>👥</i>
-                  <strong>Społeczność</strong>
-                  <small>Obserwuj liderów rankingu</small>
+                  <strong>{t('Społeczność')}</strong>
+                  <small>{t('Obserwuj liderów rankingu')}</small>
                 </div>
               </div>
             </div>
@@ -21179,15 +21259,15 @@ function LeaderboardView({
             <div className="ranking-v1398-side">
               <div className="ranking-v1398-stats">
                 <div>
-                  <span>Typerów w tabeli</span>
+                  <span>{t('Typerów w tabeli')}</span>
                   <strong>{leaderboardRows.length}</strong>
                 </div>
                 <div>
-                  <span>Top profit</span>
+                  <span>{t('Top profit')}</span>
                   <strong>{heroLeaderProfit}</strong>
                 </div>
                 <div>
-                  <span>Twoje polecenia</span>
+                  <span>{t('Twoje polecenia')}</span>
                   <strong>{referralCount}</strong>
                 </div>
               </div>
@@ -21206,9 +21286,9 @@ function LeaderboardView({
                   <small>Profit {heroLeaderProfit} • Win rate {heroLeaderWinrate}</small>
                 </div>
                 <div className="ranking-v1398-card mini">
-                  <span>AKTYWNI</span>
+                  <span>{t('AKTYWNI')}</span>
                   <strong>{leaderboardRows.length}</strong>
-                  <small>zarejestrowanych typerów w tabeli</small>
+                  <small>{t('zarejestrowanych typerów w tabeli')}</small>
                 </div>
               </div>
             </div>
@@ -21218,11 +21298,11 @@ function LeaderboardView({
 
           <div className="ranking-v4-bottom-grid">
             <div className="glass-ranking-v4 ranking-v4-card hall-card-v4">
-              <div className="ranking-v4-card-head"><h3>Galeria sławy</h3></div>
+              <div className="ranking-v4-card-head"><h3>{t('Galeria sławy')}</h3></div>
               <div className="hall-stage-v4">
                 <div className="hall-copy-v4">
-                  <strong>Legendy Bet+AI</strong>
-                  <p>Najlepsi typerzy, najwyższy profit i historyczne wyniki.</p>
+                  <strong>{t('Legendy Bet+AI')}</strong>
+                  <p>{t('Najlepsi typerzy, najwyższy profit i historyczne wyniki.')}</p>
                   <div className="hall-laurels-v4">
                     {leaderboardRows.slice(0, 3).map((row) => (
                       <button type="button" key={row.tipster_id || row.liveRank} onClick={() => openRow(row)}>
@@ -21242,22 +21322,22 @@ function LeaderboardView({
                   <div className="ball-v4">⚽</div>
                 </div>
               </div>
-              <button type="button" className="hall-btn-v4" onClick={() => setRankingVisibleCount(leaderboardRows.length || 10)}>Zobacz całą galerię</button>
+              <button type="button" className="hall-btn-v4" onClick={() => setRankingVisibleCount(leaderboardRows.length || 10)}>{t('Zobacz całą galerię')}</button>
             </div>
 
             <div className="glass-ranking-v4 ranking-v4-card challenges-card-v4">
-              <div className="ranking-v4-card-head"><h3>Wyzwania tygodniowe</h3><span>⏱ Nagroda za każde: <b>1 coin</b></span></div>
+              <div className="ranking-v4-card-head"><h3>{t('Wyzwania tygodniowe')}</h3><span>⏱ {t('Nagroda za każde:')} <b>1 coin</b></span></div>
               <div className="challenge-list-v4">
                 {challengeRows.map((row) => (
                   <div className={`challenge-item-v4 ${row.done ? 'is-done' : ''} ${row.claimed ? 'is-claimed' : ''}`} key={row.key}>
                     <div className="challenge-icon-v4">{row.icon}</div>
                     <div className="challenge-copy-v4"><strong>{row.title}</strong><small>{row.desc}</small></div>
                     <div className="challenge-progress-v4"><span>{row.label}</span><div className="challenge-bar-v4"><i style={{width: row.width}}></i></div></div>
-                    <button type="button" className="challenge-reward-v4" disabled={!row.done || row.claimed} onClick={() => handleChallengeRewardClick(row)}>{row.claimed ? 'Odebrano' : row.done ? `Odbierz ${row.reward}` : row.reward}</button>
+                    <button type="button" className="challenge-reward-v4" disabled={!row.done || row.claimed} onClick={() => handleChallengeRewardClick(row)}>{row.claimed ? t('Odebrano') : row.done ? `${t('Odbierz')} ${row.reward}` : row.reward}</button>
                   </div>
                 ))}
               </div>
-              <button type="button" className="hall-btn-v4 alt" onClick={() => onToast?.({ type: 'info', title: 'Wyzwania', message: 'Wyzwania są liczone na żywo z Twojego rankingu.' })}>Zobacz wszystkie wyzwania</button>
+              <button type="button" className="hall-btn-v4 alt" onClick={() => onToast?.({ type: 'info', title: t('Wyzwania'), message: t('Wyzwania są liczone na żywo z Twojego rankingu.') })}>{t('Zobacz wszystkie wyzwania')}</button>
             </div>
           </div>
         </div>
@@ -21265,14 +21345,14 @@ function LeaderboardView({
         <aside className="ranking-v4-sidebar">
           <div className="glass-ranking-v4 sidebar-card-v4 ranking-reward-pool-v1787">
             <div className="ranking-reward-pool-inner-v1787">
-              <span className="ranking-reward-pool-kicker-v1787">MIESIĘCZNA PULA NAGRÓD</span>
-              <strong className="ranking-reward-pool-comingsoon-v1788">WKRÓTCE</strong>
+              <span className="ranking-reward-pool-kicker-v1787">{t('MIESIĘCZNA PULA NAGRÓD')}</span>
+              <strong className="ranking-reward-pool-comingsoon-v1788">{t('WKRÓTCE')}</strong>
               <button
                 type="button"
                 className="ranking-reward-pool-btn-v1787"
-                onClick={() => onToast?.({ type: 'info', title: 'Miesięczna pula nagród', message: 'Pula nagród pojawi się wkrótce.' })}
+                onClick={() => onToast?.({ type: 'info', title: t('Miesięczna pula nagród'), message: t('Pula nagród pojawi się wkrótce.') })}
               >
-                DOŁĄCZ TERAZ
+                {t('DOŁĄCZ TERAZ')}
               </button>
             </div>
           </div>
@@ -21280,12 +21360,12 @@ function LeaderboardView({
           <div className="glass-ranking-v4 sidebar-card-v4 ranking-payouts-v1783">
             <div className="ranking-payouts-summary-v1783">
               <strong>{rankingPayoutTotal.toFixed(0)} $</strong>
-              <span>WYPŁACILIŚMY NASZYM TYPEROM</span>
+              <span>{t('WYPŁACILIŚMY NASZYM TYPEROM')}</span>
             </div>
 
             <div className="ranking-payouts-head-v1783">
-              <span>SPORT</span>
-              <span>WYPŁACONE</span>
+              <span>{t('SPORT')}</span>
+              <span>{t('WYPŁACONE')}</span>
             </div>
 
             <div className="ranking-payouts-list-v1783">
@@ -21302,13 +21382,13 @@ function LeaderboardView({
           </div>
 
           <div className="glass-ranking-v4 sidebar-card-v4 referrals-v4 ranking-referrals-bottom-v1788">
-            <div className="ranking-v4-card-head"><h3>Twoje polecenia</h3></div>
+            <div className="ranking-v4-card-head"><h3>{t('Twoje polecenia')}</h3></div>
             <div className="referral-code-v4">
-              <span>Kod polecający</span>
+              <span>{t('Kod polecający')}</span>
               <div><strong>{referralCode}</strong><button type="button" onClick={copyReferral}>⧉</button></div>
             </div>
             <div className="referral-progress-v4">
-              <div className="progress-head-v4"><span>Postęp do kolejnego bonusu</span><b>{referralCount} / 10</b></div>
+              <div className="progress-head-v4"><span>{t('Postęp do kolejnego bonusu')}</span><b>{referralCount} / 10</b></div>
               <div className="progress-bar-v4"><i style={{width:`${referralProgress}%`}}></i></div>
             </div>
             <div className="referral-bonuses-v4">
@@ -21316,7 +21396,7 @@ function LeaderboardView({
                 <div className={`ref-bonus-v4 ${item[2] ? 'done' : ''}`} key={idx}><span>{item[0]}</span><b>{item[1]}</b></div>
               ))}
             </div>
-            <button type="button" className="hall-btn-v4 alt" onClick={copyReferral}>Pobierz link polecający</button>
+            <button type="button" className="hall-btn-v4 alt" onClick={copyReferral}>{t('Pobierz link polecający')}</button>
           </div>
         </aside>
       </div>
