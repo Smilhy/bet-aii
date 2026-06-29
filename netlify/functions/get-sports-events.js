@@ -96,8 +96,7 @@ exports.handler = async function(event) {
         .filter(Boolean)
         .filter(item => {
           if (!wanted) return true
-          const haystack = normalizeLoose(`${item.home || ''} ${item.away || ''} ${item.league || ''} ${item.country || ''}`)
-          return wanted.split(/\s+/).every(term => haystack.includes(term))
+          return matchesFootballSearchText(item, rawQuery)
         })
         .filter(item => {
           const key = normalizeFixtureCacheKey(item).toLowerCase()
@@ -172,12 +171,139 @@ exports.handler = async function(event) {
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
 
-  const matchesRequestedFootballText = (fixture) => {
-    const q = normalizeLoose(query)
-    if (!q) return true
-    const haystack = normalizeLoose(`${fixture.home || ''} ${fixture.away || ''} ${fixture.league || ''} ${fixture.country || ''}`)
-    return q.split(/\s+/).every(term => haystack.includes(term))
+  // WERSJA 1848: wyszukiwarka w "Dodaj typ" przyjmuje także polskie
+  // nazwy reprezentacji/krajów. API-FOOTBALL pracuje głównie na nazwach
+  // angielskich, dlatego tylko na potrzeby wyszukiwania tworzymy angielski
+  // wariant frazy. Oryginalna fraza nadal zostaje obsłużona bez zmian.
+  const footballSearchCountryAliases = {
+    afryka: 'africa',
+    albania: 'albania',
+    algieria: 'algeria',
+    anglia: 'england',
+    'arabia saudyjska': 'saudi arabia',
+    argentyna: 'argentina',
+    armenia: 'armenia',
+    aruba: 'aruba',
+    australia: 'australia',
+    austria: 'austria',
+    azerbejdzan: 'azerbaijan',
+    azja: 'asia',
+    belgia: 'belgium',
+    bialorus: 'belarus',
+    boliwia: 'bolivia',
+    bosnia: 'bosnia and herzegovina',
+    brazylia: 'brazil',
+    bulgaria: 'bulgaria',
+    chile: 'chile',
+    chiny: 'china',
+    'chinsko tajpej': 'chinese taipei',
+    chorwacja: 'croatia',
+    cypr: 'cyprus',
+    czarnogora: 'montenegro',
+    czechy: 'czech republic',
+    dania: 'denmark',
+    'dominikana republika': 'dominican republic',
+    egipt: 'egypt',
+    ekwador: 'ecuador',
+    estonia: 'estonia',
+    etiopia: 'ethiopia',
+    finlandia: 'finland',
+    francja: 'france',
+    grecja: 'greece',
+    gruzja: 'georgia',
+    gwatemala: 'guatemala',
+    hiszpania: 'spain',
+    holandia: 'netherlands',
+    honduras: 'honduras',
+    hongkong: 'hong kong',
+    indie: 'india',
+    indonezja: 'indonesia',
+    irlandia: 'ireland',
+    'irlandia polnocna': 'northern ireland',
+    islandia: 'iceland',
+    izrael: 'israel',
+    japonia: 'japan',
+    kamerun: 'cameroon',
+    kanada: 'canada',
+    kazachstan: 'kazakhstan',
+    kenia: 'kenya',
+    kolumbia: 'colombia',
+    'korea poludniowa': 'south korea',
+    kosowa: 'kosovo',
+    kostaryka: 'costa rica',
+    litwa: 'lithuania',
+    macedonia: 'north macedonia',
+    malezja: 'malaysia',
+    malta: 'malta',
+    maroko: 'morocco',
+    meksyk: 'mexico',
+    mongolia: 'mongolia',
+    niemcy: 'germany',
+    nimecy: 'germany',
+    norwegia: 'norway',
+    panama: 'panama',
+    paragwaj: 'paraguay',
+    peru: 'peru',
+    polska: 'poland',
+    portugalia: 'portugal',
+    protugalia: 'portugal',
+    'republika poludniowej afryki': 'south africa',
+    rosja: 'russia',
+    rumunia: 'romania',
+    'san marino': 'san marino',
+    serbia: 'serbia',
+    singapur: 'singapore',
+    szkocja: 'scotland',
+    szwajcaria: 'switzerland',
+    szwecja: 'sweden',
+    slowacja: 'slovakia',
+    slowenia: 'slovenia',
+    tajlandia: 'thailand',
+    turcja: 'turkey',
+    usa: 'usa',
+    ukraina: 'ukraine',
+    urugwaj: 'uruguay',
+    wenezuela: 'venezuela',
+    wietnam: 'vietnam',
+    'wyspy owcze': 'faroe islands',
+    wegry: 'hungary',
+    wlochy: 'italy',
+    lotwa: 'latvia',
+    swiat: 'world',
+    // Najczęstsze literówki wpisywane w wyszukiwarce.
+    gemrnay: 'germany',
+    germnay: 'germany',
   }
+
+  const escapeSearchRegExp = (value) => String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+  const getFootballSearchQueryVariants = (value) => {
+    const original = normalizeLoose(value)
+      .replace(/\b(?:vs|v|kontra)\b/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (!original) return []
+
+    let translated = original
+    Object.entries(footballSearchCountryAliases)
+      .sort((a, b) => b[0].length - a[0].length)
+      .forEach(([alias, english]) => {
+        const pattern = new RegExp(`(^|\\s)${escapeSearchRegExp(alias)}(?=\\s|$)`, 'g')
+        translated = translated.replace(pattern, (match, prefix) => `${prefix}${english}`)
+      })
+
+    translated = translated.replace(/\s+/g, ' ').trim()
+    return [...new Set([original, translated].filter(Boolean))]
+  }
+
+  const matchesFootballSearchText = (fixture, rawQuery = query) => {
+    const variants = getFootballSearchQueryVariants(rawQuery)
+    if (!variants.length) return true
+    const haystack = normalizeLoose(`${fixture.home || ''} ${fixture.away || ''} ${fixture.league || ''} ${fixture.country || ''}`)
+    return variants.some(variant => variant.split(/\s+/).every(term => haystack.includes(term)))
+  }
+
+  const matchesRequestedFootballText = (fixture) => matchesFootballSearchText(fixture, query)
 
   const normalizeFootballCountryAlias = (value) => {
     const clean = normalizeLoose(value)
@@ -1193,7 +1319,12 @@ exports.handler = async function(event) {
       .split(/\s+(?:vs|v|kontra)\s+|\s*[-–—]\s*/i)
       .map(part => part.trim())
       .filter(Boolean)
-    const teamSearchTerms = [...new Set([queryParts[0], normalized].filter(Boolean))]
+    const teamSearchTerms = [...new Set([
+      ...queryParts.flatMap(part => getFootballSearchQueryVariants(part).reverse()),
+      ...getFootballSearchQueryVariants(normalized).reverse(),
+      queryParts[0],
+      normalized,
+    ].filter(Boolean))]
     const teamRows = []
     const errors = []
 
