@@ -76394,3 +76394,22 @@ body > .tip-analysis-modal-backdrop > .tip-analysis-modal{
   line-height: 1;
   transform: translateY(-1px);
 }
+
+.betfolio-goal-direction-arrow.up,
+.betfolio-goal-direction-arrow.down{
+  min-width: 1.15em;
+  text-shadow: 0 0 10px rgba(255,255,255,.45), 0 0 18px currentColor, 0 0 28px currentColor;
+  animation: betfolioArrowPulse1855 1s ease-in-out infinite;
+}
+.betfolio-goal-direction-arrow.up{
+  color:#42f5c8;
+  filter: drop-shadow(0 0 8px rgba(66,245,200,.9)) drop-shadow(0 0 18px rgba(66,245,200,.65));
+}
+.betfolio-goal-direction-arrow.down{
+  color:#ffcc4d;
+  filter: drop-shadow(0 0 8px rgba(255,204,77,.9)) drop-shadow(0 0 18px rgba(255,170,0,.65));
+}
+@keyframes betfolioArrowPulse1855{
+  0%,100%{ transform: translateY(-1px) scale(1); opacity: .9; }
+  50%{ transform: translateY(-1px) scale(1.32); opacity: 1; }
+}

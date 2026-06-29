@@ -6066,6 +6066,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const addTipIdentity = { ...(user || {}), username, email, author_name: username, author_email: email }
   const isPremiumUser = hasUnlimitedTipAccess(addTipIdentity, userPlan) || isSmilhytvLifetimePremium(addTipIdentity) || normalizeEmail(email) === 'smilhytv@gmail.com' || normalizeEmail(username) === 'smilhytv'
   const todayLabel = new Date().toLocaleDateString('pl-PL')
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
 
   const sportsbook = useMemo(() => ({
     'Piłka nożna': {
@@ -12136,24 +12138,24 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             <>
               <div className="betfolio-add-hero">
                 <div className="betfolio-add-hero-copy">
-                  <h2>Dodaj <span>typ</span></h2>
-                  <p>Wyszukaj mecz, wybierz rynek i stwórz swój własny typ w kilka sekund.</p>
+                  <h2>{lang === 'en' ? <>Add <span>pick</span></> : <>Dodaj <span>typ</span></>}</h2>
+                  <p>{t('Wyszukaj mecz, wybierz rynek i stwórz swój własny typ w kilka sekund.')}</p>
 
                   <div className="betfolio-add-hero-features">
                     <div>
                       <i>⚡</i>
-                      <strong>Szybkie wyszukiwanie</strong>
-                      <small>Top ligi, dziś i jutro</small>
+                      <strong>{t('Szybkie wyszukiwanie')}</strong>
+                      <small>{t('Top ligi, dziś i jutro')}</small>
                     </div>
                     <div>
                       <i>📈</i>
-                      <strong>Kursy i rynki</strong>
-                      <small>Najpopularniejsze opcje zakładów</small>
+                      <strong>{t('Kursy i rynki')}</strong>
+                      <small>{t('Najpopularniejsze opcje zakładów')}</small>
                     </div>
                     <div>
                       <i>🤖</i>
                       <strong>AI value</strong>
-                      <small>Sportowy skaner okazji</small>
+                      <small>{t('Sportowy skaner okazji')}</small>
                     </div>
                   </div>
                 </div>
@@ -12179,13 +12181,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
 
               <div className="betfolio-api-saver-note search-ready-v1297">
-                <strong>Tryb ręczny API</strong>
-                <span>Wyszukiwarka działa w 100%. wpisz mecz/drużynę, kliknij Top Mecze albo wybierz ligę po lewej. Liga pokaże najbliższe mecze, nie tylko dzisiejsze.</span>
+                <strong>{t('Tryb ręczny API')}</strong>
+                <span>{t('Wyszukiwarka działa w 100%. wpisz mecz/drużynę, kliknij Top Mecze albo wybierz ligę po lewej. Liga pokaże najbliższe mecze, nie tylko dzisiejsze.')}</span>
               </div>
 
               <div className="betfolio-sport-cards-v1276" aria-label="Popularne sporty premium">
                 <div className="sport-cards-head-v1276">
-                  <span>Popularne sporty</span>
+                  <span>{t('Popularne sporty')}</span>
                 </div>
                 <div className="sport-cards-track-v1276 all-sports">
                   {sportKeys.map((sportName) => {
@@ -12196,8 +12198,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                     const isFootballCard = sportName === 'Piłka nożna'
                     const isActiveCard = isFootballCard && (openSidebarSport === sportName || form.sport === sportName)
                     const subtitle = isFootballCard
-                      ? 'Top mecze • dziś + jutro'
-                      : 'Aktywacja w kolejnych wersjach'
+                      ? t('Top mecze • dziś + jutro')
+                      : t('Aktywacja w kolejnych wersjach')
                     return (
                       <button
                         key={sportName}
@@ -12205,17 +12207,17 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                         className={`sport-card-v1276 ${themeClass} ${isActiveCard ? 'active' : ''} ${!isFootballCard ? 'is-soon-v1281' : ''}`}
                         onClick={() => {
                           if (!isFootballCard) {
-                            onToast?.({ type: 'success', title: sportName, message: `${sportName} będzie dostępny wkrótce. Na ten moment aktywna jest tylko piłka nożna.` })
+                            onToast?.({ type: 'success', title: sportName, message: `${t(sportName)} ${t('będzie dostępny wkrótce. Na ten moment aktywna jest tylko piłka nożna.')}` })
                             return
                           }
                           selectSidebarSport(sportName)
                         }}
                       >
                         <div className="sport-card-top-v1276"><i>{sportIconMap[sportName] || ''}</i><span>{sportName}</span></div>
-                        <strong>{isFootballCard ? `${matchesCount} ${matchesCount === 1 ? 'mecz' : matchesCount < 5 ? 'mecze' : 'meczów'}` : 'Wkrótce'}</strong>
-                        <small>{subtitle}</small>
+                        <strong>{isFootballCard ? t(`${matchesCount} ${matchesCount === 1 ? 'mecz' : matchesCount < 5 ? 'mecze' : 'meczów'}`) : t('Wkrótce')}</strong>
+                        <small>{t(subtitle)}</small>
                         <b aria-hidden="true">{sportIconMap[sportName] || ''}</b>
-                        {!isFootballCard ? <mark className="sport-card-badge-v1281">WKRÓTCE</mark> : null}
+                        {!isFootballCard ? <mark className="sport-card-badge-v1281">{t('WKRÓTCE')}</mark> : null}
                       </button>
                     )
                   })}
@@ -12223,8 +12225,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
 
               <div className="betfolio-add-mode-switch">
-                <button type="button" className={addTipMode === 'auto' ? 'active' : ''} onClick={() => switchAddTipMode('auto')}>Dodaj typ automatycznie</button>
-                <button type="button" className={addTipMode === 'manual' ? 'active' : ''} onClick={() => switchAddTipMode('manual')}>Dodaj typ ręcznie</button>
+                <button type="button" className={addTipMode === 'auto' ? 'active' : ''} onClick={() => switchAddTipMode('auto')}>{t('Dodaj typ automatycznie')}</button>
+                <button type="button" className={addTipMode === 'manual' ? 'active' : ''} onClick={() => switchAddTipMode('manual')}>{t('Dodaj typ ręcznie')}</button>
               </div>
 
               {addTipMode === 'auto' && (
@@ -12238,18 +12240,18 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                         disabled={liveFixturesLoading && footballViewMode === 'top-matches'}
                         aria-busy={liveFixturesLoading && footballViewMode === 'top-matches'}
                       >
-                        <span>{liveFixturesLoading && footballViewMode === 'top-matches' ? 'Szukam top meczów...' : 'Top Mecze dziś + jutro'}</span>
+                        <span>{liveFixturesLoading && footballViewMode === 'top-matches' ? t('Szukam top meczów...') : t('Top Mecze dziś + jutro')}</span>
                         {liveFixturesLoading && footballViewMode === 'top-matches' && <span className="betfolio-top-matches-spinner" aria-hidden="true" />}
                       </button>
 
-                      <div className="betfolio-top-panel-chips-v1291" aria-label="Parametry top meczów">
-                        <span className="betfolio-top-chip-v1291 active">Dziś + jutro</span>
-                        <span className="betfolio-top-chip-v1291">6 lig</span>
-                        <span className="betfolio-top-chip-v1291">{visibleMatchOptions.length} wydarzeń</span>
-                        <span className="betfolio-top-chip-v1291 subtle">godziny rosnąco</span>
+                      <div className="betfolio-top-panel-chips-v1291" aria-label={t('Parametry top meczów')}>
+                        <span className="betfolio-top-chip-v1291 active">{t('Dziś + jutro')}</span>
+                        <span className="betfolio-top-chip-v1291">{t('6 lig')}</span>
+                        <span className="betfolio-top-chip-v1291">{t(`${visibleMatchOptions.length} wydarzeń`)}</span>
+                        <span className="betfolio-top-chip-v1291 subtle">{t('godziny rosnąco')}</span>
                       </div>
                     </div>
-                    <div className="betfolio-top-panel-subtitle-v1291">Premium wybór najważniejszych meczów z top lig. Kliknij kafel lub kurs, aby od razu budować typ.</div>
+                    <div className="betfolio-top-panel-subtitle-v1291">{t('Premium wybór najważniejszych meczów z top lig. Kliknij kafel lub kurs, aby od razu budować typ.')}</div>
                   </div>
                 </>
               )}
@@ -12262,8 +12264,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <>
                   {footballViewMode !== 'top-matches' && (
                     <div className="betfolio-events-head">
-                      <strong>{footballViewMode === 'all-today' ? 'Wszystkie dzisiejsze mecze' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : currentLeague ? `Najbliższe mecze • ${currentCountry} • ${currentLeague}` : 'Wybierz ligę po lewej'}</strong>
-                      <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
+                      <strong>{footballViewMode === 'all-today' ? t('Wszystkie dzisiejsze mecze') : footballViewMode === 'search' ? t('Wyniki wyszukiwania') : currentLeague ? t(`Najbliższe mecze • ${currentCountry} • ${currentLeague}`) : t('Wybierz ligę po lewej')}</strong>
+                      <span>{t(`${visibleMatchOptions.length} wydarzeń • godziny rosnąco`)}</span>
                     </div>
                   )}
 
@@ -28960,7 +28962,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
 
           <div className="betfolio-sport-cards-v1276 top-tipsters-sport-cards-v1510" aria-label="Popularne sporty Top typerzy">
             <div className="sport-cards-head-v1276">
-              <span>Popularne sporty</span>
+              <span>{t('Popularne sporty')}</span>
             </div>
             <div className="sport-cards-track-v1276 all-sports top-tipsters-sports-grid-v1510">
               {categories.map((item) => {
