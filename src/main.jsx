@@ -705,6 +705,18 @@ function translateBetaiDynamicTemplateV1850(value, lang) {
     if ((match = text.match(/^Tip wysłany do\s+(.+)$/i))) return `Tip sent to ${match[1]}`
     if ((match = text.match(/^Tip od\s+(.+)$/i))) return `Tip from ${match[1]}`
     if ((match = text.match(/^Nagroda społeczności:\s*(.+)$/i))) return `Community reward: ${match[1]}`
+    if ((match = text.match(/^(\d+)\s+wiadomości$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'message' : 'messages'}`
+    if ((match = text.match(/^(\d+)\s+aktywności$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'activity' : 'activities'}`
+    if ((match = text.match(/^(\d+)\s+(post|posty|postów)$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'post' : 'posts'}`
+    if ((match = text.match(/^(\d+)\s+typów$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'pick' : 'picks'}`
+    if ((match = text.match(/^Post w kanale\s+#(.+)$/i))) return `Post in channel #${match[1]}`
+    if ((match = text.match(/^Napisz post w\s+#(.+)\.\.\.$/i))) return `Write a post in #${match[1]}...`
+    if ((match = text.match(/^Opublikuj pierwszy realny wpis w\s+#(.+)\.$/i))) return `Publish the first real post in #${match[1]}.`
+    if ((match = text.match(/^Napisz pierwszą wiadomość na\s+#(.+)\.$/i))) return `Write the first message in #${match[1]}.`
+    if ((match = text.match(/^Napisz wiadomość w\s+#(.+)\.\.\.$/i))) return `Write a message in #${match[1]}...`
+    if ((match = text.match(/^Dodano plik:\s*(.+)$/i))) return `File added: ${match[1]}`
+    if ((match = text.match(/^(.+?) została już odebrana w ostatnich 24h\.$/i))) return `${match[1]} has already been claimed in the last 24 hours.`
+    if ((match = text.match(/^Najpierw wykonaj misję:\s*(.+?)\. Coin można odebrać raz na 24h\.$/i))) return `Complete the mission first: ${match[1]}. A coin can be claimed once every 24 hours.`
     if ((match = text.match(/^Nagroda rankingowa:\s*(.+)$/i))) return `Ranking reward: ${match[1]}`
     if ((match = text.match(/^Premium ważne do:\s*(.+?)\s*·\s*zostało\s+(\d+)\s+(dzień|dni)$/i))) return `Premium valid until: ${match[1]} · ${match[2]} ${Number(match[2]) === 1 ? 'day' : 'days'} left`
     if ((match = text.match(/^(.+?)%\s+vs poprzedni okres$/i))) return `${match[1]}% vs previous period`
@@ -1740,6 +1752,140 @@ const BETAI_RANKING_TRANSLATIONS_V1859 = {
   }
 }
 
+const BETAI_COMMUNITY_TRANSLATIONS_V1860 = {
+  en: {
+    'Społeczność': 'Community',
+    'BET+AI SOCIAL LIVE • COMMUNITY HUB': 'BET+AI SOCIAL LIVE • COMMUNITY HUB',
+    'Rozmawiaj w kanałach językowych, dziel się typami i odbieraj coin dopiero za realną aktywność.': 'Chat in language channels, share picks and earn coins only for real activity.',
+    'Czat': 'Chat',
+    'Czat live': 'Live chat',
+    'Posty': 'Posts',
+    'Nagrody': 'Rewards',
+    'Aktywnych teraz': 'Active now',
+    'Kanały społeczności': 'Community channels',
+    'Języki': 'Languages',
+    'Sporty': 'Sports',
+    'Typy': 'Picks',
+    'Polski': 'Polish',
+    'Piłka nożna': 'Football',
+    'Kupony społeczności': 'Community coupons',
+    'Typy premium': 'Premium picks',
+    'Wygrane': 'Won',
+    'Misje aktywności': 'Activity missions',
+    'Napisz wiadomość': 'Write a message',
+    'Dodaj post': 'Add a post',
+    'Bądź aktywny': 'Stay active',
+    'Napisz minimum jedną wiadomość na czacie w ostatnich 24h.': 'Write at least one chat message in the last 24 hours.',
+    'Dodaj minimum jeden post społeczności w ostatnich 24h.': 'Add at least one community post in the last 24 hours.',
+    'Zrób łącznie 3 aktywności w ostatnich 24h.': 'Complete 3 activities in total in the last 24 hours.',
+    'Wykonaj misję': 'Complete mission',
+    'Zrób misję': 'Complete mission',
+    'Odebrane': 'Claimed',
+    'Odbierz +1': 'Claim +1',
+    'Odbierz +1 coin': 'Claim +1 coin',
+    'Przejdź do czatu': 'Go to chat',
+    'Kanały są żywe — wybór kanału filtruje czat i posty po `channel_key`.': 'Channels are live — selecting a channel filters chat and posts by `channel_key`.',
+    'aktywności': 'activities',
+    'Otwórz': 'Open',
+    'Nagrody społeczności': 'Community rewards',
+    'Coin dostajesz dopiero po wykonaniu akcji.': 'You receive coins only after completing an action.',
+    'Pierwszy post społeczności': 'First community post',
+    'Opublikuj minimum jeden realny post.': 'Publish at least one real post.',
+    'Pierwszy komentarz': 'First comment',
+    'Dodaj komentarz pod postem.': 'Add a comment under a post.',
+    'Pierwsza wiadomość live': 'First live message',
+    'Napisz wiadomość na czacie live.': 'Write a message in live chat.',
+    'Value społeczności': 'Community value',
+    'Zdobądź minimum 3 reakcje pod swoimi postami.': 'Receive at least 3 reactions under your posts.',
+    'Dodaj kupon społeczności': 'Add a community coupon',
+    'Post w kanale': 'Post in channel',
+    'Do screenów kuponów użyj zakładki Czat live i ikony 📎. Tutaj możesz dodać sam opis tekstowy.': 'To upload coupon screenshots, use the Live chat tab and the 📎 icon. Here you can add a text description only.',
+    'Post zapisuje się w Supabase z `channel_key` i pojawia tylko w wybranym kanale.': 'The post is saved in Supabase with `channel_key` and appears only in the selected channel.',
+    'Opisz kupon tekstowo albo przejdź do Czat live, żeby dodać screen przez 📎...': 'Describe the coupon in text or go to Live chat to add a screenshot with 📎...',
+    'Publikuję...': 'Publishing...',
+    'Opublikuj': 'Publish',
+    'Ładuję społeczność...': 'Loading community...',
+    'Brak postów w tym kanale.': 'No posts in this channel.',
+    'Wrzuć pierwszy realny kupon społeczności.': 'Share the first real community coupon.',
+    'Przypięta wiadomość': 'Pinned message',
+    '📌 Przypięta wiadomość': '📌 Pinned message',
+    'Witamy w społeczności Bet+AI. Pamiętaj o regulaminie i baw się dobrze.': 'Welcome to the Bet+AI community. Please follow the rules and enjoy your stay.',
+    'Kanał piłkarski społeczności Bet+AI. Rozmawiaj o meczach, analizach i typach.': 'The Bet+AI community football channel. Talk about matches, analyses and picks.',
+    'Tutaj wrzucamy realne kupony jako wiadomość z załącznikiem. Dodaj screen przez 📎, kurs, stawkę i status. Nie pokazuj danych wrażliwych.': 'Share real coupons here as messages with attachments. Add a screenshot using 📎, the odds, stake and status. Do not reveal sensitive data.',
+    'Kanał live betting. Wrzucaj szybkie aktualizacje i typy na żywo.': 'Live betting channel. Share quick updates and live picks.',
+    'Tutaj rozmawiamy o typach premium i jakościowych analizach.': 'Discuss premium picks and high-quality analyses here.',
+    'Pochwal się wygraną i pokaż najlepsze trafione kupony społeczności.': 'Celebrate your win and show the community’s best winning coupons.',
+    'teraz': 'now',
+    'Edytuj': 'Edit',
+    'Usuń': 'Delete',
+    'Zgłoś': 'Report',
+    'Zapisz': 'Save',
+    'Anuluj': 'Cancel',
+    'Zamknij': 'Close',
+    'Otwórz profil': 'Open profile',
+    'Zgłoś post': 'Report post',
+    'Komentarze': 'Comments',
+    'Brak komentarzy. Dodaj pierwszy.': 'No comments yet. Add the first one.',
+    'Dodaj komentarz...': 'Add a comment...',
+    'Wyślij': 'Send',
+    'Brak wiadomości w tym kanale.': 'No messages in this channel.',
+    'Załącznik': 'Attachment',
+    'Dodaj emoji': 'Add emoji',
+    'Dodaj plik': 'Add file',
+    'Top aktywni dziś': 'Most active today',
+    'Aktywność społeczności • punkty za realne akcje': 'Community activity • points for real actions',
+    'Brak rankingu — dodaj pierwszy post.': 'No ranking yet — add the first post.',
+    'Polecani typerzy': 'Recommended tipsters',
+    'Obserwujesz': 'Following',
+    'Obserwuj': 'Follow',
+    'Użytkownik': 'User',
+    'Zdjęcie': 'Image',
+    'podgląd': 'preview',
+    'Post opublikowany.': 'Post published.',
+    'Nie udało się opublikować posta.': 'Could not publish the post.',
+    'Wpisz treść posta.': 'Enter the post content.',
+    'Zaloguj się, żeby publikować.': 'Log in to publish.',
+    'Wpisz wiadomość albo dodaj plik.': 'Enter a message or add a file.',
+    'Zaloguj się, żeby pisać.': 'Log in to write.',
+    'Nie udało się wysłać wiadomości.': 'Could not send the message.',
+    'Nie udało się dodać komentarza.': 'Could not add the comment.',
+    'Komentarz został zaktualizowany.': 'The comment was updated.',
+    'Nie udało się edytować komentarza.': 'Could not edit the comment.',
+    'Komentarz został usunięty.': 'The comment was deleted.',
+    'Nie udało się usunąć komentarza.': 'Could not delete the comment.',
+    'Wiadomość nie może być pusta.': 'The message cannot be empty.',
+    'Wiadomość została zaktualizowana.': 'The message was updated.',
+    'Nie udało się edytować wiadomości.': 'Could not edit the message.',
+    'Wiadomość została usunięta.': 'The message was deleted.',
+    'Nie udało się usunąć wiadomości.': 'Could not delete the message.',
+    'Wiadomość została zgłoszona.': 'The message was reported.',
+    'Komentarz został zgłoszony.': 'The comment was reported.',
+    'Post został usunięty.': 'The post was deleted.',
+    'Nie udało się usunąć posta.': 'Could not delete the post.',
+    'Post został zaktualizowany.': 'The post was updated.',
+    'Nie udało się edytować posta.': 'Could not edit the post.',
+    'Post został zgłoszony do moderacji.': 'The post was reported for moderation.',
+    'Nie udało się zgłosić posta.': 'Could not report the post.',
+    'Plik jest za duży. Maksymalnie 2.5 MB.': 'The file is too large. Maximum size is 2.5 MB.',
+    'Nie udało się wczytać pliku.': 'Could not load the file.',
+    'Nie udało się odebrać nagrody.': 'Could not claim the reward.',
+    'Powód zgłoszenia posta:': 'Reason for reporting the post:',
+    'Naruszenie zasad społeczności': 'Community rules violation',
+    'Usunąć ten post? Tej akcji nie da się cofnąć.': 'Delete this post? This action cannot be undone.',
+    'Usunąć ten komentarz?': 'Delete this comment?',
+    'Usunąć tę wiadomość?': 'Delete this message?',
+    'Zgłoszenie użytkownika': 'User report',
+    'Misja': 'Mission',
+    'misja aktywności': 'activity mission',
+    'została już odebrana w ostatnich 24h.': 'has already been claimed in the last 24 hours.',
+    'Najpierw wykonaj misję:': 'Complete the mission first:',
+    'Coin można odebrać raz na 24h.': 'A coin can be claimed once every 24 hours.',
+    'aktywny': 'active',
+    'Dodano plik:': 'File added:',
+    'załącznik': 'attachment'
+  }
+}
+
 const BETAI_TRANSLATION_DICTIONARY_CACHE = new Map()
 const BETAI_TRANSLATION_KEYS_CACHE = new Map()
 
@@ -1758,7 +1904,8 @@ function buildBetaiTranslationDictionary(lang) {
     BETAI_UNLOCKED_TIPS_TRANSLATIONS_V1858,
     BETAI_FINANCE_TRANSLATIONS_V1856,
     BETAI_PROFILE_TRANSLATIONS_V1857,
-    BETAI_RANKING_TRANSLATIONS_V1859
+    BETAI_RANKING_TRANSLATIONS_V1859,
+    BETAI_COMMUNITY_TRANSLATIONS_V1860
   ]
   const allTargetDictionaries = allSources.map(source => source?.[lang] || {})
   const target = Object.assign({}, ...allTargetDictionaries)
@@ -14129,6 +14276,8 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
 
 function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshTokens, onOpenTipster = null, onFollowTipster = null, followingTipsters = new Set() }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   const [activeTab, setActiveTab] = useState('feed')
   const [activeCommunityChannel, setActiveCommunityChannel] = useState('ogolny')
   const [postText, setPostText] = useState('')
@@ -14159,7 +14308,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   const [loadingCommunity, setLoadingCommunity] = useState(false)
 
   const userEmail = normalizeEmail(user?.email || '')
-  const userName = user?.user_metadata?.username || user?.user_metadata?.name || user?.username || communityNameFromEmail(userEmail) || 'Użytkownik'
+  const userName = user?.user_metadata?.username || user?.user_metadata?.name || user?.username || communityNameFromEmail(userEmail) || t('Użytkownik')
   const userAvatar = getProfileAvatarUrl(user)
   const userInitials = String(userName || userEmail || 'U').slice(0, 2).toUpperCase()
 
@@ -14347,6 +14496,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
   const getCommunityPostLabel = (count = 0) => {
     const n = Number(count || 0)
+    if (lang === 'en') return `${n} ${n === 1 ? 'post' : 'posts'}`
     if (n === 1) return '1 post'
     if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return `${n} posty`
     return `${n} postów`
@@ -14627,11 +14777,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   async function publishPost(bodyOverride = '') {
     const clean = String(bodyOverride || postText || '').trim()
     if (!clean) {
-      onToast?.({ type: 'info', title: 'Społeczność', message: 'Wpisz treść posta.' })
+      onToast?.({ type: 'info', title: t('Społeczność'), message: t('Wpisz treść posta.') })
       return
     }
     if (!user?.id || !userEmail) {
-      onToast?.({ type: 'error', title: 'Społeczność', message: 'Zaloguj się, żeby publikować.' })
+      onToast?.({ type: 'error', title: t('Społeczność'), message: t('Zaloguj się, żeby publikować.') })
       return
     }
     if (!isSupabaseConfigured || !supabase) return
@@ -14649,11 +14799,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       })
       if (error) throw error
       setPostText('')
-      onToast?.({ type: 'success', title: 'Społeczność', message: 'Post opublikowany.' })
+      onToast?.({ type: 'success', title: t('Społeczność'), message: t('Post opublikowany.') })
       await loadCommunity()
     } catch (error) {
       console.error('publish community post error', error)
-      onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się opublikować posta.' })
+      onToast?.({ type: 'error', title: t('Społeczność'), message: t('Nie udało się opublikować posta.') })
     } finally {
       setBusy(false)
     }
@@ -14662,11 +14812,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   async function sendChatMessage() {
     const clean = String(chatText || '').trim()
     if (!clean && !chatAttachment) {
-      onToast?.({ type: 'info', title: 'Czat live', message: 'Wpisz wiadomość albo dodaj plik.' })
+      onToast?.({ type: 'info', title: t('Czat live'), message: t('Wpisz wiadomość albo dodaj plik.') })
       return
     }
     if (!user?.id || !userEmail) {
-      onToast?.({ type: 'error', title: 'Czat live', message: 'Zaloguj się, żeby pisać.' })
+      onToast?.({ type: 'error', title: t('Czat live'), message: t('Zaloguj się, żeby pisać.') })
       return
     }
     if (!isSupabaseConfigured || !supabase) return
@@ -14691,7 +14841,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       await loadCommunity()
     } catch (error) {
       console.error('send community chat error', error)
-      onToast?.({ type: 'error', title: 'Czat live', message: 'Nie udało się wysłać wiadomości.' })
+      onToast?.({ type: 'error', title: t('Czat live'), message: t('Nie udało się wysłać wiadomości.') })
     } finally {
       setBusy(false)
     }
@@ -14728,7 +14878,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       await loadCommunity()
     } catch (error) {
       console.warn('community comment skipped', error)
-      onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się dodać komentarza.' })
+      onToast?.({ type: 'error', title: t('Społeczność'), message: t('Nie udało się dodać komentarza.') })
     }
   }
 
@@ -14761,11 +14911,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
       setEditingCommentId(null)
       setEditingCommentText('')
-      onToast?.({ type: 'success', title: 'Społeczność', message: 'Komentarz został zaktualizowany.' })
+      onToast?.({ type: 'success', title: t('Społeczność'), message: t('Komentarz został zaktualizowany.') })
       await loadCommunity()
     } catch (error) {
       console.error('edit community comment error', error)
-      onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się edytować komentarza.' })
+      onToast?.({ type: 'error', title: t('Społeczność'), message: t('Nie udało się edytować komentarza.') })
     } finally {
       setBusy(false)
     }
@@ -14773,7 +14923,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
   async function deleteCommunityComment(comment) {
     if (!comment?.id || !canModerateCommunityComment(comment) || !isSupabaseConfigured || !supabase) return
-    const ok = typeof window === 'undefined' ? true : window.confirm('Usunąć ten komentarz?')
+    const ok = typeof window === 'undefined' ? true : window.confirm(t('Usunąć ten komentarz?'))
     if (!ok) return
     try {
       setBusy(true)
@@ -14791,11 +14941,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       }
 
       setOpenCommentMenuId(null)
-      onToast?.({ type: 'success', title: 'Społeczność', message: 'Komentarz został usunięty.' })
+      onToast?.({ type: 'success', title: t('Społeczność'), message: t('Komentarz został usunięty.') })
       await loadCommunity()
     } catch (error) {
       console.error('delete community comment error', error)
-      onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się usunąć komentarza.' })
+      onToast?.({ type: 'error', title: t('Społeczność'), message: t('Nie udało się usunąć komentarza.') })
     } finally {
       setBusy(false)
     }
@@ -14814,7 +14964,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     if (!message?.id || !isOwnChatMessage(message) || !isSupabaseConfigured || !supabase) return
     const parts = parseChatBodyParts(message.body)
     if (!clean && !parts.attachment) {
-      onToast?.({ type: 'info', title: 'Czat live', message: 'Wiadomość nie może być pusta.' })
+      onToast?.({ type: 'info', title: t('Czat live'), message: t('Wiadomość nie może być pusta.') })
       return
     }
     try {
@@ -14840,11 +14990,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
       setEditingChatId(null)
       setEditingChatText('')
-      onToast?.({ type: 'success', title: 'Czat live', message: 'Wiadomość została zaktualizowana.' })
+      onToast?.({ type: 'success', title: t('Czat live'), message: t('Wiadomość została zaktualizowana.') })
       await loadCommunity()
     } catch (error) {
       console.error('edit chat message error', error)
-      onToast?.({ type: 'error', title: 'Czat live', message: 'Nie udało się edytować wiadomości.' })
+      onToast?.({ type: 'error', title: t('Czat live'), message: t('Nie udało się edytować wiadomości.') })
     } finally {
       setBusy(false)
     }
@@ -14852,7 +15002,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
   async function deleteCommunityChatMessage(message) {
     if (!message?.id || !canModerateCommunityChatMessage(message) || !isSupabaseConfigured || !supabase) return
-    const ok = typeof window === 'undefined' ? true : window.confirm('Usunąć tę wiadomość?')
+    const ok = typeof window === 'undefined' ? true : window.confirm(t('Usunąć tę wiadomość?'))
     if (!ok) return
     try {
       setBusy(true)
@@ -14872,11 +15022,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       setEditingChatId(null)
       setEditingChatText('')
       setOpenChatMenuId(null)
-      onToast?.({ type: 'success', title: 'Czat live', message: 'Wiadomość została usunięta.' })
+      onToast?.({ type: 'success', title: t('Czat live'), message: t('Wiadomość została usunięta.') })
       await loadCommunity()
     } catch (error) {
       console.error('delete chat message error', error)
-      onToast?.({ type: 'error', title: 'Czat live', message: 'Nie udało się usunąć wiadomości.' })
+      onToast?.({ type: 'error', title: t('Czat live'), message: t('Nie udało się usunąć wiadomości.') })
     } finally {
       setBusy(false)
     }
@@ -14899,7 +15049,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         const friendlyMissionMessage = data?.already_claimed
           ? `${reward.title || 'Misja'} została już odebrana w ostatnich 24h.`
           : `Najpierw wykonaj misję: ${reward.title || 'misja aktywności'}. Coin można odebrać raz na 24h.`
-        onToast?.({ type: data?.already_claimed ? 'info' : 'warning', title: 'Misje aktywności', message: friendlyMissionMessage })
+        onToast?.({ type: data?.already_claimed ? 'info' : 'warning', title: t('Misje aktywności'), message: t(friendlyMissionMessage) })
         await loadCommunity()
         return
       }
@@ -14914,11 +15064,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email: userEmail, balance: nextBalance, reason: 'community_reward' } }))
       window.dispatchEvent(new CustomEvent('betai-wallet-history-changed'))
       await onRefreshTokens?.()
-      onToast?.({ type: 'success', title: 'Nagroda społeczności', message: `${reward.title}: +1 coin.` })
+      onToast?.({ type: 'success', title: t('Nagroda społeczności'), message: `${t(reward.title)}: +1 coin.` })
       await loadCommunity()
     } catch (error) {
       console.error('claim community reward error', error)
-      onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się odebrać nagrody.' })
+      onToast?.({ type: 'error', title: t('Społeczność'), message: t('Nie udało się odebrać nagrody.') })
     }
   }
 
@@ -14937,7 +15087,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     if (!file) return
     const maxSize = 2.5 * 1024 * 1024
     if (file.size > maxSize) {
-      onToast?.({ type: 'error', title: 'Czat live', message: 'Plik jest za duży. Maksymalnie 2.5 MB.' })
+      onToast?.({ type: 'error', title: t('Czat live'), message: t('Plik jest za duży. Maksymalnie 2.5 MB.') })
       event.target.value = ''
       return
     }
@@ -14949,10 +15099,10 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         size: file.size,
         dataUrl: String(reader.result || '')
       })
-      onToast?.({ type: 'success', title: 'Czat live', message: `Dodano plik: ${file.name}` })
+      onToast?.({ type: 'success', title: t('Czat live'), message: t(`Dodano plik: ${file.name}`) })
     }
     reader.onerror = () => {
-      onToast?.({ type: 'error', title: 'Czat live', message: 'Nie udało się wczytać pliku.' })
+      onToast?.({ type: 'error', title: t('Czat live'), message: t('Nie udało się wczytać pliku.') })
     }
     reader.readAsDataURL(file)
     event.target.value = ''
@@ -14974,7 +15124,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
   async function deleteCommunityPost(post) {
     if (!post?.id || !isOwnPost(post) || !isSupabaseConfigured || !supabase) return
-    const ok = typeof window === 'undefined' ? true : window.confirm('Usunąć ten post? Tej akcji nie da się cofnąć.')
+    const ok = typeof window === 'undefined' ? true : window.confirm(t('Usunąć ten post? Tej akcji nie da się cofnąć.'))
     if (!ok) return
     try {
       setBusy(true)
@@ -14994,11 +15144,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       }
 
       setOpenPostMenuId(null)
-      onToast?.({ type: 'success', title: 'Społeczność', message: 'Post został usunięty.' })
+      onToast?.({ type: 'success', title: t('Społeczność'), message: t('Post został usunięty.') })
       await loadCommunity()
     } catch (error) {
       console.error('delete community post error', error)
-      onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się usunąć posta.' })
+      onToast?.({ type: 'error', title: t('Społeczność'), message: t('Nie udało się usunąć posta.') })
     } finally {
       setBusy(false)
     }
@@ -15033,11 +15183,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
       setEditingPostId(null)
       setEditingPostText('')
-      onToast?.({ type: 'success', title: 'Społeczność', message: 'Post został zaktualizowany.' })
+      onToast?.({ type: 'success', title: t('Społeczność'), message: t('Post został zaktualizowany.') })
       await loadCommunity()
     } catch (error) {
       console.error('edit community post error', error)
-      onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się edytować posta.' })
+      onToast?.({ type: 'error', title: t('Społeczność'), message: t('Nie udało się edytować posta.') })
     } finally {
       setBusy(false)
     }
@@ -15048,8 +15198,8 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     try {
       setBusy(true)
       const reason = typeof window === 'undefined'
-        ? 'Zgłoszenie użytkownika'
-        : (window.prompt('Powód zgłoszenia posta:', 'Naruszenie zasad społeczności') || '').trim()
+        ? t('Zgłoszenie użytkownika')
+        : (window.prompt(t('Powód zgłoszenia posta:'), t('Naruszenie zasad społeczności')) || '').trim()
       if (!reason) return
       const { error } = await supabase.from('community_post_reports').insert({
         post_id: post.id,
@@ -15063,10 +15213,10 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       })
       if (error) throw error
       setOpenPostMenuId(null)
-      onToast?.({ type: 'success', title: 'Społeczność', message: 'Post został zgłoszony do moderacji.' })
+      onToast?.({ type: 'success', title: t('Społeczność'), message: t('Post został zgłoszony do moderacji.') })
     } catch (error) {
       console.error('report community post error', error)
-      onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się zgłosić posta.' })
+      onToast?.({ type: 'error', title: t('Społeczność'), message: t('Nie udało się zgłosić posta.') })
     } finally {
       setBusy(false)
     }
@@ -15083,18 +15233,18 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         <div className="feed-card-head-v5">
           <div className="feed-author-v5">
             <span className={`feed-avatar-v5 ${avatar ? 'has-avatar' : 'cyan'}`}>{avatar ? <img src={avatar} alt="" /> : String(author || 'U').slice(0,2).toUpperCase()}</span>
-            <div><button type="button" className="community-name-btn-v1016 feed-name-v1016" onClick={() => openCommunityProfile(post)}>{author}</button><div className="feed-meta-v5"><span className={`feed-badge-v5 ${getAccountPlanBadgeLabel(post).toLowerCase()}`}>{getAccountPlanBadgeLabel(post)}</span><small>{post.created_at ? new Date(post.created_at).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : 'teraz'}</small><em>#{post.channel_key || 'ogolny'}</em></div></div>
+            <div><button type="button" className="community-name-btn-v1016 feed-name-v1016" onClick={() => openCommunityProfile(post)}>{author}</button><div className="feed-meta-v5"><span className={`feed-badge-v5 ${getAccountPlanBadgeLabel(post).toLowerCase()}`}>{getAccountPlanBadgeLabel(post)}</span><small>{post.created_at ? new Date(post.created_at).toLocaleString(lang === 'en' ? 'en-GB' : 'pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : t('teraz')}</small><em>#{post.channel_key || 'ogolny'}</em></div></div>
           </div>
           <div className="post-head-actions-v1417 post-head-actions-v1419">
             <div className="post-menu-wrap-v1024">
               <button type="button" className="post-menu-trigger-v1024 card-menu-trigger-v1419" onClick={() => setOpenPostMenuId(prev => prev === post.id ? null : post.id)}>⋮</button>
             {openPostMenuId === post.id ? (
               <div className="post-menu-v1024">
-                <button type="button" onClick={() => { openCommunityProfile(post); setOpenPostMenuId(null) }}>👤 Otwórz profil</button>
-                {isOwnPost(post) ? <button type="button" onClick={() => startEditCommunityPost(post)}>✏️ Edytuj</button> : null}
-                {canModerateCommunityPost(post) ? <button type="button" className="danger" onClick={() => deleteCommunityPost(post)}>🗑️ Usuń</button> : null}
-                {!isOwnPost(post) ? <button type="button" onClick={() => reportCommunityPost(post)}>🚩 Zgłoś post</button> : null}
-                <button type="button" onClick={() => setOpenPostMenuId(null)}>Zamknij</button>
+                <button type="button" onClick={() => { openCommunityProfile(post); setOpenPostMenuId(null) }}>👤 {t('Otwórz profil')}</button>
+                {isOwnPost(post) ? <button type="button" onClick={() => startEditCommunityPost(post)}>✏️ {t('Edytuj')}</button> : null}
+                {canModerateCommunityPost(post) ? <button type="button" className="danger" onClick={() => deleteCommunityPost(post)}>🗑️ {t('Usuń')}</button> : null}
+                {!isOwnPost(post) ? <button type="button" onClick={() => reportCommunityPost(post)}>🚩 {t('Zgłoś post')}</button> : null}
+                <button type="button" onClick={() => setOpenPostMenuId(null)}>{t('Zamknij')}</button>
               </div>
             ) : null}
             </div>
@@ -15104,17 +15254,17 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
           <div className="post-edit-box-v1024">
             <textarea value={editingPostText} onChange={event => setEditingPostText(event.target.value)} />
             <div>
-              <button type="button" disabled={busy || !editingPostText.trim()} onClick={() => saveEditCommunityPost(post)}>Zapisz</button>
-              <button type="button" onClick={() => { setEditingPostId(null); setEditingPostText('') }}>Anuluj</button>
+              <button type="button" disabled={busy || !editingPostText.trim()} onClick={() => saveEditCommunityPost(post)}>{t('Zapisz')}</button>
+              <button type="button" onClick={() => { setEditingPostId(null); setEditingPostText('') }}>{t('Anuluj')}</button>
             </div>
           </div>
         ) : (
-          <p className="feed-text-v5">{post.body}</p>
+          <p className="feed-text-v5" data-no-translate="true">{post.body}</p>
         )}
         <div className="feed-actions-v5">
           <button type="button" onClick={() => toggleLike(post)}>👍 {Number(post.likes_count || 0)}</button>
           <button type="button" onClick={() => setExpandedComments(prev => ({ ...prev, [post.id]: !prev[post.id] }))}>💬 {Number(post.comments_count || postComments.length || 0)}</button>
-          <button type="button" onClick={() => setExpandedComments(prev => ({ ...prev, [post.id]: true }))}>Komentarze ({Number(post.comments_count || postComments.length || 0)})</button>
+          <button type="button" onClick={() => setExpandedComments(prev => ({ ...prev, [post.id]: true }))}>{t('Komentarze')} ({Number(post.comments_count || postComments.length || 0)})</button>
         </div>
         {expandedComments[post.id] ? (
           <div className="community-comments-v1008">
@@ -15127,14 +15277,14 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                   <div className="reply-body-v1418">
                     <div className="feed-meta-v5 reply-meta-v1418">
                       <button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(comment)}>{cName}</button>
-                      <small>{comment.created_at ? new Date(comment.created_at).toLocaleString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : ''}</small>
+                      <small>{comment.created_at ? new Date(comment.created_at).toLocaleString(lang === 'en' ? 'en-GB' : 'pl-PL', { hour:'2-digit', minute:'2-digit' }) : ''}</small>
                       <span className="comment-menu-wrap-v1419">
                         <button type="button" className="mini-menu-trigger-v1419" onClick={() => setOpenCommentMenuId(prev => prev === comment.id ? null : comment.id)}>⋯</button>
                         {openCommentMenuId === comment.id ? (
                           <span className="mini-menu-v1419">
-                            {isOwnComment(comment) ? <button type="button" onClick={() => startEditCommunityComment(comment)}>Edytuj</button> : null}
-                            {canModerateCommunityComment(comment) ? <button type="button" className="danger" onClick={() => deleteCommunityComment(comment)}>Usuń</button> : null}
-                            {!isOwnComment(comment) && !isAdminUser(user) ? <button type="button" onClick={() => { onToast?.({ type: 'info', title: 'Społeczność', message: 'Komentarz został zgłoszony.' }); setOpenCommentMenuId(null) }}>Zgłoś</button> : null}
+                            {isOwnComment(comment) ? <button type="button" onClick={() => startEditCommunityComment(comment)}>{t('Edytuj')}</button> : null}
+                            {canModerateCommunityComment(comment) ? <button type="button" className="danger" onClick={() => deleteCommunityComment(comment)}>{t('Usuń')}</button> : null}
+                            {!isOwnComment(comment) && !isAdminUser(user) ? <button type="button" onClick={() => { onToast?.({ type: 'info', title: t('Społeczność'), message: t('Komentarz został zgłoszony.') }); setOpenCommentMenuId(null) }}>{t('Zgłoś')}</button> : null}
                           </span>
                         ) : null}
                       </span>
@@ -15143,18 +15293,18 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                       <div className="inline-edit-v1418">
                         <textarea value={editingCommentText} onChange={event => setEditingCommentText(event.target.value)} />
                         <div>
-                          <button type="button" disabled={busy || !editingCommentText.trim()} onClick={() => saveEditCommunityComment(comment)}>Zapisz</button>
-                          <button type="button" onClick={() => { setEditingCommentId(null); setEditingCommentText('') }}>Anuluj</button>
+                          <button type="button" disabled={busy || !editingCommentText.trim()} onClick={() => saveEditCommunityComment(comment)}>{t('Zapisz')}</button>
+                          <button type="button" onClick={() => { setEditingCommentId(null); setEditingCommentText('') }}>{t('Anuluj')}</button>
                         </div>
                       </div>
-                    ) : <p>{comment.body}</p>}
+                    ) : <p data-no-translate="true">{comment.body}</p>}
                   </div>
                 </div>
               )
-            }) : <div className="community-no-comments-v1008">Brak komentarzy. Dodaj pierwszy.</div>}
+            }) : <div className="community-no-comments-v1008">{t('Brak komentarzy. Dodaj pierwszy.')}</div>}
             <div className="community-comment-form-v1008">
-              <input value={commentDrafts[post.id] || ''} onChange={event => setCommentDrafts(prev => ({ ...prev, [post.id]: event.target.value }))} placeholder="Dodaj komentarz..." />
-              <button type="button" disabled={!String(commentDrafts[post.id] || '').trim()} onClick={() => addComment(post)}>Wyślij</button>
+              <input value={commentDrafts[post.id] || ''} onChange={event => setCommentDrafts(prev => ({ ...prev, [post.id]: event.target.value }))} placeholder={t('Dodaj komentarz...')} />
+              <button type="button" disabled={!String(commentDrafts[post.id] || '').trim()} onClick={() => addComment(post)}>{t('Wyślij')}</button>
             </div>
           </div>
         ) : null}
@@ -15167,14 +15317,14 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       <div className="community-v5-header glass-community-v5 community-pro-hero-v1012">
         <div>
           <span className="community-kicker-v1008">BET+AI SOCIAL LIVE • COMMUNITY HUB</span>
-          <h1>Społeczność</h1>
-          <p>Rozmawiaj w kanałach językowych, dziel się typami i odbieraj coin dopiero za realną aktywność.</p>
-          <div className="community-hero-badges-v1014"><span>💬 Czat</span><span>🏆 Ranking</span><span>🎁 1 coin</span></div>
+          <h1>{t('Społeczność')}</h1>
+          <p>{t('Rozmawiaj w kanałach językowych, dziel się typami i odbieraj coin dopiero za realną aktywność.')}</p>
+          <div className="community-hero-badges-v1014"><span>💬 {t('Czat')}</span><span>🏆 {t('Ranking')}</span><span>🎁 1 coin</span></div>
         </div>
         <div className="community-v5-online-wrap">
           <div className="community-v5-online-copy">
             <span className="live-dot-v5"></span>
-            <strong>Aktywnych teraz</strong>
+            <strong>{t('Aktywnych teraz')}</strong>
             <b>{Math.max(activeUsersCount, 1)} online</b>
           </div>
           <div className="community-v5-avatars">
@@ -15189,21 +15339,21 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       </div>
 
       <div className="community-v5-tabs glass-community-v5 community-pro-tabs-v1012 community-tabs-v1016 community-tabs-v1413">
-        <button type="button" className={activeTab === 'feed' ? 'active' : ''} onClick={() => setActiveTab('feed')}>💬 Czat live</button>
-        <button type="button" className={activeTab === 'posts' ? 'active' : ''} onClick={() => setActiveTab('posts')}>📝 Posty</button>
-        <button type="button" className={activeTab === 'rewards' ? 'active' : ''} onClick={() => setActiveTab('rewards')}>🏆 Nagrody</button>
+        <button type="button" className={activeTab === 'feed' ? 'active' : ''} onClick={() => setActiveTab('feed')}>💬 {t('Czat live')}</button>
+        <button type="button" className={activeTab === 'posts' ? 'active' : ''} onClick={() => setActiveTab('posts')}>📝 {t('Posty')}</button>
+        <button type="button" className={activeTab === 'rewards' ? 'active' : ''} onClick={() => setActiveTab('rewards')}>🏆 {t('Nagrody')}</button>
       </div>
 
       <div className="community-pro-grid-v1012">
         <aside className="community-pro-left-v1012">
           <div className="glass-community-v5 pro-left-card-v1012">
-            <div className="pro-left-head-v1012"><strong>Kanały społeczności</strong><span><i></i>{Math.max(activeUsersCount, 1)} online</span></div>
+            <div className="pro-left-head-v1012"><strong>{t('Kanały społeczności')}</strong><span><i></i>{Math.max(activeUsersCount, 1)} online</span></div>
             <div className="pro-channel-list-v1012">
               {channelDefs.map((row, index) => (
                 <React.Fragment key={row.key}>
-                  {index === 0 || channelDefs[index - 1]?.group !== row.group ? <div className="channel-group-title-v1409">{row.group}</div> : null}
+                  {index === 0 || channelDefs[index - 1]?.group !== row.group ? <div className="channel-group-title-v1409">{t(row.group)}</div> : null}
                   <button type="button" className={activeCommunityChannel === row.key ? 'active' : ''} onClick={() => { setActiveCommunityChannel(row.key); setActiveTab('feed') }}>
-                    {row.flagClass ? <span className={`channel-flag-v1412 ${row.flagClass}`} aria-hidden="true"></span> : <span>{row.icon}</span>}<b>{row.label}</b><em>{channelCounts[row.key] || 0}</em>
+                    {row.flagClass ? <span className={`channel-flag-v1412 ${row.flagClass}`} aria-hidden="true"></span> : <span>{row.icon}</span>}<b>{t(row.label)}</b><em>{channelCounts[row.key] || 0}</em>
                   </button>
                 </React.Fragment>
               ))}
@@ -15211,11 +15361,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
           </div>
 
           <div className="glass-community-v5 pro-missions-v1012 daily-missions-v1022">
-            <div className="pro-missions-head-v1012"><strong>Misje aktywności</strong></div>
+            <div className="pro-missions-head-v1012"><strong>{t('Misje aktywności')}</strong></div>
             {dailyMissionRows.map(mission => (
               <div className={`daily-mission-item-v1022 ${mission.done ? 'is-done' : 'is-locked'} ${mission.claimed ? 'is-claimed' : ''}`} key={mission.key}>
                 <div className="mission-row-v1012">
-                  <span>{mission.title}</span>
+                  <span>{t(mission.title)}</span>
                   <b>{mission.current}</b>
                   <em>+1 coin</em>
                 </div>
@@ -15226,7 +15376,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                   disabled={!mission.verified || !mission.done || mission.claimed}
                   onClick={() => claimCommunityReward(mission)}
                 >
-                  {mission.claimed ? getRewardUnlockLabel(mission.key) : mission.done ? 'Odbierz +1' : 'Wykonaj misję'}
+                  {mission.claimed ? t(getRewardUnlockLabel(mission.key)) : mission.done ? t('Odbierz +1') : t('Wykonaj misję')}
                 </button>
               </div>
             ))}
@@ -15236,28 +15386,28 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         <main className="community-pro-center-v1012">
           {activeTab === 'channels' ? (
             <div className="glass-community-v5 community-tab-panel-v1014 channels-tab-v1014">
-              <div className="bottom-card-head-v5"><h3>Kanały społeczności</h3><button type="button" onClick={() => setActiveTab('feed')}>Przejdź do czatu</button></div>
-              <p className="community-panel-sub-v1014">Kanały są żywe — wybór kanału filtruje czat i posty po `channel_key`.</p>
+              <div className="bottom-card-head-v5"><h3>{t('Kanały społeczności')}</h3><button type="button" onClick={() => setActiveTab('feed')}>{t('Przejdź do czatu')}</button></div>
+              <p className="community-panel-sub-v1014">{t('Kanały są żywe — wybór kanału filtruje czat i posty po `channel_key`.')}</p>
               <div className="community-channel-grid-v1014">
                 {channelDefs.map((row) => (
                   <button type="button" key={row.key} onClick={() => { setActiveCommunityChannel(row.key); setActiveTab('feed') }} className={activeCommunityChannel === row.key ? 'active' : ''}>
                     <span>{row.icon}</span>
-                    <strong>{row.label}</strong>
-                    <small>{channelCounts[row.key] || 0} aktywności</small>
-                    <em>Otwórz</em>
+                    <strong>{t(row.label)}</strong>
+                    <small>{t(`${channelCounts[row.key] || 0} aktywności`)}</small>
+                    <em>{t('Otwórz')}</em>
                   </button>
                 ))}
               </div>
             </div>
           ) : activeTab === 'rewards' ? (
             <div className="glass-community-v5 community-rewards-live-v1008 community-tab-panel-v1014">
-              <div className="bottom-card-head-v5"><h3>Nagrody społeczności</h3><span>Coin dostajesz dopiero po wykonaniu akcji.</span></div>
+              <div className="bottom-card-head-v5"><h3>{t('Nagrody społeczności')}</h3><span>{t('Coin dostajesz dopiero po wykonaniu akcji.')}</span></div>
               {rewardRows.map(reward => (
                 <div className={`community-reward-row-v1008 ${reward.done ? 'is-done' : ''} ${reward.claimed ? 'is-claimed' : ''}`} key={reward.key}>
                   <span>{reward.icon}</span>
-                  <div><strong>{reward.title}</strong><small>{reward.desc}</small><div className="reward-progress-v5"><i style={{ width: `${Math.max(4, reward.progress)}%` }}></i></div></div>
+                  <div><strong>{t(reward.title)}</strong><small>{t(reward.desc)}</small><div className="reward-progress-v5"><i style={{ width: `${Math.max(4, reward.progress)}%` }}></i></div></div>
                   <em>{reward.current}</em>
-                  <button type="button" disabled={!reward.done || reward.claimed} onClick={() => claimCommunityReward(reward)}>{reward.claimed ? getRewardUnlockLabel(reward.key) : reward.done ? 'Odbierz +1 coin' : '+1 coin'}</button>
+                  <button type="button" disabled={!reward.done || reward.claimed} onClick={() => claimCommunityReward(reward)}>{reward.claimed ? t(getRewardUnlockLabel(reward.key)) : reward.done ? t('Odbierz +1 coin') : '+1 coin'}</button>
                 </div>
               ))}
             </div>
@@ -15267,16 +15417,16 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                 <div className="glass-community-v5 composer-v5 pro-composer-v1012 composer-pro-v1014">
                   <div className="composer-v5-head">
                     <span className={`composer-avatar-v5 ${userAvatar ? 'has-avatar' : ''}`}>{userAvatar ? <img src={userAvatar} alt="" /> : userInitials}</span>
-                    <div><strong>{activeCommunityChannel === 'kupony-spolecznosci' ? 'Dodaj kupon społeczności' : `Post w kanale #${activeChannelMeta.label}`}</strong><small>{activeCommunityChannel === 'kupony-spolecznosci' ? 'Do screenów kuponów użyj zakładki Czat live i ikony 📎. Tutaj możesz dodać sam opis tekstowy.' : 'Post zapisuje się w Supabase z `channel_key` i pojawia tylko w wybranym kanale.'}</small></div>
+                    <div><strong>{activeCommunityChannel === 'kupony-spolecznosci' ? t('Dodaj kupon społeczności') : (lang === 'en' ? `Post in channel #${t(activeChannelMeta.label)}` : `Post w kanale #${activeChannelMeta.label}`)}</strong><small>{activeCommunityChannel === 'kupony-spolecznosci' ? t('Do screenów kuponów użyj zakładki Czat live i ikony 📎. Tutaj możesz dodać sam opis tekstowy.') : t('Post zapisuje się w Supabase z `channel_key` i pojawia tylko w wybranym kanale.')}</small></div>
                   </div>
                   <div className="composer-v5-row">
-                    <input value={postText} onChange={event => setPostText(event.target.value)} placeholder={activeCommunityChannel === 'kupony-spolecznosci' ? 'Opisz kupon tekstowo albo przejdź do Czat live, żeby dodać screen przez 📎...' : `Napisz post w #${activeChannelMeta.label}...`} />
-                    <button type="button" disabled={busy || !postText.trim()} onClick={() => publishPost(postText)}>{busy ? 'Publikuję...' : 'Opublikuj'}</button>
+                    <input value={postText} onChange={event => setPostText(event.target.value)} placeholder={activeCommunityChannel === 'kupony-spolecznosci' ? t('Opisz kupon tekstowo albo przejdź do Czat live, żeby dodać screen przez 📎...') : (lang === 'en' ? `Write a post in #${t(activeChannelMeta.label)}...` : `Napisz post w #${activeChannelMeta.label}...`)} />
+                    <button type="button" disabled={busy || !postText.trim()} onClick={() => publishPost(postText)}>{busy ? t('Publikuję...') : t('Opublikuj')}</button>
                   </div>
                 </div>
 
-                {loadingCommunity ? <div className="glass-community-v5 community-empty-v1008">Ładuję społeczność...</div> : null}
-                {!loadingCommunity && !filteredPosts.length ? <div className="glass-community-v5 community-empty-v1008"><strong>Brak postów w tym kanale.</strong><span>{activeCommunityChannel === 'kupony-spolecznosci' ? 'Wrzuć pierwszy realny kupon społeczności.' : `Opublikuj pierwszy realny wpis w #${activeChannelMeta.label}.`}</span></div> : null}
+                {loadingCommunity ? <div className="glass-community-v5 community-empty-v1008">{t('Ładuję społeczność...')}</div> : null}
+                {!loadingCommunity && !filteredPosts.length ? <div className="glass-community-v5 community-empty-v1008"><strong>{t('Brak postów w tym kanale.')}</strong><span>{activeCommunityChannel === 'kupony-spolecznosci' ? t('Wrzuć pierwszy realny kupon społeczności.') : (lang === 'en' ? `Publish the first real post in #${t(activeChannelMeta.label)}.` : `Opublikuj pierwszy realny wpis w #${activeChannelMeta.label}.`)}</span></div> : null}
 
                 {filteredPosts.slice(0, 10).map(renderPostCard)}
               </div>
@@ -15285,9 +15435,9 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             <>
               <div className="glass-community-v5 pro-chat-panel-v1012 pro-chat-panel-v1014 live-chat-real-v1017">
                 <div className="pro-chat-head-v1012">
-                  <h3>#{activeChannelMeta.label} <span>• {filteredChatMessages.length} wiadomości</span></h3>
+                  <h3>#{t(activeChannelMeta.label)} <span>• {t(`${filteredChatMessages.length} wiadomości`)}</span></h3>
                 </div>
-                <div className="pro-pin-v1012"><b>{activePinnedMessage.title}</b><span>{activePinnedMessage.text}</span></div>
+                <div className="pro-pin-v1012"><b>{t(activePinnedMessage.title)}</b><span>{t(activePinnedMessage.text)}</span></div>
                 <div className="pro-chat-list-v1012">
                   {filteredChatMessages.length ? filteredChatMessages.map(row => {
                     const avatar = row.avatar_url || row.profile_avatar_url
@@ -15300,14 +15450,14 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                           <div className="pro-chat-meta-v1012 chat-meta-v1418">
                             <button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(row)}>{author}</button>
                             <em>{getAccountPlanBadgeLabel(row)}</em>
-                            <small>{row.created_at ? new Date(row.created_at).toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : 'teraz'}</small>
+                            <small>{row.created_at ? new Date(row.created_at).toLocaleTimeString(lang === 'en' ? 'en-GB' : 'pl-PL', { hour:'2-digit', minute:'2-digit' }) : t('teraz')}</small>
                             <span className="chat-menu-wrap-v1419">
                               <button type="button" className="mini-menu-trigger-v1419" onClick={() => setOpenChatMenuId(prev => prev === row.id ? null : row.id)}>⋯</button>
                               {openChatMenuId === row.id ? (
                                 <span className="mini-menu-v1419">
-                                  {isOwnChatMessage(row) ? <button type="button" onClick={() => startEditCommunityChatMessage(row)}>Edytuj</button> : null}
-                                  {canModerateCommunityChatMessage(row) ? <button type="button" className="danger" onClick={() => deleteCommunityChatMessage(row)}>Usuń</button> : null}
-                                  {!isOwnChatMessage(row) && !isAdminUser(user) ? <button type="button" onClick={() => { onToast?.({ type: 'info', title: 'Czat live', message: 'Wiadomość została zgłoszona.' }); setOpenChatMenuId(null) }}>Zgłoś</button> : null}
+                                  {isOwnChatMessage(row) ? <button type="button" onClick={() => startEditCommunityChatMessage(row)}>{t('Edytuj')}</button> : null}
+                                  {canModerateCommunityChatMessage(row) ? <button type="button" className="danger" onClick={() => deleteCommunityChatMessage(row)}>{t('Usuń')}</button> : null}
+                                  {!isOwnChatMessage(row) && !isAdminUser(user) ? <button type="button" onClick={() => { onToast?.({ type: 'info', title: t('Czat live'), message: t('Wiadomość została zgłoszona.') }); setOpenChatMenuId(null) }}>{t('Zgłoś')}</button> : null}
                                 </span>
                               ) : null}
                             </span>
@@ -15320,15 +15470,15 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                                   <div className="inline-edit-v1418 chat-edit-v1418">
                                     <textarea value={editingChatText} onChange={event => setEditingChatText(event.target.value)} />
                                     <div>
-                                      <button type="button" disabled={busy || (!editingChatText.trim() && !parts.attachment)} onClick={() => saveEditCommunityChatMessage(row)}>Zapisz</button>
-                                      <button type="button" onClick={() => { setEditingChatId(null); setEditingChatText('') }}>Anuluj</button>
+                                      <button type="button" disabled={busy || (!editingChatText.trim() && !parts.attachment)} onClick={() => saveEditCommunityChatMessage(row)}>{t('Zapisz')}</button>
+                                      <button type="button" onClick={() => { setEditingChatId(null); setEditingChatText('') }}>{t('Anuluj')}</button>
                                     </div>
                                   </div>
-                                ) : parts.text ? <p>{parts.text}</p> : null}
+                                ) : parts.text ? <p data-no-translate="true">{parts.text}</p> : null}
                                 {parts.attachment ? (
                                   <div className="chat-attachment-preview-v1025">
-                                    {String(parts.attachment.type || '').startsWith('image/') ? <button type="button" className="chat-image-open-v1029" onClick={() => setChatImagePreview(parts.attachment)}><img src={parts.attachment.dataUrl} alt={parts.attachment.name || 'załącznik'} /></button> : <span>📎</span>}
-                                    <div><strong>{parts.attachment.name || 'Załącznik'}</strong><small>{Math.max(1, Math.round(Number(parts.attachment.size || 0) / 1024))} KB</small></div>
+                                    {String(parts.attachment.type || '').startsWith('image/') ? <button type="button" className="chat-image-open-v1029" onClick={() => setChatImagePreview(parts.attachment)}><img src={parts.attachment.dataUrl} alt={parts.attachment.name || t('załącznik')} /></button> : <span>📎</span>}
+                                    <div><strong>{parts.attachment.name || t('Załącznik')}</strong><small>{Math.max(1, Math.round(Number(parts.attachment.size || 0) / 1024))} KB</small></div>
                                   </div>
                                 ) : null}
                               </>
@@ -15337,7 +15487,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                         </div>
                       </div>
                     )
-                  }) : <div className="community-empty-v1008"><strong>Brak wiadomości w tym kanale.</strong><span>Napisz pierwszą wiadomość na #{activeChannelMeta.label}.</span></div>}
+                  }) : <div className="community-empty-v1008"><strong>{t('Brak wiadomości w tym kanale.')}</strong><span>{lang === 'en' ? `Write the first message in #${t(activeChannelMeta.label)}.` : `Napisz pierwszą wiadomość na #${activeChannelMeta.label}.`}</span></div>}
                 </div>
                 <div className="chat-composer-shell-v1025">
                   {emojiPickerOpen ? (
@@ -15353,10 +15503,10 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     </div>
                   ) : null}
                   <div className="pro-chat-input-v1012 chat-input-active-v1023">
-                    <input value={chatText} onChange={event => setChatText(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && (chatText.trim() || chatAttachment)) sendChatMessage() }} placeholder={activeCommunityChannel === 'kupony-spolecznosci' ? 'Napisz wiadomość i dodaj screen kuponu przez ikonę 📎...' : `Napisz wiadomość w #${activeChannelMeta.label}...`} />
+                    <input value={chatText} onChange={event => setChatText(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && (chatText.trim() || chatAttachment)) sendChatMessage() }} placeholder={activeCommunityChannel === 'kupony-spolecznosci' ? (lang === 'en' ? 'Write a message and add a coupon screenshot using the 📎 icon...' : 'Napisz wiadomość i dodaj screen kuponu przez ikonę 📎...') : (lang === 'en' ? `Write a message in #${t(activeChannelMeta.label)}...` : `Napisz wiadomość w #${activeChannelMeta.label}...`)} />
                     <div className="chat-tools-v1023">
-                      <button type="button" title="Dodaj emoji" onClick={() => setEmojiPickerOpen(prev => !prev)}>😊</button>
-                      <label title="Dodaj plik">
+                      <button type="button" title={t('Dodaj emoji')} onClick={() => setEmojiPickerOpen(prev => !prev)}>😊</button>
+                      <label title={t('Dodaj plik')}>
                         📎
                         <input type="file" accept="image/*,.pdf,.txt,.doc,.docx" onChange={handleChatFileSelect} />
                       </label>
@@ -15371,8 +15521,8 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
         <aside className="community-v5-sidebar community-pro-right-v1012">
           <div className="glass-community-v5 sidecard-v5">
-            <div className="sidecard-head-v5"><h3>🏆 Top aktywni dziś</h3></div>
-            <small className="sidecard-sub-v5">Aktywność społeczności • punkty za realne akcje</small>
+            <div className="sidecard-head-v5"><h3>🏆 {t('Top aktywni dziś')}</h3></div>
+            <small className="sidecard-sub-v5">{t('Aktywność społeczności • punkty za realne akcje')}</small>
             <div className="side-list-v5">
               {communityRanking.slice(0, 5).map((item, index) => (
                 <div className="side-leader-row-v5" key={item.user_id || item.email || index}>
@@ -15381,12 +15531,12 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                   <b>{getCappedCommunityPoints(item)} coin</b>
                 </div>
               ))}
-              {!communityRanking.length ? <div className="empty-mini">Brak rankingu — dodaj pierwszy post.</div> : null}
+              {!communityRanking.length ? <div className="empty-mini">{t('Brak rankingu — dodaj pierwszy post.')}</div> : null}
             </div>
           </div>
 
           <div className="glass-community-v5 sidecard-v5">
-            <div className="sidecard-head-v5"><h3>⭐ Polecani typerzy</h3></div>
+            <div className="sidecard-head-v5"><h3>⭐ {t('Polecani typerzy')}</h3></div>
             <div className="suggested-list-v5">
               {suggestedUsers.slice(0, 5).map((item, index) => {
                 const avatar = getProfileAvatarUrl(item)
@@ -15397,9 +15547,9 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     <button type="button" className={`suggested-avatar-v5 ${avatar ? 'has-avatar' : ''}`} onClick={() => openCommunityProfile(item)}>{avatar ? <img src={avatar} alt="" /> : String(name || 'U').slice(0,2).toUpperCase()}</button>
                     <div className="suggested-info-v1020">
                       <button type="button" className="community-name-btn-v1016 suggested-name-v1020" onClick={() => openCommunityProfile(item)}>{name}</button>
-                      <small><b>{planLabel}</b>{item.recommendation_label ? <span>{item.recommendation_label}</span> : null}</small>
+                      <small><b>{planLabel}</b>{item.recommendation_label ? <span>{t(item.recommendation_label)}</span> : null}</small>
                     </div>
-                    <button type="button" className={`suggested-follow-v1020 ${isCommunityFollowing(item) ? 'is-following' : ''}`} onClick={() => toggleCommunityFollow(item)}>{isCommunityFollowing(item) ? 'Obserwujesz' : 'Obserwuj'}</button>
+                    <button type="button" className={`suggested-follow-v1020 ${isCommunityFollowing(item) ? 'is-following' : ''}`} onClick={() => toggleCommunityFollow(item)}>{isCommunityFollowing(item) ? t('Obserwujesz') : t('Obserwuj')}</button>
                   </div>
                 )
               })}
@@ -15413,8 +15563,8 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         <div className="chat-image-modal-v1029" onClick={() => setChatImagePreview(null)}>
           <div onClick={event => event.stopPropagation()}>
             <button type="button" onClick={() => setChatImagePreview(null)}>×</button>
-            <img src={chatImagePreview.dataUrl} alt={chatImagePreview.name || 'podgląd'} />
-            <strong>{chatImagePreview.name || 'Zdjęcie'}</strong>
+            <img src={chatImagePreview.dataUrl} alt={chatImagePreview.name || t('podgląd')} />
+            <strong>{chatImagePreview.name || t('Zdjęcie')}</strong>
           </div>
         </div>
       ) : null}
@@ -19066,7 +19216,7 @@ function AiEventCard({ tip }) {
           <h3>{away}</h3>
         </div>
         <div className="ai-scoreline">
-          <small>{when ? new Date(when).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : 'Dziś'}</small>
+          <small>{when ? new Date(when).toLocaleString(lang === 'en' ? 'en-GB' : 'pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : 'Dziś'}</small>
           <b>{confidence}%</b>
           <span>AI confidence</span>
         </div>
@@ -23379,7 +23529,7 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
           <div className="payment-icon">🔒</div>
           <h2>Subskrypcja niedostępna</h2>
           <p>Użytkownik <b>{tipsterName}</b> ma konto FREE. Konta FREE nie mogą sprzedawać subskrypcji profilu ani blokować wyników/statystyk.</p>
-          <button className="payment-secondary" onClick={onClose}>Zamknij</button>
+          <button className="payment-secondary" onClick={onClose}>{t('Zamknij')}</button>
         </div>
       </div>
     )
@@ -23429,7 +23579,7 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
           ))}
         </div>
         {error && <div className="payment-error">{error}</div>}
-        <button className="payment-secondary" onClick={onClose}>Anuluj</button>
+        <button className="payment-secondary" onClick={onClose}>{t('Anuluj')}</button>
       </div>
     </div>
   )
@@ -25568,7 +25718,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const away = normalized.away_team || normalized.team_away || 'Goście'
     const league = normalized.league || 'Liga'
     const time = normalized.match_time || normalized.created_at || ''
-    const timeLabel = time ? new Date(time).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : 'Brak daty'
+    const timeLabel = time ? new Date(time).toLocaleString(lang === 'en' ? 'en-GB' : 'pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : 'Brak daty'
     const pick = normalized.pick || normalized.type || normalized.bet_type || 'Typ'
     const odds = Number(normalized.odds || 0) ? Number(normalized.odds || 0).toFixed(2) : '—'
     const confidence = `${getAiConfidence(normalized) || 0}%`
