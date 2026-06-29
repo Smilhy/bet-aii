@@ -220,7 +220,7 @@ function getLocalizedDashboardHeroSrc(src, lang) {
 
 const BETAI_DASHBOARD_TRANSLATIONS = {
   en: {
-    'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Ulepsz konto': 'Top up account', 'Saldo': 'Balance', 'Coiny': 'Coin', 'Odblokowane': 'Unlocked', 'Przejdź na Premium': 'Go Premium', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować typera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
+    'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Ulepsz konto': 'Upgrade account', 'Saldo': 'Balance', 'Coiny': 'Coin', 'Odblokowane': 'Unlocked', 'Przejdź na Premium': 'Go Premium', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować typera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
   }
 }
 
@@ -396,6 +396,40 @@ const BETAI_EN_DASHBOARD_FIX_TRANSLATIONS_V1850 = {
     'Użytkownik': 'User',
     'Gość': 'Guest',
     'Polski': 'Polish',
+
+    // WERSJA 1851 — brakujące teksty z dzwonka, koperty i lewego panelu
+    'NAWIGACJA': 'NAVIGATION',
+    'Nagrody, informacje od strony i komunikaty od admina.': 'Rewards, site updates and admin messages.',
+    'Twoje coiny': 'Your coins',
+    'Nowe powiadomienia': 'New notifications',
+    'Wiadomość BetAI': 'BetAI message',
+    'Komunikat BetAI': 'BetAI notice',
+    'Powiadomienie': 'Notification',
+    'Oznacz jako przeczytane': 'Mark as read',
+    'Nie masz teraz nowych powiadomień BetAI.': 'You have no new BetAI notifications right now.',
+    'Bonus za aktywność': 'Activity bonus',
+    'Bonus za aktywność na czacie': 'Chat activity bonus',
+    'Prywatny czat użytkowników. Ten panel otwiera się z koperty, nie z dzwonka.': 'Private user chat. This panel opens from the envelope, not the bell.',
+    'Prywatny czat użytkowników': 'Private user chat',
+    'Prywatny czat prywatny czat użytkowników': 'Private user chat',
+    'Szukaj użytkownika...': 'Search users...',
+    'Brak e-mail w profilu': 'No email in profile',
+    'Brak użytkowników dla tego wyszukiwania. Jeśli kogoś brakuje, uruchom SQL 684 dla katalogu użytkowników.': 'No users match this search. If someone is missing, run SQL 684 for the user directory.',
+    'Wybierz użytkownika': 'Select a user',
+    'Brak wiadomości. Napisz pierwszą.': 'No messages yet. Write the first one.',
+    'Kliknij użytkownika po lewej.': 'Select a user on the left.',
+    'Kliknij użytkownika po lewej i napisz prywatną wiadomość.': 'Select a user on the left and write a private message.',
+    'Brak użytkowników do pokazania.': 'No users to display.',
+    'Nie udało się wczytać rozmowy.': 'Could not load the conversation.',
+    'Najpierw wybierz odbiorcę z listy użytkowników.': 'First select a recipient from the user list.',
+    'Musisz być zalogowany i mieć połączenie z Supabase.': 'You must be logged in and connected to Supabase.',
+    'Wiadomość wysłana.': 'Message sent.',
+    'Wysyłka nie powiodła się. Sprawdź SQL/RLS direct_messages.': 'Sending failed. Check SQL/RLS for direct_messages.',
+    'Napisz wiadomość prywatną...': 'Write a private message...',
+    'Ty': 'You',
+    'nowe': 'new',
+    'coinów': 'coins',
+    'żetonów': 'tokens',
 
     // Sporty i kraje
     'Piłka nożna': 'Football',
@@ -632,11 +666,13 @@ function translateBetaiDynamicTemplateV1850(value, lang) {
     if ((match = text.match(/^Pokaż kolejne\s+(\d+)\s+typy\s+\((\d+)\s+pozostało\)$/i))) return `Show next ${match[1]} picks (${match[2]} remaining)`
     if ((match = text.match(/^Zwiń do\s+(\d+)\s+typów$/i))) return `Collapse to ${match[1]} picks`
     if ((match = text.match(/^Top\s+(\d+)\s+z\s+(\d+)$/i))) return `Top ${match[1]} of ${match[2]}`
-    if ((match = text.match(/^(\d+)\s+min(?:ut(?:a|y)?|uty|uta)?\s+temu$/i))) return `${match[1]} min ago`
+    if ((match = text.match(/^(\d+)\s+min(?:ut(?:a|y|ę)?|uty|uta)?\s+temu$/i))) return `${match[1]} min ago`
     if ((match = text.match(/^(\d+)\s*min\s+temu$/i))) return `${match[1]} min ago`
     if ((match = text.match(/^(\d+)\s*h\s+temu$/i))) return `${match[1]}h ago`
-    if ((match = text.match(/^(\d+)\s+godzin(?:a|y)?\s+temu$/i))) return `${match[1]} hours ago`
-    if ((match = text.match(/^(\d+)\s+dni?\s+temu$/i))) return `${match[1]} days ago`
+    if ((match = text.match(/^(\d+)\s+godzin(?:a|y|ę)?\s+temu$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'hour' : 'hours'} ago`
+    if ((match = text.match(/^(\d+)\s+(?:dzień|dni)\s+temu$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'day' : 'days'} ago`
+    if ((match = text.match(/^Wysłałeś\s+(\d+)\s+coin(?:a|y|ów)?\s+do\s+(.+?)\.?$/i))) return `You sent ${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'} to ${match[2]}.`
+    if ((match = text.match(/^Dostałeś\s+\+(\d+)\s+(?:żeton(?:y|ów)?|coin(?:y|ów)?)\s+Premium\s+za\s+pierwszą\s+wiadomość\s+dnia\s+na\s+BetAI\s+Live\s+Chat\.\s+Kolejne\s+(?:wiadomości|messages)\s+dzisiaj\s+nie\s+dają\s+już\s+tego\s+bonusu\.?$/i))) return `You received +${match[1]} Premium ${Number(match[1]) === 1 ? 'coin' : 'coins'} for your first message of the day in BetAI Live Chat. Further messages today do not grant this bonus.`
     if ((match = text.match(/^(\d+)\s+wiadomości\s+dziś$/i))) return `${match[1]} messages today`
     if ((match = text.match(/^(\d+)\s+wiadomości$/i))) return `${match[1]} messages`
     if ((match = text.match(/^(\d+)\s+zdarzenia$/i))) return `${match[1]} events`
@@ -657,6 +693,8 @@ function translateBetaiDynamicTemplateV1850(value, lang) {
     if ((match = text.match(/^Collapse to\s+(\d+)\s+picks$/i))) return `Zwiń do ${match[1]} typów`
     if ((match = text.match(/^(\d+)\s+min\s+ago$/i))) return `${match[1]} min temu`
     if ((match = text.match(/^(\d+)h\s+ago$/i))) return `${match[1]}h temu`
+    if ((match = text.match(/^(\d+)\s+hours?\s+ago$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'godzinę' : Number(match[1]) < 5 ? 'godziny' : 'godzin'} temu`
+    if ((match = text.match(/^(\d+)\s+days?\s+ago$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'dzień' : 'dni'} temu`
     if ((match = text.match(/^(.+?)\s+to\s+win\s+at\s+half-time$/i))) return `${match[1]} wygra do przerwy`
     if ((match = text.match(/^(.+?)\s+or\s+draw$/i))) return `${match[1]} lub remis`
     if ((match = text.match(/^(.+?)\s+to\s+win$/i))) return `${match[1]} wygra`
@@ -12715,7 +12753,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardAnalysis = cleanAkoAnalysisText(tip.analysis || tip.description || '')
   const cardMatchLabel = formatBetaiTipCardWallTimeV1719(tip)
   const cardStatusLabel = startedReadOnly ? 'Rozpoczęty' : (tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący')
-  const createdAgo = formatRelativeAddedTime(tip?.created_at)
+  const createdAgo = formatRelativeAddedTime(tip?.created_at, lang)
   const dashboardBotStatsV1794 = useBetaiBotDashboardStatsV1794(tip)
   const isDashboardBotV1794 = isBetaiMultisportRecordV1794(tip)
   const dashboardAuthorStats = getAuthorStatsLabels(
@@ -16460,6 +16498,9 @@ function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
 }
 
 function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarget = null }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
+  const locale = lang === 'en' ? 'en-GB' : 'pl-PL'
   const [users, setUsers] = useState([])
   const [activeUser, setActiveUser] = useState(null)
   const [messages, setMessages] = useState([])
@@ -16862,36 +16903,36 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
     <div className="betai-dm-box">
       <div className="betai-dm-layout">
         <aside className="betai-dm-users">
-          <input className="betai-dm-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Szukaj użytkownika..." />
+          <input className="betai-dm-search" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('Szukaj użytkownika...')} />
           <div className="betai-dm-user-list">
             {filteredUsers.length ? filteredUsers.map(item => (
               <button type="button" className={activeUser?.id === item.id ? 'betai-dm-user active' : 'betai-dm-user'} key={item.id || item.email} onClick={() => setActiveUser(item)}>
                 <span className="betai-dm-avatar">{item.initials}</span>
-                <span><strong>{item.name}</strong><small>{item.email || 'Brak e-mail w profilu'}</small></span>
+                <span><strong>{item.name}</strong><small>{item.email || t('Brak e-mail w profilu')}</small></span>
                 {Number(unreadMap[item.id] || 0) > 0 && <b>{Number(unreadMap[item.id] || 0)}</b>}
               </button>
-            )) : <div className="betai-dm-empty">Brak użytkowników dla tego wyszukiwania. Jeśli kogoś brakuje, uruchom SQL 684 dla katalogu użytkowników.</div>}
+            )) : <div className="betai-dm-empty">{t('Brak użytkowników dla tego wyszukiwania. Jeśli kogoś brakuje, uruchom SQL 684 dla katalogu użytkowników.')}</div>}
           </div>
         </aside>
         <section className="betai-dm-conversation">
           <div className="betai-dm-active">
             <span className="betai-dm-avatar big">{activeUser?.initials || 'BU'}</span>
-            <div><strong>{activeUser?.name || 'Wybierz użytkownika'}</strong><small>{activeUser?.email || 'Prywatny czat prywatny czat użytkowników'}</small></div>
+            <div><strong>{activeUser?.name || t('Wybierz użytkownika')}</strong><small>{activeUser?.email || t('Prywatny czat użytkowników')}</small></div>
           </div>
           <div className="betai-dm-messages">
             {activeUser ? (messages.length ? messages.map(msg => {
               const mine = String(msg.sender_id || '') === String(myId)
               return <div className={mine ? 'betai-dm-msg me' : 'betai-dm-msg'} key={msg.id || msg.created_at}>
                 <div className="betai-dm-bubble">{msg.message_text}</div>
-                <small>{mine ? 'Ty' : activeUser.name} • {msg.created_at ? new Date(msg.created_at).toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : '--:--'}</small>
+                <small>{mine ? t('Ty') : activeUser.name} • {msg.created_at ? new Date(msg.created_at).toLocaleTimeString(locale, { hour:'2-digit', minute:'2-digit' }) : '--:--'}</small>
               </div>
-            }) : <div className="betai-dm-empty">Brak wiadomości. Napisz pierwszą.</div>) : <div className="betai-dm-empty">Kliknij użytkownika po lewej.</div>}
+            }) : <div className="betai-dm-empty">{t('Brak wiadomości. Napisz pierwszą.')}</div>) : <div className="betai-dm-empty">{t('Kliknij użytkownika po lewej.')}</div>}
           </div>
           <div className="betai-dm-compose">
-            <textarea value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }} placeholder="Napisz wiadomość prywatną..." />
-            <button type="button" onClick={sendMessage} disabled={sending || !text.trim()}>{sending ? '...' : 'Wyślij'}</button>
+            <textarea value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }} placeholder={t('Napisz wiadomość prywatną...')} />
+            <button type="button" onClick={sendMessage} disabled={sending || !text.trim()}>{sending ? '...' : t('Wyślij')}</button>
           </div>
-          <div className="betai-dm-status">{status}</div>
+          <div className="betai-dm-status">{t(status)}</div>
         </section>
       </div>
     </div>
@@ -16899,42 +16940,45 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
 }
 
 function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, onClose, onMarkAllRead, panelStyle = null }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
+  const locale = lang === 'en' ? 'en-GB' : 'pl-PL'
   if (!open) return null
   const unread = notifications.filter(item => !item.is_read)
   const items = unread.length ? unread : notifications.slice(0, 8)
 
   return (
     <div className="betai-notify-overlay" aria-hidden={!open} onMouseDown={e => { if (e.target === e.currentTarget) onClose?.() }}>
-      <div className="betai-notify-panel" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label="Powiadomienia Bet+AI">
+      <div className="betai-notify-panel" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label={t('Powiadomienia Bet+AI')}>
         <div className="betai-notify-header">
           <div>
-            <div className="betai-notify-title">Powiadomienia Bet+AI</div>
-            <div className="betai-notify-sub">Nagrody, informacje od strony i komunikaty od admina.</div>
+            <div className="betai-notify-title">{t('Powiadomienia Bet+AI')}</div>
+            <div className="betai-notify-sub">{t('Nagrody, informacje od strony i komunikaty od admina.')}</div>
           </div>
           <div className="betai-notify-actions">
-            <button className="betai-notify-btn" type="button" title="Oznacz jako przeczytane" onClick={onMarkAllRead}>✓</button>
-            <button className="betai-notify-btn" type="button" title="Zamknij" onClick={onClose}>✕</button>
+            <button className="betai-notify-btn" type="button" title={t('Oznacz jako przeczytane')} onClick={onMarkAllRead}>✓</button>
+            <button className="betai-notify-btn" type="button" title={t('Zamknij')} onClick={onClose}>✕</button>
           </div>
         </div>
         <div className="betai-notify-stats">
-          <div className="betai-notify-stat"><span>Twoje coiny</span><strong>{Number(tokenBalance || 0)}</strong></div>
-          <div className="betai-notify-stat"><span>Nowe powiadomienia</span><strong>{unread.length}</strong></div>
+          <div className="betai-notify-stat"><span>{t('Twoje coiny')}</span><strong>{Number(tokenBalance || 0)}</strong></div>
+          <div className="betai-notify-stat"><span>{t('Nowe powiadomienia')}</span><strong>{unread.length}</strong></div>
         </div>
         <div className="betai-notify-list">
           {items.length ? items.map((item, index) => (
             <div className={item.is_read ? 'betai-notify-card' : 'betai-notify-card unread'} key={getNotificationKey(item, index)}>
               <div className="betai-notify-head">
-                <strong>{item.title || 'Wiadomość BetAI'}</strong>
-                <span className="betai-notify-time">{item.created_at ? new Date(item.created_at).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : ''}</span>
+                <strong>{t(item.title || 'Wiadomość BetAI')}</strong>
+                <span className="betai-notify-time">{item.created_at ? new Date(item.created_at).toLocaleString(locale, { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : ''}</span>
               </div>
-              <div className="betai-notify-body">{getNotificationBody(item)}</div>
+              <div className="betai-notify-body">{t(getNotificationBody(item))}</div>
               <div className="betai-notify-chips">
-                <span className="betai-chip system">{item.source === 'system' ? 'Komunikat BetAI' : 'Powiadomienie'}</span>
-                {Number(item.reward_tokens || 0) > 0 && <span className="betai-chip reward">+{Number(item.reward_tokens || 0)} coinów</span>}
+                <span className="betai-chip system">{t(item.source === 'system' ? 'Komunikat BetAI' : 'Powiadomienie')}</span>
+                {Number(item.reward_tokens || 0) > 0 && <span className="betai-chip reward">+{Number(item.reward_tokens || 0)} {lang === 'en' ? (Number(item.reward_tokens || 0) === 1 ? 'coin' : 'coins') : 'coinów'}</span>}
               </div>
             </div>
           )) : (
-            <div className="betai-notify-empty">Nie masz teraz nowych powiadomień BetAI.</div>
+            <div className="betai-notify-empty">{t('Nie masz teraz nowych powiadomień BetAI.')}</div>
           )}
         </div>
       </div>
@@ -16943,19 +16987,21 @@ function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, onClose,
 }
 
 function UserMessagesPopup({ open, user = null, dmUnreadCount = 0, onDmUnreadChange, onClose, panelStyle = null, initialTarget = null }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   if (!open) return null
 
   return (
     <div className="betai-notify-overlay" aria-hidden={!open} onMouseDown={e => { if (e.target === e.currentTarget) onClose?.() }}>
-      <div className="betai-notify-panel betai-notify-panel-with-dm betai-notify-users-only" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label="Wiadomości użytkowników">
+      <div className="betai-notify-panel betai-notify-panel-with-dm betai-notify-users-only" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label={t('Wiadomości użytkowników')}>
         <div className="betai-notify-header">
           <div>
-            <div className="betai-notify-title">Wiadomości użytkowników</div>
-            <div className="betai-notify-sub">Prywatny czat użytkowników. Ten panel otwiera się z koperty, nie z dzwonka.</div>
+            <div className="betai-notify-title">{t('Wiadomości użytkowników')}</div>
+            <div className="betai-notify-sub">{t('Prywatny czat użytkowników. Ten panel otwiera się z koperty, nie z dzwonka.')}</div>
           </div>
           <div className="betai-notify-actions">
-            <span className="betai-dm-unread">{Number(dmUnreadCount || 0)} nowe</span>
-            <button className="betai-notify-btn" type="button" title="Zamknij" onClick={onClose}>✕</button>
+            <span className="betai-dm-unread">{Number(dmUnreadCount || 0)} {t('nowe')}</span>
+            <button className="betai-notify-btn" type="button" title={t('Zamknij')} onClick={onClose}>✕</button>
           </div>
         </div>
         <UserMessagesPanel user={user} visible={open} onUnreadChange={onDmUnreadChange} initialTarget={initialTarget} />
@@ -22938,10 +22984,18 @@ function TipTeamLogo({ logo, teamId, name }) {
 }
 
 
-function formatRelativeAddedTime(value) {
+function formatRelativeAddedTime(value, lang = 'pl') {
   const ts = Date.parse(value || '')
-  if (!Number.isFinite(ts)) return 'teraz'
+  if (!Number.isFinite(ts)) return lang === 'en' ? 'now' : 'teraz'
   const diffMinutes = Math.max(0, Math.floor((Date.now() - ts) / 60000))
+  if (lang === 'en') {
+    if (diffMinutes < 1) return 'now'
+    if (diffMinutes < 60) return `${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'} ago`
+    const hours = Math.floor(diffMinutes / 60)
+    if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`
+    const days = Math.floor(hours / 24)
+    return `${days} ${days === 1 ? 'day' : 'days'} ago`
+  }
   if (diffMinutes < 1) return 'teraz'
   if (diffMinutes < 60) return `${diffMinutes} ${diffMinutes === 1 ? 'minutę' : 'minut'} temu`
   const hours = Math.floor(diffMinutes / 60)
@@ -22979,6 +23033,7 @@ function ProfileLiveTipCard({
   authorStats = null,
   canFollowAuthor = true,
 }) {
+  const lang = useBetaiLanguageState()
   const profileSubActive = hasActiveTipsterSubscription(sourceTip, tipsterSubscriptions)
   const singleUnlocked = Boolean(sourceTip?.id && unlockedTips?.has?.(sourceTip.id))
   const isUnlocked = !tip.premium || singleUnlocked || profileSubActive
@@ -23000,7 +23055,7 @@ function ProfileLiveTipCard({
   const [menuOpen, setMenuOpen] = useState(false)
   const [analysisModalOpen, setAnalysisModalOpen] = useState(false)
   const [akoExpanded, setAkoExpanded] = useState(false)
-  const createdAgo = formatRelativeAddedTime(sourceTip?.created_at || tip?.createdAt || tip?.createdLabel)
+  const createdAgo = formatRelativeAddedTime(sourceTip?.created_at || tip?.createdAt || tip?.createdLabel, lang)
 
   useEffect(() => {
     try {

@@ -76355,3 +76355,30 @@ body > .tip-analysis-modal-backdrop > .tip-analysis-modal{
   background:rgba(64,15,28,.88)!important;
   color:#ffb2c0!important;
 }
+
+
+/* =====================================================================
+   WERSJA 1851 — angielskie pseudo-etykiety sidebara.
+   CSS ::before/::after nie przechodzi przez tłumacz Reacta, dlatego
+   etykiety zależą bezpośrednio od data-betai-lang na .app-shell.
+   ===================================================================== */
+.app-shell[data-betai-lang="en"] .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::before,
+.app-shell[data-betai-lang="en"] .betai-sidebar-premium-v8 .menu::before{
+  content:"NAVIGATION"!important;
+}
+.app-shell[data-betai-lang="en"] .betai-sidebar-premium-v8 .betai-premium-upgrade-btn::after{
+  content:"Upgrade account"!important;
+}
+.app-shell[data-betai-lang="en"] .betai-sidebar-premium-v8 .betai-premium-logout-btn::after{
+  content:"Log out"!important;
+}
+.app-shell[data-betai-lang="pl"] .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::before,
+.app-shell[data-betai-lang="pl"] .betai-sidebar-premium-v8 .menu::before{
+  content:"NAWIGACJA"!important;
+}
+.app-shell[data-betai-lang="pl"] .betai-sidebar-premium-v8 .betai-premium-upgrade-btn::after{
+  content:"Ulepsz konto"!important;
+}
+.app-shell[data-betai-lang="pl"] .betai-sidebar-premium-v8 .betai-premium-logout-btn::after{
+  content:"Wyloguj"!important;
+}
