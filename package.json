@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-1867-new-presentation-video",
-  "version": "1.8.6.7",
+  "name": "betai-wersja-1868-nowy-login-ui",
+  "version": "1.8.6.8",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",

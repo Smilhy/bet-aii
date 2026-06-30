@@ -23341,7 +23341,7 @@ function AuthView({ onAuth }) {
   ]), [])
 
   return (
-    <div className="auth609-screen" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
+    <div className="auth609-screen auth1868-screen" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
       <div className="auth620-language-corner">
         <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} floating ariaLabel={t.languageLabel} />
       </div>
@@ -23385,48 +23385,81 @@ function AuthView({ onAuth }) {
         </div>
       </aside>
 
-      <div className="auth609-artboard">
-        <img
-          src={localizedAuthFrameSrc}
-          alt={t.authFrameAlt || 'Bet+AI screen reference'}
-          className="auth609-reference"
-          draggable="false"
-        />
+      <div className="auth609-artboard auth1868-artboard">
+        <div className="auth609-overlay auth1868-shell">
+          <section className="auth1868-hero-panel" aria-label={authLang === 'en' ? 'Bet plus AI advantages' : 'Zalety Bet plus AI'}>
+            <div className="auth1868-hero-top">
+              <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth1868-logo" draggable="false" />
+              <div className="auth1868-beta-chip">
+                <span>{authLang === 'en' ? 'BETA VERSION' : 'WERSJA BETA'}</span>
+                <i title={authLang === 'en' ? 'The platform is continuously improved.' : 'Platforma jest stale rozwijana.'}>i</i>
+              </div>
+            </div>
 
-        <div className="auth609-overlay">
-          <section className="auth609-left-panel">
-            <div className="auth609-panel-shell auth609-panel-shell-fixed">
-              <div className="auth609-center-wrap">
-                <div className="auth609-top-spacer" />
+            <div className="auth1868-hero-copy">
+              <h1>
+                {authLang === 'en' ? <>Smarter bets.<br />Powered by <span>AI.</span></> : <>Mądrzejsze typy.<br />Napędzane przez <span>AI.</span></>}
+              </h1>
+              <p>
+                {authLang === 'en'
+                  ? 'Real-time analysis, smart picks and better decisions in one premium platform.'
+                  : 'Analizy w czasie rzeczywistym, inteligentne typy i lepsze decyzje w jednej platformie premium.'}
+              </p>
+            </div>
 
-                <div className="auth609-heading-copy auth609-heading-center">
-                  <div className="auth609-beta-banner" role="note" aria-label={authLang === 'en' ? 'Beta version information' : 'Informacja o wersji beta'}>
-                    <span className="auth609-beta-kicker">{authLang === 'en' ? 'BETA VERSION' : 'WERSJA BETA'}</span>
-                    <span className="auth609-beta-info" tabIndex="0" aria-label={authLang === 'en' ? 'How to change browser zoom' : 'Jak zmienić zoom przeglądarki'}>
-                      i
-                      <span className="auth609-beta-tooltip" role="tooltip">
-                        <span>{authLang === 'en' ? <>If the layout looks incorrect, use your browser <b>zoom</b>.</> : <>Jeśli widok się rozjeżdża, użyj <b>zoomu</b> przeglądarki.</>}</span>
-                        <span className="auth609-beta-shortcuts">
-                          <strong>Ctrl <em>+</em></strong>
-                          <i>{authLang === 'en' ? 'and' : 'i'}</i>
-                          <strong>Ctrl <em>-</em></strong>
-                        </span>
-                        <span>{authLang === 'en' ? <>or set the browser <b>zoom</b> manually.</> : <>lub ustaw <b>zoom</b> ręcznie w przeglądarce.</>}</span>
-                        <span className="auth609-beta-zoomrow">
-                          <em>-</em><small>100%</small><em>+</em>
-                        </span>
-                      </span>
-                    </span>
-                    <p>
-                      <strong>{authLang === 'en' ? '⚠️ This page is in beta.' : '⚠️ Strona jest w wersji BETA.'}</strong><br />
-                      {authLang === 'en' ? <>If the layout looks incorrect on your device, elements overlap or the page does not fit the screen, use the browser <span className="auth609-beta-highlight">zoom tool</span> and adjust the view manually. We are continuously fixing these issues.</> : <>Jeśli widok na Twoim urządzeniu wygląda źle, ramki się nakładają albo strona nie dopasowuje się do ekranu, użyj <span className="auth609-beta-highlight">zoomu/lupy</span> w przeglądarce i ustaw widok ręcznie. Będziemy na bieżąco naprawiać takie błędy.</>}
-                    </p>
-                  </div>
-                  <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth619-fused-logo auth620-fused-logo" draggable="false" />
-                  <p className="auth609-subtitle-main auth620-subtitle-main">{mode === 'login' ? t.subtitleLogin : t.subtitleRegister}</p>
+            <div className="auth1868-benefit-list">
+              <div className="auth1868-benefit-item">
+                <span><IconBolt /></span>
+                <div>
+                  <strong>{authLang === 'en' ? 'AI-powered predictions' : 'Typy wspierane przez AI'}</strong>
+                  <small>{authLang === 'en' ? 'Advanced algorithms for better picks' : 'Zaawansowane algorytmy dla lepszych typów'}</small>
+                </div>
+              </div>
+              <div className="auth1868-benefit-item">
+                <span><IconChart /></span>
+                <div>
+                  <strong>{authLang === 'en' ? 'Real-time statistics' : 'Statystyki w czasie rzeczywistym'}</strong>
+                  <small>{authLang === 'en' ? 'Live data and match insights' : 'Dane live i analizy spotkań'}</small>
+                </div>
+              </div>
+              <div className="auth1868-benefit-item">
+                <span><IconUsers /></span>
+                <div>
+                  <strong>{authLang === 'en' ? 'Trusted community' : 'Aktywna społeczność'}</strong>
+                  <small>{authLang === 'en' ? 'Join bettors and tipsters from around the world' : 'Dołącz do typerów i graczy z całego świata'}</small>
+                </div>
+              </div>
+            </div>
+
+            <div className="auth1868-ball-wrap" aria-hidden="true">
+              <div className="auth1868-ball-glow" />
+              <img src="/auth-hero-ball-v1868.webp" alt="" draggable="false" />
+            </div>
+
+            <button
+              type="button"
+              className="auth1567-presentation-button auth1868-presentation-button"
+              onClick={() => setPresentationOpen(true)}
+              aria-label={authLang === 'en' ? 'Watch the Bet plus AI platform presentation' : 'Obejrzyj prezentację platformy Bet plus AI'}
+            >
+              <span className="auth1567-play-orb">▶</span>
+              <span>
+                <b>{authLang === 'en' ? 'Watch presentation' : 'Obejrzyj prezentację'}</b>
+                <small>{authLang === 'en' ? 'See how Bet+AI works' : 'Zobacz, jak działa Bet+AI'}</small>
+              </span>
+            </button>
+          </section>
+
+          <section className="auth609-left-panel auth1868-login-panel">
+            <div className="auth609-panel-shell auth609-panel-shell-fixed auth1868-login-card">
+              <div className="auth609-center-wrap auth1868-login-inner">
+                <div className="auth1868-login-heading">
+                  <span>{mode === 'login' ? (authLang === 'en' ? 'WELCOME BACK' : 'WITAJ PONOWNIE') : (authLang === 'en' ? 'CREATE ACCOUNT' : 'UTWÓRZ KONTO')}</span>
+                  <h2>{mode === 'login' ? (authLang === 'en' ? 'Welcome back!' : 'Witaj ponownie!') : (authLang === 'en' ? 'Join Bet+AI' : 'Dołącz do Bet+AI')}</h2>
+                  <p>{mode === 'login' ? t.subtitleLogin : t.subtitleRegister}</p>
                 </div>
 
-                <div className={`auth481-tabs auth609-tabs auth609-tabs-fixed ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label={t.authModeLabel}>
+                <div className={`auth481-tabs auth609-tabs auth609-tabs-fixed auth1868-tabs ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label={t.authModeLabel}>
                   <button
                     type="button"
                     className={`auth481-tab ${mode === 'login' ? 'is-active' : ''}`}
@@ -23443,7 +23476,7 @@ function AuthView({ onAuth }) {
                   </button>
                 </div>
 
-                <form className="auth481-form auth609-form auth609-form-fixed" onSubmit={handleSubmit} autoComplete={form.agree ? 'on' : 'off'}>
+                <form className="auth481-form auth609-form auth609-form-fixed auth1868-form" onSubmit={handleSubmit} autoComplete={form.agree ? 'on' : 'off'}>
                   <AuthField
                     label={t.email}
                     type="email"
@@ -23479,7 +23512,7 @@ function AuthView({ onAuth }) {
                     }
                   />
 
-                  <div className="auth609-remember-row">
+                  <div className="auth609-remember-row auth1868-remember-row">
                     <label className={`auth609-remember-toggle ${form.agree ? 'is-checked' : ''}`}>
                       <input
                         type="checkbox"
@@ -23495,74 +23528,48 @@ function AuthView({ onAuth }) {
                     </button>
                   </div>
 
-                  <div className="auth609-status-line">
-                    <span>
-                      {mode === 'login' ? t.statusLogin : t.statusRegister}
-                    </span>
-                    <span className="auth609-status-shield"><IconShield /></span>
-                  </div>
-
-                  <button type="submit" className="auth481-submit auth609-submit auth609-submit-fixed" disabled={submitting}>
+                  <button type="submit" className="auth481-submit auth609-submit auth609-submit-fixed auth1868-submit" disabled={submitting}>
                     {submitting ? t.authorizing : mode === 'login' ? t.submitLogin : t.createAccountShort}
                   </button>
+
+                  <div className="auth609-status-line auth1868-status-line">
+                    <span className="auth609-status-shield"><IconShield /></span>
+                    <span>{mode === 'login' ? t.submitNoteLogin : t.submitNoteRegister}</span>
+                  </div>
                 </form>
 
-                <div className="auth609-secure-note">
-                  <span className="auth609-secure-icon"><IconShield /></span>
-                  <span>{t.secureNote}</span>
-                </div>
-
-                <button
-                  type="button"
-                  className="auth1567-presentation-button"
-                  onClick={() => setPresentationOpen(true)}
-                  aria-label={authLang === 'en' ? 'Watch the Bet plus AI platform presentation' : 'Obejrzyj prezentację platformy Bet plus AI'}
-                >
-                  <span className="auth1567-play-orb">▶</span>
-                  <span>
-                    <b>{authLang === 'en' ? 'Watch presentation' : 'Obejrzyj prezentację'}</b>
-                    <small>{authLang === 'en' ? 'See how Bet+AI works' : 'Zobacz, jak działa Bet+AI'}</small>
-                  </span>
-                </button>
-
                 {authMessage ? (
-                  <div className={`auth481-message ${authMessageType} auth609-message`} role="status" aria-live="polite">
+                  <div className={`auth481-message ${authMessageType} auth609-message auth1868-message`} role="status" aria-live="polite">
                     {authMessage}
                   </div>
                 ) : null}
+
+                <div className="auth1868-switch-copy">
+                  <span>{mode === 'login' ? (authLang === 'en' ? "Don't have an account?" : 'Nie masz konta?') : (authLang === 'en' ? 'Already have an account?' : 'Masz już konto?')}</span>
+                  <button type="button" onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}>
+                    {mode === 'login' ? t.register : t.login}
+                  </button>
+                </div>
               </div>
             </div>
           </section>
 
-
-          <div className="auth617-feature-strip" aria-label={t.benefitsLabel}>
+          <div className="auth617-feature-strip auth1868-feature-strip" aria-label={t.benefitsLabel}>
             <div className="auth617-feature-card">
               <span className="auth617-feature-icon"><IconShield /></span>
-              <div>
-                <strong>{t.safeData}</strong>
-                <p>{t.safeDataText}</p>
-              </div>
+              <div><strong>{t.safeData}</strong><p>{t.safeDataText}</p></div>
             </div>
             <div className="auth617-feature-card">
               <span className="auth617-feature-icon"><IconBolt /></span>
-              <div>
-                <strong>{t.fastRegister}</strong>
-                <p>{t.fastRegisterText}</p>
-              </div>
+              <div><strong>{t.fastRegister}</strong><p>{t.fastRegisterText}</p></div>
             </div>
             <div className="auth617-feature-card">
               <span className="auth617-feature-icon"><IconChart /></span>
-              <div>
-                <strong>{t.freeAi}</strong>
-                <p>{t.freeAiText}</p>
-              </div>
+              <div><strong>{t.freeAi}</strong><p>{t.freeAiText}</p></div>
             </div>
             <div className="auth617-feature-card">
               <span className="auth617-feature-icon"><IconUsers /></span>
-              <div>
-                <strong>{t.community}</strong>
-                <p>{t.communityText}</p>
-              </div>
+              <div><strong>{t.community}</strong><p>{t.communityText}</p></div>
             </div>
           </div>
         </div>
