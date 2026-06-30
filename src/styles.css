@@ -77137,3 +77137,103 @@ html body #root .auth-fixed-v1870 .auth1866-auth-card{
   display:inline-flex!important;
   align-items:center!important;
 }
+
+
+/* =====================================================================
+   WERSJA 1874 — komunikat BETA na ekranie logowania (baza: 1872)
+   Tylko warstwa informacyjna. Logika logowania pozostaje bez zmian.
+   ===================================================================== */
+.auth-fixed-v1870 .auth1874-beta-notice{
+  position:relative;
+  z-index:40;
+  width:min(680px,calc(100% - 28px));
+  margin:18px auto -28px;
+  min-height:132px;
+  padding:18px 66px 17px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  border:1px solid rgba(39,220,231,.38);
+  border-radius:24px;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(42,229,220,.14),transparent 48%),
+    linear-gradient(180deg,rgba(7,31,42,.94),rgba(3,18,28,.96));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 18px 48px rgba(0,0,0,.28),0 0 34px rgba(31,220,226,.08);
+  color:#f4fbff;
+}
+.auth-fixed-v1870 .auth1874-beta-copy{max-width:590px;}
+.auth-fixed-v1870 .auth1874-beta-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:9px;
+  padding:6px 16px;
+  border:1px solid rgba(242,211,83,.50);
+  border-radius:999px;
+  color:#efd76b;
+  background:rgba(111,88,15,.18);
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.14em;
+}
+.auth-fixed-v1870 .auth1874-beta-pill i{width:7px;height:7px;border-radius:50%;background:#f3d453;box-shadow:0 0 12px rgba(243,212,83,.8);}
+.auth-fixed-v1870 .auth1874-beta-copy strong{display:block;font-size:15px;line-height:1.25;}
+.auth-fixed-v1870 .auth1874-beta-copy p{margin:7px 0 0;color:#a9bfcc;font-size:14px;line-height:1.45;font-weight:650;}
+.auth-fixed-v1870 .auth1874-beta-copy p b{color:#e6db7a;text-shadow:0 0 14px rgba(230,219,122,.35);}
+.auth-fixed-v1870 .auth1874-beta-info{
+  position:absolute;
+  top:14px;
+  right:16px;
+  width:35px;
+  height:35px;
+  display:grid;
+  place-items:center;
+  border:1px solid #4eeaf2;
+  border-radius:50%;
+  background:rgba(4,23,34,.86);
+  color:#dffcff;
+  font-size:20px;
+  font-family:Georgia,serif;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:0 0 18px rgba(46,226,236,.18);
+}
+.auth-fixed-v1870 .auth1874-beta-info:hover{transform:translateY(-1px);background:rgba(9,43,55,.95);}
+.auth-fixed-v1870 .auth1874-zoom-popover{
+  position:fixed;
+  z-index:100000;
+  top:clamp(125px,18vh,220px);
+  left:50%;
+  transform:translateX(-50%);
+  width:min(340px,calc(100% - 24px));
+  padding:24px 22px 18px;
+  text-align:center;
+  border:1px solid rgba(45,225,235,.48);
+  border-radius:24px;
+  background:linear-gradient(180deg,rgba(5,30,43,.985),rgba(3,20,31,.99));
+  box-shadow:0 26px 80px rgba(0,0,0,.55),0 0 42px rgba(34,213,225,.13),inset 0 1px rgba(255,255,255,.04);
+  color:#edfaff;
+}
+.auth-fixed-v1870 .auth1874-popover-close{
+  position:absolute;right:10px;top:8px;width:30px;height:30px;border:0;border-radius:50%;background:transparent;color:#86a8b8;font-size:24px;cursor:pointer;
+}
+.auth-fixed-v1870 .auth1874-zoom-popover p{margin:0 22px 12px;color:#aec3cf;font-size:14px;font-weight:700;}
+.auth-fixed-v1870 .auth1874-shortcuts{display:flex;align-items:center;justify-content:center;gap:8px;font-size:23px;color:#fff;text-shadow:0 0 15px rgba(255,255,255,.28);}
+.auth-fixed-v1870 .auth1874-shortcuts span{font-weight:950;}
+.auth-fixed-v1870 .auth1874-shortcuts b{width:30px;height:30px;display:grid;place-items:center;border:1px solid #55ecf1;border-radius:8px;color:#eefeff;background:#12384a;font-size:19px;line-height:1;}
+.auth-fixed-v1870 .auth1874-shortcuts em{font-style:normal;font-size:15px;color:#d0e0e8;}
+.auth-fixed-v1870 .auth1874-zoom-popover small{display:block;margin:12px 0 17px;color:#95adba;font-size:13px;font-weight:700;}
+.auth-fixed-v1870 .auth1874-zoom-row{padding-top:15px;border-top:1px solid rgba(77,199,211,.18);display:flex;align-items:center;justify-content:space-between;}
+.auth-fixed-v1870 .auth1874-zoom-row i{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#075061;color:#90fbff;font-style:normal;font-size:20px;font-weight:950;}
+.auth-fixed-v1870 .auth1874-zoom-row b{color:#a9c7d6;font-size:18px;}
+@media(max-width:980px){
+  .auth-fixed-v1870 .auth1874-beta-notice{margin-bottom:4px;}
+}
+@media(max-width:640px){
+  .auth-fixed-v1870 .auth1874-beta-notice{width:calc(100% - 18px);margin:10px auto 8px;min-height:0;padding:16px 48px 15px 15px;border-radius:19px;}
+  .auth-fixed-v1870 .auth1874-beta-pill{font-size:9px;padding:5px 11px;}
+  .auth-fixed-v1870 .auth1874-beta-copy strong{font-size:13px;}
+  .auth-fixed-v1870 .auth1874-beta-copy p{font-size:12px;line-height:1.4;}
+  .auth-fixed-v1870 .auth1874-beta-info{width:31px;height:31px;right:10px;top:10px;font-size:18px;}
+}

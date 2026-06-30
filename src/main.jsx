@@ -22727,6 +22727,7 @@ function AuthView({ onAuth }) {
     loading: true
   })
   const [presentationOpen, setPresentationOpen] = useState(false)
+  const [betaHelpOpen, setBetaHelpOpen] = useState(false)
   const supportedAuthLanguages = ['pl', 'en']
   const [authLang, setAuthLang] = useState(() => {
     try {
@@ -23465,6 +23466,36 @@ function AuthView({ onAuth }) {
           <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} compact ariaLabel={t.languageLabel} />
         </div>
       </header>
+
+      <section className="auth1874-beta-notice" aria-label={authLang === 'pl' ? 'Informacja o wersji beta' : 'Beta version information'}>
+        <div className="auth1874-beta-copy">
+          <span className="auth1874-beta-pill"><i />{authLang === 'pl' ? 'WERSJA BETA' : 'BETA VERSION'}</span>
+          <strong>⚠ {authLang === 'pl' ? 'Strona jest w wersji BETA.' : 'The website is currently in BETA.'}</strong>
+          <p>
+            {authLang === 'pl'
+              ? <>Jeśli widok na Twoim urządzeniu wygląda źle, ramki się nakładają albo strona nie dopasowuje się do ekranu, użyj <b>zoomu/lupy</b> w przeglądarce i ustaw widok ręcznie. Będziemy na bieżąco naprawiać takie błędy.</>
+              : <>If the view looks incorrect on your device, panels overlap or the page does not fit the screen, use the browser <b>zoom controls</b> and adjust the view manually. We will keep fixing these issues.</>}
+          </p>
+        </div>
+        <button
+          type="button"
+          className="auth1874-beta-info"
+          aria-label={authLang === 'pl' ? 'Pokaż instrukcję zmiany zoomu' : 'Show browser zoom instructions'}
+          aria-expanded={betaHelpOpen}
+          onClick={() => setBetaHelpOpen(prev => !prev)}
+        >i</button>
+      </section>
+
+      {betaHelpOpen ? (
+        <div className="auth1874-zoom-popover" role="dialog" aria-modal="false" aria-label={authLang === 'pl' ? 'Instrukcja zoomu przeglądarki' : 'Browser zoom instructions'}>
+          <button type="button" className="auth1874-popover-close" onClick={() => setBetaHelpOpen(false)} aria-label={authLang === 'pl' ? 'Zamknij' : 'Close'}>×</button>
+          <p>{authLang === 'pl' ? 'Jeśli widok się rozjeżdża, użyj' : 'If the layout does not fit, use'}</p>
+          <strong className="auth1874-shortcuts"><span>Ctrl</span><b>＋</b><em>{authLang === 'pl' ? 'i' : 'and'}</em><span>Ctrl</span><b>−</b></strong>
+          <small>{authLang === 'pl' ? 'lub ustaw zoom ręcznie w przeglądarce.' : 'or set browser zoom manually.'}</small>
+          <div className="auth1874-zoom-row" aria-hidden="true"><i>−</i><b>100%</b><i>＋</i></div>
+        </div>
+      ) : null}
+
 
       <main className="auth1866-page" id="start">
         <section className="auth1866-hero" aria-labelledby="auth1866-title">
