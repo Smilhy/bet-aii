@@ -2082,6 +2082,37 @@ const BETAI_AI_TOP_TIPSTERS_TRANSLATIONS_V1863 = {
   }
 }
 
+
+const BETAI_AI_LEAGUE_MODAL_TRANSLATIONS_V1864 = {
+  en: {
+    'ANALIZA LIGI AI': 'AI LEAGUE ANALYSIS',
+    'Podgląd, jakie rodzaje typów AI pojawiały się w tej lidze i czy były na plusie.': 'Overview of which AI pick types appeared in this league and whether they were profitable.',
+    'Typów': 'Picks',
+    'Rodzaj typu': 'Pick type',
+    'Ilość': 'Count',
+    'Stawka': 'Stake',
+    'Bilans': 'Profit',
+    'Śr. kurs': 'Avg. odds',
+    'Brak typów dla tej ligi w aktualnym filtrze.': 'No picks for this league in the current filter.',
+    'Powyżej': 'Over',
+    'Poniżej': 'Under',
+    'Suma goli': 'Total goals',
+    'Podwójna szansa': 'Double chance',
+    'Gospodarz': 'Home',
+    'Gość': 'Away',
+    'Remis': 'Draw',
+    'Tak': 'Yes',
+    'Nie': 'No',
+    'Inne': 'Other',
+    'Linia': 'Line',
+    'Połowa': 'Half',
+    'Rzuty rożne': 'Corners',
+    'Kartki': 'Cards',
+    'Dokładny wynik': 'Correct score',
+    'Typ AI': 'AI pick'
+  }
+}
+
 const BETAI_TRANSLATION_DICTIONARY_CACHE = new Map()
 const BETAI_TRANSLATION_KEYS_CACHE = new Map()
 
@@ -2102,7 +2133,8 @@ function buildBetaiTranslationDictionary(lang) {
     BETAI_PROFILE_TRANSLATIONS_V1857,
     BETAI_RANKING_TRANSLATIONS_V1859,
     BETAI_COMMUNITY_TRANSLATIONS_V1860,
-    BETAI_AI_TOP_TIPSTERS_TRANSLATIONS_V1863
+    BETAI_AI_TOP_TIPSTERS_TRANSLATIONS_V1863,
+    BETAI_AI_LEAGUE_MODAL_TRANSLATIONS_V1864
   ]
   const allTargetDictionaries = allSources.map(source => source?.[lang] || {})
   const target = Object.assign({}, ...allTargetDictionaries)
@@ -18669,6 +18701,8 @@ const getAiStatsDefaultBetTypes = sport => {
 }
 
 function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   const [sportFilter, setSportFilter] = useState('All Sports')
   const [divisionFilter, setDivisionFilter] = useState('All Divisions')
   const [betTypeFilter, setBetTypeFilter] = useState('All Types')
@@ -19100,7 +19134,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
           onClick={onRowClick ? () => onRowClick(row) : undefined}
           onKeyDown={onRowClick ? (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onRowClick(row) } } : undefined}
         >
-          <span>{row.key}</span>
+          <span>{t(row.key)}</span>
           {variant === 'league-country' ? <span className="ai-country-pill-v1508">{row.country || '—'}</span> : null}
           <span>{row.bets}</span>
           {variant === 'sport' ? <span>{row.stake.toFixed(2)}</span> : null}
@@ -19242,22 +19276,22 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
           <div className="ai-league-modal-v1497" onClick={event => event.stopPropagation()}>
             <button type="button" className="ai-league-modal-close-v1497" onClick={() => setSelectedLeagueDetail(null)}>×</button>
             <div className="ai-league-modal-head-v1497">
-              <span>ANALIZA LIGI AI</span>
+              <span>{t('ANALIZA LIGI AI')}</span>
               <h3>{selectedLeagueDetail}</h3>
-              <p>Podgląd, jakie rodzaje typów AI pojawiały się w tej lidze i czy były na plusie.</p>
+              <p>{t('Podgląd, jakie rodzaje typów AI pojawiały się w tej lidze i czy były na plusie.')}</p>
             </div>
             <div className="ai-league-modal-summary-v1497">
-              <div><small>Typów</small><b>{selectedLeagueSummary.bets}</b></div>
-              <div><small>Stawka</small><b>{selectedLeagueSummary.stake.toFixed(2)}</b></div>
-              <div><small>Bilans</small><b className={selectedLeagueSummary.profit < 0 ? 'neg' : 'pos'}>{fmtMoney(selectedLeagueSummary.profit)}</b></div>
+              <div><small>{t('Typów')}</small><b>{selectedLeagueSummary.bets}</b></div>
+              <div><small>{t('Stawka')}</small><b>{selectedLeagueSummary.stake.toFixed(2)}</b></div>
+              <div><small>{t('Bilans')}</small><b className={selectedLeagueSummary.profit < 0 ? 'neg' : 'pos'}>{fmtMoney(selectedLeagueSummary.profit)}</b></div>
               <div><small>Yield</small><b className={selectedLeagueSummary.stake && selectedLeagueSummary.profit < 0 ? 'neg' : 'pos'}>{fmtPercent(selectedLeagueSummary.stake ? (selectedLeagueSummary.profit / selectedLeagueSummary.stake) * 100 : 0)}</b></div>
               <div><small>W/L/P</small><b>{selectedLeagueSummary.won}/{selectedLeagueSummary.lost}/{selectedLeagueSummary.pending}</b></div>
             </div>
             <div className="ai-league-modal-table-v1497">
-              <div className="head"><b>Rodzaj typu</b><b>Ilość</b><b>Stawka</b><b>Bilans</b><b>Yield</b><b>Śr. kurs</b><b>W/L/P</b></div>
+              <div className="head"><b>{t('Rodzaj typu')}</b><b>{t('Ilość')}</b><b>{t('Stawka')}</b><b>{t('Bilans')}</b><b>Yield</b><b>{t('Śr. kurs')}</b><b>W/L/P</b></div>
               {selectedLeagueTypeRows.length ? selectedLeagueTypeRows.map(row => (
                 <div className="row" key={row.key}>
-                  <span>{row.key}</span>
+                  <span>{t(row.key)}</span>
                   <span>{row.bets}</span>
                   <span>{row.stake.toFixed(2)}</span>
                   <span className={row.profit < 0 ? 'neg' : 'pos'}>{fmtMoney(row.profit)}</span>
@@ -19265,7 +19299,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
                   <span>{row.avgOdds.toFixed(2)}</span>
                   <span>{row.won}/{row.lost}/{row.pending}</span>
                 </div>
-              )) : <div className="empty">Brak typów dla tej ligi w aktualnym filtrze.</div>}
+              )) : <div className="empty">{t('Brak typów dla tej ligi w aktualnym filtrze.')}</div>}
             </div>
           </div>
         </div>
