@@ -1894,6 +1894,194 @@ const BETAI_COMMUNITY_TRANSLATIONS_V1860 = {
   }
 }
 
+const BETAI_AI_TOP_TIPSTERS_TRANSLATIONS_V1863 = {
+  en: {
+    // AI Picks
+    'Typy AI': 'AI picks',
+    'SPORTY • VALUE • LIVE AI': 'SPORTS • VALUE • LIVE AI',
+    'Szybkie skanowanie': 'Fast scanning',
+    'Top mecze, live i najlepsze value': 'Top matches, live action and the best value',
+    'Filtrowanie kursów, EV i prawdopodobieństwa': 'Filtering odds, EV and probability',
+    'Gotowe typy modelu i analiza skuteczności': 'Model-ready picks and performance analysis',
+    'średnia ocena modeli': 'average model score',
+    'Statystyki Typy AI': 'AI picks statistics',
+    'Zwrot z rozliczonych AI': 'Return from settled AI picks',
+    'Bilans Typy AI': 'AI picks profit',
+    'Wszystkie zapisane': 'All saved',
+    'Wygrane': 'Won',
+    'Przegrane': 'Lost',
+    'Rozliczone na plus': 'Settled as wins',
+    'Rozliczone na minus': 'Settled as losses',
+    'Czekają na wynik': 'Awaiting result',
+    'Stawki AI': 'AI stakes',
+    'Łącznie zapisane': 'Total saved',
+    'Śr. kurs': 'Avg. odds',
+    'Średnia kursów': 'Average odds',
+    'Max kurs': 'Max odds',
+    'Najwyższy kurs AI': 'Highest AI odds',
+    'Sporty Typy AI': 'AI pick sports',
+    'Sporty Typy AI premium': 'Premium AI pick sports',
+    'Aktywne typy AI • dostępne teraz': 'Active AI picks • available now',
+    'Kurs min': 'Min odds',
+    'Kurs max': 'Max odds',
+    'Prawdop. min': 'Min probability',
+    'Reset filtrów': 'Reset filters',
+    'Typy AI aktywne': 'Active AI picks',
+    'Mecze Result': 'Match results',
+    'Statystyki': 'Statistics',
+    'Szukaj...': 'Search...',
+    'Pobieram...': 'Loading...',
+    'Odśwież dziś': 'Refresh today',
+    'Rozliczam...': 'Settling...',
+    'Rozlicz zakończone': 'Settle finished',
+    'Brak aktywnych typów AI.': 'No active AI picks.',
+    'Kliknij Odśwież dziś, żeby uruchomić bezpieczny skan premium.': 'Click Refresh today to run a secure premium scan.',
+    'Dziennik każdego typu AI · kliknij wiersz, aby podejrzeć typ': 'Journal of every AI pick · click a row to view the pick',
+    'Archiwum wyników AI': 'AI results archive',
+    'Brak zapisanych typów': 'No saved picks',
+    'Kraj': 'Country',
+    'WYBRANY TYP': 'SELECTED PICK',
+    'NAJLEPSZY RYNEK': 'BEST MARKET',
+    'KURS': 'ODDS',
+    'PRAWDOPODOBIEŃSTWO': 'PROBABILITY',
+    'PEWNOŚĆ': 'CONFIDENCE',
+    'Prawdop.': 'Probability',
+    'Pewność': 'Confidence',
+    'Średnie': 'Medium',
+    'Podwyższone': 'Elevated',
+    'Niskie': 'Low',
+    'Wysokie': 'High',
+    'Zobacz analizę': 'View analysis',
+    'Analiza AI': 'AI analysis',
+    'Ciekawostka AI': 'AI insight',
+    'Ryzyko': 'Risk',
+    'Źródło': 'Source',
+    'Forma i przewaga': 'Form and edge',
+    'Dziennik': 'Journal',
+    'Ten typ zapisuje się do Supabase jako AI Journal. Po rozliczeniu meczu status zmieni się na WON/LOST/VOID i zasili statystyki sportu oraz ligi.': 'This pick is saved to Supabase as an AI Journal entry. After the match is settled, its status changes to WON/LOST/VOID and updates the sport and league statistics.',
+    'Brak wybranego typu': 'No pick selected',
+    'Odśwież jutro': 'Refresh tomorrow',
+    'i kliknij dowolny mecz.': 'and click any match.',
+    'Ligi i sporty': 'Leagues and sports',
+    'Każdy typ dopisywany do statystyk ligi': 'Every pick is added to league statistics',
+    'Śr. ocena': 'Avg. score',
+    'Wkrótce': 'Coming soon',
+    'WKRÓTCE': 'COMING SOON',
+    'Aktywacja w kolejnych wersjach': 'Activation in future versions',
+    'Piłka nożna': 'Football',
+    'Koszykówka': 'Basketball',
+    'Siatkówka': 'Volleyball',
+    'Piłka ręczna': 'Handball',
+    'Krykiet': 'Cricket',
+    'Boks': 'Boxing',
+    'Dart': 'Darts',
+    'Wynik końcowy': 'Full-time result',
+    '1X2 / zwycięzca': '1X2 / winner',
+    'Podwójna szansa': 'Double chance',
+    'Suma goli': 'Total goals',
+    'Powyżej 1.5 gola': 'Over 1.5 goals',
+    'Powyżej 2.5 gola': 'Over 2.5 goals',
+    'Poniżej 2.5 gola': 'Under 2.5 goals',
+    'Poniżej 3.5 gola': 'Under 3.5 goals',
+    'Obie strzelą — Tak': 'Both teams to score — Yes',
+    'Obie strzelą — Nie': 'Both teams to score — No',
+    'Obie strzelą': 'Both teams to score',
+    'Tak': 'Yes',
+    'Nie': 'No',
+    'Dzisiaj': 'Today',
+    'Dziś': 'Today',
+    'Jutro': 'Tomorrow',
+    'Brak daty': 'No date',
+    'Brak danych': 'No data',
+    'Typ wykresu': 'Chart type',
+    'Profit pojedynczego typu': 'Single-pick profit',
+    'Statystyki typów kuponów': 'Coupon pick statistics',
+    'Ilość kuponów': 'Number of coupons',
+    'Statystyki dla sportów': 'Sport statistics',
+    'Liczba kuponów': 'Number of coupons',
+    'Statystyki według lig': 'Statistics by league',
+    'Statystyki rodzajów typów': 'Pick type statistics',
+    'Statystyki zakresów kursów': 'Odds range statistics',
+    'Skuteczność wg typu kuponu': 'Performance by coupon type',
+    'Statystyki picks kuponów': 'Coupon pick statistics',
+    'Statystyki godzin dodawania kuponów': 'Coupon posting time statistics',
+    'Statystyki poszczególnych miesięcy': 'Monthly statistics',
+    'Rodzaj typu': 'Pick type',
+    'Stake rozliczona': 'Settled stake',
+    'Śr. stawka': 'Avg. stake',
+    'Godziny': 'Hours',
+    'Publiczny': 'Public',
+    'Płatny': 'Paid',
+    'Wszystko': 'All',
+    'Pokaż kolejne': 'Show next',
+
+    // Top tipsters
+    'TOP TYPERZY • LIVE MARKETPLACE': 'TOP TIPSTERS • LIVE MARKETPLACE',
+    'Najlepsi typerzy': 'Top tipsters',
+    'w sportowej': 'in the sports',
+    'kratce': 'grid',
+    'TOP TYPERZY': 'TOP TIPSTERS',
+    'aktywnych profili w rankingu': 'active profiles in the ranking',
+    'Popularne sporty Top typerzy': 'Popular sports — Top tipsters',
+    'Popularne sporty': 'Popular sports',
+    'typer': 'tipster',
+    'typerów': 'tipsters',
+    'Filtruj ranking po sporcie': 'Filter the ranking by sport',
+    'Sortuj': 'Sort',
+    'Wszystkie konta': 'All accounts',
+    'Konta płatne': 'Paid accounts',
+    'Konta darmowe': 'Free accounts',
+    'NAJLEPSI TYPERZY': 'TOP TIPSTERS',
+    'Odśwież': 'Refresh',
+    'Ładuję realne konta...': 'Loading real accounts...',
+    'Brak realnych kont dla wybranego sportu.': 'No real accounts for the selected sport.',
+    'Po rejestracji użytkownika albo zmianie specjalizacji profil dopisze się automatycznie z Supabase.': 'After a user registers or changes specialization, the profile will be added automatically from Supabase.',
+    'Otwórz profil użytkownika': 'Open user profile',
+    'DARMOWE': 'FREE',
+    'Skuteczność': 'Win rate',
+    'Zysk': 'Profit',
+    'Typy': 'Picks',
+    'Forma': 'Form',
+    'Ostatnie 6 typów:': 'Last 6 picks:',
+    'Osiągnięcia': 'Achievements',
+    'Brak osiągnięć': 'No achievements',
+    '/ dostęp': '/ access',
+    'Cennik ustawiony przez użytkownika': 'Pricing set by the user',
+    'Kup subskrypcję': 'Buy subscription',
+    'Darmowe': 'Free',
+    'Przestań obserwować typera': 'Unfollow tipster',
+    'Obserwuj typera': 'Follow tipster',
+    'Kliknij, żeby przestać obserwować': 'Click to unfollow',
+    'Kliknij, żeby obserwować': 'Click to follow',
+    'Obserwujesz': 'Following',
+    'Obserwuj': 'Follow',
+    'obserwujący': 'follower',
+    'obserwujących': 'followers',
+    'PODSUMOWANIE RYNKU': 'MARKET SUMMARY',
+    'Typerzy': 'Tipsters',
+    'Typy aktywne': 'Active picks',
+    'JAK TO DZIAŁA?': 'HOW DOES IT WORK?',
+    'Wybierz typera': 'Choose a tipster',
+    'Sprawdź realne konto i jego statystyki.': 'Review a real account and its statistics.',
+    'Kup subskrypcję albo darmowy dostęp': 'Buy a subscription or get free access',
+    'Premium ma przycisk subskrypcji, darmowe konta są oznaczone jako Darmowe.': 'Premium accounts have a subscription button; free accounts are marked as Free.',
+    'Obserwuj wyniki': 'Track results',
+    'Nowi użytkownicy dopisują się automatycznie z Supabase.': 'New users are added automatically from Supabase.',
+    'Lider rankingu': 'Ranking leader',
+    'Forma 5/6': 'Form 5/6',
+    'Forma 4/6': 'Form 4/6',
+    'Minimum 4 wygrane z ostatnich 6': 'At least 4 wins from the last 6',
+    'Skuteczność minimum 80%': 'Win rate at least 80%',
+    'Skuteczność minimum 70%': 'Win rate at least 70%',
+    'Zysk minimum +300 zł': 'Profit at least +300 PLN',
+    'Zysk minimum +100 zł': 'Profit at least +100 PLN',
+    'Sprzedaje płatne typy': 'Sells paid picks',
+    'Wygrany typ': 'Won pick',
+    'Przegrany typ': 'Lost pick',
+    'Brak rozliczenia': 'Not settled'
+  }
+}
+
 const BETAI_TRANSLATION_DICTIONARY_CACHE = new Map()
 const BETAI_TRANSLATION_KEYS_CACHE = new Map()
 
@@ -1913,7 +2101,8 @@ function buildBetaiTranslationDictionary(lang) {
     BETAI_FINANCE_TRANSLATIONS_V1856,
     BETAI_PROFILE_TRANSLATIONS_V1857,
     BETAI_RANKING_TRANSLATIONS_V1859,
-    BETAI_COMMUNITY_TRANSLATIONS_V1860
+    BETAI_COMMUNITY_TRANSLATIONS_V1860,
+    BETAI_AI_TOP_TIPSTERS_TRANSLATIONS_V1863
   ]
   const allTargetDictionaries = allSources.map(source => source?.[lang] || {})
   const target = Object.assign({}, ...allTargetDictionaries)
@@ -19480,6 +19669,9 @@ function buildBetAiFallbackMatchesV1053() {
 
 
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
+  const locale = lang === 'en' ? 'en-GB' : 'pl-PL'
   const SPORTS = ['Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'MMA', 'E-sport', 'Siatkówka', 'Boks', 'Piłka ręczna', 'Krykiet', 'Rugby', 'Rugby League', 'Baseball', 'Dart']
   const LOCKED_SPORTS_V1055 = SPORTS.filter(sport => sport !== 'Piłka nożna')
   const aiSportCardThemeMapV1281 = {
@@ -19556,7 +19748,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const formatDate = (raw) => {
     if (!raw) return 'Dzisiaj'
     try {
-      return new Date(raw).toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+      return new Date(raw).toLocaleString(locale, { timeZone: 'Europe/Warsaw', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
     } catch (_) {
       return String(raw)
     }
@@ -20776,14 +20968,14 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   return (
     <section className="ai-center-page-v747">
-      <header className="ai-lite-hero" aria-label="Typy AI Premium Hero">
+      <header className="ai-lite-hero" aria-label={t('Typy AI Premium Hero')}>
         <div className="ai-lite-copy">
-          <div className="ai-lite-kicker">SPORTY • VALUE • LIVE AI</div>
-          <h1>Typy AI</h1>
+          <div className="ai-lite-kicker">{t('SPORTY • VALUE • LIVE AI')}</div>
+          <h1>{t('Typy AI')}</h1>
           <div className="ai-lite-feature-row">
-            <div className="ai-lite-feature"><span>⚡</span><div><b>Szybkie skanowanie</b><small>Top mecze, live i najlepsze value</small></div></div>
-            <div className="ai-lite-feature"><span>📈</span><div><b>Value EV</b><small>Filtrowanie kursów, EV i prawdopodobieństwa</small></div></div>
-            <div className="ai-lite-feature"><span>🤖</span><div><b>AI engine</b><small>Gotowe typy modelu i analiza skuteczności</small></div></div>
+            <div className="ai-lite-feature"><span>⚡</span><div><b>{t('Szybkie skanowanie')}</b><small>{t('Top mecze, live i najlepsze value')}</small></div></div>
+            <div className="ai-lite-feature"><span>📈</span><div><b>Value EV</b><small>{t('Filtrowanie kursów, EV i prawdopodobieństwa')}</small></div></div>
+            <div className="ai-lite-feature"><span>🤖</span><div><b>AI engine</b><small>{t('Gotowe typy modelu i analiza skuteczności')}</small></div></div>
           </div>
         </div>
         <div className="ai-lite-visual">
@@ -20792,29 +20984,29 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           <div className="ai-lite-scanner">
             <span>AI SCANNER</span>
             <strong>{stats.avgScore}%</strong>
-            <small>średnia ocena modeli</small>
+            <small>{t('średnia ocena modeli')}</small>
             <i style={{ width: `${Math.max(24, Math.min(100, stats.avgScore || 0))}%` }} />
           </div>
           <div className="ai-lite-badge ai-lite-badge-top">TOP VALUE</div>
           <div className="ai-lite-badge ai-lite-badge-live">LIVE</div>
         </div>
       </header>
-      <section className="ai-stat-strip-v1443" aria-label="Statystyki Typy AI">
-        <article className={`ai-stat-card-v1443 is-yield ${stats.yieldValue >= 0 ? 'is-positive' : 'is-negative'}`}><div><span>Yield</span><strong>{stats.yieldValue}%</strong><small>Zwrot z rozliczonych AI</small></div><i>◔</i></article>
-        <article className={`ai-stat-card-v1443 is-profit ${stats.profit >= 0 ? 'is-positive' : 'is-negative'}`}><div><span>Profit</span><strong>{stats.profit >= 0 ? '+' : ''}{stats.profit.toFixed(2)}</strong><small>Bilans Typy AI</small></div><i>₿</i></article>
-        <article className="ai-stat-card-v1443 is-total"><div><span>Typy AI</span><strong>{stats.total}</strong><small>Wszystkie zapisane</small></div><i>↗</i></article>
-        <article className="ai-stat-card-v1443 is-won"><div><span>Wygrane</span><strong>{stats.won}</strong><small>Rozliczone na plus</small></div><i>🏆</i></article>
-        <article className="ai-stat-card-v1443 is-lost"><div><span>Przegrane</span><strong>{stats.lost}</strong><small>Rozliczone na minus</small></div><i>☹</i></article>
-        <article className="ai-stat-card-v1443 is-pending"><div><span>Pending</span><strong>{stats.pending}</strong><small>Czekają na wynik</small></div><i>◷</i></article>
-        <article className="ai-stat-card-v1443 is-stake"><div><span>Stawki AI</span><strong>{stats.totalStake.toFixed(2)}</strong><small>Łącznie zapisane</small></div><i>◎</i></article>
-        <article className="ai-stat-card-v1443 is-odds"><div><span>Śr. kurs</span><strong>{stats.avgOdds.toFixed(2)}</strong><small>Średnia kursów</small></div><i>⌁</i></article>
-        <article className="ai-stat-card-v1443 is-max"><div><span>Max kurs</span><strong>{stats.maxOdds.toFixed(2)}</strong><small>Najwyższy kurs AI</small></div><i>↗</i></article>
+      <section className="ai-stat-strip-v1443" aria-label={t('Statystyki Typy AI')}>
+        <article className={`ai-stat-card-v1443 is-yield ${stats.yieldValue >= 0 ? 'is-positive' : 'is-negative'}`}><div><span>Yield</span><strong>{stats.yieldValue}%</strong><small>{t('Zwrot z rozliczonych AI')}</small></div><i>◔</i></article>
+        <article className={`ai-stat-card-v1443 is-profit ${stats.profit >= 0 ? 'is-positive' : 'is-negative'}`}><div><span>Profit</span><strong>{stats.profit >= 0 ? '+' : ''}{stats.profit.toFixed(2)}</strong><small>{t('Bilans Typy AI')}</small></div><i>₿</i></article>
+        <article className="ai-stat-card-v1443 is-total"><div><span>Typy AI</span><strong>{stats.total}</strong><small>{t('Wszystkie zapisane')}</small></div><i>↗</i></article>
+        <article className="ai-stat-card-v1443 is-won"><div><span>{t('Wygrane')}</span><strong>{stats.won}</strong><small>{t('Rozliczone na plus')}</small></div><i>🏆</i></article>
+        <article className="ai-stat-card-v1443 is-lost"><div><span>{t('Przegrane')}</span><strong>{stats.lost}</strong><small>{t('Rozliczone na minus')}</small></div><i>☹</i></article>
+        <article className="ai-stat-card-v1443 is-pending"><div><span>Pending</span><strong>{stats.pending}</strong><small>{t('Czekają na wynik')}</small></div><i>◷</i></article>
+        <article className="ai-stat-card-v1443 is-stake"><div><span>{t('Stawki AI')}</span><strong>{stats.totalStake.toFixed(2)}</strong><small>{t('Łącznie zapisane')}</small></div><i>◎</i></article>
+        <article className="ai-stat-card-v1443 is-odds"><div><span>{t('Śr. kurs')}</span><strong>{stats.avgOdds.toFixed(2)}</strong><small>{t('Średnia kursów')}</small></div><i>⌁</i></article>
+        <article className="ai-stat-card-v1443 is-max"><div><span>{t('Max kurs')}</span><strong>{stats.maxOdds.toFixed(2)}</strong><small>{t('Najwyższy kurs AI')}</small></div><i>↗</i></article>
       </section>
 
       <div className="ai-filter-bar-v747">
-        <div className="betfolio-sport-cards-v1276 ai-sports-cards-v1279" aria-label="Sporty Typy AI premium">
+        <div className="betfolio-sport-cards-v1276 ai-sports-cards-v1279" aria-label={t('Sporty Typy AI premium')}>
           <div className="sport-cards-head-v1276">
-            <span>Sporty Typy AI</span>
+            <span>{t('Sporty Typy AI')}</span>
           </div>
           <div className="sport-cards-track-v1276 ai-sports-grid-v1279">
             {SPORTS.map((sport) => {
@@ -20847,35 +21039,35 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           </div>
         </div>
 <div className="ai-range-panel-v1054">
-          <label><span>Kurs min</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.50" max="3.50" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
-          <label><span>Kurs max</span><b>NO LIMIT</b><input type="range" min="1.50" max="10.00" step="0.05" value="10" readOnly /></label>
-          <label><span>Prawdop. min</span><b>{minProb}%</b><input type="range" min="48" max="90" step="1" value={minProb} onChange={e => setMinProb(Number(e.target.value))} /></label>
-          <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.50); setMaxOdds(999); setMinProb(48); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
+          <label><span>{t('Kurs min')}</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.50" max="3.50" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
+          <label><span>{t('Kurs max')}</span><b>NO LIMIT</b><input type="range" min="1.50" max="10.00" step="0.05" value="10" readOnly /></label>
+          <label><span>{t('Prawdop. min')}</span><b>{minProb}%</b><input type="range" min="48" max="90" step="1" value={minProb} onChange={e => setMinProb(Number(e.target.value))} /></label>
+          <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.50); setMaxOdds(999); setMinProb(48); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>{t('Reset filtrów')}</button>
         </div>
 </div>
 <div className={`ai-center-grid-v747 ${activePanel !== 'live' ? 'stats-fullwidth' : ''}`}>
         <div className="ai-main-column-v747">
           <div className="ai-league-tabs-actions-v1071">
 <div className="ai-inner-tabs-v747">
-            <button type="button" className={activePanel === 'live' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>Typy AI aktywne <small className="ai-tab-count-v1095">{aiTabCounters.today}</small></button>
+            <button type="button" className={activePanel === 'live' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>{t('Typy AI aktywne')} <small className="ai-tab-count-v1095">{aiTabCounters.today}</small></button>
             {[
-              ['results','Mecze Result', aiTabCounters.results], ['stats','Statystyki', aiTabCounters.stats]
+              ['results',t('Mecze Result'), aiTabCounters.results], ['stats',t('Statystyki'), aiTabCounters.stats]
             ].map(([key,label,count]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label} <small className="ai-tab-count-v1095">{count}</small></button>)}
           </div>
   <div className="ai-search-compact-v1073">
     <input
       type="search"
-      placeholder="Szukaj..."
+      placeholder={t('Szukaj...')}
       value={search}
       onChange={e => setSearch(e.target.value)}
     />
   </div>
   <div className="ai-actions-inline-v1071">
     <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={() => fetchLiveAiPicks('today')} disabled={loadingAi}>
-      ⟳ {loadingAi ? 'Pobieram...' : 'Odśwież dziś'}
+      ⟳ {loadingAi ? t('Pobieram...') : t('Odśwież dziś')}
     </button>
     <button type="button" className="ai-settle-btn-v747 glass-btn-v1066 glass-success-v1066" onClick={onSettle} disabled={settleGenerating}>
-      {settleGenerating ? 'Rozliczam...' : '✓ Rozlicz zakończone'}
+      {settleGenerating ? t('Rozliczam...') : `✓ ${t('Rozlicz zakończone')}`}
     </button>
   </div>
 </div>
@@ -20899,7 +21091,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                 >
                   <div className="pick-header-v1686">
                     <div className="pick-copy-v1686">
-                      <span className="pick-sport-v1051"><i>{getBetAiSportMetaV1051(card.sport).icon}</i>{card.sport}</span>
+                      <span className="pick-sport-v1051"><i>{getBetAiSportMetaV1051(card.sport).icon}</i>{t(card.sport)}</span>
                       <div className="pick-match-v747"><strong>{card.home}</strong><i>vs</i><strong>{card.away}</strong></div>
                       <div className="pick-league-v1686">{card.league}</div>
                       <div className="pick-date-v1686">{card.date}</div>
@@ -20911,9 +21103,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                     </div>
                   </div>
                   <div className="pick-market-box-v1686">
-                    <small>NAJLEPSZY RYNEK</small>
-                    <em>{card.market}</em>
-                    <b>{card.prediction}</b>
+                    <small>{t('NAJLEPSZY RYNEK')}</small>
+                    <em>{t(card.market)}</em>
+                    <b>{t(card.prediction)}</b>
                   </div>
                   <div className="pick-metrics-v1686">
                     <div><small>KURS</small><b>{card.odds}</b></div>
@@ -20921,17 +21113,17 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                     <div><small>EV</small><b className={card.ev >= 0 ? 'positive' : 'negative'}>{card.ev >= 0 ? '+' : ''}{card.ev}%</b></div>
                     <div className={`confidence-box-v1686 ${getBetAiRiskToneV1686(card.risk)}`}>
                       <small>PEWNOŚĆ</small>
-                      <b>{String(card.risk || 'Średnie').toUpperCase()}</b>
+                      <b>{String(t(card.risk || 'Średnie')).toUpperCase()}</b>
                       <span className="confidence-ring-v1686" style={{ '--score-deg': getBetAiScoreDegV1686(card.aiScore) }} />
                     </div>
                   </div>
                   <div className="pick-footer-v1686">
                     <p className="pick-explain-v1051">{getBetAiShortInsightV1052(card)}</p>
-                    <span className="pick-analysis-btn-v1686">↗ Zobacz analizę</span>
+                    <span className="pick-analysis-btn-v1686">↗ {t('Zobacz analizę')}</span>
                   </div>
                 </div>
               ))}
-              {!visibleCards.length && <div className="ai-empty-v747"><b>Brak aktywnych typów AI.</b><p>Kliknij Odśwież dziś, żeby uruchomić bezpieczny skan premium.</p></div>}
+              {!visibleCards.length && <div className="ai-empty-v747"><b>{t('Brak aktywnych typów AI.')}</b><p>{t('Kliknij Odśwież dziś, żeby uruchomić bezpieczny skan premium.')}</p></div>}
             </div>
           )}
 
@@ -20939,17 +21131,17 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <div className="ai-table-card-v747 ai-results-card-v1448">
               <div className="ai-table-title-v747 ai-table-title-results-v1448">
                 <div className="ai-title-stack-v1448">
-                  <h3>Mecze Result <small>{resultCards.length}</small></h3>
-                  <p>Dziennik każdego typu AI · kliknij wiersz, aby podejrzeć typ</p>
+                  <h3>{t('Mecze Result')} <small>{resultCards.length}</small></h3>
+                  <p>{t('Dziennik każdego typu AI · kliknij wiersz, aby podejrzeć typ')}</p>
                 </div>
-                <span>Archiwum wyników AI</span>
+                <span>{t('Archiwum wyników AI')}</span>
               </div>
               <div className="ai-result-table-v747 head"><span>Date</span><span>Sport</span><span>Kraj</span><span>Division</span><span>Home Team</span><span>Score</span><span>Away Team</span><span>Prediction</span><span>Result</span></div>
               {resultCards.length ? resultCards.map(card => (
                 <div key={`${card.id}-${card.market}-${card.prediction}`} className="ai-result-table-v747 row-v1448" onClick={() => { setSelectedId(card.id) }}>
-                  <span className="cell-date">{card.date}</span><span>{card.sport}</span><span className="ai-country-pill-v1508">{getAiCountryLabelV1508(card)}</span><span>{card.league}</span><span className="cell-team">{card.home}</span><span className="cell-score">{formatScoreV1451(card)}</span><span className="cell-team">{card.away}</span><span className="cell-prediction">{card.prediction}</span><span className={`result ${String(card.status).toLowerCase()}`}>{String(card.status).toUpperCase()}</span>
+                  <span className="cell-date">{card.date}</span><span>{t(card.sport)}</span><span className="ai-country-pill-v1508">{getAiCountryLabelV1508(card)}</span><span>{card.league}</span><span className="cell-team">{card.home}</span><span className="cell-score">{formatScoreV1451(card)}</span><span className="cell-team">{card.away}</span><span className="cell-prediction">{card.prediction}</span><span className={`result ${String(card.status).toLowerCase()}`}>{String(card.status).toUpperCase()}</span>
                 </div>
-              )) : <div className="ai-result-table-v747 row-v1448"><span>Brak zapisanych typów</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span className="result pending">PENDING</span></div>}
+              )) : <div className="ai-result-table-v747 row-v1448"><span>{t('Brak zapisanych typów')}</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span className="result pending">PENDING</span></div>}
             </div>
           )}
 
@@ -20969,44 +21161,44 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           {selectedCard ? (
             <>
               <div className="ai-analysis-card-v747 featured featured-v1686">
-                <span className="label">WYBRANY TYP</span>
+                <span className="label">{t('WYBRANY TYP')}</span>
                 <h2>{selectedCard.home} vs {selectedCard.away}</h2>
                 <p>{selectedCard.date}</p>
                 <div className="featured-top-v1686">
                   <div className="ai-score-circle-v747" style={{ '--score-deg': getBetAiScoreDegV1686(selectedCard.aiScore) }}><strong>{selectedCard.aiScore}</strong><span>/100</span><em>AI SCORE</em></div>
                   <div className="selected-pick-v747 selected-market-v1686">
-                    <div className="selected-market-row-v1686"><small>NAJLEPSZY RYNEK</small><em>{selectedCard.market}</em></div>
-                    <b>{selectedCard.prediction}</b>
+                    <div className="selected-market-row-v1686"><small>{t('NAJLEPSZY RYNEK')}</small><em>{t(selectedCard.market)}</em></div>
+                    <b>{t(selectedCard.prediction)}</b>
                     <div className="selected-stats-v1686">
                       <div><span>Kurs</span><b>{selectedCard.odds}</b></div>
                       <div><span>Prawdop.</span><b>{selectedCard.probability || selectedCard.aiScore}%</b></div>
                       <div><span>EV</span><b className={selectedCard.ev >= 0 ? 'positive' : 'negative'}>{selectedCard.ev >= 0 ? '+' : ''}{selectedCard.ev}%</b></div>
-                      <div><span>Pewność</span><b>{String(selectedCard.risk || 'Średnie').toUpperCase()}</b></div>
+                      <div><span>Pewność</span><b>{String(t(selectedCard.risk || 'Średnie')).toUpperCase()}</b></div>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="ai-analysis-card-v747">
-                <h3>Analiza AI</h3>
-                <p>{selectedCard.analysis}</p>
-                {selectedCard.curiosity ? <div className="ai-curiosity-v1050"><b>Ciekawostka AI</b><span>{selectedCard.curiosity}</span></div> : null}
-                <div className="analysis-grid-v747"><div><span>Ryzyko</span><b>{selectedCard.risk}</b></div><div><span>EV</span><b>{selectedCard.ev >= 0 ? '+' : ''}{selectedCard.ev}%</b></div><div><span>Źródło</span><b>{selectedCard.source}</b></div></div>
+                <h3>{t('Analiza AI')}</h3>
+                <p>{t(selectedCard.analysis)}</p>
+                {selectedCard.curiosity ? <div className="ai-curiosity-v1050"><b>{t('Ciekawostka AI')}</b><span>{t(selectedCard.curiosity)}</span></div> : null}
+                <div className="analysis-grid-v747"><div><span>Ryzyko</span><b>{t(selectedCard.risk)}</b></div><div><span>EV</span><b>{selectedCard.ev >= 0 ? '+' : ''}{selectedCard.ev}%</b></div><div><span>Źródło</span><b>{selectedCard.source}</b></div></div>
               </div>
 
               <div className="ai-analysis-card-v747">
-                <h3>Forma i przewaga</h3>
+                <h3>{t('Forma i przewaga')}</h3>
                 <div className="team-form-v747"><span>{selectedCard.home}</span><b>{selectedCard.formHome}%</b><i style={{ width: `${selectedCard.formHome}%` }} /></div>
                 <div className="team-form-v747"><span>{selectedCard.away}</span><b>{selectedCard.formAway}%</b><i style={{ width: `${selectedCard.formAway}%` }} /></div>
               </div>
 
               <div className="ai-analysis-card-v747 compact">
-                <h3>Dziennik</h3>
+                <h3>{t('Dziennik')}</h3>
                 <p>Ten typ zapisuje się do Supabase jako AI Journal. Po rozliczeniu meczu status zmieni się na WON/LOST/VOID i zasili statystyki sportu oraz ligi.</p>
               </div>
             </>
           ) : (
-            <div className="ai-analysis-card-v747"><h3>Brak wybranego typu</h3><p>{aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś'} i kliknij dowolny mecz.</p></div>
+            <div className="ai-analysis-card-v747"><h3>{t('Brak wybranego typu')}</h3><p>{aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś'} i kliknij dowolny mecz.</p></div>
           )}
         </aside>
         )}
@@ -28380,15 +28572,17 @@ function UnlockedTipsView({ tips = [], unlockedTips = new Set(), currentUser, fo
 
 
 function AdminCouponApprovalView({ user, onToast }) {
+  const lang = useBetaiLanguageState()
+  const isEn = lang === 'en'
   const [rows, setRows] = useState([])
   const [tab, setTab] = useState('pending')
   const [loading, setLoading] = useState(false)
 
   const resultLabel = (value) => {
     const clean = String(value || '').toLowerCase()
-    if (clean === 'won') return 'Wygrana'
-    if (clean === 'lost') return 'Przegrana'
-    if (clean === 'void') return 'Zwrot'
+    if (clean === 'won') return isEn ? 'Won' : 'Wygrana'
+    if (clean === 'lost') return isEn ? 'Lost' : 'Przegrana'
+    if (clean === 'void') return isEn ? 'Void' : 'Zwrot'
     return '—'
   }
   const statusOf = (row) => String(row?.admin_approval_status || row?.manual_settlement_status || row?.status || '').toLowerCase()
@@ -28409,7 +28603,7 @@ function AdminCouponApprovalView({ user, onToast }) {
       if (error) throw error
       setRows((data || []).map(normalizeTipRow))
     } catch (error) {
-      onToast?.({ type: 'error', title: 'Kupony admin', message: formatAppErrorMessage(error.message || 'Nie udało się pobrać kuponów.') })
+      onToast?.({ type: 'error', title: isEn ? 'Admin coupons' : 'Kupony admin', message: formatAppErrorMessage(error.message || (isEn ? 'Could not load coupons.' : 'Nie udało się pobrać kuponów.')) })
     } finally {
       setLoading(false)
     }
@@ -28437,16 +28631,16 @@ function AdminCouponApprovalView({ user, onToast }) {
         settlement_source: 'manual_admin_approved'
       }
       await updateTipField(row.id, patch)
-      onToast?.({ type: 'success', title: 'Kupon zatwierdzony', message: `Zatwierdzono: ${resultLabel(clean)}. Statystyki mogą zostać dopisane.` })
+      onToast?.({ type: 'success', title: isEn ? 'Coupon approved' : 'Kupon zatwierdzony', message: isEn ? `Approved: ${resultLabel(clean)}. Statistics can now be updated.` : `Zatwierdzono: ${resultLabel(clean)}. Statystyki mogą zostać dopisane.` })
       loadRows()
       window.dispatchEvent(new CustomEvent('betai:admin-coupon-approval-changed'))
     } catch (error) {
-      onToast?.({ type: 'error', title: 'Błąd zatwierdzenia', message: formatAppErrorMessage(error.message) })
+      onToast?.({ type: 'error', title: isEn ? 'Approval error' : 'Błąd zatwierdzenia', message: formatAppErrorMessage(error.message) })
     }
   }
 
   async function rejectRow(row) {
-    const reason = window.prompt('Powód odrzucenia:', 'Wynik wymaga poprawy') || ''
+    const reason = window.prompt(isEn ? 'Reason for rejection:' : 'Powód odrzucenia:', isEn ? 'The result needs correction' : 'Wynik wymaga poprawy') || ''
     try {
       const patch = {
         status: 'pending',
@@ -28457,11 +28651,11 @@ function AdminCouponApprovalView({ user, onToast }) {
         settlement_source: 'manual_admin_rejected'
       }
       await updateTipField(row.id, patch)
-      onToast?.({ type: 'success', title: 'Zgłoszenie odrzucone', message: 'Typ wrócił do nierozliczonych. Statystyki nie zostały dopisane.' })
+      onToast?.({ type: 'success', title: isEn ? 'Submission rejected' : 'Zgłoszenie odrzucone', message: isEn ? 'The pick returned to unsettled status. Statistics were not updated.' : 'Typ wrócił do nierozliczonych. Statystyki nie zostały dopisane.' })
       loadRows()
       window.dispatchEvent(new CustomEvent('betai:admin-coupon-approval-changed'))
     } catch (error) {
-      onToast?.({ type: 'error', title: 'Błąd odrzucenia', message: formatAppErrorMessage(error.message) })
+      onToast?.({ type: 'error', title: isEn ? 'Rejection error' : 'Błąd odrzucenia', message: formatAppErrorMessage(error.message) })
     }
   }
 
@@ -28469,41 +28663,41 @@ function AdminCouponApprovalView({ user, onToast }) {
     <section className="admin-coupon-approval-page-v945">
       <div className="admin-coupon-hero-v945 glass-v2-panel">
         <div>
-          <span>Tylko administrator</span>
-          <h1>Kupony do zatwierdzenia</h1>
-          <p>Każde ręczne rozliczenie użytkownika czeka tutaj na potwierdzenie admina. Statystyki dopisują się dopiero po zatwierdzeniu.</p>
+          <span>{isEn ? 'ADMINISTRATOR ONLY' : 'Tylko administrator'}</span>
+          <h1>{isEn ? 'Coupons awaiting approval' : 'Kupony do zatwierdzenia'}</h1>
+          <p>{isEn ? 'Every manual settlement submitted by a user waits here for administrator approval. Statistics are updated only after approval.' : 'Każde ręczne rozliczenie użytkownika czeka tutaj na potwierdzenie admina. Statystyki dopisują się dopiero po zatwierdzeniu.'}</p>
         </div>
-        <button type="button" onClick={loadRows}>{loading ? 'Ładowanie...' : 'Odśwież'}</button>
+        <button type="button" onClick={loadRows}>{loading ? (isEn ? 'Loading...' : 'Ładowanie...') : (isEn ? 'Refresh' : 'Odśwież')}</button>
       </div>
       <div className="admin-coupon-tabs-v945">
-        <button className={tab === 'pending' ? 'active' : ''} onClick={() => setTab('pending')}>Czekają <b>{pendingRows.length}</b></button>
-        <button className={tab === 'approved' ? 'active' : ''} onClick={() => setTab('approved')}>Zatwierdzone <b>{approvedRows.length}</b></button>
-        <button className={tab === 'rejected' ? 'active' : ''} onClick={() => setTab('rejected')}>Odrzucone <b>{rejectedRows.length}</b></button>
+        <button className={tab === 'pending' ? 'active' : ''} onClick={() => setTab('pending')}>{isEn ? 'Pending' : 'Czekają'} <b>{pendingRows.length}</b></button>
+        <button className={tab === 'approved' ? 'active' : ''} onClick={() => setTab('approved')}>{isEn ? 'Approved' : 'Zatwierdzone'} <b>{approvedRows.length}</b></button>
+        <button className={tab === 'rejected' ? 'active' : ''} onClick={() => setTab('rejected')}>{isEn ? 'Rejected' : 'Odrzucone'} <b>{rejectedRows.length}</b></button>
       </div>
       <div className="admin-coupon-list-v945">
         {visibleRows.length ? visibleRows.map(row => {
-          const home = row.team_home || row.home_team || 'Gospodarze'
-          const away = row.team_away || row.away_team || 'Goście'
-          const author = row.author_name || row.username || row.author_email || 'Typer'
+          const home = row.team_home || row.home_team || (isEn ? 'Home team' : 'Gospodarze')
+          const away = row.team_away || row.away_team || (isEn ? 'Away team' : 'Goście')
+          const author = row.author_name || row.username || row.author_email || (isEn ? 'Tipster' : 'Typer')
           const pending = ['pending', 'pending_admin'].includes(statusOf(row)) 
           return (
             <article className="admin-coupon-card-v945 glass-v2-panel" key={row.id}>
               <div>
                 <strong>{home} — {away}</strong>
-                <span>{author} · typ: {row.pick || row.bet_type || row.prediction || '—'} · kurs {row.odds || '—'} · stawka {row.stake || row.amount || '—'}</span>
-                <em>Zgłoszony wynik: {resultLabel(row.manual_settlement_result || row.admin_approved_result)}</em>
+                <span>{author} · {isEn ? 'pick' : 'typ'}: {row.pick || row.bet_type || row.prediction || '—'} · {isEn ? 'odds' : 'kurs'} {row.odds || '—'} · {isEn ? 'stake' : 'stawka'} {row.stake || row.amount || '—'}</span>
+                <em>{isEn ? 'Submitted result' : 'Zgłoszony wynik'}: {resultLabel(row.manual_settlement_result || row.admin_approved_result)}</em>
               </div>
               {pending ? (
                 <div className="admin-coupon-actions-v945">
-                  <button className="won" onClick={() => approveRow(row, 'won')}>Potwierdź wygraną</button>
-                  <button className="lost" onClick={() => approveRow(row, 'lost')}>Potwierdź przegraną</button>
-                  <button className="void" onClick={() => approveRow(row, 'void')}>Zwrot</button>
-                  <button className="reject" onClick={() => rejectRow(row)}>Odrzuć</button>
+                  <button className="won" onClick={() => approveRow(row, 'won')}>{isEn ? 'Confirm win' : 'Potwierdź wygraną'}</button>
+                  <button className="lost" onClick={() => approveRow(row, 'lost')}>{isEn ? 'Confirm loss' : 'Potwierdź przegraną'}</button>
+                  <button className="void" onClick={() => approveRow(row, 'void')}>{isEn ? 'Void' : 'Zwrot'}</button>
+                  <button className="reject" onClick={() => rejectRow(row)}>{isEn ? 'Reject' : 'Odrzuć'}</button>
                 </div>
-              ) : <small>{statusOf(row) === 'approved' ? 'Zatwierdzony' : 'Odrzucony'}</small>}
+              ) : <small>{statusOf(row) === 'approved' ? (isEn ? 'Approved' : 'Zatwierdzony') : (isEn ? 'Rejected' : 'Odrzucony')}</small>}
             </article>
           )
-        }) : <div className="profile-live-tip-empty">Brak kuponów w tej zakładce.</div>}
+        }) : <div className="profile-live-tip-empty">{isEn ? 'No coupons in this tab.' : 'Brak kuponów w tej zakładce.'}</div>}
       </div>
     </section>
   )
@@ -29017,6 +29211,9 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
 }
 
 function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster = null, onSubscribeToTipster = null, onToggleFollow = null, followingTipsters = new Set(), followStats = {} }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
+  const locale = lang === 'en' ? 'en-GB' : 'pl-PL'
   const [profiles, setProfiles] = useState([])
   const [topAvatarOverrides, setTopAvatarOverrides] = useState({})
   const [publicTopAvatarRows, setPublicTopAvatarRows] = useState([])
@@ -30061,7 +30258,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
                     {(() => {
                       const isFollowing = isTopTipsterFollowing(tipster)
                       const count = getVisibleTopFollowersCount(tipster, isFollowing)
-                      return <span>{count.toLocaleString('pl-PL')} {formatFollowersLabel(count)}</span>
+                      return <span>{count.toLocaleString(locale)} {formatFollowersLabel(count)}</span>
                     })()}
                   </div>
                 </div>

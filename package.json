@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-1861-admin-finance-bottom-english",
-  "version": "1.8.6.1",
+  "name": "betai-wersja-1863-ai-top-tipsters-english-fix",
+  "version": "1.8.6.3",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
