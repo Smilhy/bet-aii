@@ -76755,3 +76755,158 @@ body > .tip-analysis-modal-backdrop > .tip-analysis-modal{
   .auth-ultra-v1867 .auth1866-topbar{width:calc(100% - 18px)!important;padding:11px 12px!important;border-radius:18px!important;}.auth-ultra-v1867 .auth1866-page{width:calc(100% - 20px);padding-top:38px;}.auth-ultra-v1867 .auth1866-hero h1{font-size:clamp(38px,12.5vw,55px);}.auth-ultra-v1867 .auth1867-intelligence-body{grid-template-columns:82px minmax(0,1fr);gap:12px;padding:13px;}.auth-ultra-v1867 .auth1867-score{width:75px;height:75px;}.auth-ultra-v1867 .auth1867-score::before{width:61px;height:61px;}.auth-ultra-v1867 .auth1867-score strong{font-size:18px;}.auth-ultra-v1867 .auth1867-intel-metrics{grid-template-columns:1fr;}.auth-ultra-v1867 .auth1867-intelligence-head span,.auth-ultra-v1867 .auth1867-intelligence-head b{font-size:7px;letter-spacing:.1em;}.auth-ultra-v1867 .auth1866-auth-card{padding:16px 20px 24px!important;}.auth-ultra-v1867 .auth1866-actions{display:grid;}.auth-ultra-v1867 .auth1866-primary-cta,.auth-ultra-v1867 .auth1866-secondary-cta{width:100%;justify-content:center;}
 }
 @media (prefers-reduced-motion:reduce){.auth-ultra-v1867 .auth1866-bg-orb,.auth-ultra-v1867 .auth1867-scanline i,.auth-ultra-v1867 .auth1867-intelligence-head b i{animation:none!important;}}
+
+/* =====================================================================
+   WERSJA 1868 — PREMIUM LOGIN: logo BA, flaga, prezentacja pod formularzem
+   Tylko warstwa wizualna. Logika autoryzacji pozostaje bez zmian.
+   ===================================================================== */
+.auth-premium-v1868 .auth1866-topbar{
+  min-height:92px;
+  padding:12px 22px 12px 18px!important;
+}
+.auth-premium-v1868 .auth1866-brand{
+  width:265px!important;
+  min-width:265px!important;
+  height:76px;
+  overflow:visible;
+}
+.auth-premium-v1868 .auth1866-brand img{
+  width:100%!important;
+  height:76px!important;
+  object-fit:contain!important;
+  object-position:left center!important;
+  filter:drop-shadow(0 0 22px rgba(0,224,235,.22))!important;
+}
+
+.auth-premium-v1868 .auth1868-auth-column{
+  width:100%;
+  max-width:500px;
+  align-self:center;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.auth-premium-v1868 .auth1868-auth-column .auth1866-auth-card{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+}
+.auth-premium-v1868 .auth1866-panel-logo{
+  width:226px!important;
+  height:86px!important;
+  margin:8px auto 3px!important;
+  object-fit:contain!important;
+  filter:drop-shadow(0 0 20px rgba(0,224,235,.18))!important;
+}
+
+.auth-premium-v1868 .auth1868-presentation-under-card{
+  width:100%!important;
+  max-width:none!important;
+  min-height:78px!important;
+  margin:0!important;
+  padding:12px 22px 12px 14px!important;
+  justify-content:flex-start!important;
+  border:1px solid rgba(76,216,226,.24)!important;
+  border-radius:22px!important;
+  background:
+    radial-gradient(circle at 15% 50%,rgba(0,229,238,.12),transparent 24%),
+    linear-gradient(135deg,rgba(11,29,40,.97),rgba(3,11,18,.98))!important;
+  box-shadow:0 22px 50px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.045),0 0 36px rgba(0,221,230,.07)!important;
+  transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease!important;
+}
+.auth-premium-v1868 .auth1868-presentation-under-card:hover{
+  transform:translateY(-2px)!important;
+  border-color:rgba(65,241,240,.48)!important;
+  box-shadow:0 28px 62px rgba(0,0,0,.42),0 0 44px rgba(0,221,230,.12)!important;
+}
+.auth-premium-v1868 .auth1868-presentation-under-card .auth1567-play-orb{
+  width:52px!important;
+  height:52px!important;
+  flex:0 0 52px!important;
+  font-size:18px!important;
+  color:#031016!important;
+  background:linear-gradient(135deg,#4cf5ef,#1dcbd9)!important;
+  box-shadow:0 0 26px rgba(45,239,235,.34)!important;
+}
+.auth-premium-v1868 .auth1868-presentation-under-card b{
+  color:#f5fbff!important;
+  font-size:15px!important;
+  letter-spacing:-.01em!important;
+}
+.auth-premium-v1868 .auth1868-presentation-under-card small{
+  margin-top:4px!important;
+  color:#8fa6b4!important;
+  font-size:11px!important;
+}
+
+/* Przywrócenie widocznej flagi w selektorze języka na ekranie logowania. */
+html body #root .auth-premium-v1868 .auth1866-language .betai-language-switch.compact.betai-language-dropdown{
+  min-width:72px!important;
+  padding:5px!important;
+  border:1px solid rgba(38,212,225,.28)!important;
+  border-radius:18px!important;
+  background:linear-gradient(180deg,rgba(7,24,34,.97),rgba(3,13,21,.98))!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.04),0 14px 32px rgba(0,0,0,.28),0 0 24px rgba(0,220,231,.06)!important;
+}
+html body #root .auth-premium-v1868 .auth1866-language .betai-language-current{
+  width:60px!important;
+  min-width:60px!important;
+  height:42px!important;
+  padding:0 9px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:9px!important;
+  border-radius:13px!important;
+  background:transparent!important;
+  border:0!important;
+}
+html body #root .auth-premium-v1868 .auth1866-language .betai-language-flag{
+  position:relative!important;
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:27px!important;
+  min-width:27px!important;
+  height:27px!important;
+  border-radius:50%!important;
+  overflow:hidden!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.38),0 5px 14px rgba(0,0,0,.38)!important;
+}
+html body #root .auth-premium-v1868 .auth1866-language .betai-flag-pl{
+  background:linear-gradient(to bottom,#fff 0 50%,#dc143c 50% 100%)!important;
+}
+html body #root .auth-premium-v1868 .auth1866-language .betai-flag-en{
+  background:linear-gradient(135deg,#173d76 0 44%,#fff 44% 48%,#c8102e 48% 53%,#fff 53% 57%,#173d76 57% 100%)!important;
+}
+html body #root .auth-premium-v1868 .auth1866-language .betai-language-chevron{
+  display:block!important;
+  color:#d8e9f1!important;
+  font-size:18px!important;
+  line-height:1!important;
+  transform:translateY(-2px)!important;
+}
+
+/* Logo ze wskazanego wzoru ma pozostać czyste i bez ramki. */
+.auth-premium-v1868 .auth1866-brand,
+.auth-premium-v1868 .auth1866-panel-logo{
+  background:transparent!important;
+  border:0!important;
+}
+
+@media (max-width:980px){
+  .auth-premium-v1868 .auth1868-auth-column{max-width:520px;margin:0 auto;}
+  .auth-premium-v1868 .auth1866-brand{width:215px!important;min-width:215px!important;height:64px;}
+  .auth-premium-v1868 .auth1866-brand img{height:64px!important;}
+}
+@media (max-width:640px){
+  .auth-premium-v1868 .auth1866-topbar{min-height:72px;padding:8px 10px!important;}
+  .auth-premium-v1868 .auth1866-brand{width:170px!important;min-width:170px!important;height:52px;}
+  .auth-premium-v1868 .auth1866-brand img{height:52px!important;}
+  .auth-premium-v1868 .auth1866-panel-logo{width:190px!important;height:72px!important;}
+  .auth-premium-v1868 .auth1868-presentation-under-card{min-height:70px!important;border-radius:18px!important;padding:10px 14px 10px 11px!important;}
+  .auth-premium-v1868 .auth1868-presentation-under-card .auth1567-play-orb{width:46px!important;height:46px!important;flex-basis:46px!important;}
+  html body #root .auth-premium-v1868 .auth1866-language .betai-language-switch.compact.betai-language-dropdown{min-width:62px!important;}
+  html body #root .auth-premium-v1868 .auth1866-language .betai-language-current{width:52px!important;min-width:52px!important;height:38px!important;padding:0 7px!important;gap:6px!important;}
+  html body #root .auth-premium-v1868 .auth1866-language .betai-language-flag{width:24px!important;min-width:24px!important;height:24px!important;}
+}

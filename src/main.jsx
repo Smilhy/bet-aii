@@ -23445,14 +23445,14 @@ function AuthView({ onAuth }) {
   ]), [])
 
   return (
-    <div className="auth609-screen auth-seo-v1866 auth-ultra-v1867" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
+    <div className="auth609-screen auth-seo-v1866 auth-ultra-v1867 auth-premium-v1868" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
       <span className="auth1866-bg-orb auth1866-bg-orb-one" aria-hidden="true" />
       <span className="auth1866-bg-orb auth1866-bg-orb-two" aria-hidden="true" />
       <span className="auth1866-grid" aria-hidden="true" />
 
       <header className="auth1866-topbar">
         <a className="auth1866-brand" href="#start" aria-label="Bet+AI — strona główna">
-          <img src="/auth-brand-470-transparent.png" alt="Bet+AI — AI Match Picks" draggable="false" />
+          <img src="/auth-logo-v1868.png" alt="Bet+AI — AI Match Picks" draggable="false" />
         </a>
 
         <nav className="auth1866-nav" aria-label="Nawigacja strony logowania">
@@ -23507,53 +23507,18 @@ function AuthView({ onAuth }) {
               ))}
             </div>
 
-            <div className="auth1866-actions">
-              <button
-                type="button"
-                className="auth1866-primary-cta"
-                onClick={() => {
-                  switchMode('register')
-                  window.setTimeout(() => document.getElementById('auth1866-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0)
-                }}
-              >
-                {landingCopyV1866.registerCta}<b>→</b>
-              </button>
-              <button
-                type="button"
-                className="auth1866-secondary-cta"
-                onClick={() => {
-                  switchMode('login')
-                  window.setTimeout(() => document.getElementById('auth1866-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0)
-                }}
-              >
-                {landingCopyV1866.loginCta}
-              </button>
-            </div>
-
-            <button
-              type="button"
-              className="auth1567-presentation-button auth1866-presentation-button"
-              onClick={() => setPresentationOpen(true)}
-              aria-label={landingCopyV1866.watchCta}
-            >
-              <span className="auth1567-play-orb">▶</span>
-              <span>
-                <b>{landingCopyV1866.watchCta}</b>
-                <small>{landingCopyV1866.watchSub}</small>
-              </span>
-            </button>
-
             <p className="auth1866-risk"><IconShield />{landingCopyV1866.risk}</p>
           </div>
 
-          <aside className="auth1866-auth-card" id="auth1866-panel" aria-label={t.authPanelLabel}>
+          <div className="auth1868-auth-column">
+            <aside className="auth1866-auth-card" id="auth1866-panel" aria-label={t.authPanelLabel}>
             <div className="auth1866-card-glow" aria-hidden="true" />
             <div className="auth1867-card-topline">
               <span>{landingCopyV1866.accessLabel}</span>
               <i aria-hidden="true" />
             </div>
             <div className="auth1866-beta-pill"><i />{landingCopyV1866.beta}</div>
-            <img className="auth1866-panel-logo" src="/auth-brand-470-transparent.png" alt="Bet+AI" draggable="false" />
+            <img className="auth1866-panel-logo" src="/auth-logo-v1868.png" alt="Bet+AI" draggable="false" />
             <h2>{mode === 'login' ? landingCopyV1866.panelLoginTitle : landingCopyV1866.panelRegisterTitle}</h2>
             <p className="auth1866-panel-copy">{mode === 'login' ? landingCopyV1866.panelLoginText : landingCopyV1866.panelRegisterText}</p>
 
@@ -23637,16 +23602,26 @@ function AuthView({ onAuth }) {
               <span className="auth609-secure-icon"><IconShield /></span>
               <span>{landingCopyV1866.securePanel}</span>
             </div>
-            <div className="auth1867-security-chips" aria-label="Security information">
-              <span>SSL</span><span>SUPABASE</span><span>18+</span>
-            </div>
-
             {authMessage ? (
               <div className={`auth481-message ${authMessageType} auth609-message auth1866-message`} role="status" aria-live="polite">
                 {authMessage}
               </div>
             ) : null}
-          </aside>
+            </aside>
+
+            <button
+              type="button"
+              className="auth1567-presentation-button auth1866-presentation-button auth1868-presentation-under-card"
+              onClick={() => setPresentationOpen(true)}
+              aria-label={landingCopyV1866.watchCta}
+            >
+              <span className="auth1567-play-orb">▶</span>
+              <span>
+                <b>{landingCopyV1866.watchCta}</b>
+                <small>{landingCopyV1866.watchSub}</small>
+              </span>
+            </button>
+          </div>
         </section>
 
         <section className="auth1866-live" id="statystyki" aria-labelledby="auth1866-live-title">
