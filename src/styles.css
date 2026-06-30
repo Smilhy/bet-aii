@@ -77109,3 +77109,31 @@ html body #root .auth-fixed-v1870 .auth1866-auth-card{
     font-size:10px!important;
   }
 }
+
+
+/* WERSJA 1872 — naprawa flag języka przez realne pliki SVG */
+.betai-language-flag.has-image{
+  background:transparent!important;
+}
+.betai-language-flag.has-image::before,
+.betai-language-flag.has-image::after{
+  content:none!important;
+  display:none!important;
+}
+.betai-language-flag.has-image .betai-language-flag-img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  border-radius:999px!important;
+  object-fit:cover!important;
+  box-shadow:none!important;
+}
+.auth-premium-v1868 .betai-language-flag.has-image,
+.auth-premium-v1868 .betai-language-flag.has-image .betai-language-flag-img{
+  visibility:visible!important;
+  opacity:1!important;
+}
+.auth-premium-v1868 .auth1866-language .betai-language-name{
+  display:inline-flex!important;
+  align-items:center!important;
+}

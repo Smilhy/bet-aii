@@ -23517,7 +23517,6 @@ function AuthView({ onAuth }) {
               <span>{landingCopyV1866.accessLabel}</span>
               <i aria-hidden="true" />
             </div>
-            <div className="auth1866-beta-pill"><i />{landingCopyV1866.beta}</div>
             <img className="auth1866-panel-logo" src="/auth-logo-v1868.png" alt="Bet+AI" draggable="false" />
 
             <div className={`auth481-tabs auth609-tabs auth609-tabs-fixed auth1866-tabs ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label={t.authModeLabel}>
@@ -23720,10 +23719,10 @@ function AuthView({ onAuth }) {
             </div>
             <iframe
               className="auth1567-video-player"
-              src="https://player.mediadelivery.net/embed/677418/07fb432a-32f8-476f-8826-d8f705c257e1?autoplay=true&loop=false&muted=true&preload=true&responsive=true"
+              src="https://iframe.mediadelivery.net/embed/677418/07fb432a-32f8-476f-8826-d8f705c257e1?autoplay=false&loop=false&muted=false&preload=true&responsive=true"
               title="Bet+AI prezentacja platformy"
-              loading="lazy"
-              fetchPriority="low"
+              loading="eager"
+              fetchPriority="high"
               allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
               allowFullScreen
             />
@@ -31290,6 +31289,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
 function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false, ariaLabel = 'Language switcher' }) {
   const [open, setOpen] = useState(false)
   const currentLang = BETAI_LANGUAGES.includes(lang) ? lang : 'pl'
+  const flagSources = { pl: '/flag-pl.svg', en: '/flag-en.svg' }
   const chooseLanguage = (code) => {
     onChange?.(code)
     setOpen(false)
@@ -31312,7 +31312,9 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
         aria-label={`${ariaLabel}: ${BETAI_LANG_NAMES?.[currentLang] || BETAI_LANG_LABELS[currentLang]}`}
         title={BETAI_LANG_NAMES?.[currentLang] || BETAI_LANG_LABELS[currentLang]}
       >
-        <span className={`betai-language-flag betai-flag-${currentLang}`} aria-hidden="true" />
+        <span className={`betai-language-flag betai-flag-${currentLang} has-image`} aria-hidden="true">
+          <img className="betai-language-flag-img" src={flagSources[currentLang] || '/flag-pl.svg'} alt="" loading="eager" decoding="async" />
+        </span>
         <span className="betai-language-chevron" aria-hidden="true">⌄</span>
       </button>
 
@@ -31329,7 +31331,9 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
               aria-label={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
               title={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
             >
-              <span className={`betai-language-flag betai-flag-${code}`} aria-hidden="true" />
+              <span className={`betai-language-flag betai-flag-${code} has-image`} aria-hidden="true">
+                <img className="betai-language-flag-img" src={flagSources[code] || '/flag-pl.svg'} alt="" loading="lazy" decoding="async" />
+              </span>
               <span className="betai-language-name">{BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}</span>
             </button>
           ))}
