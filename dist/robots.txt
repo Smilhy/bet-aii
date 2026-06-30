@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://bet-ai.app/sitemap.xml
