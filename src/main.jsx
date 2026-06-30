@@ -23341,267 +23341,243 @@ function AuthView({ onAuth }) {
   ]), [])
 
   return (
-    <div className="auth609-screen auth1873-screen" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
-      <div className="auth620-language-corner">
+    <div className={`auth1874-screen ${mode === 'register' ? 'is-register-mode' : ''}`} aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
+      <div className="auth1874-language">
         <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} floating ariaLabel={t.languageLabel} />
       </div>
-      <nav className="auth627-social-dock auth1873-social-rail" aria-label="Social media Bet+AI">
-        {auth627SocialLinks.map(link => (
-          <a
-            key={link.key}
-            className={`auth627-social-link ${link.className}`}
-            href={link.href}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={link.label}
-            title={link.label}
+
+      <main className="auth1874-stage">
+        <aside className="auth1874-stats" aria-label={t.liveBadge}>
+          <div className="auth1874-stats-head">
+            <span><i />{t.liveBadge}</span>
+            <small>{authLang === 'en' ? 'LIVE DATA' : 'DANE LIVE'}</small>
+          </div>
+
+          <div className="auth1874-stats-list">
+            {liveStatsCards.slice(0, 5).map(card => (
+              <article className={`auth1874-stat ${card.accentClass}`} key={card.key}>
+                <span className="auth1874-stat-icon">{card.icon}</span>
+                <strong>{liveStats.loading ? '...' : card.value}</strong>
+                <small>{card.label}</small>
+              </article>
+            ))}
+          </div>
+
+          <div className="auth1874-socials" aria-label="Social media Bet+AI">
+            {auth627SocialLinks.map(link => (
+              <a
+                key={link.key}
+                className={`auth1874-social ${link.className}`}
+                href={link.href}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={link.label}
+                title={link.label}
+              >
+                {link.icon}
+              </a>
+            ))}
+          </div>
+
+          <div className="auth1874-stats-foot">
+            <i />
+            <span>{t.liveRefresh}</span>
+          </div>
+        </aside>
+
+        <section className="auth1874-hero" aria-label={authLang === 'en' ? 'Bet plus AI advantages' : 'Zalety Bet plus AI'}>
+          <div className="auth1874-hero-shine" aria-hidden="true" />
+          <header className="auth1874-hero-top">
+            <img src="/auth-logo-fused-619.png" alt="Bet+AI" draggable="false" />
+            <div className="auth1874-hero-badges">
+              <span className="is-live"><i />{authLang === 'en' ? 'LIVE INTELLIGENCE' : 'INTELIGENCJA LIVE'}</span>
+              <span className="is-beta">{authLang === 'en' ? 'BETA VERSION' : 'WERSJA BETA'} <b>i</b></span>
+            </div>
+          </header>
+
+          <div className="auth1874-hero-copy">
+            <div className="auth1874-eyebrow"><span>BET+AI</span> PREMIUM SPORTS INTELLIGENCE</div>
+            <h1>
+              {authLang === 'en'
+                ? <>Smarter bets.<br />Powered by <em>AI.</em></>
+                : <>Mądrzejsze typy.<br />Napędzane przez <em>AI.</em></>}
+            </h1>
+            <p>
+              {authLang === 'en'
+                ? 'Real-time analysis, smart picks and better decisions in one premium platform.'
+                : 'Analizy w czasie rzeczywistym, inteligentne typy i lepsze decyzje w jednej platformie premium.'}
+            </p>
+          </div>
+
+          <div className="auth1874-benefits-list">
+            <article>
+              <span><IconBolt /></span>
+              <div>
+                <strong>{authLang === 'en' ? 'AI-powered predictions' : 'Typy wspierane przez AI'}</strong>
+                <small>{authLang === 'en' ? 'Advanced algorithms for better picks' : 'Zaawansowane algorytmy dla lepszych typów'}</small>
+              </div>
+            </article>
+            <article>
+              <span><IconChart /></span>
+              <div>
+                <strong>{authLang === 'en' ? 'Real-time statistics' : 'Statystyki w czasie rzeczywistym'}</strong>
+                <small>{authLang === 'en' ? 'Live data and match insights' : 'Dane live i analizy spotkań'}</small>
+              </div>
+            </article>
+            <article>
+              <span><IconUsers /></span>
+              <div>
+                <strong>{authLang === 'en' ? 'Trusted community' : 'Aktywna społeczność'}</strong>
+                <small>{authLang === 'en' ? 'Join our growing community' : 'Dołącz do rosnącej społeczności'}</small>
+              </div>
+            </article>
+          </div>
+
+          <button
+            type="button"
+            className="auth1874-presentation"
+            onClick={() => setPresentationOpen(true)}
+            aria-label={authLang === 'en' ? 'Watch the Bet plus AI platform presentation' : 'Obejrzyj prezentację platformy Bet plus AI'}
           >
-            <span className="auth627-social-icon">{link.icon}</span>
-            <b>{link.label}</b>
-          </a>
-        ))}
-      </nav>
+            <span className="auth1874-play">▶</span>
+            <span>
+              <b>{authLang === 'en' ? 'Watch presentation' : 'Obejrzyj prezentację'}</b>
+              <small>{authLang === 'en' ? 'See how Bet+AI works' : 'Zobacz, jak działa Bet+AI'}</small>
+            </span>
+          </button>
 
+          <div className="auth1874-model-badge" aria-hidden="true">
+            <span>{authLang === 'en' ? 'MODEL LIVE' : 'MODEL LIVE'}</span>
+            <strong>{normalizeLiveCount(liveStats.aiAccuracy, 76)}%</strong>
+            <small>{authLang === 'en' ? 'CONFIDENCE SCAN' : 'SKAN PEWNOŚCI'}</small>
+          </div>
+        </section>
 
-      <div className="auth609-artboard auth1873-artboard">
-        <div className="auth609-overlay auth1873-shell">
-              <aside className="auth623-side-live auth624-side-live auth1179-left-stats-outside auth1873-stats-rail" aria-label={t.liveBadge}>
-            <div className="auth1870-stats-title">
-              <span>{authLang === 'en' ? 'LIVE PLATFORM' : 'PLATFORMA LIVE'}</span>
-              <strong>{authLang === 'en' ? 'Live statistics' : 'Statystyki na żywo'}</strong>
-            </div>
-            <div className="auth623-side-head auth624-side-head">
-              <em><i />{t.liveBadge}</em>
-            </div>
-
-            <div className="auth623-side-list">
-              {liveStatsCards.map(card => (
-                <div className={`auth623-side-card ${card.accentClass}`} key={card.key}>
-                  <span className="auth623-side-icon">{card.icon}</span>
-                  <div>
-                    <b>{liveStats.loading ? '...' : card.value}</b>
-                    <small>{card.label}</small>
-                  </div>
-                </div>
-              ))}
+        <section className="auth1874-login-panel">
+          <div className="auth1874-login-card">
+            <div className="auth1874-login-topline">
+              <span><IconShield />{authLang === 'en' ? 'SECURE ACCESS' : 'BEZPIECZNY DOSTĘP'}</span>
+              <span className="is-online"><i />SYSTEM ONLINE</span>
             </div>
 
-            <div className="auth623-side-foot">
-              <span className="auth623-pulse" />
-              <span>{t.liveRefresh} • {t.lastUpdate} {liveStats.updatedAt ? new Date(liveStats.updatedAt).toLocaleTimeString(authLang === 'pl' ? 'pl-PL' : authLang) : '--:--'}</span>
-            </div>
-              </aside>
-          <section className="auth1868-hero-panel auth1873-hero-panel" aria-label={authLang === 'en' ? 'Bet plus AI advantages' : 'Zalety Bet plus AI'}>
-            <div className="auth1871-scene-ambient" aria-hidden="true"><i className="ring ring-one" /><i className="ring ring-two" /><i className="beam" /><i className="floor-grid" /></div>
-            <div className="auth1868-hero-top">
-              <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth1868-logo" draggable="false" />
-              <div className="auth1869-hero-statuses">
-                <div className="auth1869-live-badge"><i />{authLang === 'en' ? 'LIVE INTELLIGENCE' : 'INTELIGENCJA LIVE'}</div>
-                <div className="auth1868-beta-chip">
-                  <span>{authLang === 'en' ? 'BETA VERSION' : 'WERSJA BETA'}</span>
-                  <i title={authLang === 'en' ? 'The platform is continuously improved.' : 'Platforma jest stale rozwijana.'}>i</i>
-                </div>
-              </div>
+            <div className="auth1874-login-heading">
+              <small>{mode === 'login' ? (authLang === 'en' ? 'WELCOME BACK' : 'WITAJ PONOWNIE') : (authLang === 'en' ? 'CREATE ACCOUNT' : 'UTWÓRZ KONTO')}</small>
+              <h2>{mode === 'login' ? (authLang === 'en' ? 'Welcome back!' : 'Witaj ponownie!') : (authLang === 'en' ? 'Join Bet+AI' : 'Dołącz do Bet+AI')}</h2>
+              <p>{mode === 'login' ? t.subtitleLogin : t.subtitleRegister}</p>
             </div>
 
-            <div className="auth1868-hero-copy">
-              <div className="auth1869-eyebrow"><span>BET+AI</span>{authLang === 'en' ? 'PREMIUM SPORTS INTELLIGENCE' : 'PREMIUM SPORTS INTELLIGENCE'}</div>
-              <h1>
-                {authLang === 'en' ? <>Smarter bets.<br />Powered by <span>AI.</span></> : <>Mądrzejsze typy.<br />Napędzane przez <span>AI.</span></>}
-              </h1>
-              <p>
-                {authLang === 'en'
-                  ? 'Real-time analysis, smart picks and better decisions in one premium platform.'
-                  : 'Analizy w czasie rzeczywistym, inteligentne typy i lepsze decyzje w jednej platformie premium.'}
-              </p>
+            <div className={`auth1874-tabs ${mode === 'login' ? 'is-login' : 'is-register'}`} role="tablist" aria-label={t.authModeLabel}>
+              <button type="button" className={mode === 'login' ? 'is-active' : ''} onClick={() => switchMode('login')}>{t.loginTab}</button>
+              <button type="button" className={mode === 'register' ? 'is-active' : ''} onClick={() => switchMode('register')}>{t.registerTab}</button>
             </div>
 
-            <div className="auth1869-kpi-rail" aria-label={authLang === 'en' ? 'Live platform metrics' : 'Metryki platformy na żywo'}>
-              <article><span>{t.aiAccuracy}</span><strong>{normalizeLiveCount(liveStats.aiAccuracy, 76)}%</strong><em>{authLang === 'en' ? 'MODEL' : 'MODEL'}</em></article>
-              <article><span>{t.activeNow}</span><strong>{formatCompactNumber(liveStats.activeNow)}</strong><em>LIVE</em></article>
-              <article><span>{t.tipsterTipsToday}</span><strong>{formatCompactNumber(liveStats.tipsterTipsToday)}</strong><em>{authLang === 'en' ? 'TODAY' : 'DZISIAJ'}</em></article>
-            </div>
+            <form className="auth1874-form" onSubmit={handleSubmit} autoComplete={form.agree ? 'on' : 'off'}>
+              {mode === 'register' ? (
+                <AuthField
+                  label={t.username}
+                  type="text"
+                  value={form.username}
+                  onChange={(event) => updateField('username', event.target.value)}
+                  placeholder={t.usernamePlaceholder}
+                  icon={<IconUser />}
+                  autoComplete="username"
+                  name="betai_username"
+                />
+              ) : null}
 
-            <div className="auth1868-benefit-list">
-              <div className="auth1868-benefit-item">
-                <span><IconBolt /></span>
-                <div>
-                  <strong>{authLang === 'en' ? 'AI-powered predictions' : 'Typy wspierane przez AI'}</strong>
-                  <small>{authLang === 'en' ? 'Advanced algorithms for better picks' : 'Zaawansowane algorytmy dla lepszych typów'}</small>
-                </div>
-              </div>
-              <div className="auth1868-benefit-item">
-                <span><IconChart /></span>
-                <div>
-                  <strong>{authLang === 'en' ? 'Real-time statistics' : 'Statystyki w czasie rzeczywistym'}</strong>
-                  <small>{authLang === 'en' ? 'Live data and match insights' : 'Dane live i analizy spotkań'}</small>
-                </div>
-              </div>
-              <div className="auth1868-benefit-item">
-                <span><IconUsers /></span>
-                <div>
-                  <strong>{authLang === 'en' ? 'Trusted community' : 'Aktywna społeczność'}</strong>
-                  <small>{authLang === 'en' ? 'Join bettors and tipsters from around the world' : 'Dołącz do typerów i graczy z całego świata'}</small>
-                </div>
-              </div>
-            </div>
+              <AuthField
+                label={t.email}
+                type="email"
+                value={form.email}
+                onChange={(event) => updateField('email', event.target.value)}
+                placeholder={t.emailPlaceholderShort}
+                icon={<IconMail />}
+                autoComplete={mode === 'login' ? 'username' : 'email'}
+                name="betai_email"
+              />
 
-            <div className="auth1868-ball-wrap auth1873-ball-stage" aria-hidden="true">
-              <div className="auth1869-ball-orbit orbit-a" />
-              <div className="auth1869-ball-orbit orbit-b" />
-              <div className="auth1868-ball-glow" />
-              <img src="/auth-hero-scene-v1870.webp" alt="" draggable="false" />
-              <div className="auth1869-ball-caption"><span>{authLang === 'en' ? 'LIVE MODEL' : 'MODEL LIVE'}</span><strong>87%</strong><small>{authLang === 'en' ? 'confidence scan' : 'skan pewności'}</small></div>
-            </div>
-
-            <button
-              type="button"
-              className="auth1567-presentation-button auth1868-presentation-button"
-              onClick={() => setPresentationOpen(true)}
-              aria-label={authLang === 'en' ? 'Watch the Bet plus AI platform presentation' : 'Obejrzyj prezentację platformy Bet plus AI'}
-            >
-              <span className="auth1567-play-orb">▶</span>
-              <span>
-                <b>{authLang === 'en' ? 'Watch presentation' : 'Obejrzyj prezentację'}</b>
-                <small>{authLang === 'en' ? 'See how Bet+AI works' : 'Zobacz, jak działa Bet+AI'}</small>
-              </span>
-            </button>
-          </section>
-
-          <section className="auth609-left-panel auth1873-login-panel">
-            <div className="auth609-panel-shell auth609-panel-shell-fixed auth1873-login-card">
-              <div className="auth609-center-wrap auth1873-login-inner">
-                <div className="auth1869-login-topline">
-                  <span className="auth1869-secure-pill"><IconShield /> {authLang === 'en' ? 'SECURE MEMBER ACCESS' : 'BEZPIECZNY DOSTĘP'}</span>
-                  <span className="auth1869-online-pill"><i />{authLang === 'en' ? 'SYSTEM ONLINE' : 'SYSTEM ONLINE'}</span>
-                </div>
-                <div className="auth1868-login-heading">
-                  <span>{mode === 'login' ? (authLang === 'en' ? 'WELCOME BACK' : 'WITAJ PONOWNIE') : (authLang === 'en' ? 'CREATE ACCOUNT' : 'UTWÓRZ KONTO')}</span>
-                  <h2>{mode === 'login' ? (authLang === 'en' ? 'Welcome back!' : 'Witaj ponownie!') : (authLang === 'en' ? 'Join Bet+AI' : 'Dołącz do Bet+AI')}</h2>
-                  <p>{mode === 'login' ? t.subtitleLogin : t.subtitleRegister}</p>
-                </div>
-
-                <div className={`auth481-tabs auth609-tabs auth609-tabs-fixed auth1868-tabs ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label={t.authModeLabel}>
-                  <button
-                    type="button"
-                    className={`auth481-tab ${mode === 'login' ? 'is-active' : ''}`}
-                    onClick={() => switchMode('login')}
-                  >
-                    {t.loginTab}
+              <AuthField
+                label={t.password}
+                type={showPassword ? 'text' : 'password'}
+                value={form.password}
+                onChange={(event) => {
+                  updateField('password', event.target.value)
+                  if (mode === 'register') updateField('repeatPassword', event.target.value)
+                }}
+                placeholder={t.passwordPlaceholderShort}
+                icon={<IconLock />}
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                name="betai_password"
+                rightControl={
+                  <button type="button" className="auth481-eye" onClick={() => setShowPassword(prev => !prev)} aria-label={showPassword ? t.hidePassword : t.showPassword}>
+                    <IconEye />
                   </button>
-                  <button
-                    type="button"
-                    className={`auth481-tab ${mode === 'register' ? 'is-active' : ''}`}
-                    onClick={() => switchMode('register')}
-                  >
-                    {t.registerTab}
-                  </button>
-                </div>
+                }
+              />
 
-                <form className="auth481-form auth609-form auth609-form-fixed auth1868-form" onSubmit={handleSubmit} autoComplete={form.agree ? 'on' : 'off'}>
-                  <AuthField
-                    label={t.email}
-                    type="email"
-                    value={form.email}
-                    onChange={(event) => updateField('email', event.target.value)}
-                    placeholder={t.emailPlaceholderShort}
-                    icon={<IconMail />}
-                    autoComplete={mode === 'login' ? 'username' : 'email'}
-                    name="betai_email"
-                  />
-
-                  <AuthField
-                    label={t.password}
-                    type={showPassword ? 'text' : 'password'}
-                    value={form.password}
-                    onChange={(event) => {
-                      updateField('password', event.target.value)
-                      if (mode === 'register') updateField('repeatPassword', event.target.value)
-                    }}
-                    placeholder={t.passwordPlaceholderShort}
-                    icon={<IconLock />}
-                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                    name="betai_password"
-                    rightControl={
-                      <button
-                        type="button"
-                        className="auth481-eye"
-                        onClick={() => setShowPassword(prev => !prev)}
-                        aria-label={showPassword ? t.hidePassword : t.showPassword}
-                      >
-                        <IconEye />
-                      </button>
-                    }
-                  />
-
-                  <div className="auth609-remember-row auth1868-remember-row">
-                    <label className={`auth609-remember-toggle ${form.agree ? 'is-checked' : ''}`}>
-                      <input
-                        type="checkbox"
-                        checked={form.agree}
-                        onChange={(event) => updateField('agree', event.target.checked)}
-                        aria-label={t.rememberMe}
-                      />
-                      <span className="auth609-remember-box">✓</span>
-                      <span>{t.rememberMe}</span>
-                    </label>
-                    <button type="button" className="auth609-forgot-link" onClick={handleForgotPassword}>
-                      {t.forgotPassword}
+              {mode === 'register' ? (
+                <AuthField
+                  label={t.repeatPassword}
+                  type={showRepeatPassword ? 'text' : 'password'}
+                  value={form.repeatPassword}
+                  onChange={(event) => updateField('repeatPassword', event.target.value)}
+                  placeholder={t.repeatPasswordPlaceholder}
+                  icon={<IconLock />}
+                  autoComplete="new-password"
+                  name="betai_repeat_password"
+                  rightControl={
+                    <button type="button" className="auth481-eye" onClick={() => setShowRepeatPassword(prev => !prev)} aria-label={showRepeatPassword ? t.hideRepeat : t.showRepeat}>
+                      <IconEye />
                     </button>
-                  </div>
+                  }
+                />
+              ) : null}
 
-                  <button type="submit" className="auth481-submit auth609-submit auth609-submit-fixed auth1868-submit" disabled={submitting}>
-                    {submitting ? t.authorizing : mode === 'login' ? t.submitLogin : t.createAccountShort}
-                  </button>
-
-                  <div className="auth609-status-line auth1868-status-line">
-                    <span className="auth609-status-shield"><IconShield /></span>
-                    <span>{mode === 'login' ? t.submitNoteLogin : t.submitNoteRegister}</span>
-                  </div>
-
-                  <div className="auth1869-trust-row" aria-label={authLang === 'en' ? 'Security information' : 'Informacje o bezpieczeństwie'}>
-                    <span><i>256</i>{authLang === 'en' ? 'BIT ENCRYPTION' : 'SZYFROWANIE BIT'}</span>
-                    <span><i>24/7</i>{authLang === 'en' ? 'LIVE DATA' : 'DANE LIVE'}</span>
-                    <span><i>AI</i>{authLang === 'en' ? 'SMART ENGINE' : 'SMART ENGINE'}</span>
-                  </div>
-                </form>
-
-                {authMessage ? (
-                  <div className={`auth481-message ${authMessageType} auth609-message auth1868-message`} role="status" aria-live="polite">
-                    {authMessage}
-                  </div>
-                ) : null}
-
-                <div className="auth1868-switch-copy">
-                  <span>{mode === 'login' ? (authLang === 'en' ? "Don't have an account?" : 'Nie masz konta?') : (authLang === 'en' ? 'Already have an account?' : 'Masz już konto?')}</span>
-                  <button type="button" onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}>
-                    {mode === 'login' ? t.register : t.login}
-                  </button>
-                </div>
+              <div className="auth1874-remember-row">
+                <label className={form.agree ? 'is-checked' : ''}>
+                  <input type="checkbox" checked={form.agree} onChange={(event) => updateField('agree', event.target.checked)} aria-label={t.rememberMe} />
+                  <span>✓</span>
+                  <b>{t.rememberMe}</b>
+                </label>
+                <button type="button" onClick={handleForgotPassword}>{t.forgotPassword}</button>
               </div>
-            </div>
-          </section>
 
-          <div className="auth617-feature-strip auth1873-feature-strip" aria-label={t.benefitsLabel}>
-            <div className="auth617-feature-card">
-              <span className="auth617-feature-icon"><IconShield /></span>
-              <div><strong>{t.safeData}</strong><p>{t.safeDataText}</p></div>
-            </div>
-            <div className="auth617-feature-card">
-              <span className="auth617-feature-icon"><IconBolt /></span>
-              <div><strong>{t.fastRegister}</strong><p>{t.fastRegisterText}</p></div>
-            </div>
-            <div className="auth617-feature-card">
-              <span className="auth617-feature-icon"><IconChart /></span>
-              <div><strong>{t.freeAi}</strong><p>{t.freeAiText}</p></div>
-            </div>
-            <div className="auth617-feature-card">
-              <span className="auth617-feature-icon"><IconUsers /></span>
-              <div><strong>{t.community}</strong><p>{t.communityText}</p></div>
+              <button type="submit" className="auth1874-submit" disabled={submitting}>
+                {submitting ? t.authorizing : mode === 'login' ? t.submitLogin : t.createAccountShort}
+              </button>
+
+              <div className="auth1874-secure-note">
+                <IconShield />
+                <span>{mode === 'login' ? t.submitNoteLogin : t.submitNoteRegister}</span>
+              </div>
+
+              <div className="auth1874-trust-row" aria-label={authLang === 'en' ? 'Security information' : 'Informacje o bezpieczeństwie'}>
+                <span><strong>256</strong><small>{authLang === 'en' ? 'BIT ENCRYPTION' : 'SZYFROWANIE BIT'}</small></span>
+                <span><strong>24/7</strong><small>{authLang === 'en' ? 'LIVE DATA' : 'DANE LIVE'}</small></span>
+                <span><strong>AI</strong><small>SMART ENGINE</small></span>
+              </div>
+            </form>
+
+            {authMessage ? (
+              <div className={`auth481-message ${authMessageType} auth1874-message`} role="status" aria-live="polite">
+                {authMessage}
+              </div>
+            ) : null}
+
+            <div className="auth1874-switch-copy">
+              <span>{mode === 'login' ? (authLang === 'en' ? "Don't have an account?" : 'Nie masz konta?') : (authLang === 'en' ? 'Already have an account?' : 'Masz już konto?')}</span>
+              <button type="button" onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}>{mode === 'login' ? t.register : t.login}</button>
             </div>
           </div>
+        </section>
+
+        <div className="auth1874-feature-strip" aria-label={t.benefitsLabel}>
+          <article><span><IconShield /></span><div><strong>{t.safeData}</strong><small>{t.safeDataText}</small></div></article>
+          <article><span><IconBolt /></span><div><strong>{t.fastRegister}</strong><small>{t.fastRegisterText}</small></div></article>
+          <article><span><IconChart /></span><div><strong>{t.freeAi}</strong><small>{t.freeAiText}</small></div></article>
+          <article><span><IconUsers /></span><div><strong>{t.community}</strong><small>{t.communityText}</small></div></article>
         </div>
-      </div>
+      </main>
 
       {presentationOpen ? (
         <div
