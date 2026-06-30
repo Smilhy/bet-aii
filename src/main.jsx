@@ -1316,6 +1316,14 @@ const BETAI_FINANCE_TRANSLATIONS_V1856 = {
   "Zwiń listę": "Collapse list",
   "Pokaż więcej": "Show more",
   "Ostatnie operacje finansowe": "Recent financial operations",
+  "Operacja": "Operation",
+  "Brak operacji finansowych": "No financial operations",
+  "Po pierwszych prawdziwych płatnościach i wypłatach zobaczysz je tutaj.": "You will see them here after the first real payments and payouts.",
+  "Sprzedaż marketplace": "Marketplace sale",
+  "Subskrypcja Premium": "Premium subscription",
+  "Wypłata typera": "Tipster payout",
+  "Wpłata do portfela": "Wallet deposit",
+  "Zakończona": "Completed",
   "wyników": "results",
   "Brak dostępu": "Access denied",
   "Ten panel jest dostępny tylko dla administratora.": "This panel is available only to the administrator.",
@@ -23768,7 +23776,7 @@ function PaymentsView({ payments = [], onViewChange, onTopUp }) {
   const getPaymentStatusLabel = status => {
     const clean = String(status || 'paid').toLowerCase()
     if (clean === 'completed' || clean === 'paid' || clean === 'succeeded') return 'Opłacona'
-    if (clean === 'pending') return 'Oczekuje'
+    if (clean === 'pending') return t('Oczekuje')
     if (clean === 'failed') return 'Nieudana'
     if (clean === 'refunded') return 'Zwrócona'
     return status || 'Opłacona'
@@ -24131,7 +24139,7 @@ function EarningsView({ user, earnings = null, stripeConnectStatus = null, onCon
             <div className="earnings-live-history">
               {recentRows.map(row => (
                 <div key={row.id || `${row.created_at}_${row.source}`}>
-                  <span>{new Date(row.created_at).toLocaleString('pl-PL')}</span>
+                  <span>{new Date(row.created_at).toLocaleString(lang === 'en' ? 'en-GB' : 'pl-PL')}</span>
                   <strong>+{formatMoney(amountFromRow(row))}</strong>
                   <small>{sourceLabel(row.source)}</small>
                 </div>
@@ -28074,7 +28082,7 @@ function DepositsView({ user, wallet = 0, onTopUp, onViewChange }) {
             <div className="deposits-history-list">
               {topups.map(row => (
                 <div key={row.id}>
-                  <span>{new Date(row.created_at).toLocaleString('pl-PL')}</span>
+                  <span>{new Date(row.created_at).toLocaleString(lang === 'en' ? 'en-GB' : 'pl-PL')}</span>
                   <strong>+{formatMoney(row.amount)}</strong>
                   <small>{row.status === 'completed' ? 'Opłacona' : row.status || 'Oczekuje'}</small>
                 </div>
@@ -28126,9 +28134,9 @@ function PayoutsView({ user, payoutRequests = [], onRequestPayout, userPlan = 'f
   const canRequestPayout = available >= MIN_PAYOUT_AMOUNT && !hasPending && stripeReady && !payoutLimitReached && !submitting
   const payoutStatusLabel = status => {
     if (status === 'paid') return 'Wypłacona'
-    if (status === 'approved') return 'Zatwierdzona'
-    if (status === 'pending') return 'Oczekuje'
-    if (status === 'rejected') return 'Odrzucona'
+    if (status === 'approved') return t('Zatwierdzona')
+    if (status === 'pending') return t('Oczekuje')
+    if (status === 'rejected') return t('Odrzucona')
     return status || 'Nieznany'
   }
   const payoutActionLabel = hasPending
@@ -28503,6 +28511,8 @@ function AdminCouponApprovalView({ user, onToast }) {
 
 
 function AdminFinanceView({ report, onRefresh, onViewChange }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   const [adminFinanceFilter, setAdminFinanceFilter] = useState('all')
   const [expandedTransactionTabs, setExpandedTransactionTabs] = useState({})
   const [marketplaceSalesExpanded, setMarketplaceSalesExpanded] = useState(false)
@@ -28518,18 +28528,18 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
   }
   const getTxLabel = row => {
     const type = getTxType(row)
-    if (type === 'marketplace') return 'Sprzedaż marketplace'
-    if (type === 'premium') return 'Subskrypcja Premium'
-    if (type === 'payout') return 'Wypłata typera'
-    if (type === 'topup') return 'Wpłata do portfela'
-    return row?.label || row?.type || 'Operacja'
+    if (type === 'marketplace') return t('Sprzedaż marketplace')
+    if (type === 'premium') return t('Subskrypcja Premium')
+    if (type === 'payout') return t('Wypłata typera')
+    if (type === 'topup') return t('Wpłata do portfela')
+    return row?.label ? t(row.label) : (row?.type || t('Operacja'))
   }
   const getStatusLabel = status => {
     const clean = String(status || '').toLowerCase()
-    if (clean === 'completed' || clean === 'paid' || clean === 'succeeded') return 'Zakończona'
-    if (clean === 'pending') return 'Oczekuje'
-    if (clean === 'approved') return 'Zatwierdzona'
-    if (clean === 'rejected') return 'Odrzucona'
+    if (clean === 'completed' || clean === 'paid' || clean === 'succeeded') return t('Zakończona')
+    if (clean === 'pending') return t('Oczekuje')
+    if (clean === 'approved') return t('Zatwierdzona')
+    if (clean === 'rejected') return t('Odrzucona')
     return status || '—'
   }
   const txCounts = {
@@ -28691,29 +28701,29 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
 
       <div className="glass-v2-panel admin-finance-transactions-card">
         <div className="admin-finance-live-card-head">
-          <h2>Ostatnie operacje finansowe</h2>
-          <span>{filteredTransactions.length} wyników</span>
+          <h2>{t('Ostatnie operacje finansowe')}</h2>
+          <span>{t(`${filteredTransactions.length} wyników`)}</span>
         </div>
 
         <div className="admin-finance-live-filters">
-          <button type="button" className={adminFinanceFilter === 'all' ? 'active' : ''} onClick={() => changeFinanceFilter('all')}>Wszystkie <b>{txCounts.all}</b></button>
+          <button type="button" className={adminFinanceFilter === 'all' ? 'active' : ''} onClick={() => changeFinanceFilter('all')}>{t('Wszystkie')} <b>{txCounts.all}</b></button>
           <button type="button" className={adminFinanceFilter === 'marketplace' ? 'active' : ''} onClick={() => changeFinanceFilter('marketplace')}>Marketplace <b>{txCounts.marketplace}</b></button>
           <button type="button" className={adminFinanceFilter === 'premium' ? 'active' : ''} onClick={() => changeFinanceFilter('premium')}>Premium <b>{txCounts.premium}</b></button>
-          <button type="button" className={adminFinanceFilter === 'payout' ? 'active' : ''} onClick={() => changeFinanceFilter('payout')}>Wypłaty <b>{txCounts.payout}</b></button>
-          <button type="button" className={adminFinanceFilter === 'topup' ? 'active' : ''} onClick={() => changeFinanceFilter('topup')}>Wpłaty <b>{txCounts.topup}</b></button>
+          <button type="button" className={adminFinanceFilter === 'payout' ? 'active' : ''} onClick={() => changeFinanceFilter('payout')}>{t('Wypłaty')} <b>{txCounts.payout}</b></button>
+          <button type="button" className={adminFinanceFilter === 'topup' ? 'active' : ''} onClick={() => changeFinanceFilter('topup')}>{t('Wpłaty')} <b>{txCounts.topup}</b></button>
         </div>
 
         <div className="admin-finance-live-table">
           <div className="admin-finance-live-row header">
-            <span>Data</span>
-            <span>Operacja</span>
-            <span>Użytkownik</span>
-            <span>Kwota</span>
-            <span>Status</span>
+            <span>{t('Data')}</span>
+            <span>{t('Operacja')}</span>
+            <span>{t('Użytkownik')}</span>
+            <span>{t('Kwota')}</span>
+            <span>{t('Status')}</span>
           </div>
           {filteredTransactions.length ? visibleTransactions.map((row, idx) => (
             <div className="admin-finance-live-row" key={row.id || idx}>
-              <span>{new Date(row.created_at).toLocaleString('pl-PL')}</span>
+              <span>{new Date(row.created_at).toLocaleString(lang === 'en' ? 'en-GB' : 'pl-PL')}</span>
               <span><strong>{getTxLabel(row)}</strong><small>{row.type || row.source || '—'}</small></span>
               <span className="admin-finance-user-cell-v1044">
                 <strong>{row.display_user || row.user_username || row.username || row.user_email || row.user_id || '—'}</strong>
@@ -28724,8 +28734,8 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
             </div>
           )) : (
             <div className="admin-finance-empty">
-              <strong>Brak operacji finansowych</strong>
-              <span>Po pierwszych prawdziwych płatnościach i wypłatach zobaczysz je tutaj.</span>
+              <strong>{t('Brak operacji finansowych')}</strong>
+              <span>{t('Po pierwszych prawdziwych płatnościach i wypłatach zobaczysz je tutaj.')}</span>
             </div>
           )}
           {filteredTransactions.length > 4 ? (
@@ -28734,7 +28744,7 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
               className="admin-finance-show-more-btn"
               onClick={() => setExpandedTransactionTabs(prev => ({ ...prev, [adminFinanceFilter]: !prev[adminFinanceFilter] }))}
             >
-              {currentTabExpanded ? 'Zwiń listę' : `Pokaż więcej (${hiddenTransactionsCount})`}
+              {currentTabExpanded ? t('Zwiń listę') : `${t('Pokaż więcej')} (${hiddenTransactionsCount})`}
             </button>
           ) : null}
         </div>
@@ -28833,10 +28843,10 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   }
 
   const getStatusLabel = status => {
-    if (status === 'pending') return 'Oczekuje'
+    if (status === 'pending') return t('Oczekuje')
     if (status === 'processing') return 'Przetwarzana'
     if (status === 'paid' || status === 'approved') return 'Wypłacona'
-    if (status === 'rejected') return 'Odrzucona'
+    if (status === 'rejected') return t('Odrzucona')
     if (status === 'failed') return 'Błąd'
     return status || '—'
   }
