@@ -77393,3 +77393,440 @@ html body #root:not(:has(.app-shell)) .auth609-screen.auth1868-screen .auth620-l
     animation:none !important;
   }
 }
+
+/* =========================================================
+   WERSJA 1869 — PREMIUM LOGIN REWORK
+   Wyłącznie warstwa wizualna. Auth / Supabase / formularze bez zmian.
+   ========================================================= */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen{
+  --auth-cyan:#24f2e7;
+  --auth-blue:#43a8ff;
+  --auth-violet:#7d68ff;
+  --auth-gold:#f4cb65;
+  min-height:100vh!important;
+  padding:76px 28px 118px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:
+    radial-gradient(circle at 18% 18%,rgba(17,231,223,.12),transparent 25%),
+    radial-gradient(circle at 82% 14%,rgba(83,96,255,.14),transparent 27%),
+    radial-gradient(circle at 52% 92%,rgba(31,137,255,.08),transparent 30%),
+    linear-gradient(155deg,#010713 0%,#020b18 44%,#01050d 100%)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen::before{
+  background-image:
+    linear-gradient(rgba(70,214,244,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(70,214,244,.035) 1px,transparent 1px)!important;
+  background-size:54px 54px!important;
+  opacity:.65;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen::after{
+  inset:-35%!important;
+  background:
+    conic-gradient(from 140deg at 48% 45%,transparent 0 18%,rgba(37,242,231,.055) 25%,transparent 34% 57%,rgba(92,105,255,.05) 67%,transparent 76%)!important;
+  filter:blur(5px);
+  animation:auth1869Backdrop 42s linear infinite!important;
+}
+@keyframes auth1869Backdrop{to{transform:rotate(360deg) scale(1.04)}}
+
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-artboard.auth1869-artboard{
+  width:min(1640px,calc(100vw - 56px))!important;
+  max-width:1640px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-overlay.auth1869-shell{
+  grid-template-columns:minmax(0,1.32fr) minmax(445px,.68fr)!important;
+  grid-template-rows:minmax(715px,auto) 122px!important;
+  gap:18px!important;
+  padding:18px!important;
+  border-radius:34px!important;
+  border:1px solid rgba(70,225,241,.30)!important;
+  background:
+    linear-gradient(145deg,rgba(4,18,33,.97),rgba(1,8,18,.985))!important;
+  box-shadow:
+    0 38px 120px rgba(0,0,0,.68),
+    0 0 0 1px rgba(48,239,231,.07) inset,
+    0 0 80px rgba(35,202,235,.11),
+    0 0 130px rgba(71,80,255,.045)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-overlay.auth1869-shell::before{
+  background:
+    linear-gradient(118deg,transparent 0 42%,rgba(255,255,255,.035) 49%,transparent 56%)!important;
+  background-size:260% 100%!important;
+  animation:auth1869Sweep 11s ease-in-out infinite!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-overlay.auth1869-shell::after{
+  content:"";
+  position:absolute;
+  inset:8px;
+  border-radius:27px;
+  pointer-events:none;
+  border:1px solid rgba(255,255,255,.018);
+  box-shadow:inset 0 0 80px rgba(36,242,231,.018);
+}
+@keyframes auth1869Sweep{0%,48%{background-position:140% 0}72%,100%{background-position:-140% 0}}
+
+/* HERO */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-hero-panel{
+  min-height:715px!important;
+  padding:40px 42px 34px!important;
+  border-radius:27px!important;
+  border:1px solid rgba(51,220,239,.27)!important;
+  background:
+    radial-gradient(circle at 72% 54%,rgba(31,241,224,.16),transparent 24%),
+    radial-gradient(circle at 84% 15%,rgba(73,101,255,.17),transparent 28%),
+    radial-gradient(circle at 16% 86%,rgba(12,115,169,.14),transparent 26%),
+    linear-gradient(145deg,rgba(4,25,41,.99),rgba(1,10,22,.995))!important;
+  box-shadow:
+    0 24px 58px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,255,255,.045),
+    inset 0 0 80px rgba(30,226,234,.025)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-hero-panel::before{
+  background-image:
+    linear-gradient(rgba(69,222,247,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(69,222,247,.035) 1px,transparent 1px)!important;
+  background-size:42px 42px!important;
+  mask-image:linear-gradient(105deg,rgba(0,0,0,.95),rgba(0,0,0,.34) 68%,transparent)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-hero-panel::after{
+  content:"";
+  position:absolute;
+  right:-8%;
+  top:-18%;
+  width:60%;
+  height:72%;
+  border-radius:50%;
+  border:1px solid rgba(43,236,232,.11);
+  box-shadow:
+    0 0 0 34px rgba(37,231,236,.018),
+    0 0 0 70px rgba(76,95,255,.014);
+  transform:rotate(-12deg);
+  pointer-events:none;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-logo{
+  width:220px!important;
+  filter:drop-shadow(0 0 22px rgba(28,239,234,.19))!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-hero-statuses{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-live-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:40px;
+  padding:0 15px;
+  border-radius:12px;
+  border:1px solid rgba(38,238,204,.25);
+  background:linear-gradient(180deg,rgba(4,38,45,.86),rgba(2,20,29,.92));
+  color:#66ffe5;
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.1em;
+  box-shadow:0 0 28px rgba(36,242,231,.06),inset 0 1px 0 rgba(255,255,255,.04);
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-live-badge i{
+  width:8px;height:8px;border-radius:50%;background:#44ffc8;
+  box-shadow:0 0 0 5px rgba(68,255,200,.08),0 0 14px rgba(68,255,200,.9);
+  animation:auth1869LivePulse 1.4s ease-in-out infinite;
+}
+@keyframes auth1869LivePulse{50%{opacity:.4;transform:scale(.72)}}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-beta-chip{
+  border-color:rgba(244,203,101,.32)!important;
+  color:#ffe5a1!important;
+  background:linear-gradient(180deg,rgba(47,35,11,.68),rgba(20,15,5,.82))!important;
+  box-shadow:0 0 26px rgba(244,203,101,.06),inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-beta-chip i{
+  border-color:rgba(244,203,101,.55)!important;
+  color:#ffe9ad!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-hero-copy{
+  width:58%!important;
+  margin-top:40px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-eyebrow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:16px;
+  color:rgba(199,226,239,.62);
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.16em;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-eyebrow span{
+  padding:7px 10px;
+  border-radius:8px;
+  color:#102328;
+  background:linear-gradient(135deg,#54ffe8,#43baff);
+  box-shadow:0 0 20px rgba(50,232,232,.18);
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-hero-copy h1{
+  max-width:650px;
+  font-size:clamp(54px,4.45vw,82px)!important;
+  line-height:.98!important;
+  letter-spacing:-.055em!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-hero-copy h1 span{
+  background:linear-gradient(115deg,#61ffe9 0%,#31dff1 42%,#6a8dff 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent!important;
+  text-shadow:none!important;
+  filter:drop-shadow(0 0 20px rgba(43,228,236,.20));
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-hero-copy p{
+  max-width:555px!important;
+  margin-top:20px!important;
+  font-size:17px!important;
+  color:rgba(217,235,246,.76)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-kpi-rail{
+  position:absolute;
+  z-index:6;
+  right:34px;
+  top:96px;
+  width:310px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-kpi-rail article{
+  min-height:82px;
+  padding:12px 10px;
+  border-radius:15px;
+  border:1px solid rgba(66,210,238,.16);
+  background:linear-gradient(155deg,rgba(5,31,46,.88),rgba(2,14,26,.92));
+  box-shadow:0 14px 30px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.035);
+  backdrop-filter:blur(14px);
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-kpi-rail span{
+  display:block;color:rgba(184,210,224,.56);font-size:8px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-kpi-rail strong{
+  display:block;margin:6px 0 3px;color:#f7fcff;font-size:22px;line-height:1;font-weight:950;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-kpi-rail em{
+  color:#3af3df;font-size:8px;font-style:normal;font-weight:950;letter-spacing:.08em;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-benefit-list{
+  width:54%!important;
+  gap:10px!important;
+  margin-top:24px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-benefit-item{
+  min-height:60px!important;
+  padding:7px 10px 7px 8px;
+  border-radius:16px;
+  transition:.22s ease;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-benefit-item:hover{
+  background:linear-gradient(90deg,rgba(37,222,227,.07),transparent);
+  transform:translateX(4px);
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-benefit-item>span{
+  border-color:rgba(45,232,229,.30)!important;
+  background:linear-gradient(145deg,rgba(11,50,60,.96),rgba(3,18,31,.96))!important;
+  box-shadow:0 0 24px rgba(31,230,233,.09),inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-benefit-item strong{font-size:15px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-ball-wrap{
+  right:5px!important;
+  bottom:58px!important;
+  width:min(51%,500px)!important;
+  filter:drop-shadow(0 34px 52px rgba(0,0,0,.48))!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-ball-wrap img{
+  border-radius:28px;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,1) 70%,rgba(0,0,0,.82));
+  animation:auth1869BallFloat 5s ease-in-out infinite!important;
+}
+@keyframes auth1869BallFloat{0%,100%{transform:translateY(0) scale(1.01)}50%{transform:translateY(-13px) scale(1.025)}}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-ball-glow{
+  left:9%!important;right:0!important;bottom:5%!important;height:28%!important;
+  background:radial-gradient(ellipse,rgba(34,255,230,.52),rgba(31,127,255,.14) 50%,transparent 75%)!important;
+  filter:blur(22px)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-ball-orbit{
+  position:absolute;z-index:1;left:5%;right:2%;bottom:5%;height:28%;border-radius:50%;border:1px solid rgba(45,244,232,.32);transform:perspective(450px) rotateX(66deg);box-shadow:0 0 20px rgba(46,236,236,.12);animation:auth1869Orbit 8s linear infinite;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-ball-orbit.orbit-b{
+  left:16%;right:12%;bottom:9%;border-color:rgba(95,118,255,.28);animation-direction:reverse;animation-duration:11s;
+}
+@keyframes auth1869Orbit{to{transform:perspective(450px) rotateX(66deg) rotateZ(360deg)}}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-ball-caption{
+  position:absolute;z-index:8;right:4px;bottom:21%;width:126px;padding:12px;border-radius:16px;border:1px solid rgba(55,224,235,.25);background:linear-gradient(155deg,rgba(5,35,49,.94),rgba(3,14,28,.95));box-shadow:0 16px 34px rgba(0,0,0,.30),0 0 28px rgba(36,231,232,.08);backdrop-filter:blur(14px);
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-ball-caption span,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-ball-caption small{display:block;color:rgba(180,213,226,.64);font-size:8px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-ball-caption strong{display:block;margin:5px 0;color:#f5fdff;font-size:29px;font-weight:950;line-height:1;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1567-presentation-button.auth1868-presentation-button{
+  left:42px!important;bottom:30px!important;width:45%!important;max-width:420px!important;min-height:74px!important;border-radius:18px!important;border:1px solid rgba(43,234,230,.31)!important;background:linear-gradient(135deg,rgba(7,48,60,.94),rgba(4,19,34,.94))!important;box-shadow:0 17px 38px rgba(0,0,0,.32),0 0 30px rgba(30,229,233,.08),inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1567-presentation-button.auth1868-presentation-button::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(115deg,transparent 22%,rgba(255,255,255,.10) 48%,transparent 74%);transform:translateX(-120%);transition:transform .7s ease;pointer-events:none;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1567-presentation-button.auth1868-presentation-button:hover::after{transform:translateX(120%)}
+
+/* LOGIN CARD */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-login-panel,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-login-card{
+  min-height:715px!important;
+  border-radius:27px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-login-card{
+  position:relative!important;
+  border:1px solid rgba(84,211,241,.30)!important;
+  background:
+    radial-gradient(circle at 80% 10%,rgba(87,92,255,.13),transparent 30%),
+    radial-gradient(circle at 20% 86%,rgba(31,231,223,.08),transparent 28%),
+    linear-gradient(160deg,rgba(4,23,39,.99),rgba(2,10,22,.995))!important;
+  box-shadow:0 28px 60px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.04),inset 0 0 60px rgba(47,215,235,.025)!important;
+  overflow:hidden!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-login-card::before{
+  content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,rgba(255,255,255,.026),transparent 35% 72%,rgba(57,222,244,.025));
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-login-card::after{
+  content:"";position:absolute;left:12%;right:12%;top:0;height:2px;background:linear-gradient(90deg,transparent,#2cf2e7,#6580ff,transparent);box-shadow:0 0 20px rgba(44,242,231,.45);
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-login-inner{
+  min-height:715px!important;
+  padding:34px 36px 30px!important;
+  justify-content:flex-start!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-login-topline{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:34px;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-secure-pill,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-online-pill{
+  display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:0 11px;border-radius:10px;border:1px solid rgba(55,213,238,.17);background:rgba(3,19,31,.72);font-size:9px;font-weight:950;letter-spacing:.09em;color:rgba(194,224,237,.72);
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-secure-pill svg{width:15px;height:15px;color:#39ebde;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-online-pill{color:#54f6cc;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-online-pill i{width:7px;height:7px;border-radius:50%;background:#44ffc8;box-shadow:0 0 12px rgba(68,255,200,.9);}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-login-heading{width:100%;margin-bottom:24px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-login-heading>span{color:#38ebdf!important;font-size:11px!important;letter-spacing:.16em!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-login-heading h2{
+  margin-top:9px!important;font-size:clamp(38px,3vw,54px)!important;letter-spacing:-.045em!important;line-height:1!important;text-shadow:0 8px 30px rgba(0,0,0,.32);
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-login-heading p{margin-top:11px!important;font-size:15px!important;color:rgba(194,216,229,.65)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-tabs-fixed.auth1868-tabs{
+  min-height:58px!important;margin-bottom:22px!important;padding:5px!important;border-radius:17px!important;border:1px solid rgba(62,202,232,.18)!important;background:rgba(1,11,22,.83)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-tabs .auth481-tab{height:48px!important;border-radius:13px!important;font-size:14px!important;font-weight:900!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-tabs .auth481-tab.is-active{
+  color:#04171c!important;background:linear-gradient(120deg,#36f2df,#47b8ff 65%,#7183ff)!important;box-shadow:0 10px 24px rgba(45,211,242,.24),inset 0 1px 0 rgba(255,255,255,.36)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-form-fixed.auth1868-form{gap:13px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-form .auth481-label{font-size:12px!important;letter-spacing:.025em!important;color:rgba(235,247,252,.88)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-form .auth481-input-shell{
+  min-height:64px!important;padding:0 17px!important;border-radius:15px!important;border:1px solid rgba(48,183,220,.20)!important;background:linear-gradient(180deg,rgba(2,16,29,.96),rgba(1,10,20,.98))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.02),0 9px 24px rgba(0,0,0,.14)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-form .auth481-input-shell:focus-within{
+  border-color:rgba(47,239,231,.70)!important;box-shadow:0 0 0 4px rgba(47,239,231,.08),0 0 28px rgba(42,215,235,.10),inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-form .auth481-field-icon{color:#2be6df!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-form .auth481-input{font-size:15px!important;color:#f1fbff!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-remember-row.auth1868-remember-row{margin-top:1px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-forgot-link{color:#35eee0!important;text-shadow:0 0 14px rgba(53,238,224,.20);}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-submit-fixed.auth1868-submit{
+  min-height:64px!important;margin-top:6px!important;border-radius:16px!important;background:linear-gradient(105deg,#2af1dc 0%,#3dc9ff 48%,#687eff 100%)!important;color:#041319!important;font-size:17px!important;font-weight:950!important;box-shadow:0 15px 34px rgba(49,181,255,.24),0 0 30px rgba(43,237,224,.12),inset 0 1px 0 rgba(255,255,255,.45)!important;position:relative!important;overflow:hidden!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-submit-fixed.auth1868-submit::after{
+  content:"";position:absolute;top:-100%;left:-30%;width:30%;height:300%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent);transform:rotate(22deg);animation:auth1869ButtonShine 4.5s ease-in-out infinite;
+}
+@keyframes auth1869ButtonShine{0%,64%{left:-42%}84%,100%{left:118%}}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-status-line.auth1868-status-line{
+  min-height:46px!important;margin-top:0!important;border-radius:14px!important;border:1px solid rgba(49,192,224,.14)!important;background:linear-gradient(180deg,rgba(5,31,44,.65),rgba(2,17,29,.72))!important;color:rgba(179,207,220,.62)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-trust-row{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:0;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-trust-row span{
+  min-height:50px;padding:8px 7px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:12px;border:1px solid rgba(59,191,220,.12);background:rgba(2,15,27,.68);color:rgba(164,197,213,.55);font-size:7px;font-weight:950;letter-spacing:.07em;text-align:center;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-trust-row i{color:#42eee0;font-size:12px;font-style:normal;font-weight:950;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-switch-copy{margin-top:auto!important;padding-top:18px!important;color:rgba(178,204,218,.60)!important;}
+
+/* FOOTER */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth617-feature-strip.auth1869-feature-strip{
+  grid-column:1 / -1!important;
+  min-height:122px!important;
+  padding:0!important;
+  gap:12px!important;
+  background:transparent!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-feature-strip .auth617-feature-card{
+  position:relative!important;min-height:110px!important;padding:18px 16px!important;border-radius:20px!important;border:1px solid rgba(55,196,225,.16)!important;background:linear-gradient(145deg,rgba(5,28,42,.88),rgba(2,14,26,.92))!important;box-shadow:0 14px 32px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.035)!important;overflow:hidden!important;transition:.25s ease!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-feature-strip .auth617-feature-card::after{
+  content:"";position:absolute;left:18px;right:18px;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#2ef1e1,#5b7eff,transparent);opacity:.55;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-feature-strip .auth617-feature-card:hover{transform:translateY(-4px);border-color:rgba(58,232,231,.30)!important;box-shadow:0 20px 40px rgba(0,0,0,.28),0 0 30px rgba(34,224,232,.06)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-feature-strip .auth617-feature-icon{
+  width:48px!important;height:48px!important;border-radius:15px!important;border-color:rgba(46,231,227,.24)!important;background:linear-gradient(145deg,rgba(10,52,61,.94),rgba(3,19,33,.96))!important;box-shadow:0 0 24px rgba(39,228,231,.08)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-feature-strip strong{font-size:14px!important;color:#f3fbff!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-feature-strip p{font-size:10px!important;color:rgba(171,201,216,.58)!important;}
+
+/* Porządkujemy elementy poboczne — nadal działają, ale nie wyglądają jak osobna biedna kolumna. */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{display:none!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth627-social-dock{
+  left:28px!important;top:24px!important;width:auto!important;display:flex!important;grid-template-columns:none!important;gap:7px!important;padding:7px 9px!important;border-radius:16px!important;background:rgba(3,18,31,.82)!important;border:1px solid rgba(56,201,230,.17)!important;box-shadow:0 14px 34px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth627-social-link{width:34px!important;height:34px!important;min-height:34px!important;border-radius:10px!important;transition:.2s ease!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth627-social-link:hover{transform:translateY(-3px)!important;border-color:rgba(48,237,229,.36)!important;box-shadow:0 8px 18px rgba(0,0,0,.25),0 0 18px rgba(42,226,231,.10)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth627-social-icon,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth627-social-icon svg{width:17px!important;height:17px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth620-language-corner{top:22px!important;right:28px!important;}
+
+@media (max-width:1400px){
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen{padding-top:70px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-overlay.auth1869-shell{grid-template-columns:minmax(0,1.18fr) minmax(420px,.82fr)!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-hero-copy h1{font-size:58px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-kpi-rail{width:280px;}
+}
+@media (max-width:1100px){
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen{padding:72px 14px 100px!important;align-items:flex-start!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-artboard.auth1869-artboard{width:100%!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-overlay.auth1869-shell{grid-template-columns:1fr!important;grid-template-rows:auto auto auto!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-hero-panel{min-height:680px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-login-panel,
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-login-card,
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-login-inner{min-height:650px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-feature-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+}
+@media (max-width:700px){
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen{padding:68px 7px 92px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth609-overlay.auth1869-shell{padding:8px!important;gap:10px!important;border-radius:22px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-hero-panel{min-height:720px!important;padding:24px 20px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-logo{width:155px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-hero-statuses{gap:5px;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-live-badge{display:none;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-beta-chip{min-height:34px!important;font-size:8px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-hero-copy{width:100%!important;margin-top:28px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-hero-copy h1{font-size:41px!important;max-width:360px;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-hero-copy p{font-size:14px!important;max-width:360px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-kpi-rail{position:relative;right:auto;top:auto;width:100%;margin-top:22px;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-benefit-list{width:100%!important;margin-top:18px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-benefit-item:nth-child(3){display:none;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-ball-wrap{right:-30px!important;bottom:70px!important;width:64%!important;opacity:.68;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-ball-caption{display:none;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1567-presentation-button.auth1868-presentation-button{left:20px!important;width:calc(100% - 40px)!important;max-width:none!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-login-inner{padding:26px 18px 24px!important;min-height:620px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-login-topline{margin-bottom:24px;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-secure-pill{font-size:8px;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-online-pill{display:none;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1868-login-heading h2{font-size:39px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth1869-feature-strip{grid-template-columns:1fr!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth627-social-dock{left:8px!important;top:12px!important;transform:scale(.86);transform-origin:left top;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen .auth620-language-corner{top:12px!important;right:8px!important;}
+}
+@media (prefers-reduced-motion:reduce){
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen *,
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1869-screen::after{animation:none!important;scroll-behavior:auto!important;}
+}

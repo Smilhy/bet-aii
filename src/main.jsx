@@ -23341,7 +23341,7 @@ function AuthView({ onAuth }) {
   ]), [])
 
   return (
-    <div className="auth609-screen auth1868-screen" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
+    <div className="auth609-screen auth1868-screen auth1869-screen" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
       <div className="auth620-language-corner">
         <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} floating ariaLabel={t.languageLabel} />
       </div>
@@ -23385,18 +23385,22 @@ function AuthView({ onAuth }) {
         </div>
       </aside>
 
-      <div className="auth609-artboard auth1868-artboard">
-        <div className="auth609-overlay auth1868-shell">
-          <section className="auth1868-hero-panel" aria-label={authLang === 'en' ? 'Bet plus AI advantages' : 'Zalety Bet plus AI'}>
+      <div className="auth609-artboard auth1868-artboard auth1869-artboard">
+        <div className="auth609-overlay auth1868-shell auth1869-shell">
+          <section className="auth1868-hero-panel auth1869-hero-panel" aria-label={authLang === 'en' ? 'Bet plus AI advantages' : 'Zalety Bet plus AI'}>
             <div className="auth1868-hero-top">
               <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth1868-logo" draggable="false" />
-              <div className="auth1868-beta-chip">
-                <span>{authLang === 'en' ? 'BETA VERSION' : 'WERSJA BETA'}</span>
-                <i title={authLang === 'en' ? 'The platform is continuously improved.' : 'Platforma jest stale rozwijana.'}>i</i>
+              <div className="auth1869-hero-statuses">
+                <div className="auth1869-live-badge"><i />{authLang === 'en' ? 'LIVE INTELLIGENCE' : 'INTELIGENCJA LIVE'}</div>
+                <div className="auth1868-beta-chip">
+                  <span>{authLang === 'en' ? 'BETA VERSION' : 'WERSJA BETA'}</span>
+                  <i title={authLang === 'en' ? 'The platform is continuously improved.' : 'Platforma jest stale rozwijana.'}>i</i>
+                </div>
               </div>
             </div>
 
             <div className="auth1868-hero-copy">
+              <div className="auth1869-eyebrow"><span>BET+AI</span>{authLang === 'en' ? 'PREMIUM SPORTS INTELLIGENCE' : 'PREMIUM SPORTS INTELLIGENCE'}</div>
               <h1>
                 {authLang === 'en' ? <>Smarter bets.<br />Powered by <span>AI.</span></> : <>Mądrzejsze typy.<br />Napędzane przez <span>AI.</span></>}
               </h1>
@@ -23405,6 +23409,12 @@ function AuthView({ onAuth }) {
                   ? 'Real-time analysis, smart picks and better decisions in one premium platform.'
                   : 'Analizy w czasie rzeczywistym, inteligentne typy i lepsze decyzje w jednej platformie premium.'}
               </p>
+            </div>
+
+            <div className="auth1869-kpi-rail" aria-label={authLang === 'en' ? 'Live platform metrics' : 'Metryki platformy na żywo'}>
+              <article><span>{t.aiAccuracy}</span><strong>{normalizeLiveCount(liveStats.aiAccuracy, 76)}%</strong><em>{authLang === 'en' ? 'MODEL' : 'MODEL'}</em></article>
+              <article><span>{t.activeNow}</span><strong>{formatCompactNumber(liveStats.activeNow)}</strong><em>LIVE</em></article>
+              <article><span>{t.tipsterTipsToday}</span><strong>{formatCompactNumber(liveStats.tipsterTipsToday)}</strong><em>{authLang === 'en' ? 'TODAY' : 'DZISIAJ'}</em></article>
             </div>
 
             <div className="auth1868-benefit-list">
@@ -23432,8 +23442,11 @@ function AuthView({ onAuth }) {
             </div>
 
             <div className="auth1868-ball-wrap" aria-hidden="true">
+              <div className="auth1869-ball-orbit orbit-a" />
+              <div className="auth1869-ball-orbit orbit-b" />
               <div className="auth1868-ball-glow" />
               <img src="/auth-hero-ball-v1868.webp" alt="" draggable="false" />
+              <div className="auth1869-ball-caption"><span>{authLang === 'en' ? 'LIVE MODEL' : 'MODEL LIVE'}</span><strong>87%</strong><small>{authLang === 'en' ? 'confidence scan' : 'skan pewności'}</small></div>
             </div>
 
             <button
@@ -23450,9 +23463,13 @@ function AuthView({ onAuth }) {
             </button>
           </section>
 
-          <section className="auth609-left-panel auth1868-login-panel">
-            <div className="auth609-panel-shell auth609-panel-shell-fixed auth1868-login-card">
-              <div className="auth609-center-wrap auth1868-login-inner">
+          <section className="auth609-left-panel auth1868-login-panel auth1869-login-panel">
+            <div className="auth609-panel-shell auth609-panel-shell-fixed auth1868-login-card auth1869-login-card">
+              <div className="auth609-center-wrap auth1868-login-inner auth1869-login-inner">
+                <div className="auth1869-login-topline">
+                  <span className="auth1869-secure-pill"><IconShield /> {authLang === 'en' ? 'SECURE MEMBER ACCESS' : 'BEZPIECZNY DOSTĘP'}</span>
+                  <span className="auth1869-online-pill"><i />{authLang === 'en' ? 'SYSTEM ONLINE' : 'SYSTEM ONLINE'}</span>
+                </div>
                 <div className="auth1868-login-heading">
                   <span>{mode === 'login' ? (authLang === 'en' ? 'WELCOME BACK' : 'WITAJ PONOWNIE') : (authLang === 'en' ? 'CREATE ACCOUNT' : 'UTWÓRZ KONTO')}</span>
                   <h2>{mode === 'login' ? (authLang === 'en' ? 'Welcome back!' : 'Witaj ponownie!') : (authLang === 'en' ? 'Join Bet+AI' : 'Dołącz do Bet+AI')}</h2>
@@ -23536,6 +23553,12 @@ function AuthView({ onAuth }) {
                     <span className="auth609-status-shield"><IconShield /></span>
                     <span>{mode === 'login' ? t.submitNoteLogin : t.submitNoteRegister}</span>
                   </div>
+
+                  <div className="auth1869-trust-row" aria-label={authLang === 'en' ? 'Security information' : 'Informacje o bezpieczeństwie'}>
+                    <span><i>256</i>{authLang === 'en' ? 'BIT ENCRYPTION' : 'SZYFROWANIE BIT'}</span>
+                    <span><i>24/7</i>{authLang === 'en' ? 'LIVE DATA' : 'DANE LIVE'}</span>
+                    <span><i>AI</i>{authLang === 'en' ? 'SMART ENGINE' : 'SMART ENGINE'}</span>
+                  </div>
                 </form>
 
                 {authMessage ? (
@@ -23554,7 +23577,7 @@ function AuthView({ onAuth }) {
             </div>
           </section>
 
-          <div className="auth617-feature-strip auth1868-feature-strip" aria-label={t.benefitsLabel}>
+          <div className="auth617-feature-strip auth1868-feature-strip auth1869-feature-strip" aria-label={t.benefitsLabel}>
             <div className="auth617-feature-card">
               <span className="auth617-feature-icon"><IconShield /></span>
               <div><strong>{t.safeData}</strong><p>{t.safeDataText}</p></div>
