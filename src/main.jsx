@@ -23341,7 +23341,7 @@ function AuthView({ onAuth }) {
   ]), [])
 
   return (
-    <div className="auth609-screen auth1868-screen auth1869-screen auth1870-screen auth1871-screen" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
+    <div className="auth609-screen auth1868-screen auth1869-screen auth1870-screen auth1871-screen auth1872-screen" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
       <div className="auth620-language-corner">
         <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} floating ariaLabel={t.languageLabel} />
       </div>

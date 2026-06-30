@@ -78877,3 +78877,345 @@ html body #root:not(:has(.app-shell)) .auth609-screen.auth1871-screen .auth1870-
   html body #root:not(:has(.app-shell)) .auth609-screen.auth1871-screen *,
   html body #root:not(:has(.app-shell)) .auth609-screen.auth1871-screen::after{animation:none!important;transition:none!important;}
 }
+
+/* =====================================================================
+   WERSJA 1872 — LOGIN LAYOUT REPAIR / PREMIUM INTEGRATED SCENE
+   Naprawa rozjechanego układu. Tylko CSS — logika auth bez zmian.
+   ===================================================================== */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen{
+  min-height:100dvh!important;
+  width:100%!important;
+  padding:34px 24px 52px 72px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:auto!important;
+  transform:none!important;
+  zoom:1!important;
+  background:
+    radial-gradient(900px 540px at 43% 48%,rgba(19,184,218,.13),transparent 70%),
+    radial-gradient(720px 520px at 88% 15%,rgba(81,91,255,.11),transparent 72%),
+    linear-gradient(135deg,#010812 0%,#020d19 48%,#010610 100%)!important;
+}
+
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth609-artboard{
+  position:relative!important;
+  display:block!important;
+  width:min(1580px,calc(100vw - 108px))!important;
+  max-width:1580px!important;
+  min-width:0!important;
+  min-height:820px!important;
+  margin:0 auto!important;
+  padding:0!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  transform:none!important;
+  zoom:1!important;
+  filter:none!important;
+  overflow:visible!important;
+}
+
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth609-overlay{
+  position:relative!important;
+  inset:auto!important;
+  width:100%!important;
+  min-height:820px!important;
+  margin:0!important;
+  padding:14px!important;
+  display:grid!important;
+  grid-template-columns:172px minmax(0,1fr) 430px!important;
+  grid-template-rows:minmax(690px,1fr) 100px!important;
+  gap:12px!important;
+  transform:none!important;
+  border-radius:28px!important;
+  overflow:hidden!important;
+  border:1px solid rgba(57,224,238,.34)!important;
+  background:
+    radial-gradient(circle at 48% 30%,rgba(38,224,229,.08),transparent 38%),
+    linear-gradient(145deg,rgba(7,28,43,.97),rgba(2,11,22,.985))!important;
+  box-shadow:
+    0 38px 100px rgba(0,0,0,.62),
+    0 0 0 1px rgba(51,223,235,.07) inset,
+    0 0 54px rgba(35,218,229,.13)!important;
+}
+
+/* rail statystyk — naprawdę wewnątrz ramy, bez fixed/absolute */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-stats-rail{
+  grid-column:1!important;
+  grid-row:1 / 3!important;
+  position:relative!important;
+  inset:auto!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:17px 10px 14px!important;
+  transform:none!important;
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+  border-radius:19px!important;
+  border:1px solid rgba(54,217,230,.22)!important;
+  background:
+    radial-gradient(circle at 50% -5%,rgba(36,240,224,.14),transparent 35%),
+    linear-gradient(180deg,rgba(7,32,47,.97),rgba(2,14,26,.99))!important;
+  box-shadow:inset 0 1px 0 rgba(176,247,255,.07),0 18px 38px rgba(0,0,0,.27)!important;
+  z-index:6!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1870-stats-title{
+  display:flex!important;
+  flex-direction:column!important;
+  margin:0 3px 10px!important;
+  padding:0 0 11px!important;
+  border-bottom:1px solid rgba(73,218,231,.14)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1870-stats-title span{
+  color:#25efe4!important;font-size:8px!important;font-weight:950!important;letter-spacing:.17em!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1870-stats-title strong{
+  color:#f1fbff!important;font-size:15px!important;line-height:1.2!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth623-side-head{
+  display:flex!important;justify-content:center!important;margin:0 0 9px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth623-side-list{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:repeat(6,minmax(78px,1fr))!important;
+  gap:8px!important;
+  flex:1!important;
+  min-height:0!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth623-side-card{
+  width:100%!important;
+  min-height:0!important;
+  padding:9px 7px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  text-align:center!important;
+  border-radius:14px!important;
+  border:1px solid rgba(60,211,230,.14)!important;
+  background:linear-gradient(145deg,rgba(10,42,58,.79),rgba(3,18,31,.9))!important;
+  box-shadow:inset 0 1px 0 rgba(177,247,255,.045)!important;
+  transform:none!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth623-side-icon{
+  width:32px!important;height:32px!important;display:grid!important;place-items:center!important;
+  border-radius:10px!important;color:#2deee5!important;background:rgba(12,77,86,.33)!important;
+  border:1px solid rgba(50,228,230,.2)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth623-side-card b{
+  font-size:19px!important;line-height:1!important;color:#f7fcff!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth623-side-card small{
+  font-size:9px!important;line-height:1.2!important;color:rgba(199,222,232,.72)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth623-side-foot{
+  display:none!important;
+}
+
+/* hero — pełna szerokość kolumny, obraz jako część tła, bez prostokątnej wklejki */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-hero-panel{
+  grid-column:2!important;
+  grid-row:1!important;
+  position:relative!important;
+  inset:auto!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:690px!important;
+  margin:0!important;
+  padding:30px 32px!important;
+  transform:none!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  border-radius:20px!important;
+  border:1px solid rgba(59,218,234,.23)!important;
+  background:
+    linear-gradient(90deg,rgba(2,14,25,.99) 0%,rgba(2,14,25,.95) 32%,rgba(2,14,25,.56) 50%,rgba(2,14,25,.10) 72%),
+    linear-gradient(180deg,rgba(3,14,25,.16),rgba(2,12,22,.28)),
+    url('/auth-hero-scene-v1870.webp') right center / auto 110% no-repeat,
+    linear-gradient(135deg,#061f31,#020d19)!important;
+  box-shadow:inset 0 1px 0 rgba(177,248,255,.065),0 16px 42px rgba(0,0,0,.24)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-hero-panel::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+  pointer-events:none!important;
+  opacity:.4!important;
+  background:
+    radial-gradient(ellipse at 72% 55%,rgba(29,237,227,.15),transparent 37%),
+    linear-gradient(rgba(55,221,235,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(55,221,235,.035) 1px,transparent 1px)!important;
+  background-size:auto,52px 52px,52px 52px!important;
+  -webkit-mask-image:linear-gradient(90deg,#000,rgba(0,0,0,.55) 55%,transparent 98%)!important;
+  mask-image:linear-gradient(90deg,#000,rgba(0,0,0,.55) 55%,transparent 98%)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-hero-panel::after{
+  content:""!important;
+  position:absolute!important;
+  inset:auto -8% -18% 38%!important;
+  height:48%!important;
+  z-index:2!important;
+  pointer-events:none!important;
+  background:radial-gradient(ellipse,rgba(31,238,225,.18),rgba(43,121,255,.06) 43%,transparent 72%)!important;
+  filter:blur(20px)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1870-ball-stage{
+  display:none!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-scene-ambient{
+  display:block!important;position:absolute!important;inset:0!important;z-index:2!important;pointer-events:none!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-hero-top,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-hero-copy,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-benefit-list,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1567-presentation-button{
+  position:relative!important;z-index:8!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-hero-top{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;width:100%!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-logo{
+  width:178px!important;max-width:40%!important;height:auto!important;transform:none!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-hero-copy{
+  position:relative!important;
+  width:51%!important;
+  max-width:520px!important;
+  margin:46px 0 0!important;
+  left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+  transform:none!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-hero-copy h1{
+  margin:0!important;
+  font-size:clamp(48px,3.45vw,67px)!important;
+  line-height:.94!important;
+  letter-spacing:-.055em!important;
+  text-wrap:balance!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-hero-copy p{
+  max-width:450px!important;margin:18px 0 0!important;font-size:14px!important;line-height:1.55!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-benefit-list{
+  width:48%!important;max-width:480px!important;margin-top:24px!important;gap:7px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-benefit-item{
+  min-height:51px!important;padding:7px 9px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1567-presentation-button.auth1868-presentation-button{
+  position:absolute!important;left:30px!important;bottom:24px!important;width:288px!important;min-height:58px!important;
+}
+
+/* login — stała, czytelna szerokość; zero ściskania */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-login-panel{
+  grid-column:3!important;grid-row:1!important;
+  position:relative!important;inset:auto!important;width:100%!important;min-width:0!important;margin:0!important;transform:none!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-login-card{
+  width:100%!important;height:100%!important;min-height:690px!important;margin:0!important;transform:none!important;
+  border-radius:20px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-login-inner{
+  width:100%!important;min-height:690px!important;padding:30px 30px 24px!important;transform:none!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-login-heading h2{
+  font-size:42px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-form .auth481-input-shell,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-form .auth481-input-wrap{
+  min-height:53px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-submit{
+  min-height:57px!important;font-size:16px!important;
+}
+
+/* dolne kafle zajmują hero + login, bez pustej przestrzeni */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-feature-strip{
+  grid-column:2 / 4!important;
+  grid-row:2!important;
+  position:relative!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:10px!important;
+  transform:none!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-feature-strip .auth617-feature-card{
+  height:100px!important;min-height:100px!important;padding:16px!important;
+}
+
+/* social — mały dock, nie wpływa na layout */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1870-social-rail{
+  position:fixed!important;left:14px!important;top:50%!important;transform:translateY(-50%)!important;
+  width:42px!important;z-index:100!important;
+}
+
+@media (max-width:1500px){
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen{padding:26px 18px 42px 62px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth609-artboard{width:calc(100vw - 82px)!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth609-overlay{
+    grid-template-columns:146px minmax(0,1fr) 395px!important;
+    grid-template-rows:minmax(650px,1fr) 92px!important;
+    min-height:768px!important;
+  }
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-login-card,
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-login-inner,
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-hero-panel{min-height:650px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-hero-copy h1{font-size:50px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-login-heading h2{font-size:37px!important;}
+}
+
+@media (max-width:1160px){
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen{padding:70px 12px 90px!important;align-items:flex-start!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth609-artboard{width:min(980px,100%)!important;min-height:0!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth609-overlay{
+    grid-template-columns:1fr 390px!important;
+    grid-template-rows:auto auto auto!important;
+    min-height:0!important;
+  }
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-stats-rail{
+    grid-column:1 / 3!important;grid-row:1!important;height:auto!important;min-height:132px!important;
+  }
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1870-stats-title,
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth623-side-head{display:none!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth623-side-list{
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;grid-template-rows:1fr!important;
+  }
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-hero-panel{grid-column:1!important;grid-row:2!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-login-panel{grid-column:2!important;grid-row:2!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-feature-strip{grid-column:1 / 3!important;grid-row:3!important;}
+}
+
+@media (max-width:850px){
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth609-overlay{display:flex!important;flex-direction:column!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-stats-rail{order:1!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth623-side-list{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:repeat(2,1fr)!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-hero-panel{order:2!important;min-height:650px!important;background-size:auto 100%!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-login-panel{order:3!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-feature-strip{order:4!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-hero-copy{width:72%!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-benefit-list{width:70%!important;}
+}
+
+@media (max-width:520px){
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen{padding:62px 5px 88px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth609-overlay{padding:7px!important;border-radius:18px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth623-side-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(3,1fr)!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-hero-panel{min-height:620px!important;padding:20px 17px!important;background-position:62% center!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-hero-copy{width:100%!important;margin-top:34px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-hero-copy h1{font-size:40px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1868-benefit-list{width:100%!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-login-inner{padding:24px 17px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-feature-strip{grid-template-columns:1fr!important;}
+}
