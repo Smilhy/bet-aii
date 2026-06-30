@@ -22755,87 +22755,105 @@ function AuthView({ onAuth }) {
   const t = authTranslations[authLang] || authTranslations.pl
 
   const landingCopyV1866 = authLang === 'pl' ? {
-    beta: 'WERSJA BETA',
+    beta: 'INTELLIGENCE BETA',
     navHow: 'Jak działa',
     navBenefits: 'Możliwości',
     navStats: 'Statystyki',
-    eyebrow: 'ANALITYKA SPORTOWA WSPOMAGANA AI',
-    titleLead: 'Typy sportowe, statystyki i ranking typerów',
-    titleAccent: 'w jednym miejscu',
-    lead: 'Bet+AI porządkuje dane meczowe, wyniki modeli i aktywność społeczności. Sprawdzaj analizy, porównuj historię wyników i podejmuj własne decyzje na podstawie danych.',
-    badges: ['Analizy AI', 'Dane live', 'Historia wyników'],
+    eyebrow: 'BET+AI INTELLIGENCE PLATFORM',
+    titleLead: 'Typy sportowe i analiza AI',
+    titleAccent: 'w standardzie premium',
+    lead: 'Ekskluzywne centrum analityczne łączące modele AI, dane meczowe, transparentną historię wyników i społeczność typerów. Wszystko w jednym, dopracowanym środowisku.',
+    badges: ['AI Match Intelligence', 'Weryfikowalne wyniki', 'Dane live'],
     registerCta: 'Załóż darmowe konto',
     loginCta: 'Mam już konto',
     watchCta: 'Obejrzyj prezentację',
     watchSub: 'Zobacz platformę w praktyce',
+    engineKicker: 'AI INTELLIGENCE ENGINE',
+    engineStatus: 'SYSTEM ONLINE',
+    engineTitle: 'Skan rynku w czasie rzeczywistym',
+    engineScan: 'Modele analizują dane, formę i sygnały meczowe',
+    engineConfidence: 'Wynik modelu',
+    engineMarkets: 'Typy dziś',
+    engineCommunity: 'Typy społeczności',
+    engineSecurity: 'Prywatny dostęp',
+    accessLabel: 'SECURE MEMBER ACCESS',
     risk: '18+ • Zakłady wiążą się z ryzykiem. Bet+AI nie gwarantuje zysku.',
     liveTitle: 'Dane platformy na żywo',
     liveSubtitle: 'Aktualizowane automatycznie co 30 sekund',
-    panelLoginTitle: 'Witaj ponownie',
-    panelRegisterTitle: 'Dołącz do Bet+AI',
-    panelLoginText: 'Zaloguj się, aby przejść do analiz, typów i społeczności.',
-    panelRegisterText: 'Utwórz konto i poznaj wszystkie funkcje platformy.',
+    panelLoginTitle: 'Wejdź do centrum analiz',
+    panelRegisterTitle: 'Otwórz dostęp do Bet+AI',
+    panelLoginText: 'Zaloguj się do swojego prywatnego panelu analitycznego.',
+    panelRegisterText: 'Utwórz konto i odblokuj pełne środowisko Bet+AI.',
     securePanel: 'Bezpieczne logowanie przez Supabase',
-    featuresEyebrow: 'CO ZNAJDZIESZ W ŚRODKU',
-    featuresTitle: 'Narzędzia do analizy, bez obietnic łatwego zysku',
-    featuresLead: 'Platforma pomaga uporządkować informacje. Każdy typ pozostaje prognozą, a ostateczna decyzja zawsze należy do Ciebie.',
+    featuresEyebrow: 'BET+AI ECOSYSTEM',
+    featuresTitle: 'Jedno środowisko. Wiele warstw przewagi informacyjnej.',
+    featuresLead: 'Precyzyjny interfejs, dane live i historia wyników pomagają szybciej ocenić sytuację. Każdy typ pozostaje prognozą, a decyzja zawsze należy do Ciebie.',
     features: [
       ['Analizy AI', 'Modele porządkują dane meczowe i wskazują najważniejsze sygnały do dalszej oceny.'],
       ['Historia wyników', 'Przeglądaj rozliczone typy, wyniki i statystyki zamiast opierać się na samych deklaracjach.'],
       ['Ranking typerów', 'Porównuj profile społeczności na podstawie publikowanych wyników i aktywności.'],
       ['Aktualizacje live', 'Śledź bieżące dane platformy i nowe materiały w jednym przejrzystym panelu.']
     ],
-    processEyebrow: 'JAK TO DZIAŁA',
-    processTitle: 'Od danych do własnej decyzji',
+    processEyebrow: 'INTELLIGENCE FLOW',
+    processTitle: 'Od surowych danych do świadomej decyzji',
     process: [
       ['1', 'Sprawdź analizę', 'Zobacz statystyki, rynek i argumenty przedstawione przy typie.'],
       ['2', 'Porównaj wyniki', 'Zweryfikuj historię modelu lub typera, liczbę typów i sposób rozliczania.'],
       ['3', 'Oceń ryzyko', 'Ustal własny budżet i nie traktuj żadnej prognozy jako gwarancji.']
     ],
-    socialTitle: 'Dołącz do społeczności Bet+AI',
-    socialText: 'Aktualności, materiały edukacyjne i rozmowy o analizie sportowej.',
-    footer: 'Bet+AI • AI Match Picks',
+    socialTitle: 'Wejdź do ekosystemu Bet+AI',
+    socialText: 'Aktualności, analizy, materiały edukacyjne i rozmowy społeczności skupionej wokół danych sportowych.',
+    footer: 'Bet+AI • Sports Intelligence Ecosystem',
     betaNote: 'Platforma jest rozwijana. Zgłoszenia dotyczące wyglądu możesz wysłać przez czat pomocy.'
   } : {
-    beta: 'BETA VERSION',
+    beta: 'INTELLIGENCE BETA',
     navHow: 'How it works',
     navBenefits: 'Features',
     navStats: 'Live stats',
-    eyebrow: 'AI-ASSISTED SPORTS ANALYTICS',
-    titleLead: 'Sports picks, statistics and tipster rankings',
-    titleAccent: 'in one place',
-    lead: 'Bet+AI organizes match data, model results and community activity. Review analyses, compare historical performance and make your own data-informed decisions.',
-    badges: ['AI analysis', 'Live data', 'Result history'],
+    eyebrow: 'BET+AI INTELLIGENCE PLATFORM',
+    titleLead: 'Sports picks and AI analysis',
+    titleAccent: 'in a premium environment',
+    lead: 'An exclusive analytics hub combining AI models, match data, transparent performance history and a community of tipsters in one refined environment.',
+    badges: ['AI Match Intelligence', 'Verifiable results', 'Live data'],
     registerCta: 'Create a free account',
     loginCta: 'I already have an account',
     watchCta: 'Watch the presentation',
     watchSub: 'See the platform in action',
+    engineKicker: 'AI INTELLIGENCE ENGINE',
+    engineStatus: 'SYSTEM ONLINE',
+    engineTitle: 'Real-time market scan',
+    engineScan: 'Models analyze data, form and match signals',
+    engineConfidence: 'Model score',
+    engineMarkets: 'Picks today',
+    engineCommunity: 'Community picks',
+    engineSecurity: 'Private access',
+    accessLabel: 'SECURE MEMBER ACCESS',
     risk: '18+ • Betting involves risk. Bet+AI does not guarantee profit.',
     liveTitle: 'Live platform data',
     liveSubtitle: 'Automatically refreshed every 30 seconds',
-    panelLoginTitle: 'Welcome back',
-    panelRegisterTitle: 'Join Bet+AI',
-    panelLoginText: 'Log in to access analyses, picks and the community.',
-    panelRegisterText: 'Create an account and explore all platform features.',
+    panelLoginTitle: 'Enter the intelligence hub',
+    panelRegisterTitle: 'Unlock Bet+AI access',
+    panelLoginText: 'Log in to your private sports intelligence dashboard.',
+    panelRegisterText: 'Create an account and unlock the full Bet+AI environment.',
     securePanel: 'Secure authentication powered by Supabase',
-    featuresEyebrow: 'WHAT YOU WILL FIND INSIDE',
-    featuresTitle: 'Analysis tools without promises of easy profit',
-    featuresLead: 'The platform helps you organize information. Every pick is still a forecast, and the final decision is always yours.',
+    featuresEyebrow: 'BET+AI ECOSYSTEM',
+    featuresTitle: 'One environment. Multiple layers of information advantage.',
+    featuresLead: 'A precise interface, live data and performance history help you evaluate situations faster. Every pick remains a forecast, and the final decision is always yours.',
     features: [
       ['AI analysis', 'Models organize match data and surface important signals for further evaluation.'],
       ['Result history', 'Review settled picks, outcomes and statistics instead of relying on claims alone.'],
       ['Tipster rankings', 'Compare community profiles using published results and activity.'],
       ['Live updates', 'Follow current platform data and new content in one clear dashboard.']
     ],
-    processEyebrow: 'HOW IT WORKS',
-    processTitle: 'From data to your own decision',
+    processEyebrow: 'INTELLIGENCE FLOW',
+    processTitle: 'From raw data to an informed decision',
     process: [
       ['1', 'Review the analysis', 'Check the statistics, market and reasoning shown with each pick.'],
       ['2', 'Compare results', 'Verify model or tipster history, pick volume and settlement method.'],
       ['3', 'Assess the risk', 'Set your own budget and never treat a forecast as a guarantee.']
     ],
-    socialTitle: 'Join the Bet+AI community',
-    socialText: 'Updates, educational materials and conversations about sports analysis.',
+    socialTitle: 'Enter the Bet+AI ecosystem',
+    socialText: 'Updates, analysis, educational content and community discussions focused on sports data.',
     footer: 'Bet+AI • AI Match Picks',
     betaNote: 'The platform is under active development. You can report visual issues through the support chat.'
   }
@@ -23427,7 +23445,7 @@ function AuthView({ onAuth }) {
   ]), [])
 
   return (
-    <div className="auth609-screen auth-seo-v1866" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
+    <div className="auth609-screen auth-seo-v1866 auth-ultra-v1867" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
       <span className="auth1866-bg-orb auth1866-bg-orb-one" aria-hidden="true" />
       <span className="auth1866-bg-orb auth1866-bg-orb-two" aria-hidden="true" />
       <span className="auth1866-grid" aria-hidden="true" />
@@ -23457,6 +23475,31 @@ function AuthView({ onAuth }) {
               <span>{landingCopyV1866.titleAccent}</span>
             </h1>
             <p className="auth1866-lead">{landingCopyV1866.lead}</p>
+
+            <div className="auth1867-intelligence" aria-label={landingCopyV1866.engineKicker}>
+              <div className="auth1867-intelligence-head">
+                <span><i />{landingCopyV1866.engineKicker}</span>
+                <b><i />{landingCopyV1866.engineStatus}</b>
+              </div>
+              <div className="auth1867-intelligence-body">
+                <div
+                  className="auth1867-score"
+                  style={{ '--auth1867-score': Math.max(0, Math.min(100, normalizeLiveCount(liveStats.aiAccuracy, 76))) }}
+                >
+                  <div><strong>{normalizeLiveCount(liveStats.aiAccuracy, 76)}%</strong><small>{landingCopyV1866.engineConfidence}</small></div>
+                </div>
+                <div className="auth1867-scan">
+                  <div className="auth1867-scanline" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
+                  <strong>{landingCopyV1866.engineTitle}</strong>
+                  <small>{landingCopyV1866.engineScan}</small>
+                </div>
+                <div className="auth1867-intel-metrics">
+                  <span><small>{landingCopyV1866.engineMarkets}</small><b>{liveStats.loading ? '—' : formatCompactNumber(liveStats.tipsToday)}</b></span>
+                  <span><small>{landingCopyV1866.engineCommunity}</small><b>{liveStats.loading ? '—' : formatCompactNumber(liveStats.tipsterTipsToday)}</b></span>
+                  <span><small>{landingCopyV1866.engineSecurity}</small><b>SSL</b></span>
+                </div>
+              </div>
+            </div>
 
             <div className="auth1866-badges" aria-label="Najważniejsze funkcje">
               {landingCopyV1866.badges.map((badge, index) => (
@@ -23505,6 +23548,10 @@ function AuthView({ onAuth }) {
 
           <aside className="auth1866-auth-card" id="auth1866-panel" aria-label={t.authPanelLabel}>
             <div className="auth1866-card-glow" aria-hidden="true" />
+            <div className="auth1867-card-topline">
+              <span>{landingCopyV1866.accessLabel}</span>
+              <i aria-hidden="true" />
+            </div>
             <div className="auth1866-beta-pill"><i />{landingCopyV1866.beta}</div>
             <img className="auth1866-panel-logo" src="/auth-brand-470-transparent.png" alt="Bet+AI" draggable="false" />
             <h2>{mode === 'login' ? landingCopyV1866.panelLoginTitle : landingCopyV1866.panelRegisterTitle}</h2>
@@ -23589,6 +23636,9 @@ function AuthView({ onAuth }) {
             <div className="auth609-secure-note auth1866-secure-note">
               <span className="auth609-secure-icon"><IconShield /></span>
               <span>{landingCopyV1866.securePanel}</span>
+            </div>
+            <div className="auth1867-security-chips" aria-label="Security information">
+              <span>SSL</span><span>SUPABASE</span><span>18+</span>
             </div>
 
             {authMessage ? (
