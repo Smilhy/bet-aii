@@ -79219,3 +79219,465 @@ html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1870-
   html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-login-inner{padding:24px 17px!important;}
   html body #root:not(:has(.app-shell)) .auth609-screen.auth1872-screen .auth1871-feature-strip{grid-template-columns:1fr!important;}
 }
+
+/* ================================================================
+   WERSJA 1873 — SZTYWNY LOGIN JAK W REFERENCJI, BEZ ZMIAN LOGIKI
+   ================================================================ */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen{
+  --auth-cyan:#19e6de;
+  --auth-blue:#3b8cff;
+  --auth-panel:#071827;
+  --auth-panel-2:#081d2d;
+  position:relative!important;
+  isolation:isolate!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  min-height:100svh!important;
+  overflow:hidden!important;
+  padding:34px 24px 42px!important;
+  background:
+    radial-gradient(circle at 54% 45%, rgba(10,116,160,.16), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgba(35,52,121,.16), transparent 29%),
+    linear-gradient(135deg,#020b14 0%,#03111e 48%,#020914 100%)!important;
+  color:#f5fbff!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(rgba(37,181,206,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(37,181,206,.025) 1px,transparent 1px)!important;
+  background-size:56px 56px!important;
+  mask-image:linear-gradient(to bottom,transparent,black 18%,black 82%,transparent)!important;
+  opacity:.42!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen::after{
+  content:""!important;
+  position:absolute!important;
+  left:50%!important;
+  bottom:-180px!important;
+  width:1200px!important;
+  height:360px!important;
+  transform:translateX(-48%)!important;
+  border-radius:50%!important;
+  background:radial-gradient(ellipse,rgba(21,193,219,.12),transparent 68%)!important;
+  filter:blur(28px)!important;
+  pointer-events:none!important;
+}
+
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth620-language-corner{
+  position:fixed!important;
+  top:24px!important;
+  right:28px!important;
+  z-index:120!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth627-social-dock.auth1873-social-rail{
+  display:none!important;
+}
+
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-artboard.auth1873-artboard{
+  position:relative!important;
+  z-index:2!important;
+  width:min(1370px,calc(100vw - 210px))!important;
+  height:760px!important;
+  min-height:760px!important;
+  margin:0!important;
+  transform:translateX(38px)!important;
+  overflow:visible!important;
+  border-radius:24px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-overlay.auth1873-shell{
+  position:relative!important;
+  width:100%!important;
+  height:100%!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 480px!important;
+  grid-template-rows:760px!important;
+  gap:0!important;
+  padding:10px!important;
+  overflow:visible!important;
+  border:1px solid rgba(56,209,230,.22)!important;
+  border-radius:24px!important;
+  background:linear-gradient(145deg,rgba(5,24,38,.94),rgba(3,14,27,.97))!important;
+  box-shadow:
+    0 35px 90px rgba(0,0,0,.58),
+    0 0 0 1px rgba(24,231,222,.05),
+    0 0 44px rgba(27,210,224,.12),
+    inset 0 1px 0 rgba(143,238,255,.08)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-overlay.auth1873-shell::before{
+  content:""!important;
+  position:absolute!important;
+  inset:-1px!important;
+  border-radius:24px!important;
+  padding:1px!important;
+  background:linear-gradient(120deg,rgba(28,233,222,.78),rgba(64,130,255,.55),rgba(28,233,222,.14))!important;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0)!important;
+  -webkit-mask-composite:xor!important;
+  mask-composite:exclude!important;
+  pointer-events:none!important;
+}
+
+/* left live statistics — fixed outside the main frame like the reference */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1179-left-stats-outside.auth1873-stats-rail{
+  position:absolute!important;
+  left:-118px!important;
+  top:96px!important;
+  z-index:8!important;
+  width:94px!important;
+  height:568px!important;
+  min-height:568px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  padding:12px 9px!important;
+  border:1px solid rgba(41,203,224,.2)!important;
+  border-radius:18px!important;
+  background:linear-gradient(180deg,rgba(5,26,40,.94),rgba(3,15,27,.97))!important;
+  box-shadow:0 24px 60px rgba(0,0,0,.44),inset 0 1px 0 rgba(135,238,255,.06)!important;
+  overflow:hidden!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1870-stats-title,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth623-side-foot{
+  display:none!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth623-side-head{
+  display:flex!important;
+  justify-content:center!important;
+  margin:0 0 3px!important;
+  padding:0!important;
+  border:0!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth623-side-head em{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  min-height:28px!important;
+  padding:0 8px!important;
+  border:1px solid rgba(33,227,215,.23)!important;
+  border-radius:999px!important;
+  color:#21eee1!important;
+  background:rgba(5,46,56,.55)!important;
+  font-size:9px!important;
+  font-style:normal!important;
+  font-weight:900!important;
+  letter-spacing:.06em!important;
+  white-space:nowrap!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth623-side-head em i{
+  width:6px!important;height:6px!important;border-radius:50%!important;background:#21f0a7!important;box-shadow:0 0 10px #21f0a7!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth623-side-list{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-auto-rows:minmax(77px,1fr)!important;
+  gap:6px!important;
+  flex:1 1 auto!important;
+  min-height:0!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth623-side-card{
+  min-width:0!important;
+  min-height:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+  padding:7px 4px!important;
+  border:0!important;
+  border-radius:12px!important;
+  background:rgba(3,19,31,.55)!important;
+  box-shadow:none!important;
+  text-align:center!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth623-side-icon{
+  width:31px!important;height:31px!important;display:grid!important;place-items:center!important;border-radius:50%!important;
+  color:#20eadf!important;background:rgba(9,72,81,.26)!important;border:1px solid rgba(34,221,218,.17)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth623-side-icon svg{width:17px!important;height:17px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth623-side-card div{display:flex!important;flex-direction:column!important;align-items:center!important;min-width:0!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth623-side-card b{font-size:16px!important;line-height:1!important;color:#f4fbff!important;font-weight:950!important;letter-spacing:-.02em!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth623-side-card small{margin-top:4px!important;font-size:8px!important;line-height:1.2!important;color:rgba(186,209,220,.68)!important;}
+
+/* hero */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-panel.auth1873-hero-panel{
+  position:relative!important;
+  grid-column:1!important;
+  grid-row:1!important;
+  min-width:0!important;
+  height:740px!important;
+  margin:0!important;
+  padding:32px 34px 28px!important;
+  overflow:hidden!important;
+  border:1px solid rgba(50,194,219,.13)!important;
+  border-radius:18px 0 0 18px!important;
+  background:
+    radial-gradient(circle at 78% 42%,rgba(0,230,255,.12),transparent 30%),
+    linear-gradient(115deg,rgba(5,23,37,.98) 0%,rgba(5,24,38,.94) 44%,rgba(3,13,25,.84) 100%)!important;
+  box-shadow:inset 0 1px 0 rgba(156,239,255,.045)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-panel.auth1873-hero-panel::before{
+  content:""!important;
+  position:absolute!important;
+  z-index:0!important;
+  top:0!important;
+  right:0!important;
+  width:62%!important;
+  height:100%!important;
+  background-image:
+    linear-gradient(90deg,rgba(5,23,37,1) 0%,rgba(5,23,37,.78) 12%,rgba(5,23,37,.16) 42%,rgba(3,10,20,.08) 100%),
+    linear-gradient(0deg,rgba(3,14,26,.58),transparent 26%),
+    url('/auth-hero-scene-v1870.webp')!important;
+  background-size:cover!important;
+  background-position:center 50%!important;
+  background-repeat:no-repeat!important;
+  filter:saturate(1.08) contrast(1.05) brightness(.9)!important;
+  opacity:.98!important;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.35) 15%,#000 32%,#000 100%)!important;
+  mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.35) 15%,#000 32%,#000 100%)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-panel.auth1873-hero-panel::after{
+  content:""!important;
+  position:absolute!important;
+  z-index:1!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(circle at 79% 61%,rgba(24,238,228,.13),transparent 27%),
+    linear-gradient(rgba(42,202,223,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(42,202,223,.025) 1px,transparent 1px)!important;
+  background-size:auto,48px 48px,48px 48px!important;
+  mask-image:linear-gradient(to right,black,transparent 78%)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1871-scene-ambient{display:none!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-top,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-copy,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-benefit-list,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-presentation-button{
+  position:relative!important;
+  z-index:4!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-top{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-logo{
+  width:180px!important;
+  height:auto!important;
+  object-fit:contain!important;
+  filter:drop-shadow(0 0 16px rgba(32,233,224,.1))!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-hero-statuses{display:flex!important;align-items:center!important;gap:10px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-live-badge,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-beta-chip{
+  min-height:33px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:0 12px!important;
+  border-radius:9px!important;
+  border:1px solid rgba(41,216,219,.2)!important;
+  background:rgba(4,27,39,.72)!important;
+  color:#2aeade!important;
+  font-size:8px!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-live-badge i{width:6px!important;height:6px!important;border-radius:50%!important;background:#24e7a4!important;box-shadow:0 0 9px #24e7a4!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-beta-chip{color:rgba(215,230,238,.74)!important;border-color:rgba(224,193,74,.23)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-beta-chip i{display:grid!important;place-items:center!important;width:18px!important;height:18px!important;border-radius:50%!important;border:1px solid rgba(245,209,78,.55)!important;color:#f1ce55!important;font-style:normal!important;}
+
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-copy{
+  width:48%!important;
+  margin-top:72px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-eyebrow{
+  display:flex!important;align-items:center!important;gap:9px!important;margin-bottom:16px!important;color:rgba(182,204,216,.67)!important;font-size:9px!important;font-weight:900!important;letter-spacing:.12em!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-eyebrow span{display:inline-flex!important;align-items:center!important;min-height:26px!important;padding:0 10px!important;border-radius:7px!important;background:linear-gradient(110deg,#28e7df,#559bff)!important;color:#03111a!important;font-size:8px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-copy h1{
+  margin:0!important;
+  max-width:510px!important;
+  color:#f7fbff!important;
+  font-size:52px!important;
+  line-height:1.03!important;
+  letter-spacing:-.055em!important;
+  font-weight:950!important;
+  text-shadow:0 10px 30px rgba(0,0,0,.3)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-copy h1 span{color:#2be6df!important;text-shadow:0 0 26px rgba(43,230,223,.16)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-copy p{
+  max-width:420px!important;
+  margin:20px 0 0!important;
+  color:rgba(193,214,225,.78)!important;
+  font-size:14px!important;
+  line-height:1.55!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-kpi-rail{display:none!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-benefit-list{
+  width:44%!important;
+  display:grid!important;
+  gap:11px!important;
+  margin-top:28px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-benefit-item{
+  display:grid!important;
+  grid-template-columns:42px 1fr!important;
+  align-items:center!important;
+  gap:12px!important;
+  min-height:54px!important;
+  padding:8px 10px!important;
+  border-radius:12px!important;
+  background:rgba(4,21,33,.62)!important;
+  border:1px solid rgba(45,194,212,.11)!important;
+  backdrop-filter:blur(8px)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-benefit-item>span{width:40px!important;height:40px!important;display:grid!important;place-items:center!important;border-radius:11px!important;color:#26e9df!important;background:rgba(7,61,72,.34)!important;border:1px solid rgba(41,217,218,.17)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-benefit-item>span svg{width:20px!important;height:20px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-benefit-item strong{display:block!important;color:#f2f9fd!important;font-size:12px!important;line-height:1.2!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-benefit-item small{display:block!important;margin-top:4px!important;color:rgba(172,199,212,.64)!important;font-size:9px!important;line-height:1.3!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-ball-wrap.auth1873-ball-stage{display:none!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1567-presentation-button.auth1868-presentation-button{
+  position:absolute!important;
+  left:34px!important;
+  bottom:28px!important;
+  width:330px!important;
+  min-height:72px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:14px!important;
+  padding:10px 14px!important;
+  border-radius:14px!important;
+  border:1px solid rgba(36,224,219,.25)!important;
+  background:linear-gradient(135deg,rgba(6,32,47,.88),rgba(4,20,34,.88))!important;
+  color:#eefaff!important;
+  box-shadow:0 14px 35px rgba(0,0,0,.24),inset 0 1px 0 rgba(141,240,255,.06)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-presentation-button .auth1567-play-orb{width:48px!important;height:48px!important;display:grid!important;place-items:center!important;border-radius:50%!important;background:linear-gradient(135deg,#21e9df,#2aa6ff)!important;color:#03202c!important;font-size:16px!important;box-shadow:0 0 24px rgba(33,226,221,.22)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-presentation-button span:last-child{display:flex!important;flex-direction:column!important;align-items:flex-start!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-presentation-button b{font-size:13px!important;color:#f6fbff!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-presentation-button small{margin-top:3px!important;color:rgba(182,207,219,.65)!important;font-size:9px!important;}
+
+/* login panel */
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-left-panel.auth1873-login-panel{
+  position:relative!important;
+  grid-column:2!important;
+  grid-row:1!important;
+  min-width:0!important;
+  height:740px!important;
+  margin:0!important;
+  padding:0!important;
+  border-left:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-panel-shell.auth1873-login-card{
+  width:100%!important;
+  height:100%!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid rgba(62,181,215,.2)!important;
+  border-radius:0 18px 18px 0!important;
+  background:
+    radial-gradient(circle at 80% 0%,rgba(47,82,175,.16),transparent 33%),
+    linear-gradient(160deg,rgba(7,27,44,.98),rgba(4,16,30,.99))!important;
+  box-shadow:inset 0 1px 0 rgba(161,239,255,.06),-18px 0 38px rgba(0,0,0,.16)!important;
+  overflow:hidden!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-center-wrap.auth1873-login-inner{
+  width:100%!important;
+  height:100%!important;
+  display:flex!important;
+  flex-direction:column!important;
+  padding:48px 48px 40px!important;
+  overflow:auto!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-login-topline{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;margin-bottom:28px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-secure-pill,
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-online-pill{min-height:30px!important;display:inline-flex!important;align-items:center!important;gap:7px!important;padding:0 10px!important;border-radius:9px!important;background:rgba(7,39,51,.62)!important;border:1px solid rgba(42,197,215,.16)!important;color:rgba(203,225,235,.76)!important;font-size:8px!important;font-weight:850!important;letter-spacing:.07em!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-secure-pill svg{width:14px!important;height:14px!important;color:#25e9df!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-online-pill i{width:6px!important;height:6px!important;border-radius:50%!important;background:#25e9a1!important;box-shadow:0 0 9px #25e9a1!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-login-heading{margin-bottom:24px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-login-heading>span{color:#25e8df!important;font-size:9px!important;font-weight:900!important;letter-spacing:.16em!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-login-heading h2{margin:8px 0 8px!important;color:#f8fbff!important;font-size:38px!important;line-height:1!important;letter-spacing:-.045em!important;font-weight:950!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-login-heading p{margin:0!important;color:rgba(188,209,220,.7)!important;font-size:13px!important;line-height:1.45!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-tabs.auth1868-tabs{min-height:52px!important;display:grid!important;grid-template-columns:1fr 1fr!important;margin:0 0 25px!important;padding:4px!important;border-radius:12px!important;background:rgba(1,13,25,.82)!important;border:1px solid rgba(48,188,213,.16)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-tabs .auth481-tab{min-height:42px!important;border:0!important;border-radius:9px!important;background:transparent!important;color:rgba(213,228,236,.72)!important;font-size:12px!important;font-weight:900!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-tabs .auth481-tab.is-active{color:#031019!important;background:linear-gradient(105deg,#27e4de,#5799ff)!important;box-shadow:0 8px 26px rgba(47,184,238,.22)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-form.auth1868-form{display:grid!important;gap:17px!important;margin:0!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-field{display:block!important;margin:0!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-label{display:block!important;margin:0 0 8px!important;color:rgba(234,244,249,.9)!important;font-size:10px!important;font-weight:850!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-input-shell{position:relative!important;display:grid!important;grid-template-columns:42px minmax(0,1fr) auto!important;align-items:center!important;min-height:56px!important;border-radius:12px!important;background:rgba(2,15,28,.84)!important;border:1px solid rgba(55,181,208,.17)!important;box-shadow:inset 0 1px 0 rgba(135,226,244,.025)!important;overflow:hidden!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-input-shell:focus-within{border-color:rgba(37,231,221,.52)!important;box-shadow:0 0 0 3px rgba(37,231,221,.07),0 0 22px rgba(37,218,226,.08)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-field-icon{display:grid!important;place-items:center!important;width:42px!important;height:100%!important;color:#25dcd7!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-field-icon svg{width:17px!important;height:17px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-input{width:100%!important;height:54px!important;padding:0 8px 0 0!important;border:0!important;outline:0!important;background:transparent!important;color:#f4fbff!important;font-size:14px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-input::placeholder{color:rgba(154,181,196,.49)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-field-right{display:grid!important;place-items:center!important;min-width:42px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-eye{display:grid!important;place-items:center!important;width:34px!important;height:34px!important;border:0!important;background:transparent!important;color:#2bded9!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-eye svg{width:17px!important;height:17px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-remember-row.auth1868-remember-row{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;margin:1px 0 0!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-remember-toggle{display:flex!important;align-items:center!important;gap:8px!important;color:rgba(213,226,234,.78)!important;font-size:11px!important;cursor:pointer!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-remember-toggle input{position:absolute!important;opacity:0!important;pointer-events:none!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-remember-box{width:17px!important;height:17px!important;display:grid!important;place-items:center!important;border-radius:4px!important;border:1px solid rgba(43,207,211,.48)!important;background:rgba(4,28,41,.8)!important;color:transparent!important;font-size:10px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-remember-toggle.is-checked .auth609-remember-box{background:#27e4dd!important;color:#03151c!important;border-color:#27e4dd!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-forgot-link{border:0!important;background:transparent!important;color:#24e6dc!important;font-size:11px!important;font-weight:850!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-submit.auth1868-submit{min-height:58px!important;border:0!important;border-radius:12px!important;background:linear-gradient(102deg,#22e8dd,#46b4ff 60%,#6775ff)!important;color:#03121b!important;font-size:15px!important;font-weight:950!important;box-shadow:0 14px 34px rgba(39,174,237,.24),inset 0 1px 0 rgba(255,255,255,.42)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth481-submit.auth1868-submit:hover{transform:translateY(-1px)!important;filter:brightness(1.05)!important;box-shadow:0 18px 40px rgba(39,189,237,.3),0 0 28px rgba(39,229,221,.12)!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-status-line.auth1868-status-line{min-height:45px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;border-radius:11px!important;border:1px solid rgba(47,177,198,.13)!important;background:rgba(3,20,32,.68)!important;color:rgba(172,196,208,.64)!important;font-size:8px!important;text-align:center!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-status-shield svg{width:14px!important;height:14px!important;color:#27ddd7!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-trust-row{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:8px!important;margin-top:0!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-trust-row>span{min-height:53px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;border-radius:10px!important;background:rgba(5,27,41,.72)!important;border:1px solid rgba(51,181,205,.13)!important;color:rgba(165,189,202,.57)!important;font-size:7px!important;font-weight:850!important;letter-spacing:.06em!important;text-align:center!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-trust-row i{margin-bottom:4px!important;color:#25e8df!important;font-size:13px!important;font-style:normal!important;font-weight:950!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-message{margin-top:12px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-switch-copy{margin-top:auto!important;padding-top:18px!important;display:flex!important;justify-content:center!important;gap:5px!important;color:rgba(185,204,214,.66)!important;font-size:10px!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-switch-copy button{border:0!important;background:transparent!important;color:#25e5db!important;font-size:10px!important;font-weight:900!important;}
+html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth617-feature-strip.auth1873-feature-strip{display:none!important;}
+
+@media (max-width:1550px){
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-artboard.auth1873-artboard{width:calc(100vw - 190px)!important;transform:translateX(34px)!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-overlay.auth1873-shell{grid-template-columns:minmax(0,1fr) 440px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-copy h1{font-size:47px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-center-wrap.auth1873-login-inner{padding:42px 36px 34px!important;}
+}
+@media (max-width:1220px){
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen{padding:82px 18px 40px!important;overflow:auto!important;align-items:flex-start!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-artboard.auth1873-artboard{width:min(1040px,100%)!important;height:auto!important;min-height:0!important;transform:none!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-overlay.auth1873-shell{height:auto!important;grid-template-columns:1fr 420px!important;grid-template-rows:720px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1179-left-stats-outside.auth1873-stats-rail{display:none!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-panel.auth1873-hero-panel,
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-left-panel.auth1873-login-panel{height:700px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-copy h1{font-size:43px!important;}
+}
+@media (max-width:900px){
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-overlay.auth1873-shell{display:block!important;padding:8px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-panel.auth1873-hero-panel{height:620px!important;border-radius:18px 18px 0 0!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-left-panel.auth1873-login-panel{height:auto!important;min-height:700px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-panel-shell.auth1873-login-card{border-radius:0 0 18px 18px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-copy{width:56%!important;margin-top:50px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-benefit-list{width:52%!important;}
+}
+@media (max-width:640px){
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen{padding:72px 8px 24px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth620-language-corner{top:14px!important;right:12px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-panel.auth1873-hero-panel{height:570px!important;padding:24px 20px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-panel.auth1873-hero-panel::before{width:100%!important;opacity:.46!important;-webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 28%,#000 100%)!important;mask-image:linear-gradient(to bottom,transparent 0%,#000 28%,#000 100%)!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1869-hero-statuses{display:none!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-copy{width:100%!important;margin-top:44px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-hero-copy h1{font-size:39px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-benefit-list{width:100%!important;grid-template-columns:1fr!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-benefit-item:nth-child(3){display:none!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1567-presentation-button.auth1868-presentation-button{left:20px!important;right:20px!important;bottom:18px!important;width:auto!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth609-center-wrap.auth1873-login-inner{padding:34px 22px 28px!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen.auth1873-screen .auth1868-login-heading h2{font-size:32px!important;}
+}

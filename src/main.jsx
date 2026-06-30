@@ -23341,11 +23341,11 @@ function AuthView({ onAuth }) {
   ]), [])
 
   return (
-    <div className="auth609-screen auth1868-screen auth1869-screen auth1870-screen auth1871-screen auth1872-screen" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
+    <div className="auth609-screen auth1873-screen" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
       <div className="auth620-language-corner">
         <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} floating ariaLabel={t.languageLabel} />
       </div>
-      <nav className="auth627-social-dock auth1870-social-rail" aria-label="Social media Bet+AI">
+      <nav className="auth627-social-dock auth1873-social-rail" aria-label="Social media Bet+AI">
         {auth627SocialLinks.map(link => (
           <a
             key={link.key}
@@ -23363,9 +23363,9 @@ function AuthView({ onAuth }) {
       </nav>
 
 
-      <div className="auth609-artboard auth1868-artboard auth1869-artboard auth1870-artboard auth1871-artboard">
-        <div className="auth609-overlay auth1868-shell auth1869-shell auth1870-shell auth1871-shell">
-              <aside className="auth623-side-live auth624-side-live auth1179-left-stats-outside auth1870-stats-rail auth1871-stats-rail" aria-label={t.liveBadge}>
+      <div className="auth609-artboard auth1873-artboard">
+        <div className="auth609-overlay auth1873-shell">
+              <aside className="auth623-side-live auth624-side-live auth1179-left-stats-outside auth1873-stats-rail" aria-label={t.liveBadge}>
             <div className="auth1870-stats-title">
               <span>{authLang === 'en' ? 'LIVE PLATFORM' : 'PLATFORMA LIVE'}</span>
               <strong>{authLang === 'en' ? 'Live statistics' : 'Statystyki na żywo'}</strong>
@@ -23391,7 +23391,7 @@ function AuthView({ onAuth }) {
               <span>{t.liveRefresh} • {t.lastUpdate} {liveStats.updatedAt ? new Date(liveStats.updatedAt).toLocaleTimeString(authLang === 'pl' ? 'pl-PL' : authLang) : '--:--'}</span>
             </div>
               </aside>
-          <section className="auth1868-hero-panel auth1869-hero-panel auth1870-hero-panel auth1871-hero-panel" aria-label={authLang === 'en' ? 'Bet plus AI advantages' : 'Zalety Bet plus AI'}>
+          <section className="auth1868-hero-panel auth1873-hero-panel" aria-label={authLang === 'en' ? 'Bet plus AI advantages' : 'Zalety Bet plus AI'}>
             <div className="auth1871-scene-ambient" aria-hidden="true"><i className="ring ring-one" /><i className="ring ring-two" /><i className="beam" /><i className="floor-grid" /></div>
             <div className="auth1868-hero-top">
               <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth1868-logo" draggable="false" />
@@ -23446,7 +23446,7 @@ function AuthView({ onAuth }) {
               </div>
             </div>
 
-            <div className="auth1868-ball-wrap auth1870-ball-stage" aria-hidden="true">
+            <div className="auth1868-ball-wrap auth1873-ball-stage" aria-hidden="true">
               <div className="auth1869-ball-orbit orbit-a" />
               <div className="auth1869-ball-orbit orbit-b" />
               <div className="auth1868-ball-glow" />
@@ -23468,9 +23468,9 @@ function AuthView({ onAuth }) {
             </button>
           </section>
 
-          <section className="auth609-left-panel auth1868-login-panel auth1869-login-panel auth1870-login-panel auth1871-login-panel">
-            <div className="auth609-panel-shell auth609-panel-shell-fixed auth1868-login-card auth1869-login-card auth1870-login-card auth1871-login-card">
-              <div className="auth609-center-wrap auth1868-login-inner auth1869-login-inner auth1870-login-inner auth1871-login-inner">
+          <section className="auth609-left-panel auth1873-login-panel">
+            <div className="auth609-panel-shell auth609-panel-shell-fixed auth1873-login-card">
+              <div className="auth609-center-wrap auth1873-login-inner">
                 <div className="auth1869-login-topline">
                   <span className="auth1869-secure-pill"><IconShield /> {authLang === 'en' ? 'SECURE MEMBER ACCESS' : 'BEZPIECZNY DOSTĘP'}</span>
                   <span className="auth1869-online-pill"><i />{authLang === 'en' ? 'SYSTEM ONLINE' : 'SYSTEM ONLINE'}</span>
@@ -23582,7 +23582,7 @@ function AuthView({ onAuth }) {
             </div>
           </section>
 
-          <div className="auth617-feature-strip auth1868-feature-strip auth1869-feature-strip auth1870-feature-strip auth1871-feature-strip" aria-label={t.benefitsLabel}>
+          <div className="auth617-feature-strip auth1873-feature-strip" aria-label={t.benefitsLabel}>
             <div className="auth617-feature-card">
               <span className="auth617-feature-icon"><IconShield /></span>
               <div><strong>{t.safeData}</strong><p>{t.safeDataText}</p></div>
