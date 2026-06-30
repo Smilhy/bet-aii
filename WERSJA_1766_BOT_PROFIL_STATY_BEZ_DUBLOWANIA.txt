@@ -1,0 +1,24 @@
+WERSJA 1766 — PROFIL BOTA: STATYSTYKI BEZ PODWÓJNEGO LICZENIA
+
+Naprawiono wyłącznie profil betai-multisport-ai.
+
+Przyczyna:
+- profil dodawał imported_* oraz te same rekordy z tips,
+- 37 typów było pokazywane jako 74,
+- +32.39 jako +64.78,
+- 19 wygranych jako 38,
+- 14 przegranych jako 28.
+
+Naprawa:
+- dla betai-multisport-ai profil wybiera jeden pełniejszy zestaw statystyk,
+- nie sumuje drugi raz tych samych rekordów,
+- void/zwrot nie jest liczony jako pending,
+- innych użytkowników i reszty strony nie zmieniono.
+
+Oczekiwany profil bota:
+- Typy: 37
+- Wygrane: 19
+- Przegrane: 14
+- Zwrot: 1
+- Profit: około +32.39
+- Yield: około 98.15%

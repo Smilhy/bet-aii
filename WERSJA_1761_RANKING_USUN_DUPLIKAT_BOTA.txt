@@ -1,0 +1,8 @@
+WERSJA 1761 — RANKING: USUNIĘCIE DUPLIKATU BOTA
+
+Poprawiono tylko ranking:
+- BetAI MultiSport AI / betai-multisport-ai są traktowane jako jeden ten sam profil.
+- Ranking nie powinien już pokazywać dwóch pozycji tego samego bota.
+- Reszty strony nie ruszano.
+
+Po deployu zrób Ctrl+F5.

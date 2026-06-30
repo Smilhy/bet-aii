@@ -1,0 +1,17 @@
+WERSJA 1760 — TOP TYPERZY: VOID / ZWROT W BILANSIE
+
+Zmiana w tabeli "Top typerzy":
+- w statystyce "Bilans" dodano trzecią wartość po przegranych,
+- format: WYGRANE – PRZEGRANE – ZWROTY/VOID,
+- zwroty/void mają kolor niebieski.
+
+Przykład:
+17 – 13 – 4
+zielony = wygrane
+czerwony = przegrane
+niebieski = zwroty / void
+
+Dodatkowo:
+- statystyki autora liczą teraz voidTips osobno,
+- author_visible_stats z get-public-tips przekazuje imported_void_tips,
+- ranking nie miesza już zwrotów z pending.
