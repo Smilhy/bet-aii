@@ -23445,7 +23445,7 @@ function AuthView({ onAuth }) {
   ]), [])
 
   return (
-    <div className="auth609-screen auth-seo-v1866 auth-ultra-v1867 auth-premium-v1868" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
+    <div className="auth609-screen auth-seo-v1866 auth-ultra-v1867 auth-premium-v1868 auth-fixed-v1870" data-betai-lang={authLang} aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
       <span className="auth1866-bg-orb auth1866-bg-orb-one" aria-hidden="true" />
       <span className="auth1866-bg-orb auth1866-bg-orb-two" aria-hidden="true" />
       <span className="auth1866-grid" aria-hidden="true" />
@@ -23519,8 +23519,6 @@ function AuthView({ onAuth }) {
             </div>
             <div className="auth1866-beta-pill"><i />{landingCopyV1866.beta}</div>
             <img className="auth1866-panel-logo" src="/auth-logo-v1868.png" alt="Bet+AI" draggable="false" />
-            <h2>{mode === 'login' ? landingCopyV1866.panelLoginTitle : landingCopyV1866.panelRegisterTitle}</h2>
-            <p className="auth1866-panel-copy">{mode === 'login' ? landingCopyV1866.panelLoginText : landingCopyV1866.panelRegisterText}</p>
 
             <div className={`auth481-tabs auth609-tabs auth609-tabs-fixed auth1866-tabs ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label={t.authModeLabel}>
               <button
@@ -23595,13 +23593,8 @@ function AuthView({ onAuth }) {
                 <span>{submitting ? t.authorizing : submitLabel}</span>
                 {!submitting ? <b>→</b> : null}
               </button>
-              <p className="auth1866-submit-note">{submitNote}</p>
             </form>
 
-            <div className="auth609-secure-note auth1866-secure-note">
-              <span className="auth609-secure-icon"><IconShield /></span>
-              <span>{landingCopyV1866.securePanel}</span>
-            </div>
             {authMessage ? (
               <div className={`auth481-message ${authMessageType} auth609-message auth1866-message`} role="status" aria-live="polite">
                 {authMessage}
