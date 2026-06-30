@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-1870-ultra-premium-login-ui",
-  "version": "1.8.7.0",
+  "name": "betai-wersja-1871-ultra-pro-login-integrated",
+  "version": "1.8.7.1",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
