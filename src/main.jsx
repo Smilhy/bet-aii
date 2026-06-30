@@ -22727,7 +22727,6 @@ function AuthView({ onAuth }) {
     loading: true
   })
   const [presentationOpen, setPresentationOpen] = useState(false)
-  const [betaHelpOpen, setBetaHelpOpen] = useState(false)
   const supportedAuthLanguages = ['pl', 'en']
   const [authLang, setAuthLang] = useState(() => {
     try {
@@ -22754,113 +22753,9 @@ function AuthView({ onAuth }) {
   }
 
   const t = authTranslations[authLang] || authTranslations.pl
-
-  const landingCopyV1866 = authLang === 'pl' ? {
-    beta: 'INTELLIGENCE BETA',
-    navHow: 'Jak działa',
-    navBenefits: 'Możliwości',
-    navStats: 'Statystyki',
-    eyebrow: 'BET+AI INTELLIGENCE PLATFORM',
-    titleLead: 'Typy sportowe i analiza AI',
-    titleAccent: 'w standardzie premium',
-    lead: 'Ekskluzywne centrum analityczne łączące modele AI, dane meczowe, transparentną historię wyników i społeczność typerów. Wszystko w jednym, dopracowanym środowisku.',
-    badges: ['AI Match Intelligence', 'Weryfikowalne wyniki', 'Dane live'],
-    registerCta: 'Załóż darmowe konto',
-    loginCta: 'Mam już konto',
-    watchCta: 'Obejrzyj prezentację',
-    watchSub: 'Zobacz platformę w praktyce',
-    engineKicker: 'AI INTELLIGENCE ENGINE',
-    engineStatus: 'SYSTEM ONLINE',
-    engineTitle: 'Skan rynku w czasie rzeczywistym',
-    engineScan: 'Modele analizują dane, formę i sygnały meczowe',
-    engineConfidence: 'Wynik modelu',
-    engineMarkets: 'Typy dziś',
-    engineCommunity: 'Typy społeczności',
-    engineSecurity: 'Prywatny dostęp',
-    accessLabel: 'SECURE MEMBER ACCESS',
-    risk: '18+ • Zakłady wiążą się z ryzykiem. Bet+AI nie gwarantuje zysku.',
-    liveTitle: 'Dane platformy na żywo',
-    liveSubtitle: 'Aktualizowane automatycznie co 30 sekund',
-    panelLoginTitle: 'Wejdź do centrum analiz',
-    panelRegisterTitle: 'Otwórz dostęp do Bet+AI',
-    panelLoginText: 'Zaloguj się do swojego prywatnego panelu analitycznego.',
-    panelRegisterText: 'Utwórz konto i odblokuj pełne środowisko Bet+AI.',
-    securePanel: 'Bezpieczne logowanie przez Supabase',
-    featuresEyebrow: 'BET+AI ECOSYSTEM',
-    featuresTitle: 'Jedno środowisko. Wiele warstw przewagi informacyjnej.',
-    featuresLead: 'Precyzyjny interfejs, dane live i historia wyników pomagają szybciej ocenić sytuację. Każdy typ pozostaje prognozą, a decyzja zawsze należy do Ciebie.',
-    features: [
-      ['Analizy AI', 'Modele porządkują dane meczowe i wskazują najważniejsze sygnały do dalszej oceny.'],
-      ['Historia wyników', 'Przeglądaj rozliczone typy, wyniki i statystyki zamiast opierać się na samych deklaracjach.'],
-      ['Ranking typerów', 'Porównuj profile społeczności na podstawie publikowanych wyników i aktywności.'],
-      ['Aktualizacje live', 'Śledź bieżące dane platformy i nowe materiały w jednym przejrzystym panelu.']
-    ],
-    processEyebrow: 'INTELLIGENCE FLOW',
-    processTitle: 'Od surowych danych do świadomej decyzji',
-    process: [
-      ['1', 'Sprawdź analizę', 'Zobacz statystyki, rynek i argumenty przedstawione przy typie.'],
-      ['2', 'Porównaj wyniki', 'Zweryfikuj historię modelu lub typera, liczbę typów i sposób rozliczania.'],
-      ['3', 'Oceń ryzyko', 'Ustal własny budżet i nie traktuj żadnej prognozy jako gwarancji.']
-    ],
-    socialTitle: 'Wejdź do ekosystemu Bet+AI',
-    socialText: 'Aktualności, analizy, materiały edukacyjne i rozmowy społeczności skupionej wokół danych sportowych.',
-    footer: 'Bet+AI • Sports Intelligence Ecosystem',
-    betaNote: 'Platforma jest rozwijana. Zgłoszenia dotyczące wyglądu możesz wysłać przez czat pomocy.'
-  } : {
-    beta: 'INTELLIGENCE BETA',
-    navHow: 'How it works',
-    navBenefits: 'Features',
-    navStats: 'Live stats',
-    eyebrow: 'BET+AI INTELLIGENCE PLATFORM',
-    titleLead: 'Sports picks and AI analysis',
-    titleAccent: 'in a premium environment',
-    lead: 'An exclusive analytics hub combining AI models, match data, transparent performance history and a community of tipsters in one refined environment.',
-    badges: ['AI Match Intelligence', 'Verifiable results', 'Live data'],
-    registerCta: 'Create a free account',
-    loginCta: 'I already have an account',
-    watchCta: 'Watch the presentation',
-    watchSub: 'See the platform in action',
-    engineKicker: 'AI INTELLIGENCE ENGINE',
-    engineStatus: 'SYSTEM ONLINE',
-    engineTitle: 'Real-time market scan',
-    engineScan: 'Models analyze data, form and match signals',
-    engineConfidence: 'Model score',
-    engineMarkets: 'Picks today',
-    engineCommunity: 'Community picks',
-    engineSecurity: 'Private access',
-    accessLabel: 'SECURE MEMBER ACCESS',
-    risk: '18+ • Betting involves risk. Bet+AI does not guarantee profit.',
-    liveTitle: 'Live platform data',
-    liveSubtitle: 'Automatically refreshed every 30 seconds',
-    panelLoginTitle: 'Enter the intelligence hub',
-    panelRegisterTitle: 'Unlock Bet+AI access',
-    panelLoginText: 'Log in to your private sports intelligence dashboard.',
-    panelRegisterText: 'Create an account and unlock the full Bet+AI environment.',
-    securePanel: 'Secure authentication powered by Supabase',
-    featuresEyebrow: 'BET+AI ECOSYSTEM',
-    featuresTitle: 'One environment. Multiple layers of information advantage.',
-    featuresLead: 'A precise interface, live data and performance history help you evaluate situations faster. Every pick remains a forecast, and the final decision is always yours.',
-    features: [
-      ['AI analysis', 'Models organize match data and surface important signals for further evaluation.'],
-      ['Result history', 'Review settled picks, outcomes and statistics instead of relying on claims alone.'],
-      ['Tipster rankings', 'Compare community profiles using published results and activity.'],
-      ['Live updates', 'Follow current platform data and new content in one clear dashboard.']
-    ],
-    processEyebrow: 'INTELLIGENCE FLOW',
-    processTitle: 'From raw data to an informed decision',
-    process: [
-      ['1', 'Review the analysis', 'Check the statistics, market and reasoning shown with each pick.'],
-      ['2', 'Compare results', 'Verify model or tipster history, pick volume and settlement method.'],
-      ['3', 'Assess the risk', 'Set your own budget and never treat a forecast as a guarantee.']
-    ],
-    socialTitle: 'Enter the Bet+AI ecosystem',
-    socialText: 'Updates, analysis, educational content and community discussions focused on sports data.',
-    footer: 'Bet+AI • AI Match Picks',
-    betaNote: 'The platform is under active development. You can report visual issues through the support chat.'
-  }
   const localizedAuthFrameSrc = authLang === 'pl'
     ? '/auth-frame-reference-609.png'
-    : `/auth-frame-reference-609-${authLang}.png`
+    : '/auth-frame-reference-609-en-v1866.png'
 
   function normalizeLiveCount(value, fallback = 0) {
     const parsed = Number(value)
@@ -23446,289 +23341,239 @@ function AuthView({ onAuth }) {
   ]), [])
 
   return (
-    <div className="auth609-screen auth-seo-v1866 auth-ultra-v1867 auth-premium-v1868 auth-fixed-v1870" data-betai-lang={authLang} aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
-      <span className="auth1866-bg-orb auth1866-bg-orb-one" aria-hidden="true" />
-      <span className="auth1866-bg-orb auth1866-bg-orb-two" aria-hidden="true" />
-      <span className="auth1866-grid" aria-hidden="true" />
+    <div className="auth609-screen" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
+      <div className="auth620-language-corner">
+        <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} floating ariaLabel={t.languageLabel} />
+      </div>
+      <nav className="auth627-social-dock" aria-label="Social media Bet+AI">
+        {auth627SocialLinks.map(link => (
+          <a
+            key={link.key}
+            className={`auth627-social-link ${link.className}`}
+            href={link.href}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={link.label}
+            title={link.label}
+          >
+            <span className="auth627-social-icon">{link.icon}</span>
+            <b>{link.label}</b>
+          </a>
+        ))}
+      </nav>
 
-      <header className="auth1866-topbar">
-        <a className="auth1866-brand" href="#start" aria-label="Bet+AI — strona główna">
-          <img src="/auth-logo-v1868.png" alt="Bet+AI — AI Match Picks" draggable="false" />
-        </a>
-
-        <nav className="auth1866-nav" aria-label="Nawigacja strony logowania">
-          <a href="#jak-dziala">{landingCopyV1866.navHow}</a>
-          <a href="#mozliwosci">{landingCopyV1866.navBenefits}</a>
-          <a href="#statystyki">{landingCopyV1866.navStats}</a>
-        </nav>
-
-        <div className="auth1866-language">
-          <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} compact ariaLabel={t.languageLabel} />
+      <aside className="auth623-side-live auth624-side-live auth1179-left-stats-outside" aria-label={t.liveBadge}>
+        <div className="auth623-side-head auth624-side-head">
+          <em><i />{t.liveBadge}</em>
         </div>
-      </header>
 
-      <section className="auth1874-beta-notice" aria-label={authLang === 'pl' ? 'Informacja o wersji beta' : 'Beta version information'}>
-        <div className="auth1874-beta-copy">
-          <span className="auth1874-beta-pill"><i />{authLang === 'pl' ? 'WERSJA BETA' : 'BETA VERSION'}</span>
-          <strong>⚠ {authLang === 'pl' ? 'Strona jest w wersji BETA.' : 'The website is currently in BETA.'}</strong>
-          <p>
-            {authLang === 'pl'
-              ? <>Jeśli widok na Twoim urządzeniu wygląda źle, ramki się nakładają albo strona nie dopasowuje się do ekranu, użyj <b>zoomu/lupy</b> w przeglądarce i ustaw widok ręcznie. Będziemy na bieżąco naprawiać takie błędy.</>
-              : <>If the view looks incorrect on your device, panels overlap or the page does not fit the screen, use the browser <b>zoom controls</b> and adjust the view manually. We will keep fixing these issues.</>}
-          </p>
-        </div>
-        <button
-          type="button"
-          className="auth1874-beta-info"
-          aria-label={authLang === 'pl' ? 'Pokaż instrukcję zmiany zoomu' : 'Show browser zoom instructions'}
-          aria-expanded={betaHelpOpen}
-          onClick={() => setBetaHelpOpen(prev => !prev)}
-        >i</button>
-      </section>
-
-      {betaHelpOpen ? (
-        <div className="auth1874-zoom-popover" role="dialog" aria-modal="false" aria-label={authLang === 'pl' ? 'Instrukcja zoomu przeglądarki' : 'Browser zoom instructions'}>
-          <button type="button" className="auth1874-popover-close" onClick={() => setBetaHelpOpen(false)} aria-label={authLang === 'pl' ? 'Zamknij' : 'Close'}>×</button>
-          <p>{authLang === 'pl' ? 'Jeśli widok się rozjeżdża, użyj' : 'If the layout does not fit, use'}</p>
-          <strong className="auth1874-shortcuts"><span>Ctrl</span><b>＋</b><em>{authLang === 'pl' ? 'i' : 'and'}</em><span>Ctrl</span><b>−</b></strong>
-          <small>{authLang === 'pl' ? 'lub ustaw zoom ręcznie w przeglądarce.' : 'or set browser zoom manually.'}</small>
-          <div className="auth1874-zoom-row" aria-hidden="true"><i>−</i><b>100%</b><i>＋</i></div>
-        </div>
-      ) : null}
-
-
-      <main className="auth1866-page" id="start">
-        <section className="auth1866-hero" aria-labelledby="auth1866-title">
-          <div className="auth1866-hero-copy">
-            <div className="auth1866-eyebrow"><i />{landingCopyV1866.eyebrow}</div>
-            <h1 id="auth1866-title">
-              {landingCopyV1866.titleLead}
-              <span>{landingCopyV1866.titleAccent}</span>
-            </h1>
-            <p className="auth1866-lead">{landingCopyV1866.lead}</p>
-
-            <div className="auth1867-intelligence" aria-label={landingCopyV1866.engineKicker}>
-              <div className="auth1867-intelligence-head">
-                <span><i />{landingCopyV1866.engineKicker}</span>
-                <b><i />{landingCopyV1866.engineStatus}</b>
-              </div>
-              <div className="auth1867-intelligence-body">
-                <div
-                  className="auth1867-score"
-                  style={{ '--auth1867-score': Math.max(0, Math.min(100, normalizeLiveCount(liveStats.aiAccuracy, 76))) }}
-                >
-                  <div><strong>{normalizeLiveCount(liveStats.aiAccuracy, 76)}%</strong><small>{landingCopyV1866.engineConfidence}</small></div>
-                </div>
-                <div className="auth1867-scan">
-                  <div className="auth1867-scanline" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
-                  <strong>{landingCopyV1866.engineTitle}</strong>
-                  <small>{landingCopyV1866.engineScan}</small>
-                </div>
-                <div className="auth1867-intel-metrics">
-                  <span><small>{landingCopyV1866.engineMarkets}</small><b>{liveStats.loading ? '—' : formatCompactNumber(liveStats.tipsToday)}</b></span>
-                  <span><small>{landingCopyV1866.engineCommunity}</small><b>{liveStats.loading ? '—' : formatCompactNumber(liveStats.tipsterTipsToday)}</b></span>
-                  <span><small>{landingCopyV1866.engineSecurity}</small><b>SSL</b></span>
-                </div>
+        <div className="auth623-side-list">
+          {liveStatsCards.map(card => (
+            <div className={`auth623-side-card ${card.accentClass}`} key={card.key}>
+              <span className="auth623-side-icon">{card.icon}</span>
+              <div>
+                <b>{liveStats.loading ? '...' : card.value}</b>
+                <small>{card.label}</small>
               </div>
             </div>
+          ))}
+        </div>
 
-            <div className="auth1866-badges" aria-label="Najważniejsze funkcje">
-              {landingCopyV1866.badges.map((badge, index) => (
-                <span key={badge}>{index === 0 ? <IconChart /> : index === 1 ? <IconBolt /> : <IconShield />}{badge}</span>
-              ))}
-            </div>
+        <div className="auth623-side-foot">
+          <span className="auth623-pulse" />
+          <span>{t.liveRefresh} • {t.lastUpdate} {liveStats.updatedAt ? new Date(liveStats.updatedAt).toLocaleTimeString(authLang === 'pl' ? 'pl-PL' : authLang) : '--:--'}</span>
+        </div>
+      </aside>
 
-            <p className="auth1866-risk"><IconShield />{landingCopyV1866.risk}</p>
-          </div>
+      <div className="auth609-artboard">
+        <img
+          src={localizedAuthFrameSrc}
+          alt={t.authFrameAlt || 'Bet+AI screen reference'}
+          className="auth609-reference"
+          draggable="false"
+        />
 
-          <div className="auth1868-auth-column">
-            <aside className="auth1866-auth-card" id="auth1866-panel" aria-label={t.authPanelLabel}>
-            <div className="auth1866-card-glow" aria-hidden="true" />
-            <div className="auth1867-card-topline">
-              <span>{landingCopyV1866.accessLabel}</span>
-              <i aria-hidden="true" />
-            </div>
-            <img className="auth1866-panel-logo" src="/auth-logo-v1868.png" alt="Bet+AI" draggable="false" />
+        <div className="auth609-overlay">
+          <section className="auth609-left-panel">
+            <div className="auth609-panel-shell auth609-panel-shell-fixed">
+              <div className="auth609-center-wrap">
+                <div className="auth609-top-spacer" />
 
-            <div className={`auth481-tabs auth609-tabs auth609-tabs-fixed auth1866-tabs ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label={t.authModeLabel}>
-              <button
-                type="button"
-                className={`auth481-tab ${mode === 'login' ? 'is-active' : ''}`}
-                onClick={() => switchMode('login')}
-              >
-                {t.loginTab}
-              </button>
-              <button
-                type="button"
-                className={`auth481-tab ${mode === 'register' ? 'is-active' : ''}`}
-                onClick={() => switchMode('register')}
-              >
-                {t.registerTab}
-              </button>
-            </div>
+                <div className="auth609-heading-copy auth609-heading-center">
+                  <div className="auth609-beta-banner" role="note" aria-label={authLang === 'en' ? 'Beta version information' : 'Informacja o wersji beta'}>
+                    <span className="auth609-beta-kicker">{authLang === 'en' ? 'BETA VERSION' : 'WERSJA BETA'}</span>
+                    <span className="auth609-beta-info" tabIndex="0" aria-label={authLang === 'en' ? 'How to change browser zoom' : 'Jak zmienić zoom przeglądarki'}>
+                      i
+                      <span className="auth609-beta-tooltip" role="tooltip">
+                        <span>{authLang === 'en' ? <>If the layout looks incorrect, use your browser <b>zoom</b>.</> : <>Jeśli widok się rozjeżdża, użyj <b>zoomu</b> przeglądarki.</>}</span>
+                        <span className="auth609-beta-shortcuts">
+                          <strong>Ctrl <em>+</em></strong>
+                          <i>{authLang === 'en' ? 'and' : 'i'}</i>
+                          <strong>Ctrl <em>-</em></strong>
+                        </span>
+                        <span>{authLang === 'en' ? <>or set the browser <b>zoom</b> manually.</> : <>lub ustaw <b>zoom</b> ręcznie w przeglądarce.</>}</span>
+                        <span className="auth609-beta-zoomrow">
+                          <em>-</em><small>100%</small><em>+</em>
+                        </span>
+                      </span>
+                    </span>
+                    <p>
+                      <strong>{authLang === 'en' ? '⚠️ This page is in beta.' : '⚠️ Strona jest w wersji BETA.'}</strong><br />
+                      {authLang === 'en' ? <>If the layout looks incorrect on your device, elements overlap or the page does not fit the screen, use the browser <span className="auth609-beta-highlight">zoom tool</span> and adjust the view manually. We are continuously fixing these issues.</> : <>Jeśli widok na Twoim urządzeniu wygląda źle, ramki się nakładają albo strona nie dopasowuje się do ekranu, użyj <span className="auth609-beta-highlight">zoomu/lupy</span> w przeglądarce i ustaw widok ręcznie. Będziemy na bieżąco naprawiać takie błędy.</>}
+                    </p>
+                  </div>
+                  <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth619-fused-logo auth620-fused-logo" draggable="false" />
+                  <p className="auth609-subtitle-main auth620-subtitle-main">{mode === 'login' ? t.subtitleLogin : t.subtitleRegister}</p>
+                </div>
 
-            <form className="auth481-form auth609-form auth609-form-fixed auth1866-form" onSubmit={handleSubmit} autoComplete={form.agree ? 'on' : 'off'}>
-              <AuthField
-                label={t.email}
-                type="email"
-                value={form.email}
-                onChange={(event) => updateField('email', event.target.value)}
-                placeholder={t.emailPlaceholderShort}
-                icon={<IconMail />}
-                autoComplete={mode === 'login' ? 'username' : 'email'}
-                name="betai_email"
-              />
-
-              <AuthField
-                label={t.password}
-                type={showPassword ? 'text' : 'password'}
-                value={form.password}
-                onChange={(event) => {
-                  updateField('password', event.target.value)
-                  if (mode === 'register') updateField('repeatPassword', event.target.value)
-                }}
-                placeholder={t.passwordPlaceholderShort}
-                icon={<IconLock />}
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                name="betai_password"
-                rightControl={
+                <div className={`auth481-tabs auth609-tabs auth609-tabs-fixed ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label={t.authModeLabel}>
                   <button
                     type="button"
-                    className="auth481-eye"
-                    onClick={() => setShowPassword(prev => !prev)}
-                    aria-label={showPassword ? t.hidePassword : t.showPassword}
+                    className={`auth481-tab ${mode === 'login' ? 'is-active' : ''}`}
+                    onClick={() => switchMode('login')}
                   >
-                    <IconEye />
+                    {t.loginTab}
                   </button>
-                }
-              />
-
-              <div className="auth609-remember-row auth1866-remember-row">
-                <label className={`auth609-remember-toggle ${form.agree ? 'is-checked' : ''}`}>
-                  <input
-                    type="checkbox"
-                    checked={form.agree}
-                    onChange={(event) => updateField('agree', event.target.checked)}
-                    aria-label={t.rememberMe}
-                  />
-                  <span className="auth609-remember-box">✓</span>
-                  <span>{t.rememberMe}</span>
-                </label>
-                <button type="button" className="auth609-forgot-link" onClick={handleForgotPassword}>
-                  {t.forgotPassword}
-                </button>
-              </div>
-
-              <button type="submit" className="auth481-submit auth609-submit auth609-submit-fixed auth1866-submit" disabled={submitting}>
-                <span>{submitting ? t.authorizing : submitLabel}</span>
-                {!submitting ? <b>→</b> : null}
-              </button>
-            </form>
-
-            {authMessage ? (
-              <div className={`auth481-message ${authMessageType} auth609-message auth1866-message`} role="status" aria-live="polite">
-                {authMessage}
-              </div>
-            ) : null}
-            </aside>
-
-            <button
-              type="button"
-              className="auth1567-presentation-button auth1866-presentation-button auth1868-presentation-under-card"
-              onClick={() => setPresentationOpen(true)}
-              aria-label={landingCopyV1866.watchCta}
-            >
-              <span className="auth1567-play-orb">▶</span>
-              <span>
-                <b>{landingCopyV1866.watchCta}</b>
-                <small>{landingCopyV1866.watchSub}</small>
-              </span>
-            </button>
-          </div>
-        </section>
-
-        <section className="auth1866-live" id="statystyki" aria-labelledby="auth1866-live-title">
-          <div className="auth1866-section-heading">
-            <div>
-              <span className="auth1866-section-kicker"><i />LIVE</span>
-              <h2 id="auth1866-live-title">{landingCopyV1866.liveTitle}</h2>
-            </div>
-            <p>{landingCopyV1866.liveSubtitle}</p>
-          </div>
-          <div className="auth1866-live-grid">
-            {liveStatsCards.map(card => (
-              <article className={`auth1866-live-card ${card.accentClass}`} key={card.key}>
-                <span className="auth1866-live-icon">{card.icon}</span>
-                <div>
-                  <b>{liveStats.loading ? '...' : card.value}</b>
-                  <small>{card.label}</small>
+                  <button
+                    type="button"
+                    className={`auth481-tab ${mode === 'register' ? 'is-active' : ''}`}
+                    onClick={() => switchMode('register')}
+                  >
+                    {t.registerTab}
+                  </button>
                 </div>
-              </article>
-            ))}
-          </div>
-          <div className="auth1866-live-foot"><i />{t.liveRefresh} • {t.lastUpdate} {liveStats.updatedAt ? new Date(liveStats.updatedAt).toLocaleTimeString(authLang === 'pl' ? 'pl-PL' : authLang) : '--:--'}</div>
-        </section>
 
-        <section className="auth1866-features" id="mozliwosci" aria-labelledby="auth1866-features-title">
-          <div className="auth1866-feature-intro">
-            <span className="auth1866-section-kicker">{landingCopyV1866.featuresEyebrow}</span>
-            <h2 id="auth1866-features-title">{landingCopyV1866.featuresTitle}</h2>
-            <p>{landingCopyV1866.featuresLead}</p>
-          </div>
-          <div className="auth1866-feature-grid">
-            {landingCopyV1866.features.map((feature, index) => (
-              <article className="auth1866-feature-card" key={feature[0]}>
-                <span className="auth1866-feature-number">0{index + 1}</span>
-                <span className="auth1866-feature-icon">{index === 0 ? <IconChart /> : index === 1 ? <IconShield /> : index === 2 ? <IconUsers /> : <IconBolt />}</span>
-                <h3>{feature[0]}</h3>
-                <p>{feature[1]}</p>
-              </article>
-            ))}
-          </div>
-        </section>
+                <form className="auth481-form auth609-form auth609-form-fixed" onSubmit={handleSubmit} autoComplete={form.agree ? 'on' : 'off'}>
+                  <AuthField
+                    label={t.email}
+                    type="email"
+                    value={form.email}
+                    onChange={(event) => updateField('email', event.target.value)}
+                    placeholder={t.emailPlaceholderShort}
+                    icon={<IconMail />}
+                    autoComplete={mode === 'login' ? 'username' : 'email'}
+                    name="betai_email"
+                  />
 
-        <section className="auth1866-process" id="jak-dziala" aria-labelledby="auth1866-process-title">
-          <div className="auth1866-process-copy">
-            <span className="auth1866-section-kicker">{landingCopyV1866.processEyebrow}</span>
-            <h2 id="auth1866-process-title">{landingCopyV1866.processTitle}</h2>
-          </div>
-          <div className="auth1866-process-grid">
-            {landingCopyV1866.process.map(step => (
-              <article key={step[0]}>
-                <span>{step[0]}</span>
-                <div><h3>{step[1]}</h3><p>{step[2]}</p></div>
-              </article>
-            ))}
-          </div>
-        </section>
+                  <AuthField
+                    label={t.password}
+                    type={showPassword ? 'text' : 'password'}
+                    value={form.password}
+                    onChange={(event) => {
+                      updateField('password', event.target.value)
+                      if (mode === 'register') updateField('repeatPassword', event.target.value)
+                    }}
+                    placeholder={t.passwordPlaceholderShort}
+                    icon={<IconLock />}
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    name="betai_password"
+                    rightControl={
+                      <button
+                        type="button"
+                        className="auth481-eye"
+                        onClick={() => setShowPassword(prev => !prev)}
+                        aria-label={showPassword ? t.hidePassword : t.showPassword}
+                      >
+                        <IconEye />
+                      </button>
+                    }
+                  />
 
-        <section className="auth1866-community" aria-labelledby="auth1866-social-title">
-          <div>
-            <span className="auth1866-section-kicker">COMMUNITY</span>
-            <h2 id="auth1866-social-title">{landingCopyV1866.socialTitle}</h2>
-            <p>{landingCopyV1866.socialText}</p>
-          </div>
-          <nav className="auth1866-socials" aria-label="Social media Bet+AI">
-            {auth627SocialLinks.map(link => (
-              <a key={link.key} className={link.className} href={link.href} target="_blank" rel="noreferrer" aria-label={link.label} title={link.label}>
-                <span>{link.icon}</span><b>{link.label}</b>
-              </a>
-            ))}
-          </nav>
-        </section>
-      </main>
+                  <div className="auth609-remember-row">
+                    <label className={`auth609-remember-toggle ${form.agree ? 'is-checked' : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={form.agree}
+                        onChange={(event) => updateField('agree', event.target.checked)}
+                        aria-label={t.rememberMe}
+                      />
+                      <span className="auth609-remember-box">✓</span>
+                      <span>{t.rememberMe}</span>
+                    </label>
+                    <button type="button" className="auth609-forgot-link" onClick={handleForgotPassword}>
+                      {t.forgotPassword}
+                    </button>
+                  </div>
 
-      <footer className="auth1866-footer">
-        <span>{landingCopyV1866.footer}</span>
-        <span>{landingCopyV1866.betaNote}</span>
-      </footer>
+                  <div className="auth609-status-line">
+                    <span>
+                      {mode === 'login' ? t.statusLogin : t.statusRegister}
+                    </span>
+                    <span className="auth609-status-shield"><IconShield /></span>
+                  </div>
+
+                  <button type="submit" className="auth481-submit auth609-submit auth609-submit-fixed" disabled={submitting}>
+                    {submitting ? t.authorizing : mode === 'login' ? t.submitLogin : t.createAccountShort}
+                  </button>
+                </form>
+
+                <div className="auth609-secure-note">
+                  <span className="auth609-secure-icon"><IconShield /></span>
+                  <span>{t.secureNote}</span>
+                </div>
+
+                <button
+                  type="button"
+                  className="auth1567-presentation-button"
+                  onClick={() => setPresentationOpen(true)}
+                  aria-label={authLang === 'en' ? 'Watch the Bet plus AI platform presentation' : 'Obejrzyj prezentację platformy Bet plus AI'}
+                >
+                  <span className="auth1567-play-orb">▶</span>
+                  <span>
+                    <b>{authLang === 'en' ? 'Watch presentation' : 'Obejrzyj prezentację'}</b>
+                    <small>{authLang === 'en' ? 'See how Bet+AI works' : 'Zobacz, jak działa Bet+AI'}</small>
+                  </span>
+                </button>
+
+                {authMessage ? (
+                  <div className={`auth481-message ${authMessageType} auth609-message`} role="status" aria-live="polite">
+                    {authMessage}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </section>
+
+
+          <div className="auth617-feature-strip" aria-label={t.benefitsLabel}>
+            <div className="auth617-feature-card">
+              <span className="auth617-feature-icon"><IconShield /></span>
+              <div>
+                <strong>{t.safeData}</strong>
+                <p>{t.safeDataText}</p>
+              </div>
+            </div>
+            <div className="auth617-feature-card">
+              <span className="auth617-feature-icon"><IconBolt /></span>
+              <div>
+                <strong>{t.fastRegister}</strong>
+                <p>{t.fastRegisterText}</p>
+              </div>
+            </div>
+            <div className="auth617-feature-card">
+              <span className="auth617-feature-icon"><IconChart /></span>
+              <div>
+                <strong>{t.freeAi}</strong>
+                <p>{t.freeAiText}</p>
+              </div>
+            </div>
+            <div className="auth617-feature-card">
+              <span className="auth617-feature-icon"><IconUsers /></span>
+              <div>
+                <strong>{t.community}</strong>
+                <p>{t.communityText}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {presentationOpen ? (
         <div
           className="auth1567-video-backdrop"
           role="dialog"
           aria-modal="true"
-          aria-label="Prezentacja platformy Bet plus AI"
+          aria-label={authLang === 'en' ? 'Bet plus AI platform presentation' : 'Prezentacja platformy Bet plus AI'}
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setPresentationOpen(false)
           }}
@@ -23736,24 +23581,24 @@ function AuthView({ onAuth }) {
           <div className="auth1567-video-modal">
             <div className="auth1567-video-head">
               <div>
-                <span>PREZENTACJA PLATFORMY</span>
-                <strong>Bet+AI w praktyce</strong>
+                <span>{authLang === 'en' ? 'PLATFORM PRESENTATION' : 'PREZENTACJA PLATFORMY'}</span>
+                <strong>{authLang === 'en' ? 'Bet+AI in action' : 'Bet+AI w praktyce'}</strong>
               </div>
               <button
                 type="button"
                 className="auth1567-video-close"
                 onClick={() => setPresentationOpen(false)}
-                aria-label="Zamknij prezentację"
+                aria-label={authLang === 'en' ? 'Close presentation' : 'Zamknij prezentację'}
               >
                 ×
               </button>
             </div>
             <iframe
               className="auth1567-video-player"
-              src="https://iframe.mediadelivery.net/embed/677418/07fb432a-32f8-476f-8826-d8f705c257e1?autoplay=false&loop=false&muted=false&preload=true&responsive=true"
-              title="Bet+AI prezentacja platformy"
-              loading="eager"
-              fetchPriority="high"
+              src="https://player.mediadelivery.net/embed/677418/07fb432a-32f8-476f-8826-d8f705c257e1?autoplay=true&loop=false&muted=true&preload=true&responsive=true"
+              title={authLang === 'en' ? 'Bet+AI platform presentation' : 'Bet+AI prezentacja platformy'}
+              loading="lazy"
+              fetchPriority="low"
               allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
               allowFullScreen
             />
@@ -23765,7 +23610,6 @@ function AuthView({ onAuth }) {
       <AuthSupportChatGuest />
     </div>
   )
-
 }
 
 function PaymentModal({ tip, user, onClose, onSuccess }) {
@@ -31320,7 +31164,6 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
 function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false, ariaLabel = 'Language switcher' }) {
   const [open, setOpen] = useState(false)
   const currentLang = BETAI_LANGUAGES.includes(lang) ? lang : 'pl'
-  const flagSources = { pl: '/flag-pl.svg', en: '/flag-en.svg' }
   const chooseLanguage = (code) => {
     onChange?.(code)
     setOpen(false)
@@ -31343,9 +31186,7 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
         aria-label={`${ariaLabel}: ${BETAI_LANG_NAMES?.[currentLang] || BETAI_LANG_LABELS[currentLang]}`}
         title={BETAI_LANG_NAMES?.[currentLang] || BETAI_LANG_LABELS[currentLang]}
       >
-        <span className={`betai-language-flag betai-flag-${currentLang} has-image`} aria-hidden="true">
-          <img className="betai-language-flag-img" src={flagSources[currentLang] || '/flag-pl.svg'} alt="" loading="eager" decoding="async" />
-        </span>
+        <span className={`betai-language-flag betai-flag-${currentLang}`} aria-hidden="true" />
         <span className="betai-language-chevron" aria-hidden="true">⌄</span>
       </button>
 
@@ -31362,9 +31203,7 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
               aria-label={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
               title={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
             >
-              <span className={`betai-language-flag betai-flag-${code} has-image`} aria-hidden="true">
-                <img className="betai-language-flag-img" src={flagSources[code] || '/flag-pl.svg'} alt="" loading="lazy" decoding="async" />
-              </span>
+              <span className={`betai-language-flag betai-flag-${code}`} aria-hidden="true" />
               <span className="betai-language-name">{BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}</span>
             </button>
           ))}
