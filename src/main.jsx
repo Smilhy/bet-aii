@@ -682,6 +682,24 @@ function translateBetaiDynamicTemplateV1850(value, lang) {
     if ((match = text.match(/^Typ:\s*(.+?)\s+•\s+Kurs:\s*(.+)$/i))) return `Pick: ${match[1]} • Odds: ${match[2]}`
     if ((match = text.match(/^Kurs\s+(.+)$/i))) return `Odds ${match[1]}`
     if ((match = text.match(/^Pozostało dziś:\s*(\d+)$/i))) return `Remaining today: ${match[1]}`
+    if ((match = text.match(/^([+-]?\d+(?:[.,]\d+)?)\s+pkt$/i))) return `${match[1]} pts`
+    if ((match = text.match(/^(\d+)\s*\/\s*7\s+dni$/i))) return `${match[1]} / 7 days`
+    if ((match = text.match(/^(\d+)\s+dni$/i))) return `${match[1]} days`
+    if ((match = text.match(/^(\d+)%\s+obecności$/i))) return `${match[1]}% attendance`
+    if ((match = text.match(/^Nagroda gotowa:\s*(\d+)\s+coin$/i))) return `Reward ready: ${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'}`
+    if ((match = text.match(/^Obecność tygodnia:\s*(\d+)\s+coin$/i))) return `Weekly attendance: ${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'}`
+    if ((match = text.match(/^Seria typów gotowa:\s*(\d+)\s+coin$/i))) return `Pick streak ready: ${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'}`
+    if ((match = text.match(/^Seria typów:\s*(\d+)\/7\s+dni$/i))) return `Pick streak: ${match[1]}/7 days`
+    if ((match = text.match(/^Odbierz\s+(\d+)\s+coin$/i))) return `Claim ${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'}`
+    if ((match = text.match(/^Masz nagrodę do odebrania:\s*(\d+)\s+coin\.?$/i))) return `You have a reward to claim: ${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'}.`
+    if ((match = text.match(/^Odebrano dzienną obecność:\s*\+(\d+)\s+coin\.?$/i))) return `Daily attendance claimed: +${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'}.`
+    if ((match = text.match(/^Odebrano nagrodę tygodniową:\s*\+(\d+)\s+coin\.?$/i))) return `Weekly reward claimed: +${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'}.`
+    if ((match = text.match(/^Odebrano nagrodę za serię typów:\s*\+(\d+)\s+coin\.?$/i))) return `Pick streak reward claimed: +${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'}.`
+    if ((match = text.match(/^Odebrano nagrodę za win streak:\s*\+(\d+)\s+coin\.?$/i))) return `Win streak reward claimed: +${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'}.`
+    if ((match = text.match(/^Dodano\s+(\d+)\s+coin za dzisiejszą obecność\.?$/i))) return `Added ${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'} for today's attendance.`
+    if ((match = text.match(/^Dodano\s+(\d+)\s+coin za pełny tydzień obecności\.?$/i))) return `Added ${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'} for a full week of attendance.`
+    if ((match = text.match(/^Dodano\s+(\d+)\s+coin za 7 dni dodawania typów\.?$/i))) return `Added ${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'} for 7 days of adding picks.`
+    if ((match = text.match(/^Dodano\s+(\d+)\s+coin za trafione 5\/5\.?$/i))) return `Added ${match[1]} ${Number(match[1]) === 1 ? 'coin' : 'coins'} for a 5/5 win streak.`
     if ((match = text.match(/^(\d+)\s+(mecz|mecze|meczów)$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'match' : 'matches'}`
     if ((match = text.match(/^(\d+)\s+wydarzeń\s+•\s+godziny rosnąco$/i))) return `${match[1]} events • time ascending`
     if ((match = text.match(/^(\d+)\s+wydarze(?:nie|nia|ń)$/i))) return `${match[1]} ${Number(match[1]) === 1 ? 'event' : 'events'}`
@@ -2113,6 +2131,118 @@ const BETAI_AI_LEAGUE_MODAL_TRANSLATIONS_V1864 = {
   }
 }
 
+const BETAI_REWARDS_TRANSLATIONS_V1865 = {
+  en: {
+    'MISJE I NAGRODY': 'MISSIONS & REWARDS',
+    'Aktywność, coiny i osiągnięcia': 'Activity, coins and achievements',
+    'Wejdź codziennie do BetAI, buduj win streak 5/5 i dodawaj typy przez 7 dni po nagrody.': 'Visit BetAI every day, build a 5/5 win streak and add picks for 7 days to earn rewards.',
+    'Free: 7 coin / tydzień': 'Free: 7 coins / week',
+    'Premium: 14 coin / tydzień': 'Premium: 14 coins / week',
+    'Win streak 5/5: 1 coin': '5/5 win streak: 1 coin',
+    'Seria typów: 7 coin': 'Pick streak: 7 coins',
+    'Twoje coiny': 'Your coins',
+    'Saldo konta': 'Account balance',
+    'Dzienny zapis': 'Daily check-in',
+    'Tydzień': 'Week',
+    'MISJE DZIENNE': 'DAILY MISSIONS',
+    'Obecność zapisuje się automatycznie raz dziennie po wejściu na stronę.': 'Attendance is recorded automatically once per day when you visit the site.',
+    'Wykonane': 'Completed',
+    'Dzisiaj': 'Today',
+    'Dzisiejsza obecność': "Today's attendance",
+    'Wejdź minimum raz dziennie do BetAI.': 'Visit BetAI at least once per day.',
+    'Traf 5 typów z rzędu i odbierz 1 coin.': 'Win 5 picks in a row and claim 1 coin.',
+    'Dodaj typ 7 dni z rzędu': 'Add a pick for 7 days in a row',
+    'Minimum 1 typ dziennie od poniedziałku do niedzieli. Nagroda tylko za komplet.': 'Add at least 1 pick per day from Monday to Sunday. The reward is granted only for completing the full streak.',
+    'Nagroda za serię typów': 'Pick streak reward',
+    'Komplet 7/7 z poprzedniego tygodnia jest gotowy do odbioru.': 'Your completed 7/7 streak from last week is ready to claim.',
+    'Nagroda za poprzedni tydzień została już odebrana.': "Last week's reward has already been claimed.",
+    'Odbiór pojawi się po komplecie 7/7 dni typowania.': 'The reward will become available after completing 7/7 days of picking.',
+    'Odebrano': 'Claimed',
+    'Odebrane': 'Claimed',
+    'Odbierz': 'Claim',
+    'Odbieram...': 'Claiming...',
+    'Zapisane': 'Recorded',
+    'W toku': 'In progress',
+    'STREAK AKTYWNOŚCI': 'ACTIVITY STREAK',
+    'Jeśli zaliczysz cały tydzień, po niedzieli odblokujesz nagrodę tygodniową.': 'Complete the entire week to unlock the weekly reward after Sunday.',
+    'dni w tym tygodniu': 'days this week',
+    '3 dni': '3 days',
+    '7 dni': '7 days',
+    'Seria': 'Streak',
+    'Odbiór': 'Claim',
+    'Dostępny': 'Available',
+    'Po tygodniu': 'After the week',
+    'Nagroda za obecność odebrana': 'Attendance reward claimed',
+    'Zalicz 7/7 dni i odbierz nagrodę po zakończeniu tygodnia.': 'Complete 7/7 days and claim the reward after the week ends.',
+    'Zablokowane': 'Locked',
+    'Nagroda za serię typów odebrana': 'Pick streak reward claimed',
+    'Dodaj minimum 1 typ dziennie przez 7 dni i odbierz 7 coin.': 'Add at least 1 pick per day for 7 days and claim 7 coins.',
+    'OSIĄGNIĘCIA': 'ACHIEVEMENTS',
+    'Odznaki za aktywność, regularność i rozwój profilu typera.': 'Badges for activity, consistency and tipster profile growth.',
+    'Pierwsza obecność': 'First attendance',
+    'Pierwszy zapisany dzień w BetAI.': 'Your first recorded day in BetAI.',
+    'Odblokowano': 'Unlocked',
+    'Traf 5 typów z rzędu.': 'Win 5 picks in a row.',
+    'Wzorowa obecność': 'Perfect attendance',
+    'Pełne 7/7 dni w tygodniu.': 'A full 7/7 days in the week.',
+    'PROGRES TYGODNIA': 'WEEKLY PROGRESS',
+    'Obecność użytkownika': 'User attendance',
+    'Cel tygodniowy': 'Weekly goal',
+    'Nagroda': 'Reward',
+    'TOP AKTYWNOŚCI': 'TOP ACTIVITY',
+    'Liczenie aktywności...': 'Calculating activity...',
+    'Czat, posty, komentarze, misje i odbiory': 'Chat, posts, comments, missions and claims',
+    'Otwórz profil': 'Open profile',
+    'Aktywny': 'Active',
+    'AKTYWNY': 'ACTIVE',
+    'LIDER': 'LEADER',
+    'START': 'START',
+    'SYSTEM COINÓW': 'COIN SYSTEM',
+    '7 coin za 7/7 dni': '7 coins for 7/7 days',
+    '14 coin za 7/7 dni': '14 coins for 7/7 days',
+    'Typy 7/7': 'Picks 7/7',
+    '7 coin za komplet': '7 coins for completion',
+    'po niedzieli 00:00': 'after Sunday at 00:00',
+    'Sprawdzam obecność...': 'Checking attendance...',
+    'Sprawdzam dzienny odbiór...': 'Checking daily reward...',
+    'Sprawdzam serię typów...': 'Checking pick streak...',
+    'Sprawdzam win streak...': 'Checking win streak...',
+    'Zaloguj się i podłącz Supabase, aby zapisać obecność.': 'Sign in and connect Supabase to record attendance.',
+    'Zapisuję dzisiejszą obecność...': "Recording today's attendance...",
+    'Obecność na dziś zapisana.': "Today's attendance has been recorded.",
+    'Uruchom SQL Supabase dla obecności tygodniowej.': 'Run the Supabase SQL for weekly attendance.',
+    'Zaloguj się, aby odebrać dzienny coin.': 'Sign in to claim the daily coin.',
+    'Dzisiejszy coin został już odebrany.': "Today's coin has already been claimed.",
+    'Możesz odebrać dzienny coin.': 'You can claim the daily coin.',
+    'Wejdź dziś do BetAI, aby odblokować odbiór.': 'Visit BetAI today to unlock the reward.',
+    'Uruchom SQL Supabase dla dziennego odbioru.': 'Run the Supabase SQL for the daily reward.',
+    'Dzienna obecność odebrana': 'Daily attendance claimed',
+    'Nie udało się odebrać dziennego coina. Sprawdź SQL Supabase.': 'The daily coin could not be claimed. Check the Supabase SQL.',
+    'Nie odebrano nagrody': 'Reward not claimed',
+    'Sprawdź Supabase SQL.': 'Check the Supabase SQL.',
+    'Nagroda odebrana': 'Reward claimed',
+    'Nie udało się odebrać nagrody. Sprawdź SQL Supabase.': 'The reward could not be claimed. Check the Supabase SQL.',
+    'Podłącz Supabase, aby zapisać serię typów.': 'Connect Supabase to record the pick streak.',
+    'Dodaj minimum 1 typ dziennie przez 7 dni.': 'Add at least 1 pick per day for 7 days.',
+    'Uruchom SQL Supabase dla serii typów.': 'Run the Supabase SQL for the pick streak.',
+    'Seria typów odebrana': 'Pick streak claimed',
+    'Nie udało się odebrać nagrody za serię typów.': 'The pick streak reward could not be claimed.',
+    'Podłącz Supabase, aby liczyć win streak.': 'Connect Supabase to track the win streak.',
+    'Masz gotowy odbiór za trafione 5/5.': 'Your reward for a 5/5 win streak is ready to claim.',
+    'Nagroda za aktualny poziom została odebrana.': 'The reward for the current level has been claimed.',
+    'Traf 5 typów z rzędu, aby odebrać 1 coin.': 'Win 5 picks in a row to claim 1 coin.',
+    'Win streak odebrany': 'Win streak claimed',
+    'Nie udało się odebrać nagrody za win streak.': 'The win streak reward could not be claimed.',
+    'Pn': 'Mon',
+    'Wt': 'Tue',
+    'Śr': 'Wed',
+    'Cz': 'Thu',
+    'Pt': 'Fri',
+    'So': 'Sat',
+    'Dziś': 'Today'
+  }
+}
+
 const BETAI_TRANSLATION_DICTIONARY_CACHE = new Map()
 const BETAI_TRANSLATION_KEYS_CACHE = new Map()
 
@@ -2134,7 +2264,8 @@ function buildBetaiTranslationDictionary(lang) {
     BETAI_RANKING_TRANSLATIONS_V1859,
     BETAI_COMMUNITY_TRANSLATIONS_V1860,
     BETAI_AI_TOP_TIPSTERS_TRANSLATIONS_V1863,
-    BETAI_AI_LEAGUE_MODAL_TRANSLATIONS_V1864
+    BETAI_AI_LEAGUE_MODAL_TRANSLATIONS_V1864,
+    BETAI_REWARDS_TRANSLATIONS_V1865
   ]
   const allTargetDictionaries = allSources.map(source => source?.[lang] || {})
   const target = Object.assign({}, ...allTargetDictionaries)
@@ -22624,7 +22755,7 @@ function AuthView({ onAuth }) {
   const t = authTranslations[authLang] || authTranslations.pl
   const localizedAuthFrameSrc = authLang === 'pl'
     ? '/auth-frame-reference-609.png'
-    : `/auth-frame-reference-609-${authLang}.png`
+    : '/auth-frame-reference-609-en-v1866.png'
 
   function normalizeLiveCount(value, fallback = 0) {
     const parsed = Number(value)
@@ -23269,26 +23400,26 @@ function AuthView({ onAuth }) {
                 <div className="auth609-top-spacer" />
 
                 <div className="auth609-heading-copy auth609-heading-center">
-                  <div className="auth609-beta-banner" role="note" aria-label="Informacja o wersji beta">
-                    <span className="auth609-beta-kicker">WERSJA BETA</span>
-                    <span className="auth609-beta-info" tabIndex="0" aria-label="Jak zmienić zoom przeglądarki">
+                  <div className="auth609-beta-banner" role="note" aria-label={authLang === 'en' ? 'Beta version information' : 'Informacja o wersji beta'}>
+                    <span className="auth609-beta-kicker">{authLang === 'en' ? 'BETA VERSION' : 'WERSJA BETA'}</span>
+                    <span className="auth609-beta-info" tabIndex="0" aria-label={authLang === 'en' ? 'How to change browser zoom' : 'Jak zmienić zoom przeglądarki'}>
                       i
                       <span className="auth609-beta-tooltip" role="tooltip">
-                        <span>Jeśli widok się rozjeżdża, użyj <b>zoomu</b> przeglądarki.</span>
+                        <span>{authLang === 'en' ? <>If the layout looks incorrect, use your browser <b>zoom</b>.</> : <>Jeśli widok się rozjeżdża, użyj <b>zoomu</b> przeglądarki.</>}</span>
                         <span className="auth609-beta-shortcuts">
                           <strong>Ctrl <em>+</em></strong>
-                          <i>i</i>
+                          <i>{authLang === 'en' ? 'and' : 'i'}</i>
                           <strong>Ctrl <em>-</em></strong>
                         </span>
-                        <span>lub ustaw <b>zoom</b> ręcznie w przeglądarce.</span>
+                        <span>{authLang === 'en' ? <>or set the browser <b>zoom</b> manually.</> : <>lub ustaw <b>zoom</b> ręcznie w przeglądarce.</>}</span>
                         <span className="auth609-beta-zoomrow">
                           <em>-</em><small>100%</small><em>+</em>
                         </span>
                       </span>
                     </span>
                     <p>
-                      <strong>⚠️ Strona jest w wersji BETA.</strong><br />
-                      Jeśli widok na Twoim urządzeniu wygląda źle, ramki się nakładają albo strona nie dopasowuje się do ekranu, użyj <span className="auth609-beta-highlight">zoomu/lupy</span> w przeglądarce i ustaw widok ręcznie. Będziemy na bieżąco naprawiać takie błędy.
+                      <strong>{authLang === 'en' ? '⚠️ This page is in beta.' : '⚠️ Strona jest w wersji BETA.'}</strong><br />
+                      {authLang === 'en' ? <>If the layout looks incorrect on your device, elements overlap or the page does not fit the screen, use the browser <span className="auth609-beta-highlight">zoom tool</span> and adjust the view manually. We are continuously fixing these issues.</> : <>Jeśli widok na Twoim urządzeniu wygląda źle, ramki się nakładają albo strona nie dopasowuje się do ekranu, użyj <span className="auth609-beta-highlight">zoomu/lupy</span> w przeglądarce i ustaw widok ręcznie. Będziemy na bieżąco naprawiać takie błędy.</>}
                     </p>
                   </div>
                   <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth619-fused-logo auth620-fused-logo" draggable="false" />
@@ -23385,12 +23516,12 @@ function AuthView({ onAuth }) {
                   type="button"
                   className="auth1567-presentation-button"
                   onClick={() => setPresentationOpen(true)}
-                  aria-label="Obejrzyj prezentację platformy Bet plus AI"
+                  aria-label={authLang === 'en' ? 'Watch the Bet plus AI platform presentation' : 'Obejrzyj prezentację platformy Bet plus AI'}
                 >
                   <span className="auth1567-play-orb">▶</span>
                   <span>
-                    <b>Obejrzyj prezentację</b>
-                    <small>Zobacz, jak działa Bet+AI</small>
+                    <b>{authLang === 'en' ? 'Watch presentation' : 'Obejrzyj prezentację'}</b>
+                    <small>{authLang === 'en' ? 'See how Bet+AI works' : 'Zobacz, jak działa Bet+AI'}</small>
                   </span>
                 </button>
 
@@ -23442,7 +23573,7 @@ function AuthView({ onAuth }) {
           className="auth1567-video-backdrop"
           role="dialog"
           aria-modal="true"
-          aria-label="Prezentacja platformy Bet plus AI"
+          aria-label={authLang === 'en' ? 'Bet plus AI platform presentation' : 'Prezentacja platformy Bet plus AI'}
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setPresentationOpen(false)
           }}
@@ -23450,14 +23581,14 @@ function AuthView({ onAuth }) {
           <div className="auth1567-video-modal">
             <div className="auth1567-video-head">
               <div>
-                <span>PREZENTACJA PLATFORMY</span>
-                <strong>Bet+AI w praktyce</strong>
+                <span>{authLang === 'en' ? 'PLATFORM PRESENTATION' : 'PREZENTACJA PLATFORMY'}</span>
+                <strong>{authLang === 'en' ? 'Bet+AI in action' : 'Bet+AI w praktyce'}</strong>
               </div>
               <button
                 type="button"
                 className="auth1567-video-close"
                 onClick={() => setPresentationOpen(false)}
-                aria-label="Zamknij prezentację"
+                aria-label={authLang === 'en' ? 'Close presentation' : 'Zamknij prezentację'}
               >
                 ×
               </button>
@@ -23465,7 +23596,7 @@ function AuthView({ onAuth }) {
             <iframe
               className="auth1567-video-player"
               src="https://player.mediadelivery.net/embed/677418/07fb432a-32f8-476f-8826-d8f705c257e1?autoplay=true&loop=false&muted=true&preload=true&responsive=true"
-              title="Bet+AI prezentacja platformy"
+              title={authLang === 'en' ? 'Bet+AI platform presentation' : 'Bet+AI prezentacja platformy'}
               loading="lazy"
               fetchPriority="low"
               allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
@@ -30424,6 +30555,16 @@ function DashboardAutoTranslator({ lang }) {
 
 
 function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onToast, onOpenTipster }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
+  const formatCoins = (value, prefix = '') => {
+    const amount = Number(value || 0)
+    return lang === 'en' ? `${prefix}${amount} ${amount === 1 ? 'coin' : 'coins'}` : `${prefix}${amount} coin`
+  }
+  const formatDays = (value) => {
+    const amount = Number(value || 0)
+    return lang === 'en' ? `${amount} ${amount === 1 ? 'day' : 'days'}` : `${amount} dni`
+  }
   const isPremium = isPremiumAccount(userPlan) || isPremiumProfile(user)
   const dailyRewardCoins = isPremium ? 2 : 1
   const defaultRewardCoins = isPremium ? 14 : 7
@@ -30432,13 +30573,13 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
     return day === 0 ? 7 : day
   })()
   const buildLocalDays = (activeDays = []) => [
-    { label: 'Pn', index: 1, state: activeDays.includes(1) ? 'done' : todayIsoDow === 1 ? 'today' : todayIsoDow < 1 ? 'soon' : 'soon' },
-    { label: 'Wt', index: 2, state: activeDays.includes(2) ? 'done' : todayIsoDow === 2 ? 'today' : todayIsoDow < 2 ? 'soon' : 'missed' },
-    { label: 'Śr', index: 3, state: activeDays.includes(3) ? 'done' : todayIsoDow === 3 ? 'today' : todayIsoDow < 3 ? 'soon' : 'missed' },
-    { label: 'Cz', index: 4, state: activeDays.includes(4) ? 'done' : todayIsoDow === 4 ? 'today' : todayIsoDow < 4 ? 'soon' : 'missed' },
-    { label: 'Pt', index: 5, state: activeDays.includes(5) ? 'done' : todayIsoDow === 5 ? 'today' : todayIsoDow < 5 ? 'soon' : 'missed' },
-    { label: 'So', index: 6, state: activeDays.includes(6) ? 'done' : todayIsoDow === 6 ? 'today' : todayIsoDow < 6 ? 'soon' : 'missed' },
-    { label: 'Dziś', index: 7, state: activeDays.includes(7) ? 'done' : todayIsoDow === 7 ? 'today' : todayIsoDow < 7 ? 'soon' : 'missed' }
+    { label: t('Pn'), index: 1, state: activeDays.includes(1) ? 'done' : todayIsoDow === 1 ? 'today' : todayIsoDow < 1 ? 'soon' : 'soon' },
+    { label: t('Wt'), index: 2, state: activeDays.includes(2) ? 'done' : todayIsoDow === 2 ? 'today' : todayIsoDow < 2 ? 'soon' : 'missed' },
+    { label: t('Śr'), index: 3, state: activeDays.includes(3) ? 'done' : todayIsoDow === 3 ? 'today' : todayIsoDow < 3 ? 'soon' : 'missed' },
+    { label: t('Cz'), index: 4, state: activeDays.includes(4) ? 'done' : todayIsoDow === 4 ? 'today' : todayIsoDow < 4 ? 'soon' : 'missed' },
+    { label: t('Pt'), index: 5, state: activeDays.includes(5) ? 'done' : todayIsoDow === 5 ? 'today' : todayIsoDow < 5 ? 'soon' : 'missed' },
+    { label: t('So'), index: 6, state: activeDays.includes(6) ? 'done' : todayIsoDow === 6 ? 'today' : todayIsoDow < 6 ? 'soon' : 'missed' },
+    { label: t('Dziś'), index: 7, state: activeDays.includes(7) ? 'done' : todayIsoDow === 7 ? 'today' : todayIsoDow < 7 ? 'soon' : 'missed' }
   ]
   const [attendance, setAttendance] = useState(() => ({
     loading: true,
@@ -30504,7 +30645,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
       const profileMap = buildBetaiProfileMap(publicProfiles)
       const mapped = rawRows.map((row, index) => {
         const points = Number(row.points ?? row.total_points ?? row.score ?? 0) || 0
-        const fallbackName = String(row.display_name || row.user_name || row.username || row.name || row.email || `Użytkownik ${index + 1}`).replace(/@.*$/, '')
+        const fallbackName = String(row.display_name || row.user_name || row.username || row.name || row.email || (lang === 'en' ? `User ${index + 1}` : `Użytkownik ${index + 1}`)).replace(/@.*$/, '')
         const profile = findProfileFromMap(profileMap, {
           id: row.user_id || row.id,
           user_id: row.user_id || row.id,
@@ -30521,8 +30662,8 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
         const initials = String(row.initials || profileName.slice(0, 2) || 'AI').toUpperCase()
         return {
           name: profileName,
-          score: `${points.toLocaleString('pl-PL')} pkt`,
-          badge: row.badge || (index === 0 ? 'LIDER' : 'AKTYWNY'),
+          score: lang === 'en' ? `${points.toLocaleString('en-US')} pts` : `${points.toLocaleString('pl-PL')} pkt`,
+          badge: row.badge || (index === 0 ? t('LIDER') : t('AKTYWNY')),
           initials,
           points,
           avatarUrl: getProfileAvatarUrl(profile || row) || '',
@@ -30619,12 +30760,12 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
       try { if (email) localStorage.setItem('betai_tokens_' + email, String(nextBalance)) } catch (_) {}
       window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email, balance: nextBalance, reason: 'daily_attendance_reward' } }))
       setDailyReward(prev => ({ ...prev, claimed: true, can_claim: false, reward_coins: rewardCoins, message: `Odebrano dzienną obecność: +${rewardCoins} coin.` }))
-      onToast?.({ type: 'success', title: 'Dzienna obecność odebrana', message: `Dodano ${rewardCoins} coin za dzisiejszą obecność.` })
+      onToast?.({ type: 'success', title: t('Dzienna obecność odebrana'), message: t(`Dodano ${rewardCoins} coin za dzisiejszą obecność.`) })
       refreshActivityRanking()
     } catch (error) {
       console.warn('daily attendance reward claim failed', error)
       setDailyReward(prev => ({ ...prev, message: 'Nie udało się odebrać dziennego coina. Sprawdź SQL Supabase.' }))
-      onToast?.({ type: 'error', title: 'Nie odebrano nagrody', message: error?.message || 'Sprawdź Supabase SQL.' })
+      onToast?.({ type: 'error', title: t('Nie odebrano nagrody'), message: error?.message || t('Sprawdź Supabase SQL.') })
     } finally {
       setDailyClaimBusy(false)
       refreshDailyReward()
@@ -30644,11 +30785,11 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
       try { if (email) localStorage.setItem('betai_tokens_' + email, String(nextBalance)) } catch (_) {}
       window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email, balance: nextBalance, reason: 'weekly_attendance_reward' } }))
       setAttendance(prev => ({ ...prev, can_claim_previous: false, previous_week_claimed: true, message: `Odebrano nagrodę tygodniową: +${rewardCoins} coin.` }))
-      onToast?.({ type: 'success', title: 'Nagroda odebrana', message: `Dodano ${rewardCoins} coin za pełny tydzień obecności.` })
+      onToast?.({ type: 'success', title: t('Nagroda odebrana'), message: t(`Dodano ${rewardCoins} coin za pełny tydzień obecności.`) })
     } catch (error) {
       console.warn('weekly reward claim failed', error)
       setAttendance(prev => ({ ...prev, message: 'Nie udało się odebrać nagrody. Sprawdź SQL Supabase.' }))
-      onToast?.({ type: 'error', title: 'Nie odebrano nagrody', message: error?.message || 'Sprawdź Supabase SQL.' })
+      onToast?.({ type: 'error', title: t('Nie odebrano nagrody'), message: error?.message || t('Sprawdź Supabase SQL.') })
     } finally {
       setClaimBusy(false)
       refreshAttendance()
@@ -30700,12 +30841,12 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
       try { if (email) localStorage.setItem('betai_tokens_' + email, String(nextBalance)) } catch (_) {}
       window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email, balance: nextBalance, reason: 'weekly_tip_streak_reward' } }))
       setTipStreak(prev => ({ ...prev, can_claim_previous: false, previous_week_claimed: true, message: `Odebrano nagrodę za serię typów: +${rewardCoins} coin.` }))
-      onToast?.({ type: 'success', title: 'Seria typów odebrana', message: `Dodano ${rewardCoins} coin za 7 dni dodawania typów.` })
+      onToast?.({ type: 'success', title: t('Seria typów odebrana'), message: t(`Dodano ${rewardCoins} coin za 7 dni dodawania typów.`) })
       refreshActivityRanking()
     } catch (error) {
       console.warn('weekly tip reward claim failed', error)
       setTipStreak(prev => ({ ...prev, message: 'Nie udało się odebrać nagrody za serię typów.' }))
-      onToast?.({ type: 'error', title: 'Nie odebrano nagrody', message: error?.message || 'Sprawdź Supabase SQL.' })
+      onToast?.({ type: 'error', title: t('Nie odebrano nagrody'), message: error?.message || t('Sprawdź Supabase SQL.') })
     } finally {
       setTipClaimBusy(false)
       refreshTipStreak()
@@ -30759,12 +30900,12 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
       try { if (email) localStorage.setItem('betai_tokens_' + email, String(nextBalance)) } catch (_) {}
       window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email, balance: nextBalance, reason: 'win_streak_5_reward' } }))
       setWinStreak(prev => ({ ...prev, can_claim: false, claimed_units: Number(prev.claimed_units || 0) + 1, message: `Odebrano nagrodę za win streak: +${rewardCoins} coin.` }))
-      onToast?.({ type: 'success', title: 'Win streak odebrany', message: `Dodano ${rewardCoins} coin za trafione 5/5.` })
+      onToast?.({ type: 'success', title: t('Win streak odebrany'), message: t(`Dodano ${rewardCoins} coin za trafione 5/5.`) })
       refreshActivityRanking()
     } catch (error) {
       console.warn('win streak claim failed', error)
       setWinStreak(prev => ({ ...prev, message: 'Nie udało się odebrać nagrody za win streak.' }))
-      onToast?.({ type: 'error', title: 'Nie odebrano nagrody', message: error?.message || 'Sprawdź Supabase SQL.' })
+      onToast?.({ type: 'error', title: t('Nie odebrano nagrody'), message: error?.message || t('Sprawdź Supabase SQL.') })
     } finally {
       setWinClaimBusy(false)
       refreshWinStreak()
@@ -30822,41 +30963,41 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
   }, [user?.id, weeklyDays, winStreak.current_streak])
 
   const fallbackRanking = [
-    { name: 'buchajson1988', score: `${Math.max(weeklyDays * dailyRewardCoins, 1)} pkt`, badge: 'AKTYWNY', initials: 'BU' },
-    { name: 'smilhytv', score: '0 pkt', badge: 'START', initials: 'SM' },
-    { name: 'pkucharski', score: '0 pkt', badge: 'START', initials: 'PK' },
-    { name: 'smokeybet', score: '0 pkt', badge: 'START', initials: 'MS' },
-    { name: 'AI_Master', score: '0 pkt', badge: 'START', initials: 'AI' }
+    { name: 'buchajson1988', score: lang === 'en' ? `${Math.max(weeklyDays * dailyRewardCoins, 1)} pts` : `${Math.max(weeklyDays * dailyRewardCoins, 1)} pkt`, badge: t('AKTYWNY'), initials: 'BU' },
+    { name: 'smilhytv', score: lang === 'en' ? '0 pts' : '0 pkt', badge: t('START'), initials: 'SM' },
+    { name: 'pkucharski', score: lang === 'en' ? '0 pts' : '0 pkt', badge: t('START'), initials: 'PK' },
+    { name: 'smokeybet', score: lang === 'en' ? '0 pts' : '0 pkt', badge: t('START'), initials: 'MS' },
+    { name: 'AI_Master', score: lang === 'en' ? '0 pts' : '0 pkt', badge: t('START'), initials: 'AI' }
   ]
   const ranking = activityRanking.length ? activityRanking : fallbackRanking
   return (
     <div className="rewards-ultra-page rewards-missions-v1533 rewards-weekly-v1540">
       <section className="rewards-ultra-card rewards-ultra-hero rewards-missions-hero-v1533">
         <div className="rewards-ultra-hero-copy rewards-hero-copy-v1533">
-          <span>MISJE I NAGRODY</span>
-          <h1>Aktywność, coiny i osiągnięcia</h1>
-          <p>Wejdź codziennie do BetAI, buduj win streak 5/5 i dodawaj typy przez 7 dni po nagrody.</p>
+          <span>{t('MISJE I NAGRODY')}</span>
+          <h1>{t('Aktywność, coiny i osiągnięcia')}</h1>
+          <p>{t('Wejdź codziennie do BetAI, buduj win streak 5/5 i dodawaj typy przez 7 dni po nagrody.')}</p>
           <div className="rewards-hero-badges-v1533">
-            <em>Free: 7 coin / tydzień</em>
-            <em>Premium: 14 coin / tydzień</em>
-            <em>Win streak 5/5: 1 coin</em><em>Seria typów: 7 coin</em>
+            <em>{t('Free: 7 coin / tydzień')}</em>
+            <em>{t('Premium: 14 coin / tydzień')}</em>
+            <em>{t('Win streak 5/5: 1 coin')}</em><em>{t('Seria typów: 7 coin')}</em>
           </div>
         </div>
         <div className="rewards-ultra-hero-stats rewards-missions-hero-stats-v1533">
           <div className="rewards-ultra-topmini tone-blue rewards-hero-stat-card-v1533">
-            <span>Twoje coiny</span>
+            <span>{t('Twoje coiny')}</span>
             <strong>{Number(tokenBalance || 0).toLocaleString('pl-PL')}</strong>
-            <small>Saldo konta</small>
+            <small>{t('Saldo konta')}</small>
           </div>
           <div className="rewards-ultra-topmini tone-green rewards-hero-stat-card-v1533">
-            <span>Dzienny zapis</span>
-            <strong>{dailyRewardCoins} coin</strong>
+            <span>{t('Dzienny zapis')}</span>
+            <strong>{formatCoins(dailyRewardCoins)}</strong>
             <small>{isPremium ? 'Premium' : 'Free'}</small>
           </div>
           <div className="rewards-ultra-topmini tone-gold rewards-hero-stat-card-v1533">
-            <span>Tydzień</span>
+            <span>{t('Tydzień')}</span>
             <strong>{weeklyDays}/7</strong>
-            <small>{weeklyProgress}% obecności</small>
+            <small>{lang === 'en' ? `${weeklyProgress}% attendance` : `${weeklyProgress}% obecności`}</small>
           </div>
         </div>
       </section>
@@ -30866,12 +31007,12 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
           <section className="rewards-ultra-card rewards-ultra-missions rewards-missions-card-v1533 rewards-missions-primary-v1533">
             <div className="rewards-missions-section-top-v1533">
               <div className="rewards-ultra-head stacked">
-                <h3>MISJE DZIENNE</h3>
-                <small>Obecność zapisuje się automatycznie raz dziennie po wejściu na stronę.</small>
+                <h3>{t('MISJE DZIENNE')}</h3>
+                <small>{t('Obecność zapisuje się automatycznie raz dziennie po wejściu na stronę.')}</small>
               </div>
               <div className="rewards-mission-summary-v1533">
-                <div><span>Wykonane</span><strong>{completedMissions}/{missions.length}</strong></div>
-                <div><span>Dzisiaj</span><strong>{potentialCoinsToday} coin</strong></div>
+                <div><span>{t('Wykonane')}</span><strong>{completedMissions}/{missions.length}</strong></div>
+                <div><span>{t('Dzisiaj')}</span><strong>{formatCoins(potentialCoinsToday)}</strong></div>
               </div>
             </div>
             <div className="rewards-ultra-mission-list rewards-mission-list-v1533">
@@ -30883,18 +31024,18 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
                     <div className="rewards-ultra-mission-icon">{mission.icon}</div>
                     <div className="rewards-ultra-mission-copy">
                       <div className="rewards-mission-title-v1533">
-                        <strong>{mission.title}</strong>
-                        <small>{mission.desc}</small>
+                        <strong>{t(mission.title)}</strong>
+                        <small>{t(mission.desc)}</small>
                       </div>
                       <div className="rewards-ultra-progress"><i style={{ width: `${progressPercent}%` }} /></div>
                     </div>
                     <div className="rewards-mission-meta-v1533">
                       <b>{mission.progress}/{mission.total}</b>
-                      <span>{mission.reward}</span>
+                      <span>{t(mission.reward)}</span>
                       {mission.claimable ? (
-                        <button type="button" className="rewards-mission-claim-btn-v1548" disabled={mission.busy} onClick={mission.onClaim}>{mission.busy ? 'Odbieram...' : 'Odbierz'}</button>
+                        <button type="button" className="rewards-mission-claim-btn-v1548" disabled={mission.busy} onClick={mission.onClaim}>{mission.busy ? t('Odbieram...') : t('Odbierz')}</button>
                       ) : (
-                        <em className={done ? 'done' : 'pending'}>{mission.claimed ? 'Odebrane' : done ? 'Zapisane' : 'W toku'}</em>
+                        <em className={done ? 'done' : 'pending'}>{mission.claimed ? t('Odebrane') : done ? t('Zapisane') : t('W toku')}</em>
                       )}
                     </div>
                   </div>
@@ -30905,11 +31046,11 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
 
           <section className="rewards-ultra-card rewards-ultra-streak rewards-missions-card-v1533 rewards-streak-card-v1533">
             <div className="rewards-ultra-head stacked">
-              <h3>STREAK AKTYWNOŚCI</h3>
-              <small>Jeśli zaliczysz cały tydzień, po niedzieli odblokujesz nagrodę tygodniową.</small>
+              <h3>{t('STREAK AKTYWNOŚCI')}</h3>
+              <small>{t('Jeśli zaliczysz cały tydzień, po niedzieli odblokujesz nagrodę tygodniową.')}</small>
             </div>
             <div className="rewards-ultra-streak-main rewards-streak-main-v1533">
-              <div className="rewards-ultra-streak-value rewards-streak-value-v1533"><strong>{weeklyDays}</strong><span>dni w tym tygodniu</span></div>
+              <div className="rewards-ultra-streak-value rewards-streak-value-v1533"><strong>{weeklyDays}</strong><span>{t('dni w tym tygodniu')}</span></div>
               <div className="rewards-ultra-streak-days rewards-streak-days-v1533">
                 {streakDays.map((day) => (
                   <div className={`rewards-ultra-day ${day.state}`} key={day.label}>
@@ -30922,38 +31063,38 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
             <div className="rewards-streak-milestones-v1533">
               {streakRewards.map(item => (
                 <div className={`rewards-streak-milestone-v1533 ${item.active ? 'active' : ''}`} key={item.value}>
-                  <strong>{item.value}</strong>
-                  <span>{item.reward}</span>
+                  <strong>{t(item.value)}</strong>
+                  <span>{t(item.reward)}</span>
                 </div>
               ))}
             </div>
             <div className="weekly-claim-box-v1540">
               <div>
-                <strong>{attendance.can_claim_previous ? `Nagroda gotowa: ${rewardCoins} coin` : attendance.previous_week_claimed ? 'Nagroda za obecność odebrana' : `Obecność tygodnia: ${rewardCoins} coin`}</strong>
-                <small>{attendance.message || 'Zalicz 7/7 dni i odbierz nagrodę po zakończeniu tygodnia.'}</small>
+                <strong>{attendance.can_claim_previous ? (lang === 'en' ? `Reward ready: ${formatCoins(rewardCoins)}` : `Nagroda gotowa: ${rewardCoins} coin`) : attendance.previous_week_claimed ? t('Nagroda za obecność odebrana') : (lang === 'en' ? `Weekly attendance: ${formatCoins(rewardCoins)}` : `Obecność tygodnia: ${rewardCoins} coin`)}</strong>
+                <small>{t(attendance.message || 'Zalicz 7/7 dni i odbierz nagrodę po zakończeniu tygodnia.')}</small>
               </div>
-              <button type="button" disabled={!attendance.can_claim_previous || claimBusy} onClick={claimWeeklyReward}>{claimBusy ? 'Odbieram...' : attendance.can_claim_previous ? `Odbierz ${rewardCoins} coin` : 'Zablokowane'}</button>
+              <button type="button" disabled={!attendance.can_claim_previous || claimBusy} onClick={claimWeeklyReward}>{claimBusy ? t('Odbieram...') : attendance.can_claim_previous ? (lang === 'en' ? `Claim ${formatCoins(rewardCoins)}` : `Odbierz ${rewardCoins} coin`) : t('Zablokowane')}</button>
             </div>
             <div className="weekly-claim-box-v1540 weekly-tip-claim-box-v1545">
               <div>
-                <strong>{tipStreak.can_claim_previous ? `Seria typów gotowa: ${Number(tipStreak.reward_coins || 7)} coin` : tipStreak.previous_week_claimed ? 'Nagroda za serię typów odebrana' : `Seria typów: ${tipStreakCount}/7 dni`}</strong>
-                <small>{tipStreak.message || 'Dodaj minimum 1 typ dziennie przez 7 dni i odbierz 7 coin.'}</small>
+                <strong>{tipStreak.can_claim_previous ? (lang === 'en' ? `Pick streak ready: ${formatCoins(Number(tipStreak.reward_coins || 7))}` : `Seria typów gotowa: ${Number(tipStreak.reward_coins || 7)} coin`) : tipStreak.previous_week_claimed ? t('Nagroda za serię typów odebrana') : (lang === 'en' ? `Pick streak: ${tipStreakCount}/7 days` : `Seria typów: ${tipStreakCount}/7 dni`)}</strong>
+                <small>{t(tipStreak.message || 'Dodaj minimum 1 typ dziennie przez 7 dni i odbierz 7 coin.')}</small>
               </div>
-              <button type="button" disabled={!tipStreak.can_claim_previous || tipClaimBusy} onClick={claimWeeklyTipReward}>{tipClaimBusy ? 'Odbieram...' : tipStreak.can_claim_previous ? `Odbierz ${Number(tipStreak.reward_coins || 7)} coin` : 'Zablokowane'}</button>
+              <button type="button" disabled={!tipStreak.can_claim_previous || tipClaimBusy} onClick={claimWeeklyTipReward}>{tipClaimBusy ? t('Odbieram...') : tipStreak.can_claim_previous ? (lang === 'en' ? `Claim ${formatCoins(Number(tipStreak.reward_coins || 7))}` : `Odbierz ${Number(tipStreak.reward_coins || 7)} coin`) : t('Zablokowane')}</button>
             </div>
           </section>
 
           <section className="rewards-ultra-card rewards-ultra-achievements rewards-missions-card-v1533 rewards-achievements-v1533">
             <div className="rewards-ultra-head stacked">
-              <h3>OSIĄGNIĘCIA</h3>
-              <small>Odznaki za aktywność, regularność i rozwój profilu typera.</small>
+              <h3>{t('OSIĄGNIĘCIA')}</h3>
+              <small>{t('Odznaki za aktywność, regularność i rozwój profilu typera.')}</small>
             </div>
             <div className="rewards-achievement-grid-v1533">
               {achievements.map((item) => (
                 <div className={`rewards-ultra-achievement rewards-achievement-card-v1533 tone-${item.tone}`} key={item.title}>
                   <div className={`rewards-ultra-achievement-icon ${item.tone}`}>{item.icon}</div>
-                  <div className="rewards-ultra-achievement-copy"><strong>{item.title}</strong><small>{item.desc}</small></div>
-                  <span>{item.status}</span>
+                  <div className="rewards-ultra-achievement-copy"><strong>{t(item.title)}</strong><small>{t(item.desc)}</small></div>
+                  <span>{t(item.status)}</span>
                 </div>
               ))}
             </div>
@@ -30963,20 +31104,20 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
         <aside className="rewards-missions-side-v1533">
           <section className="rewards-ultra-card rewards-ultra-progress-card rewards-side-card-v1533 rewards-progress-v1533">
             <div className="rewards-ultra-head stacked">
-              <h3>PROGRES TYGODNIA</h3>
-              <small>Obecność użytkownika</small>
+              <h3>{t('PROGRES TYGODNIA')}</h3>
+              <small>{t('Obecność użytkownika')}</small>
             </div>
             <div className="rewards-ultra-ring" style={{ '--ring': `${weeklyProgress}%` }}>
-              <div><strong>{weeklyProgress}%</strong><span>{weeklyDays} / 7 dni</span></div>
+              <div><strong>{weeklyProgress}%</strong><span>{lang === 'en' ? `${weeklyDays} / 7 days` : `${weeklyDays} / 7 dni`}</span></div>
             </div>
             <div className="rewards-progress-list-v1533">
-              <div><span>Cel tygodniowy</span><b>7 dni</b></div>
-              <div><span>Nagroda</span><b>{rewardCoins} coin</b></div>
+              <div><span>{t('Cel tygodniowy')}</span><b>{t('7 dni')}</b></div>
+              <div><span>{t('Nagroda')}</span><b>{formatCoins(rewardCoins)}</b></div>
             </div>
           </section>
 
           <section className="rewards-ultra-card rewards-ultra-ranking rewards-side-card-v1533">
-            <div className="rewards-ultra-head stacked"><h3>TOP AKTYWNOŚCI</h3><small>{activityRankingLoading ? 'Liczenie aktywności...' : 'Czat, posty, komentarze, misje i odbiory'}</small></div>
+            <div className="rewards-ultra-head stacked"><h3>{t('TOP AKTYWNOŚCI')}</h3><small>{activityRankingLoading ? t('Liczenie aktywności...') : t('Czat, posty, komentarze, misje i odbiory')}</small></div>
             <div className="rewards-ultra-ranking-list rewards-ranking-list-v1533">
               {ranking.map((item, idx) => {
                 const canOpenProfile = Boolean(item.profileRef || item.email || item.profileName || item.name)
@@ -30987,16 +31128,16 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
                 return (
                   <div className="rewards-ultra-ranking-row rewards-ranking-row-v1533" key={`${item.name}-${idx}`}>
                     <span>{idx + 1}</span>
-                    <button type="button" className={`rewards-ranking-avatar-v1544 ${item.avatarUrl ? 'has-avatar' : ''}`} onClick={openProfile} disabled={!canOpenProfile} aria-label={`Otwórz profil ${item.name}`}>
+                    <button type="button" className={`rewards-ranking-avatar-v1544 ${item.avatarUrl ? 'has-avatar' : ''}`} onClick={openProfile} disabled={!canOpenProfile} aria-label={`${t('Otwórz profil')} ${item.name}`}>
                       {item.avatarUrl ? <img src={item.avatarUrl} alt="" loading="lazy" /> : item.initials}
                     </button>
                     <div>
                       <strong>
                         <button type="button" className="rewards-ranking-user-btn-v1544" onClick={openProfile} disabled={!canOpenProfile}>{item.name}</button>
                       </strong>
-                      {item.badge ? <small>{item.badge}</small> : <small>Aktywny</small>}
+                      {item.badge ? <small>{t(item.badge)}</small> : <small>{t('Aktywny')}</small>}
                     </div>
-                    <b>{item.score}</b>
+                    <b>{t(item.score)}</b>
                   </div>
                 )
               })}
@@ -31004,12 +31145,12 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
           </section>
 
           <section className="rewards-ultra-card rewards-missions-info-v1533 rewards-side-card-v1533">
-            <span>SYSTEM COINÓW</span>
+            <span>{t('SYSTEM COINÓW')}</span>
             <ul className="rewards-rules-list-v1533">
-              <li><b>Free</b><span>7 coin za 7/7 dni</span></li>
-              <li><b>Premium</b><span>14 coin za 7/7 dni</span></li>
-              <li><b>Typy 7/7</b><span>7 coin za komplet</span></li>
-              <li><b>Odbiór</b><span>po niedzieli 00:00</span></li>
+              <li><b>Free</b><span>{t('7 coin za 7/7 dni')}</span></li>
+              <li><b>Premium</b><span>{t('14 coin za 7/7 dni')}</span></li>
+              <li><b>{t('Typy 7/7')}</b><span>{t('7 coin za komplet')}</span></li>
+              <li><b>{t('Odbiór')}</b><span>{t('po niedzieli 00:00')}</span></li>
             </ul>
           </section>
         </aside>
