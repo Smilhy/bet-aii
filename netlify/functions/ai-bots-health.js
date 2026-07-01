@@ -12,7 +12,13 @@ exports.handler = async function(event = {}) {
     checked_at: new Date().toISOString(),
     env: { SUPABASE_URL: Boolean(url), SUPABASE_SERVICE_ROLE_KEY: Boolean(key), APISPORTS_KEY: Boolean(apiKey) },
     strategies: Object.fromEntries(Object.entries(BOT_POLICIES).map(([bot, policy]) => [bot, {
-      name: policy.strategyName, cooldown_hours: policy.cooldownHours, min_odds: policy.minOdds, max_odds: policy.maxOdds
+      name: policy.strategyName,
+      cooldown_hours: policy.cooldownHours,
+      time_lock: policy.cooldownHours > 0,
+      pending_lock: bot === 'typer',
+      progression: bot === 'typer' ? policy.progression : null,
+      min_odds: policy.minOdds,
+      max_odds: policy.maxOdds
     }])),
     latest_tips: {},
     ai_bets: { count: null, latest: null },

@@ -1,58 +1,69 @@
 const { createClient } = require('@supabase/supabase-js')
 
 const AUTHORS = {
-  betai: { name: 'BetAI MultiSport AI', username: 'betai-multisport-ai', source: 'betai_independent_value_v1867_6', mirrorAiBets: true },
-  typer: { name: 'Typer Expert', username: 'typer-expert', source: 'typer_expert_independent_v1867_6', mirrorAiBets: false },
-  ograc: { name: 'Ograć Buka', username: 'ograc-buka', source: 'ograc_buka_independent_v1867_6', mirrorAiBets: false }
+  betai: { name: 'BetAI MultiSport AI', username: 'betai-multisport-ai', source: 'betai_independent_value_v1867_9', mirrorAiBets: true },
+  typer: { name: 'Typer Expert', username: 'typer-expert', source: 'typer_expert_progression_v1867_9', mirrorAiBets: false },
+  ograc: { name: 'Ograć Buka', username: 'ograc-buka', source: 'ograc_buka_independent_v1867_9', mirrorAiBets: false }
 }
 
-const VERSION = '1867.6-three-independent-strategies-v1'
+const VERSION = '1867.9-independent-bots-typer-progression-cooldown-2h-v2'
 const DEFAULT_BOTS = ['betai', 'typer', 'ograc']
 
-// Wspólne jest wyłącznie pobranie surowych meczów i kursów.
-// Każdy profil ma własną strategię, progi, ranking i cooldown.
+// Każdy bot działa niezależnie. Nie ma wspólnej rotacji.
+// BetAI AI i Ograć Buka nie mają żadnego cooldownu czasowego.
+// Jedyny wyjątek: Typer Expert ma cooldown 2 h i czeka na rozliczenie własnego
+// poprzedniego typu, ponieważ następna stawka wynika z progresji.
 const BOT_POLICIES = {
   betai: {
     strategyName: 'Szeroki silnik value',
-    cooldownHours: 4,
+    cooldownHours: 0,
+    blockWhilePending: false,
+    progression: null,
     minOdds: 1.50,
     maxOdds: 5.00,
-    minBooks: 2,
-    minProbability: 18,
-    minEdge: 0.5,
-    maxSpread: 10,
-    fallback: { minBooks: 1, minProbability: 15, minEdge: -1.0, maxSpread: 14 },
+    minBooks: 1,
+    minProbability: 12,
+    minEdge: -4.0,
+    maxSpread: 25,
+    fallback: { minBooks: 1, minProbability: 9, minEdge: -9.0, maxSpread: 40 },
+    openFallback: { minBooks: 1, minProbability: 8, minEdge: -12.0, maxSpread: 50 },
     allowedMarkets: ['match_winner', 'goals_2_5', 'btts'],
     allowedSelections: ['home', 'away', 'over_2_5', 'yes'],
     predictionLookups: 0
   },
   typer: {
-    strategyName: 'Rynek + prognoza API-Football',
-    cooldownHours: 8,
+    strategyName: 'Rynek + prognoza API-Football + progresja',
+    cooldownHours: 2,
+    blockWhilePending: true,
+    progression: { enabled: true, baseStake: 1, maxStake: 1000, targetProfit: 0.4 },
     minOdds: 1.50,
     maxOdds: 5.00,
-    minBooks: 2,
-    minProbability: 27,
-    minEdge: -0.5,
-    maxSpread: 8,
-    fallback: { minBooks: 2, minProbability: 23, minEdge: -1.5, maxSpread: 10 },
+    minBooks: 1,
+    minProbability: 18,
+    minEdge: -4.0,
+    maxSpread: 20,
+    fallback: { minBooks: 1, minProbability: 14, minEdge: -8.0, maxSpread: 35 },
+    openFallback: { minBooks: 1, minProbability: 10, minEdge: -12.0, maxSpread: 50 },
     allowedMarkets: ['match_winner', 'goals_2_5', 'btts'],
     allowedSelections: ['home', 'away', 'over_2_5', 'under_2_5', 'yes', 'no'],
-    predictionLookups: 4
+    predictionLookups: 2
   },
   ograc: {
     strategyName: 'Selektywny API value bez progresji',
-    cooldownHours: 6,
-    minOdds: 1.80,
+    cooldownHours: 0,
+    blockWhilePending: false,
+    progression: null,
+    minOdds: 1.50,
     maxOdds: 5.00,
-    minBooks: 2,
-    minProbability: 18,
-    minEdge: 1.0,
-    maxSpread: 7.5,
-    fallback: { minBooks: 2, minProbability: 18, minEdge: 0.5, maxSpread: 9.5 },
+    minBooks: 1,
+    minProbability: 12,
+    minEdge: -3.0,
+    maxSpread: 20,
+    fallback: { minBooks: 1, minProbability: 10, minEdge: -8.0, maxSpread: 35 },
+    openFallback: { minBooks: 1, minProbability: 8, minEdge: -12.0, maxSpread: 50 },
     allowedMarkets: ['match_winner', 'goals_2_5', 'btts'],
     allowedSelections: ['home', 'away', 'over_2_5', 'yes'],
-    predictionLookups: 4
+    predictionLookups: 2
   }
 }
 
@@ -261,7 +272,7 @@ function oddsGroupsFromRow(row) {
   return groups
 }
 async function fetchOdds(context, dates) {
-  const maxPages = Math.round(clamp(process.env.AI_BOTS_ODDS_MAX_PAGES || 2, 1, 3))
+  const maxPages = Math.round(clamp(process.env.AI_BOTS_ODDS_MAX_PAGES || 3, 1, 5))
   const requests = dates.flatMap(date => Array.from({ length: maxPages }, (_, index) => ({ date, page: index + 1 })))
   const results = await Promise.allSettled(requests.map(request => apiGet('/odds', request, context)))
   const map = new Map()
@@ -364,6 +375,14 @@ function getBotPolicy(bot, settings = {}, query = {}) {
   // Zakres kursów może być wspólny, lecz wszystkie pozostałe progi pozostają osobne.
   const minOdds = clamp(botQueryValue('min_odds') ?? query.min_odds ?? envNumber('MIN_ODDS', base.minOdds), 1.2, 5)
   const maxOdds = clamp(botQueryValue('max_odds') ?? query.max_odds ?? envNumber('MAX_ODDS', base.maxOdds), minOdds, 5)
+  const progression = bot === 'typer'
+    ? {
+        enabled: true,
+        baseStake: clamp(botQueryValue('base_stake') ?? envNumber('BASE_STAKE', base.progression?.baseStake || 1), 1, 1000),
+        maxStake: clamp(botQueryValue('max_stake') ?? envNumber('MAX_STAKE', base.progression?.maxStake || 1000), 1, 1000),
+        targetProfit: clamp(botQueryValue('target_profit') ?? envNumber('TARGET_PROFIT', base.progression?.targetProfit || 0.4), 0.01, 100)
+      }
+    : null
   return {
     ...base,
     minOdds: Math.max(settings.minOdds || 1.2, minOdds),
@@ -372,9 +391,12 @@ function getBotPolicy(bot, settings = {}, query = {}) {
     minProbability: clamp(botQueryValue('min_probability_pct') ?? envNumber('MIN_PROBABILITY_PCT', base.minProbability), 10, 80),
     minEdge: clamp(botQueryValue('min_edge_pct') ?? envNumber('MIN_EDGE_PCT', base.minEdge), -5, 25),
     maxSpread: clamp(botQueryValue('max_spread_pct') ?? envNumber('MAX_SPREAD_PCT', base.maxSpread), 1, 25),
-    cooldownHours: clamp(botQueryValue('cooldown_hours') ?? envNumber('COOLDOWN_HOURS', base.cooldownHours), 1, 48)
+    // Tylko Typer Expert (progresja) ma cooldown 2 h. Pozostałe boty: 0 h.
+    cooldownHours: bot === 'typer' ? 2 : 0,
+    progression
   }
 }
+
 
 function candidateTier(candidate, policy) {
   if (!candidate || !policy) return ''
@@ -391,7 +413,13 @@ function candidateTier(candidate, policy) {
     candidate.probability >= number(fallback.minProbability, policy.minProbability) &&
     candidate.edge >= number(fallback.minEdge, policy.minEdge) &&
     candidate.spread <= number(fallback.maxSpread, policy.maxSpread)
-  return relaxed ? 'fallback' : ''
+  if (relaxed) return 'fallback'
+  const open = policy.openFallback || {}
+  const openPass = candidate.booksCount >= number(open.minBooks, 1) &&
+    candidate.probability >= number(open.minProbability, 8) &&
+    candidate.edge >= number(open.minEdge, -12) &&
+    candidate.spread <= number(open.maxSpread, 50)
+  return openPass ? 'open' : ''
 }
 
 function scoreCandidate(candidate, bot) {
@@ -402,7 +430,7 @@ function scoreCandidate(candidate, bot) {
   const odds = number(candidate.odds)
   const api = candidate.apiEvidence || {}
   const apiBonus = api.supported ? 16 : api.unavailable ? 0 : api.contrary ? -18 : -4
-  const tierBonus = candidate.strategyTier === 'strict' ? 8 : 0
+  const tierBonus = candidate.strategyTier === 'strict' ? 8 : candidate.strategyTier === 'fallback' ? 3 : -4
 
   // BetAI: szeroko szuka realnego value i konsensusu wielu bukmacherów.
   if (bot === 'betai') {
@@ -427,16 +455,13 @@ function scoreCandidate(candidate, bot) {
 function apiStrategyPass(candidate, bot) {
   if (bot === 'betai') return true
   const api = candidate.apiEvidence || { unavailable: true }
+  // W 1867.7 prognoza API jest sygnałem rankingowym, a nie twardą blokadą publikacji.
+  // Dzięki temu każdy bot zachowuje inną taktykę, ale brak /predictions nie zeruje całej puli.
+  if (api.supported || api.unavailable || !api.available) return true
   if (bot === 'typer') {
-    if (api.supported) return true
-    if (api.contrary) return false
-    // Przy braku prognozy API dopuszczamy wyłącznie bardzo stabilny konsensus rynku.
-    return candidate.booksCount >= 3 && candidate.probability >= 28 && candidate.spread <= 7
+    return !api.contrary || candidate.probability >= 16 || candidate.booksCount >= 2
   }
-  if (api.supported) return true
-  if (api.contrary) return false
-  // Brak odpowiedzi /predictions nie blokuje awaryjnie tylko wyjątkowo stabilnego value.
-  return candidate.edge >= 5 && candidate.booksCount >= 3 && candidate.spread <= 6.5
+  return !api.contrary || candidate.edge >= -3 || candidate.probability >= 14
 }
 
 function rankBotCandidates(candidates, bot, policy) {
@@ -448,17 +473,13 @@ function rankBotCandidates(candidates, bot, policy) {
 
 function selectDistinct(shortlists, bots) {
   const selected = {}
-  const usedFixtures = new Set()
   bots.forEach(bot => {
     const ranked = (shortlists[bot] || [])
       .filter(candidate => apiStrategyPass(candidate, bot))
       .sort((a, b) => scoreCandidate(b, bot) - scoreCandidate(a, bot))
-    // Strategie są niezależne. Unikalny mecz jest tylko preferencją, nie blokadą.
-    const pick = ranked.find(candidate => !usedFixtures.has(candidate.event.fixtureId)) || ranked[0] || null
-    if (pick) {
-      selected[bot] = pick
-      usedFixtures.add(pick.event.fixtureId)
-    }
+    // Każdy bot wybiera własny najlepszy mecz. Brak zależności od wyborów innych botów.
+    const pick = ranked[0] || null
+    if (pick) selected[bot] = pick
   })
   return selected
 }
@@ -577,24 +598,30 @@ function warsawParts(iso) {
   }, {})
   return { date: `${parts.year}-${parts.month}-${parts.day}`, time: `${parts.hour}:${parts.minute}` }
 }
-function buildTipRow(candidate, bot) {
+function buildTipRow(candidate, bot, progressionState = null, policy = null) {
   const author = AUTHORS[bot]
   const evidence = candidate.apiEvidence || null
   const apiBoost = evidence?.supported ? 5 : 0
   const aiScore = Math.round(clamp(candidate.quality + apiBoost, 50, 97))
+  const progression = bot === 'typer'
+    ? progressionForOdds(progressionState || {}, candidate.odds, policy?.progression || BOT_POLICIES.typer.progression)
+    : null
   const strategyText = bot === 'betai'
     ? 'BetAI MultiSport AI: szeroki silnik value, realne kursy i konsensus bukmacherów.'
     : bot === 'typer'
-      ? 'Typer Expert: konserwatywna selekcja, stabilność rynku i potwierdzenie modelu.'
+      ? 'Typer Expert: konserwatywna selekcja, stabilność rynku, potwierdzenie modelu i własna progresja stawki.'
       : 'Ograć Buka: selektywny model API-Football, dodatnie value i stała stawka bez progresji.'
   const analysisParts = [
     strategyText,
     `${candidate.mode === 'value' ? 'Model value' : 'Konsensus rynku'}: ${candidate.prediction}.`,
     `Realny kurs ${candidate.odds} u ${candidate.bookmaker}.`,
     `Konsensus ${candidate.probability}% z ${candidate.booksCount} bukmacherów; szacowane value ${candidate.edge}%.`,
-    `Poziom selekcji: ${candidate.strategyTier === 'strict' ? 'główny' : 'rezerwowy'}.`,
+    `Poziom selekcji: ${candidate.strategyTier === 'strict' ? 'główny' : candidate.strategyTier === 'fallback' ? 'rezerwowy' : 'otwarty awaryjny'}.`,
     evidence?.detail || '',
     evidence?.advice ? `API-Football: ${evidence.advice}.` : '',
+    bot === 'typer' && progression
+      ? `Progresja Typer Expert: krok ${progression.step}, stawka ${progression.stake}, bilans bieżącego cyklu ${progression.cycleNetBefore}.`
+      : '',
     bot === 'ograc' ? 'Stała wirtualna stawka 1 jednostki; bez progresji.' : '',
     'Brak gwarancji wyniku.'
   ].filter(Boolean)
@@ -655,14 +682,21 @@ function buildTipRow(candidate, bot) {
     result: null,
     settlement_status: 'pending',
     result_status: null,
-    stake: 1,
+    stake: progression?.stake || 1,
     profit: 0,
     payout: 0,
     return_amount: 0,
     coupon_type: 'single',
     is_ako: false,
     legs_count: 1,
-    tags: [author.username, 'real-odds', candidate.mode, candidate.strategyTier || 'strict', evidence?.supported ? 'api-confirmed' : 'market-confirmed'],
+    tags: [
+      author.username,
+      'real-odds',
+      candidate.mode,
+      candidate.strategyTier || 'strict',
+      evidence?.supported ? 'api-confirmed' : 'market-confirmed',
+      ...(bot === 'typer' ? ['wirtualna-progresja', `progresja-krok-${progression?.step || 1}`] : [])
+    ],
     notify_followers: true
   }
 }
@@ -708,6 +742,98 @@ function isActiveFutureTip(row) {
 function duplicateKey(row) {
   return String(row?.fixture_id || row?.external_fixture_id || row?.api_fixture_id || '').trim()
 }
+
+function normalizeTipStatus(value) {
+  const status = String(value == null ? '' : value).trim().toLowerCase()
+  if (/(won|win|wygran)/.test(status)) return 'won'
+  if (/(lost|loss|lose|przegran)/.test(status)) return 'lost'
+  if (/(void|push|refund|zwrot)/.test(status)) return 'void'
+  return 'pending'
+}
+
+function rowTipStatus(row = {}) {
+  return normalizeTipStatus([
+    row.status,
+    row.result_status,
+    row.result,
+    row.settlement_status
+  ].filter(Boolean).join(' '))
+}
+
+function profitFromTip(row = {}) {
+  const status = rowTipStatus(row)
+  if (status === 'pending' || status === 'void') return 0
+  const explicit = Number(row.profit)
+  if (Number.isFinite(explicit)) return round(explicit, 2)
+  const stake = Math.max(0, number(row.stake ?? row.amount ?? row.bet_amount, 1))
+  const odds = Math.max(1, number(row.odds, 1))
+  return status === 'won' ? round((odds - 1) * stake, 2) : round(-stake, 2)
+}
+
+async function readTyperProgressionState(supabase, targetProfit = 0.4) {
+  const { data, error } = await supabase
+    .from('tips')
+    .select('*')
+    .eq('author_name', AUTHORS.typer.name)
+    .order('created_at', { ascending: true })
+    .limit(1500)
+  if (error) throw error
+
+  const rows = Array.isArray(data) ? data : []
+  const pending = rows.filter(row => rowTipStatus(row) === 'pending')
+
+  let cycleNet = 0
+  let cycleStep = 0
+  let completedCycles = 0
+  let totalNet = 0
+
+  rows.forEach(row => {
+    const status = rowTipStatus(row)
+    if (status === 'pending') return
+    const profit = profitFromTip(row)
+    totalNet = round(totalNet + profit, 2)
+    if (status === 'void') return
+    cycleStep += 1
+    cycleNet = round(cycleNet + profit, 2)
+    if (cycleNet >= targetProfit - 0.005) {
+      completedCycles += 1
+      cycleNet = 0
+      cycleStep = 0
+    }
+  })
+
+  return {
+    rows,
+    pending,
+    cycleNet: round(cycleNet, 2),
+    cycleStep,
+    completedCycles,
+    totalNet: round(totalNet, 2)
+  }
+}
+
+function ceilMoney(value) {
+  return Math.ceil(Math.max(0, number(value, 0)) * 100) / 100
+}
+
+function progressionForOdds(state, odds, settings = {}) {
+  const baseStake = clamp(settings.baseStake || 1, 1, 1000)
+  const maxStake = clamp(settings.maxStake || 1000, baseStake, 1000)
+  const targetProfit = clamp(settings.targetProfit || 0.4, 0.01, 100)
+  const targetRemaining = Math.max(0, targetProfit - number(state?.cycleNet, 0))
+  const rawRequired = Math.max(baseStake, targetRemaining / Math.max(0.01, number(odds, 1) - 1))
+  const requiredStake = ceilMoney(rawRequired)
+  const stake = Math.min(maxStake, Math.max(baseStake, requiredStake))
+  return {
+    stake: round(stake, 2),
+    requiredStake: round(requiredStake, 2),
+    capped: requiredStake > maxStake,
+    step: Number(state?.cycleStep || 0) + 1,
+    cycleNetBefore: round(state?.cycleNet || 0, 2),
+    targetProfit: round(targetProfit, 2),
+    possibleProfit: round((number(odds, 1) - 1) * stake, 2)
+  }
+}
 async function mirrorAiBet(supabase, tip) {
   const row = buildAiBetRow(tip)
   const { data: existing, error: findError } = await supabase.from('ai_bets').select('id,status,result').eq('external_fixture_id', row.external_fixture_id).eq('market', row.market).eq('prediction', row.prediction).limit(1)
@@ -747,14 +873,16 @@ async function runAiBotCycle(event = {}, options = {}) {
   const bots = parseBots(options.bots || query.bots)
   const dryRun = ['1', 'true', 'yes'].includes(String(query.dry_run || '').toLowerCase())
   const force = ['1', 'true', 'yes'].includes(String(query.force || '').toLowerCase())
+  const requestedMaxPicks = options.maxPicks ?? query.max_picks ?? bots.length
+  const maxPicks = Math.max(1, Math.min(bots.length, Math.round(number(requestedMaxPicks, bots.length))))
   const settings = {
-    days: Math.round(clamp(query.days || 2, 1, 2)),
+    days: Math.round(clamp(query.days || 3, 1, 4)),
     minMinutes: clamp(query.min_minutes_before_start || 45, 30, 360),
-    maxHours: clamp(query.max_hours_ahead || 72, 12, 96),
+    maxHours: clamp(query.max_hours_ahead || 96, 12, 120),
     // Surowa pula jest szeroka. Właściwe progi są osobne dla każdego bota.
     minOdds: clamp(query.min_odds || 1.50, 1.2, 5),
     maxOdds: clamp(query.max_odds || 5.00, 1.5, 5),
-    minProbability: 0.12,
+    minProbability: 0.08,
     minBooks: 1
   }
   const botPolicies = Object.fromEntries(bots.map(bot => [bot, getBotPolicy(bot, settings, query)]))
@@ -774,19 +902,70 @@ async function runAiBotCycle(event = {}, options = {}) {
   let recentTips = []
   try { recentTips = await loadRecentBotTips(supabase, bots) } catch (error) { context.errors.push(`recent tips: ${error.message || error}`) }
 
+  // Jedyna blokada dotyczy Typer Expert: musi znać wynik poprzedniego typu
+  // oraz zachować 2 godziny przerwy między własnymi publikacjami.
+  // BetAI AI i Ograć Buka nie mają cooldownu ani blokady przez aktywny typ.
+  let typerProgressionState = null
+  if (bots.includes('typer')) {
+    try {
+      typerProgressionState = await readTyperProgressionState(
+        supabase,
+        botPolicies.typer?.progression?.targetProfit || 0.4
+      )
+    } catch (error) {
+      context.errors.push(`typer progression: ${error.message || error}`)
+    }
+  }
+
   const blocked = {}
-  bots.forEach(bot => {
-    const author = AUTHORS[bot]
-    const policy = botPolicies[bot]
-    const latest = recentTips.find(row => row.author_name === author.name)
-    const active = recentTips.find(row => row.author_name === author.name && isActiveFutureTip(row))
-    const latestAgeHours = latest?.created_at ? (Date.now() - Date.parse(latest.created_at)) / 3_600_000 : Infinity
-    if (!force && active) blocked[bot] = 'active_pick_exists'
-    else if (!force && latest && latestAgeHours < policy.cooldownHours) blocked[bot] = `cooldown_${policy.cooldownHours}h`
-  })
+  let typerCooldown = null
+  if (bots.includes('typer')) {
+    if (!typerProgressionState) {
+      blocked.typer = 'progression_state_unavailable'
+    } else if (typerProgressionState.pending.length > 0) {
+      blocked.typer = 'previous_pick_pending_progression'
+    } else {
+      const cooldownHours = Number(botPolicies.typer?.cooldownHours || 0)
+      const latestTyperTip = [...(typerProgressionState.rows || [])]
+        .filter(row => Number.isFinite(Date.parse(row?.created_at || '')))
+        .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0] || null
+      if (latestTyperTip && cooldownHours > 0) {
+        const elapsedMs = Math.max(0, Date.now() - Date.parse(latestTyperTip.created_at))
+        const cooldownMs = cooldownHours * 3_600_000
+        const remainingMs = Math.max(0, cooldownMs - elapsedMs)
+        typerCooldown = {
+          hours: cooldownHours,
+          last_pick_at: latestTyperTip.created_at,
+          remaining_minutes: Math.ceil(remainingMs / 60_000)
+        }
+        if (remainingMs > 0) blocked.typer = 'typer_expert_cooldown_2h'
+      }
+    }
+  }
+
   const botsToRun = bots.filter(bot => !blocked[bot])
   if (!botsToRun.length && !dryRun) {
-    const result = { ok: true, version: VERSION, inserted: 0, skipped: blocked, message: 'Każdy bot ma aktywny typ albo jest w krótkim cooldownie.', elapsed_ms: Date.now() - startedAt, errors: context.errors }
+    const result = {
+      ok: true,
+      version: VERSION,
+      inserted: 0,
+      skipped: blocked,
+      cooldown: typerCooldown,
+      progression_state: typerProgressionState
+        ? {
+            pending: typerProgressionState.pending.length,
+            cycle_net: typerProgressionState.cycleNet,
+            next_step: typerProgressionState.cycleStep + 1,
+            completed_cycles: typerProgressionState.completedCycles,
+            total_net: typerProgressionState.totalNet
+          }
+        : null,
+      message: blocked.typer === 'typer_expert_cooldown_2h'
+        ? `Typer Expert ma 2-godzinny cooldown. Pozostało około ${typerCooldown?.remaining_minutes || 0} min.`
+        : 'Typer Expert czeka na rozliczenie własnego poprzedniego typu, aby wyliczyć następną stawkę progresji.',
+      elapsed_ms: Date.now() - startedAt,
+      errors: context.errors
+    }
     await recordRun(supabase, result)
     return result
   }
@@ -806,12 +985,13 @@ async function runAiBotCycle(event = {}, options = {}) {
       .map(duplicateKey)
       .filter(Boolean))
     const ownFreshPool = candidates.filter(candidate => !ownRecentFixtures.has(candidate.event.fixtureId))
-    const ranked = rankBotCandidates(ownFreshPool.length ? ownFreshPool : candidates, bot, botPolicies[bot])
+    const ranked = rankBotCandidates(ownFreshPool, bot, botPolicies[bot])
     shortlists[bot] = ranked.slice(0, Math.max(8, botPolicies[bot].predictionLookups || 0))
     strategyDiagnostics[bot] = {
       strategy: botPolicies[bot].strategyName,
       strict_candidates: ranked.filter(candidate => candidate.strategyTier === 'strict').length,
       fallback_candidates: ranked.filter(candidate => candidate.strategyTier === 'fallback').length,
+      open_candidates: ranked.filter(candidate => candidate.strategyTier === 'open').length,
       cooldown_hours: botPolicies[bot].cooldownHours
     }
   })
@@ -837,6 +1017,7 @@ async function runAiBotCycle(event = {}, options = {}) {
       bots,
       blocked,
       settings,
+      execution: { max_picks: maxPicks, independent_bots: true, cooldown_hours: { betai: 0, typer: 2, ograc: 0 } },
       bot_policies: botPolicies,
       ...diagnostics,
       selected: Object.fromEntries(Object.entries(selected).map(([bot, candidate]) => [bot, {
@@ -856,10 +1037,14 @@ async function runAiBotCycle(event = {}, options = {}) {
     }
   }
 
-  const outcomes = await Promise.all(botsToRun.map(async bot => {
+  // WERSJA 1867.9: każdy bot zapisuje własny typ niezależnie.
+  // Nie ma wspólnej rotacji. Tylko Typer Expert może być zatrzymany
+  // przez nierozliczony poprzedni typ lub własny cooldown 2 h.
+  const botsForInsert = botsToRun.filter(bot => selected[bot]).slice(0, maxPicks)
+  const outcomes = await Promise.all(botsForInsert.map(async bot => {
     const candidate = selected[bot]
     if (!candidate) return { bot, author: AUTHORS[bot].name, inserted: 0, reason: 'no_real_odds_candidate' }
-    const tip = buildTipRow(candidate, bot)
+    const tip = buildTipRow(candidate, bot, typerProgressionState, botPolicies[bot])
     try {
       const saved = await insertSafe(supabase, 'tips', tip)
       const outcome = { bot, author: AUTHORS[bot].name, inserted: 1, id: saved.data?.id, removed_columns: saved.removed, pick: tip }
@@ -887,6 +1072,8 @@ async function runAiBotCycle(event = {}, options = {}) {
     ai_bets_inserted: aiBetsInserted,
     bots_requested: bots,
     bots_run: botsToRun,
+    bots_insert_attempted: botsForInsert,
+    execution: { max_picks: maxPicks, independent_bots: true, cooldown_hours: { betai: 0, typer: 2, ograc: 0 } },
     skipped: blocked,
     outcomes,
     settings,
@@ -894,9 +1081,19 @@ async function runAiBotCycle(event = {}, options = {}) {
     ...diagnostics,
     errors: context.errors.slice(0, 25),
     elapsed_ms: Date.now() - startedAt,
+    cooldown: typerCooldown,
+    progression_state: typerProgressionState
+      ? {
+          pending: typerProgressionState.pending.length,
+          cycle_net: typerProgressionState.cycleNet,
+          next_step: typerProgressionState.cycleStep + 1,
+          completed_cycles: typerProgressionState.completedCycles,
+          total_net: typerProgressionState.totalNet
+        }
+      : null,
     message: inserted > 0
-      ? `Zapisano ${inserted} typy z trzech niezależnych strategii. Wspólne było tylko pobranie danych API.`
-      : 'Nie zapisano typu. Odpowiedź zawiera dokładną liczbę meczów, kursów, kandydatów i błędy API.'
+      ? `Zapisano ${inserted} niezależny typ. BetAI AI i Ograć Buka nie mają cooldownu; Typer Expert ma 2 h.`
+      : 'Nie zapisano typu. Odpowiedź zawiera liczbę meczów, kursów, kandydatów i błędy API.'
   }
   await recordRun(supabase, result)
   return result
@@ -914,4 +1111,4 @@ function createHandler(options = {}) {
   }
 }
 
-module.exports = { AUTHORS, VERSION, BOT_POLICIES, runAiBotCycle, createHandler, json, _test: { parseMarket, buildCandidates, scoreCandidate, labelFor, candidateTier, rankBotCandidates, apiStrategyPass, getBotPolicy } }
+module.exports = { AUTHORS, VERSION, BOT_POLICIES, runAiBotCycle, createHandler, json, _test: { parseMarket, buildCandidates, scoreCandidate, labelFor, candidateTier, rankBotCandidates, apiStrategyPass, getBotPolicy, normalizeTipStatus, rowTipStatus, profitFromTip, progressionForOdds } }

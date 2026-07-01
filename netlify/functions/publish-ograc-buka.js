@@ -1,2 +1,4 @@
 const { createHandler } = require('./_lib/ai-bot-cycle')
-exports.handler = createHandler({ bots: 'ograc' })
+
+// Ograć Buka działa niezależnie, bez cooldownu i bez blokady przez aktywny typ.
+exports.handler = createHandler({ bots: 'ograc', maxPicks: 1 })

@@ -1,3 +1,4 @@
 const { createHandler } = require('./_lib/ai-bot-cycle')
-// Ręczny skan pobiera dane raz, ale uruchamia trzy niezależne strategie.
-exports.handler = createHandler({ bots: 'betai,typer,ograc' })
+
+// Typy AI działają niezależnie, bez cooldownu i bez blokady przez aktywny typ.
+exports.handler = createHandler({ bots: 'betai', maxPicks: 1 })

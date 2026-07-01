@@ -16,20 +16,29 @@
   to = "/index.html"
   status = 200
 
-# WERSJA 1867.6 — trzy niezależne strategie botów.
-# Wspólne jest wyłącznie pobranie surowych meczów i kursów z API-Football.
+# WERSJA 1867.9 — każdy bot działa niezależnie.
+# To są częstotliwości skanowania, niezależne dla każdego bota.
+# BetAI AI i Ograć Buka nie mają cooldownu czasowego.
+# Typer Expert jako jedyny ma cooldown 2 h i czeka na rozliczenie
+# własnego poprzedniego typu, ponieważ wylicza następną stawkę progresji.
 
-[functions."schedule-ai-bot-cycle"]
-  schedule = "12 5,10,15,20 * * *"
+[functions."publish-betai-multisport-ai"]
+  schedule = "7 */2 * * *"
+
+[functions."publish-typer-expert"]
+  schedule = "27 */2 * * *"
+
+[functions."publish-ograc-buka"]
+  schedule = "47 */2 * * *"
 
 # BetAI MultiSport AI — rozliczanie i naprawa błędnych zwrotów.
 [functions."settle-live-ai-picks"]
   schedule = "47 1,7,13,19 * * *"
 
-# Typer Expert — rozliczanie wyłącznie tego profilu co godzinę.
+# Typer Expert — rozliczanie własnych typów co godzinę.
 [functions."settle-typer-expert"]
   schedule = "37 * * * *"
 
-# Ograć Buka — automatyczne rozliczanie wyłącznie tego profilu co godzinę.
+# Ograć Buka — rozliczanie własnych typów co godzinę.
 [functions."settle-ograc-buka"]
   schedule = "52 * * * *"

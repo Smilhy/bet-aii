@@ -6302,7 +6302,7 @@ async function triggerBetAiRightDailyGeneratorV1157(dayKey = getBetAiWarsawDayKe
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 18000)
   try {
-    const res = await fetch('/.netlify/functions/publish-betai-multisport-ai?days=2&manual=1', {
+    const res = await fetch('/.netlify/functions/publish-betai-multisport-ai?days=3&manual=1', {
       method: 'POST',
       cache: 'no-store',
       signal: controller.signal
@@ -32303,7 +32303,7 @@ function App() {
   async function runLiveAiEngine() {
     setAiLiveGenerating(true)
     try {
-      const response = await fetch("/.netlify/functions/publish-betai-multisport-ai?days=2&manual=1", { method: "POST" })
+      const response = await fetch("/.netlify/functions/publish-betai-multisport-ai?days=3&manual=1", { method: "POST" })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || "Nie udało się wygenerować LIVE AI typów")
       const msg = data.queued ? 'Skan realnych meczów został uruchomiony w tle. Typ pojawi się po zakończeniu analizy.' : (data.inserted ? `Dodano ${data.inserted} realnych typów z ${data.matches_checked || data.live_matches_checked || 0} meczów.` : (data.message || 'Brak meczów albo brak value picków.'))
