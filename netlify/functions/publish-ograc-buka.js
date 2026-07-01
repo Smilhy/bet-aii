@@ -8,7 +8,7 @@ const API_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || proce
 // Funkcja nie obstawia u bukmachera. Publikuje wyłącznie typy i wirtualne stawki na bet-ai.app.
 const AUTHOR_NAME = 'Ograć Buka'
 const USERNAME = 'ograc-buka'
-const VERSION = '1846-ograc-buka-api-football-value-v1'
+const VERSION = '1867.2-ograc-buka-balanced-v2'
 const SOURCE = 'ograc_buka_api_football_value_v1'
 
 const headers = {
@@ -814,31 +814,31 @@ exports.handler = async function(event) {
   const dryRun = ['1', 'true', 'yes'].includes(String(q.dry_run || '').toLowerCase())
   const force = ['1', 'true', 'yes'].includes(String(q.force || '').toLowerCase())
   const days = clamp(q.days || process.env.OGRAC_BUKA_LOOKAHEAD_DAYS || 2, 1, 3)
-  const minMinutes = clamp(q.min_minutes_before_start || process.env.OGRAC_BUKA_MIN_MINUTES_BEFORE_START || 90, 45, 720)
-  const maxHours = clamp(q.max_hours_ahead || process.env.OGRAC_BUKA_MAX_HOURS_AHEAD || 36, 6, 72)
+  const minMinutes = clamp(q.min_minutes_before_start || process.env.OGRAC_BUKA_MIN_MINUTES_BEFORE_START || 75, 45, 720)
+  const maxHours = clamp(q.max_hours_ahead || process.env.OGRAC_BUKA_MAX_HOURS_AHEAD || 48, 6, 72)
 
   const settings = {
-    minBooks: clamp(q.min_books || process.env.OGRAC_BUKA_MIN_BOOKS || 3, 2, 15),
-    minOdds: clamp(q.min_odds || process.env.OGRAC_BUKA_MIN_ODDS || 1.45, 1.2, 3),
-    maxOdds: clamp(q.max_odds || process.env.OGRAC_BUKA_MAX_ODDS || 2.30, 1.35, 5),
-    minProbability: clamp(q.min_probability || process.env.OGRAC_BUKA_MIN_PROBABILITY || 0.55, 0.45, 0.85),
-    minEdge: clamp(q.min_edge || process.env.OGRAC_BUKA_MIN_EDGE || 0.02, 0, 0.2),
-    maxProbabilitySpread: clamp(q.max_probability_spread || process.env.OGRAC_BUKA_MAX_PROBABILITY_SPREAD || 0.05, 0.01, 0.15),
-    maxOddsOutlierRatio: clamp(q.max_odds_outlier_ratio || process.env.OGRAC_BUKA_MAX_ODDS_OUTLIER_RATIO || 1.08, 1.01, 1.2),
+    minBooks: clamp(q.min_books || process.env.OGRAC_BUKA_MIN_BOOKS || 2, 2, 15),
+    minOdds: clamp(q.min_odds || process.env.OGRAC_BUKA_MIN_ODDS || 1.40, 1.2, 3),
+    maxOdds: clamp(q.max_odds || process.env.OGRAC_BUKA_MAX_ODDS || 2.45, 1.35, 5),
+    minProbability: clamp(q.min_probability || process.env.OGRAC_BUKA_MIN_PROBABILITY || 0.52, 0.45, 0.85),
+    minEdge: clamp(q.min_edge || process.env.OGRAC_BUKA_MIN_EDGE || 0.01, 0, 0.2),
+    maxProbabilitySpread: clamp(q.max_probability_spread || process.env.OGRAC_BUKA_MAX_PROBABILITY_SPREAD || 0.065, 0.01, 0.15),
+    maxOddsOutlierRatio: clamp(q.max_odds_outlier_ratio || process.env.OGRAC_BUKA_MAX_ODDS_OUTLIER_RATIO || 1.10, 1.01, 1.2),
     baseStake: 1,
     maxStake: 1,
     targetProfit: 0,
-    apiCandidates: clamp(q.api_candidates || process.env.OGRAC_BUKA_API_CANDIDATES || 6, 1, 8),
-    minApiScore: clamp(q.min_api_score || process.env.OGRAC_BUKA_MIN_API_SCORE || 58, 40, 95),
-    minApiProbability: clamp(q.min_api_probability || process.env.OGRAC_BUKA_MIN_API_PROBABILITY || 54, 40, 85),
-    minCombinedScore: clamp(q.min_combined_score || process.env.OGRAC_BUKA_MIN_COMBINED_SCORE || 62, 40, 95),
+    apiCandidates: clamp(q.api_candidates || process.env.OGRAC_BUKA_API_CANDIDATES || 8, 1, 8),
+    minApiScore: clamp(q.min_api_score || process.env.OGRAC_BUKA_MIN_API_SCORE || 54, 40, 95),
+    minApiProbability: clamp(q.min_api_probability || process.env.OGRAC_BUKA_MIN_API_PROBABILITY || 51, 40, 85),
+    minCombinedScore: clamp(q.min_combined_score || process.env.OGRAC_BUKA_MIN_COMBINED_SCORE || 58, 40, 95),
     apiWeight: clamp(q.api_weight || process.env.OGRAC_BUKA_API_WEIGHT || 0.60, 0.2, 0.8),
     marketWeight: 0,
     requireApiPrediction: boolEnv(q.require_api_prediction ?? process.env.OGRAC_BUKA_REQUIRE_API_PREDICTION, true),
     useInjuries: boolEnv(q.use_injuries ?? process.env.OGRAC_BUKA_USE_INJURIES, true),
-    minComparison: clamp(q.min_comparison || process.env.OGRAC_BUKA_MIN_COMPARISON || 52, 40, 80),
-    minConservativeEdge: clamp(q.min_conservative_edge || process.env.OGRAC_BUKA_MIN_CONSERVATIVE_EDGE || 0.025, 0, 0.15),
-    cooldownHours: clamp(q.cooldown_hours || process.env.OGRAC_BUKA_COOLDOWN_HOURS || 12, 6, 72)
+    minComparison: clamp(q.min_comparison || process.env.OGRAC_BUKA_MIN_COMPARISON || 48, 40, 80),
+    minConservativeEdge: clamp(q.min_conservative_edge || process.env.OGRAC_BUKA_MIN_CONSERVATIVE_EDGE || 0.015, 0, 0.15),
+    cooldownHours: clamp(q.cooldown_hours || process.env.OGRAC_BUKA_COOLDOWN_HOURS || 10, 6, 72)
   }
   settings.marketWeight = round(1 - settings.apiWeight, 4)
 

@@ -7,7 +7,7 @@ const API_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || proce
 // Ta funkcja dotyczy wyłącznie profilu BetAI MultiSport AI.
 const AUTHOR_NAME = 'BetAI MultiSport AI'
 const USERNAME = 'betai-multisport-ai'
-const VERSION = '1867.1-betai-football-market-value-v3'
+const VERSION = '1867.2-betai-football-market-value-balanced-v4'
 const SOURCE = 'betai_value_engine_v3'
 
 const headers = {
@@ -549,7 +549,7 @@ async function fixtureAlreadyUsed(supabase, fixtureId) {
   return Array.isArray(data) && data.length > 0
 }
 
-// WERSJA 1867.1: pięć lekkich skanów dziennie. Cooldown chroni przed nadmierną publikacją.
+// WERSJA 1867.2: umiarkowanie poluzowane filtry. Nadal maksymalnie jeden świeży typ na profil w okresie cooldown.
 exports.config = { schedule: '17 6,10,14,18,22 * * *' }
 
 exports.handler = async function(event) {
@@ -561,18 +561,18 @@ exports.handler = async function(event) {
   const dryRun = ['1', 'true', 'yes'].includes(String(q.dry_run || '').toLowerCase())
   const force = ['1', 'true', 'yes'].includes(String(q.force || '').toLowerCase())
   const days = clamp(q.days || process.env.BETAI_VALUE_V2_LOOKAHEAD_DAYS || 2, 1, 3)
-  const minMinutes = clamp(q.min_minutes_before_start || process.env.BETAI_VALUE_V2_MIN_MINUTES_BEFORE_START || 120, 60, 720)
-  const maxHours = clamp(q.max_hours_ahead || process.env.BETAI_VALUE_V2_MAX_HOURS_AHEAD || 48, 6, 72)
-  const cooldownHours = clamp(q.cooldown_hours || process.env.BETAI_VALUE_V2_COOLDOWN_HOURS || 12, 8, 48)
+  const minMinutes = clamp(q.min_minutes_before_start || process.env.BETAI_VALUE_V2_MIN_MINUTES_BEFORE_START || 90, 60, 720)
+  const maxHours = clamp(q.max_hours_ahead || process.env.BETAI_VALUE_V2_MAX_HOURS_AHEAD || 60, 6, 72)
+  const cooldownHours = clamp(q.cooldown_hours || process.env.BETAI_VALUE_V2_COOLDOWN_HOURS || 10, 8, 48)
 
   const settings = {
-    minBooks: clamp(q.min_books || process.env.BETAI_VALUE_V2_MIN_BOOKS || 4, 3, 15),
-    minOdds: clamp(q.min_odds || process.env.BETAI_VALUE_V2_MIN_ODDS || 1.45, 1.2, 3),
-    maxOdds: clamp(q.max_odds || process.env.BETAI_VALUE_V2_MAX_ODDS || 2.50, 1.5, 5),
-    minProbability: clamp(q.min_probability || process.env.BETAI_VALUE_V2_MIN_PROBABILITY || 0.44, 0.35, 0.8),
-    minEdge: clamp(q.min_edge || process.env.BETAI_VALUE_V2_MIN_EDGE || 0.025, 0.01, 0.2),
-    maxProbabilitySpread: clamp(q.max_probability_spread || process.env.BETAI_VALUE_V2_MAX_PROBABILITY_SPREAD || 0.065, 0.01, 0.12),
-    maxOddsOutlierRatio: clamp(q.max_odds_outlier_ratio || process.env.BETAI_VALUE_V2_MAX_ODDS_OUTLIER_RATIO || 1.10, 1.01, 1.2)
+    minBooks: clamp(q.min_books || process.env.BETAI_VALUE_V2_MIN_BOOKS || 3, 3, 15),
+    minOdds: clamp(q.min_odds || process.env.BETAI_VALUE_V2_MIN_ODDS || 1.40, 1.2, 3),
+    maxOdds: clamp(q.max_odds || process.env.BETAI_VALUE_V2_MAX_ODDS || 2.65, 1.5, 5),
+    minProbability: clamp(q.min_probability || process.env.BETAI_VALUE_V2_MIN_PROBABILITY || 0.42, 0.35, 0.8),
+    minEdge: clamp(q.min_edge || process.env.BETAI_VALUE_V2_MIN_EDGE || 0.015, 0.01, 0.2),
+    maxProbabilitySpread: clamp(q.max_probability_spread || process.env.BETAI_VALUE_V2_MAX_PROBABILITY_SPREAD || 0.075, 0.01, 0.12),
+    maxOddsOutlierRatio: clamp(q.max_odds_outlier_ratio || process.env.BETAI_VALUE_V2_MAX_ODDS_OUTLIER_RATIO || 1.12, 1.01, 1.2)
   }
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
