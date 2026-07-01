@@ -819,8 +819,8 @@ exports.handler = async function(event) {
 
   const settings = {
     minBooks: clamp(q.min_books || process.env.OGRAC_BUKA_MIN_BOOKS || 2, 2, 15),
-    minOdds: clamp(q.min_odds || process.env.OGRAC_BUKA_MIN_ODDS || 1.40, 1.2, 3),
-    maxOdds: clamp(q.max_odds || process.env.OGRAC_BUKA_MAX_ODDS || 2.45, 1.35, 5),
+    minOdds: clamp(q.min_odds || process.env.OGRAC_BUKA_MIN_ODDS || 1.50, 1.2, 5),
+    maxOdds: clamp(q.max_odds || process.env.OGRAC_BUKA_MAX_ODDS || 5.00, 1.5, 5),
     minProbability: clamp(q.min_probability || process.env.OGRAC_BUKA_MIN_PROBABILITY || 0.52, 0.45, 0.85),
     minEdge: clamp(q.min_edge || process.env.OGRAC_BUKA_MIN_EDGE || 0.01, 0, 0.2),
     maxProbabilitySpread: clamp(q.max_probability_spread || process.env.OGRAC_BUKA_MAX_PROBABILITY_SPREAD || 0.065, 0.01, 0.15),

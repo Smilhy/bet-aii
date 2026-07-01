@@ -798,8 +798,8 @@ exports.handler = async function(event) {
 
   const settings = {
     minBooks: clamp(q.min_books || process.env.TYPER_EXPERT_MIN_BOOKS || 2, 2, 15),
-    minOdds: clamp(q.min_odds || process.env.TYPER_EXPERT_MIN_ODDS || 1.30, 1.2, 3),
-    maxOdds: clamp(q.max_odds || process.env.TYPER_EXPERT_MAX_ODDS || 2.10, 1.35, 5),
+    minOdds: clamp(q.min_odds || process.env.TYPER_EXPERT_MIN_ODDS || 1.50, 1.2, 5),
+    maxOdds: clamp(q.max_odds || process.env.TYPER_EXPERT_MAX_ODDS || 5.00, 1.5, 5),
     minProbability: clamp(q.min_probability || process.env.TYPER_EXPERT_MIN_PROBABILITY || 0.50, 0.45, 0.85),
     minEdge: clamp(q.min_edge || process.env.TYPER_EXPERT_MIN_EDGE || 0.0, 0, 0.2),
     maxProbabilitySpread: clamp(q.max_probability_spread || process.env.TYPER_EXPERT_MAX_PROBABILITY_SPREAD || 0.08, 0.01, 0.15),

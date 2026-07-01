@@ -549,7 +549,7 @@ async function fixtureAlreadyUsed(supabase, fixtureId) {
   return Array.isArray(data) && data.length > 0
 }
 
-// WERSJA 1867.2: umiarkowanie poluzowane filtry. Nadal maksymalnie jeden świeży typ na profil w okresie cooldown.
+// WERSJA 1867.3: zakres realnych kursów rozszerzony do 1.50–5.00. Pozostałe filtry jakości i cooldown pozostają aktywne.
 exports.config = { schedule: '17 6,10,14,18,22 * * *' }
 
 exports.handler = async function(event) {
@@ -567,8 +567,8 @@ exports.handler = async function(event) {
 
   const settings = {
     minBooks: clamp(q.min_books || process.env.BETAI_VALUE_V2_MIN_BOOKS || 3, 3, 15),
-    minOdds: clamp(q.min_odds || process.env.BETAI_VALUE_V2_MIN_ODDS || 1.40, 1.2, 3),
-    maxOdds: clamp(q.max_odds || process.env.BETAI_VALUE_V2_MAX_ODDS || 2.65, 1.5, 5),
+    minOdds: clamp(q.min_odds || process.env.BETAI_VALUE_V2_MIN_ODDS || 1.50, 1.2, 5),
+    maxOdds: clamp(q.max_odds || process.env.BETAI_VALUE_V2_MAX_ODDS || 5.00, 1.5, 5),
     minProbability: clamp(q.min_probability || process.env.BETAI_VALUE_V2_MIN_PROBABILITY || 0.42, 0.35, 0.8),
     minEdge: clamp(q.min_edge || process.env.BETAI_VALUE_V2_MIN_EDGE || 0.015, 0.01, 0.2),
     maxProbabilitySpread: clamp(q.max_probability_spread || process.env.BETAI_VALUE_V2_MAX_PROBABILITY_SPREAD || 0.075, 0.01, 0.12),
