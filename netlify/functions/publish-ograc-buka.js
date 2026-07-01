@@ -1,4 +1,2 @@
-const { queueBackground } = require('./_lib/queue-ai-background')
-exports.handler = async function(event) {
-  return queueBackground(event, 'publish-ograc-buka-background', 'manual-or-api')
-}
+const { createHandler } = require('./_lib/ai-bot-cycle')
+exports.handler = createHandler({ bots: 'ograc' })

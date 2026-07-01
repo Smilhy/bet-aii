@@ -16,37 +16,19 @@
   to = "/index.html"
   status = 200
 
-# WERSJA 1867.4 — długie skany AI działają jako Background Functions.
-# Lekkie funkcje harmonogramu tylko kolejkują pracę, więc nie wpadają w 30-sekundowy limit cronów.
+# WERSJA 1867.6 — trzy niezależne strategie botów.
+# Wspólne jest wyłącznie pobranie surowych meczów i kursów z API-Football.
 
-[functions."publish-betai-multisport-ai-background"]
-  background = true
-
-[functions."publish-typer-expert-background"]
-  background = true
-
-[functions."publish-ograc-buka-background"]
-  background = true
-
-# BetAI MultiSport AI — 3 skany dziennie UTC.
-[functions."schedule-betai-multisport-ai"]
-  schedule = "17 6,12,18 * * *"
+[functions."schedule-ai-bot-cycle"]
+  schedule = "12 5,10,15,20 * * *"
 
 # BetAI MultiSport AI — rozliczanie i naprawa błędnych zwrotów.
 [functions."settle-live-ai-picks"]
   schedule = "47 1,7,13,19 * * *"
 
-# Typer Expert — 3 skany dziennie UTC, przesunięte względem BetAI AI.
-[functions."schedule-typer-expert"]
-  schedule = "27 7,13,19 * * *"
-
 # Typer Expert — rozliczanie wyłącznie tego profilu co godzinę.
 [functions."settle-typer-expert"]
   schedule = "37 * * * *"
-
-# Ograć Buka — 3 skany dziennie UTC, przesunięte względem pozostałych botów.
-[functions."schedule-ograc-buka"]
-  schedule = "37 8,14,20 * * *"
 
 # Ograć Buka — automatyczne rozliczanie wyłącznie tego profilu co godzinę.
 [functions."settle-ograc-buka"]

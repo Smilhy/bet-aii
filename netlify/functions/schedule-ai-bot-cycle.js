@@ -1,3 +1,2 @@
 const { createHandler } = require('./_lib/ai-bot-cycle')
-// Ręczny skan pobiera dane raz, ale uruchamia trzy niezależne strategie.
 exports.handler = createHandler({ bots: 'betai,typer,ograc' })
