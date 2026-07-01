@@ -7167,9 +7167,12 @@ function betaiCanonicalMarketLabelV1663(rawMarket = '', rawPick = '') {
     text.includes('over/under line (1st half)')
   ) return 'Gole w 1. połowie'
 
+  // WERSJA 5: DNB musi być rozpoznane przed ogólnym rynkiem zwycięzcy.
+  // Część dostawców opisuje rynek jako np. "Match Winner - Draw No Bet";
+  // wcześniejsza kolejność potrafiła wtedy zapisać market_key=match_winner.
+  if (text.includes('draw no bet') || text.includes('dnb') || text.includes('remis nie ma') || pickText.includes('draw no bet') || pickText.includes('dnb') || pickText.includes('remis nie ma')) return 'DNB / Remis nie ma zakładu'
   if (text === '1x2' || text.includes('match winner') || text.includes('wynik') || text.includes('winner')) return '1X2'
   if (text.includes('podwojna') || text.includes('double chance')) return 'Podwójna szansa'
-  if (text.includes('draw no bet') || text.includes('dnb') || text.includes('remis nie ma')) return 'DNB / Remis nie ma zakładu'
   if (text.includes('both teams') || text.includes('btts') || text.includes('obie')) return 'BTTS'
   if (text.includes('over/under') || text.includes('goals') || text.includes('gole') || text.includes('bram')) return 'Gole'
   if (text.includes('handicap')) return 'Handicap'
@@ -7303,7 +7306,20 @@ function betaiBuildSettlementKeysV1663(market = '', pick = '', home = '', away =
   let selectionKey = 'unknown'
   let mode = 'auto'
 
-  if (label === '1X2') {
+  const isDnbV5 = label === 'DNB / Remis nie ma zakładu'
+    || text.includes('draw no bet')
+    || text.includes('remis nie ma')
+    || compact.includes('dnb')
+
+  // WERSJA 5: tekst DNB ma pierwszeństwo nawet wtedy, gdy zewnętrzny rynek
+  // zawiera słowa "winner" / "result". Dzięki temu remis zawsze daje zwrot.
+  if (isDnbV5) {
+    marketKey = 'draw_no_bet'
+    if (awayCompact && compact.includes(awayCompact)) selectionKey = 'away'
+    else if (homeCompact && compact.includes(homeCompact)) selectionKey = 'home'
+    else if (compact.includes('away') || compact.endsWith('2dnb')) selectionKey = 'away'
+    else if (compact.includes('home') || compact.endsWith('1dnb')) selectionKey = 'home'
+  } else if (label === '1X2') {
     marketKey = 'match_winner'
     if (text.includes('remis') || text.includes('draw') || compact === 'x') selectionKey = 'draw'
     else if (homeCompact && compact.includes(homeCompact)) selectionKey = 'home'
@@ -7341,9 +7357,6 @@ function betaiBuildSettlementKeysV1663(market = '', pick = '', home = '', away =
     marketKey = 'handicap'
     const side = awayCompact && compact.includes(awayCompact) ? 'away' : 'home'
     selectionKey = `${side}_${signedLine || ''}`
-  } else if (label === 'DNB / Remis nie ma zakładu') {
-    marketKey = 'draw_no_bet'
-    selectionKey = awayCompact && compact.includes(awayCompact) ? 'away' : 'home'
   } else if (label === 'Dokładny wynik') {
     marketKey = 'exact_score'
     const score = text.match(/(\d+)\s*[:\-]\s*(\d+)/)
@@ -32663,7 +32676,7 @@ function App() {
     autoSettleRunningRef.current = true
     autoSettleLastRunRef.current = now
     try {
-      const response = await fetch('/.netlify/functions/auto-settle-tips?limit=500', { method: 'GET' })
+      const response = await fetch('/.netlify/functions/auto-settle-tips?limit=500&repair_dnb=1', { method: 'GET' })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Nie udało się automatycznie rozliczyć typów użytkowników')
       const settledCount = Array.isArray(data.settled) ? data.settled.length : Number(data.settled || 0)

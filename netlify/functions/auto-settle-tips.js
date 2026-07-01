@@ -186,6 +186,48 @@ function pickLooksLikeTeam(textCompact, teamName) {
   return Boolean(teamCompact && (textCompact.includes(teamCompact) || teamCompact.includes(textCompact)))
 }
 
+// WERSJA 5 — globalna identyfikacja DNB.
+// Tekst rynku ma pierwszeństwo przed błędnym/starym market_key, ponieważ starsze
+// rekordy mogły zapisać DNB jako match_winner i przy remisie oznaczyć typ jako WON.
+function looksLikeDnbTip(tip) {
+  const raw = norm([
+    tip && tip.market_key,
+    tip && tip.market,
+    tip && tip.market_name,
+    tip && tip.bet_type,
+    tip && tip.prediction,
+    tip && tip.selection,
+    tip && tip.pick,
+    tip && tip.tip
+  ].filter(Boolean).join(' '))
+  const c = compact(raw)
+  return raw === 'draw_no_bet'
+    || c.includes('drawnobet')
+    || c.includes('dnb')
+    || c.includes('remisniemazakladu')
+    || c.includes('bezremisu')
+}
+
+function dnbSelectionFromTip(tip) {
+  const teams = teamNamesFromTip(tip || {})
+  const pickC = compact(pickTextOf(tip || {}))
+  const homeC = compact(teams.home)
+  const awayC = compact(teams.away)
+
+  // Najpierw ufamy faktycznej nazwie wybranej drużyny zapisanej w typie.
+  // Dopiero później używamy starego selection_key, który mógł pochodzić
+  // z błędnej klasyfikacji rynku jako match_winner.
+  if (awayC && pickC.includes(awayC)) return 'away'
+  if (homeC && pickC.includes(homeC)) return 'home'
+  if (pickC.includes('away') || pickC === '2dnb' || pickC.endsWith('2dnb')) return 'away'
+  if (pickC.includes('home') || pickC === '1dnb' || pickC.endsWith('1dnb')) return 'home'
+
+  const explicit = norm(tip && (tip.selection_key || tip.selectionKey))
+  if (explicit === 'home' || explicit === '1') return 'home'
+  if (explicit === 'away' || explicit === '2') return 'away'
+  return ''
+}
+
 function inferPolishSettlementKeysV1723(tip) {
   const t = textOf(tip)
   const c = compact(t)
@@ -279,6 +321,15 @@ function fallbackKeys(tip) {
   const c = compact(t)
   let market = norm(tip.market_key || tip.marketKey)
   let selection = norm(tip.selection_key || tip.selectionKey)
+
+  // WERSJA 5: naprawa starych rekordów DNB. Nawet gdy zapisano
+  // market_key=match_winner, opis "DNB / remis nie ma zakładu" wymusza
+  // prawidłowy rynek draw_no_bet. Przy remisie wynik musi być VOID/ZWROT.
+  if (looksLikeDnbTip(tip)) {
+    const dnbSelection = dnbSelectionFromTip(tip)
+    if (dnbSelection) return { market: 'draw_no_bet', selection: dnbSelection }
+    return { market: 'draw_no_bet', selection }
+  }
 
   if (market && selection && market !== 'unknown' && selection !== 'unknown') return { market, selection }
 
@@ -586,19 +637,26 @@ async function settleAkoTip(tip) {
   if (statuses.includes('lost')) {
     status = 'lost'
     reason = 'AKO przegrane: co najmniej jedna noga nietrafiona'
-  } else if (statuses.length && statuses.every(st => ['won', 'void'].includes(st))) {
-    status = 'won'
-    reason = 'AKO wygrane: wszystkie nogi trafione/zwrot'
-  } else if (statuses.every(st => st === 'void')) {
+  } else if (statuses.length && statuses.every(st => st === 'void')) {
+    // WERSJA 5: wszystkie nogi zwrócone oznaczają zwrot całego kuponu,
+    // a nie wygraną po pierwotnym kursie AKO.
     status = 'void'
     reason = 'AKO zwrot: wszystkie nogi void'
+  } else if (statuses.length && statuses.every(st => ['won', 'void'].includes(st))) {
+    status = 'won'
+    reason = 'AKO wygrane: wszystkie aktywne nogi trafione, nogi void usunięte z kursu'
   }
+
+  const effectiveOdds = settledLegs
+    .filter(leg => String(leg.status || leg.result || '').toLowerCase() === 'won')
+    .reduce((product, leg) => product * Math.max(toNum(leg.odds ?? leg.course, 1), 1), 1)
 
   return {
     status,
     reason,
     legs_json: settledLegs,
-    leg_statuses: statuses
+    leg_statuses: statuses,
+    effective_odds: status === 'won' ? effectiveOdds : null
   }
 }
 
@@ -615,7 +673,7 @@ function profitFromSettlement(tip, status) {
 function updatePayload(result, tip = {}) {
   const status = ['won','lost','void'].includes(result.status) ? result.status : 'pending'
   const stake = toNum(tip && (tip.stake ?? tip.amount ?? tip.bet_amount), 0)
-  const odds = toNum(tip && (tip.odds ?? tip.course), 0)
+  const odds = toNum(result && result.effective_odds, toNum(tip && (tip.odds ?? tip.course), 0))
 
   const profit = status === 'won'
     ? Math.round((stake * Math.max(odds - 1, 0)) * 100) / 100
@@ -642,6 +700,7 @@ function updatePayload(result, tip = {}) {
   }
 
   if (Array.isArray(result.legs_json)) payload.legs_json = result.legs_json
+  if (result.settlement_source) payload.settlement_source = result.settlement_source
   return payload
 }
 
@@ -650,13 +709,45 @@ function updatePayload(result, tip = {}) {
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders, body: '' }
   const supabase = getSupabase()
-  const { data: tips, error } = await supabase
+  const query = event.queryStringParameters || {}
+  const requestedLimit = Math.max(1, Math.min(500, Number(query.limit || 120) || 120))
+  const repairDnb = ['1', 'true', 'yes'].includes(norm(query.repair_dnb || query.repairDnb || ''))
+
+  const pendingRequest = supabase
     .from('tips')
     .select('*')
     .or('status.eq.pending,settlement_status.eq.pending,status.is.null,settlement_status.is.null')
     .order('created_at', { ascending: true })
-    .limit(80)
-  if (error) return json(500, { ok: false, error: error.message })
+    .limit(requestedLimit)
+
+  // Jednorazowe samonaprawianie starszych DNB. Pobieramy ostatnie rekordy tylko
+  // gdy frontend poprosi o repair_dnb=1. Rekord oznaczony źródłem v5 nie jest
+  // ponownie odpytywany przy kolejnych cyklach.
+  const repairRequest = repairDnb
+    ? supabase
+      .from('tips')
+      .select('*')
+      .or('market.ilike.%DNB%,bet_type.ilike.%DNB%')
+      .order('created_at', { ascending: false })
+      .limit(500)
+    : Promise.resolve({ data: [], error: null })
+
+  const [pendingResult, repairResult] = await Promise.all([pendingRequest, repairRequest])
+  if (pendingResult.error) return json(500, { ok: false, error: pendingResult.error.message })
+  if (repairResult.error) return json(500, { ok: false, error: repairResult.error.message })
+
+  const pendingTips = Array.isArray(pendingResult.data) ? pendingResult.data : []
+  const dnbRepairTips = (Array.isArray(repairResult.data) ? repairResult.data : []).filter(tip => {
+    if (!looksLikeDnbTip(tip)) return false
+    const status = norm(tip.status || tip.result || tip.settlement_status || tip.result_status)
+    if (!['won', 'win', 'lost', 'loss', 'void', 'push'].includes(status)) return false
+    return !norm(tip.settlement_source).includes('dnb_void_fix_v5')
+  })
+
+  const unique = new Map()
+  ;[...pendingTips, ...dnbRepairTips].forEach(tip => unique.set(String(tip.id), tip))
+  const tips = Array.from(unique.values())
+  const repairIds = new Set(dnbRepairTips.map(tip => String(tip.id)))
 
   const checked = []
   const settled = []
@@ -673,6 +764,11 @@ exports.handler = async function(event) {
         leg_statuses: res.leg_statuses || null
       })
       if (['won','lost','void'].includes(res.status)) {
+        if (looksLikeDnbTip(tip)) {
+          res.settlement_source = repairIds.has(String(tip.id))
+            ? 'auto_dnb_void_fix_v5_repaired'
+            : 'auto_dnb_void_fix_v5'
+        }
         const { error: upErr } = await supabase.from('tips').update(updatePayload(res, tip)).eq('id', tip.id)
         if (upErr) skipped.push({ id: tip.id, reason: upErr.message })
         else settled.push({ id: tip.id, status: res.status, type: isAkoTip(tip) ? 'ako' : 'single' })
@@ -689,5 +785,14 @@ exports.handler = async function(event) {
       skipped.push({ id: tip.id, reason: e.message || String(e) })
     }
   }
-  return json(200, { ok: true, version: '1847-auto-settle-half-markets-v1', checked: checked.length, settled, skipped, sample: checked.slice(0, 20) })
+  return json(200, {
+    ok: true,
+    version: '5-dnb-remis-zwrot-global-fix',
+    checked: checked.length,
+    pending_checked: pendingTips.length,
+    dnb_repair_candidates: dnbRepairTips.length,
+    settled,
+    skipped,
+    sample: checked.slice(0, 20)
+  })
 }
