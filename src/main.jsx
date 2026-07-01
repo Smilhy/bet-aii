@@ -20812,10 +20812,27 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
 
   async function runSavedAiScanEndpointV1690(mode = 'today') {
-    const url = `/.netlify/functions/generate-live-ai-picks?days=1&limit=20&mode=${encodeURIComponent(mode)}`
+    // WERSJA 1867.1: ekran Typy AI korzysta z aktywnego generatora profilu
+    // BetAI MultiSport AI. Generator zapisuje równolegle do tips i ai_bets,
+    // dzięki czemu typ od razu pojawia się na tej stronie i w profilu systemowym.
+    const params = new URLSearchParams({
+      days: mode === 'tomorrow' ? '2' : '2',
+      min_minutes_before_start: '120',
+      max_hours_ahead: mode === 'tomorrow' ? '72' : '48',
+      cooldown_hours: '12',
+      min_books: '4',
+      min_odds: '1.45',
+      max_odds: '2.50',
+      min_probability: '0.44',
+      min_edge: '0.025',
+      max_probability_spread: '0.065',
+      max_odds_outlier_ratio: '1.10',
+      manual: '1'
+    })
+    const url = `/.netlify/functions/publish-betai-multisport-ai?${params.toString()}`
     const response = await fetch(url, { cache: 'no-store' })
     const json = await response.json().catch(() => ({}))
-    if (!response.ok) throw new Error(json?.error || json?.message || `generate-live-ai-picks HTTP ${response.status}`)
+    if (!response.ok) throw new Error(json?.error || json?.message || `publish-betai-multisport-ai HTTP ${response.status}`)
     return json
   }
 
@@ -20858,31 +20875,52 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
       setStatusText(`Pierwszy skan dnia: uruchamiam zapisujący skaner AI na ${dayLabel} i po nim odczytuję Supabase...`)
 
-      // WERSJA 1690: główny skan musi iść przez endpoint, który zapisuje do public.ai_bets.
-      // Dzięki temu typy nie znikną po odświeżeniu strony.
+      // WERSJA 1867.1: aktywny generator profilu zapisuje jednocześnie do tips i public.ai_bets.
+      // Dzięki temu typ jest widoczny zarówno na profilu systemowym, jak i w zakładce Typy AI.
       try {
         const scanJson = await runSavedAiScanEndpointV1690(mode)
-        const savedAfterEndpoint = await loadSavedAiTipsFromDb('today')
+        const [savedToday, savedTomorrow] = await Promise.all([
+          loadSavedAiTipsFromDb('today'),
+          loadSavedAiTipsFromDb('tomorrow')
+        ])
         await loadSavedAiJournalFromDbV1094()
 
-        if (savedAfterEndpoint.length) {
+        const inserted = Number(scanJson?.inserted || scanJson?.ai_bets_inserted || scanJson?.ai_bets_saved || 0)
+        const fixturesChecked = Number(scanJson?.fixtures_found || scanJson?.matches_checked || 0)
+        const candidatesFound = Number(scanJson?.candidates_found || scanJson?.candidates || 0)
+        const oddsFixtures = Number(scanJson?.odds_fixtures_found || scanJson?.real_odds_fixtures || 0)
+
+        if (savedToday.length) {
+          setAiDayMode('today')
           setLiveCards([])
-          setSelectedId(savedAfterEndpoint[0]?.id || '')
-          saveBetAiVisibleCacheV1484('today', savedAfterEndpoint)
+          setSelectedId(savedToday[0]?.id || '')
+          saveBetAiVisibleCacheV1484('today', savedToday)
           shouldSetScanCooldownV1482 = true
-          setStatusText(`Skan zapisany w Supabase: ${savedAfterEndpoint.length} typów AI na dziś. Wynik endpointu: inserted=${scanJson?.inserted ?? scanJson?.ai_bets_inserted ?? 'ok'}.`)
+          setStatusText(`Skan zakończony. Aktywne typy AI na dziś: ${savedToday.length}. Sprawdzono meczów: ${fixturesChecked}, meczów z kursami: ${oddsFixtures}, kandydatów: ${candidatesFound}.`)
           return
         }
 
-        const inserted = Number(scanJson?.inserted || scanJson?.ai_bets_inserted || 0)
+        if (savedTomorrow.length) {
+          setAiDayMode('tomorrow')
+          setLiveCards([])
+          setSelectedId(savedTomorrow[0]?.id || '')
+          saveBetAiVisibleCacheV1484('tomorrow', savedTomorrow)
+          shouldSetScanCooldownV1482 = true
+          setStatusText(`Skan znalazł typ na jutro i przełączył widok. Typów na jutro: ${savedTomorrow.length}. Sprawdzono meczów: ${fixturesChecked}, kandydatów: ${candidatesFound}.`)
+          return
+        }
+
         if (inserted > 0) {
           setLiveCards([])
           setSelectedId('')
-          setStatusText(`Endpoint zgłosił zapis ${inserted} typów, ale odczyt z Supabase zwrócił 0. Sprawdź RLS/service role w get-ai-bets.`)
+          setStatusText(`Generator zapisał ${inserted} typ, ale nie jest on jeszcze widoczny w ai_bets. Odśwież stronę za chwilę; jeśli nadal go nie ma, sprawdź tabelę ai_bets.`)
           return
         }
 
-        setStatusText(scanJson?.message || 'Skan zakończony: endpoint nie znalazł typów spełniających warunki na dziś.')
+        const reason = scanJson?.skipped === 'cooldown'
+          ? 'Generator nie stworzył duplikatu, ponieważ profil ma już świeży typ. Istniejący typ został zsynchronizowany z ekranem.'
+          : (scanJson?.message || 'Brak typu spełniającego aktualne filtry jakości.')
+        setStatusText(`${reason} Sprawdzono meczów: ${fixturesChecked}, meczów z kursami: ${oddsFixtures}, kandydatów: ${candidatesFound}.`)
         setLiveCards([])
         setSelectedId('')
         return

@@ -17,9 +17,9 @@
   status = 200
 
 # BetAI MultiSport AI — automatyczne publikowanie typów
-# Netlify cron działa w UTC: skany o 07:17, 11:17 i 15:17; konto publikuje maksymalnie 1 typ na 20 godzin.
+# WERSJA 1867.1 — skany UTC o 06:17, 10:17, 14:17, 18:17 i 22:17; cooldown domyślnie 12 godzin.
 [functions."publish-betai-multisport-ai"]
-  schedule = "17 7,11,15 * * *"
+  schedule = "17 6,10,14,18,22 * * *"
 
 
 # BetAI MultiSport AI — rozliczanie i naprawa błędnych zwrotów.

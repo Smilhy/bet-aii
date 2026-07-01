@@ -7,8 +7,8 @@ const API_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || proce
 // Ta funkcja dotyczy wyłącznie profilu BetAI MultiSport AI.
 const AUTHOR_NAME = 'BetAI MultiSport AI'
 const USERNAME = 'betai-multisport-ai'
-const VERSION = '1822-betai-football-market-value-v2'
-const SOURCE = 'betai_value_engine_v2'
+const VERSION = '1867.1-betai-football-market-value-v3'
+const SOURCE = 'betai_value_engine_v3'
 
 const headers = {
   'Content-Type': 'application/json',
@@ -422,6 +422,80 @@ function buildTipRow(ev, pick) {
   }
 }
 
+function warsawDateTimeParts(value) {
+  const date = new Date(value || Date.now())
+  const safe = Number.isFinite(date.getTime()) ? date : new Date()
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Warsaw',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false
+  }).formatToParts(safe).reduce((acc, part) => {
+    if (part.type !== 'literal') acc[part.type] = part.value
+    return acc
+  }, {})
+  return {
+    date: `${parts.year}-${parts.month}-${parts.day}`,
+    time: `${parts.hour || '12'}:${parts.minute || '00'}`
+  }
+}
+
+function buildAiBetRow(tipRow) {
+  const local = warsawDateTimeParts(tipRow.event_time || tipRow.kickoff_time || tipRow.match_time)
+  return {
+    external_fixture_id: String(tipRow.external_fixture_id || tipRow.fixture_id || tipRow.ai_external_key || ''),
+    match_date: local.date,
+    match_time: local.time,
+    home_team: tipRow.team_home,
+    away_team: tipRow.team_away,
+    country: tipRow.country || 'API-Football',
+    league: tipRow.league || 'Football',
+    market: tipRow.market || tipRow.bet_type || 'AI pick',
+    prediction: tipRow.prediction || tipRow.pick || tipRow.selection || 'AI prediction',
+    odds: n(tipRow.odds, 1.5),
+    probability: Math.round(n(tipRow.probability || tipRow.model_probability, 60)),
+    ev: round(n(tipRow.ev || tipRow.value_score, 0), 2),
+    ai_score: Math.round(n(tipRow.ai_score || tipRow.ai_confidence, 60)),
+    status: clean(tipRow.status, 'pending').toLowerCase(),
+    result: tipRow.result ? clean(tipRow.result).toLowerCase() : null,
+    profit: n(tipRow.profit, 0),
+    source: SOURCE,
+    updated_at: new Date().toISOString()
+  }
+}
+
+async function saveAiBetMirror(supabase, tipRow) {
+  const row = buildAiBetRow(tipRow)
+  if (!row.external_fixture_id || !row.home_team || !row.away_team) return { saved: 0, reason: 'missing_identity' }
+
+  const { data: existing, error: findError } = await supabase
+    .from('ai_bets')
+    .select('id,status,result')
+    .eq('external_fixture_id', row.external_fixture_id)
+    .eq('market', row.market)
+    .eq('prediction', row.prediction)
+    .limit(1)
+  if (findError) throw findError
+
+  const existingId = existing?.[0]?.id
+  if (existingId) {
+    const settled = ['won','lost','void','push','win','loss'].includes(String(existing?.[0]?.status || existing?.[0]?.result || '').toLowerCase())
+    const updateRow = settled
+      ? Object.fromEntries(Object.entries(row).filter(([key]) => !['status','result','profit'].includes(key)))
+      : row
+    const { error } = await supabase.from('ai_bets').update(updateRow).eq('id', existingId)
+    if (error) throw error
+    return { saved: 1, id: existingId, updated: true }
+  }
+
+  const { data, error } = await supabase
+    .from('ai_bets')
+    .insert({ ...row, created_at: new Date().toISOString() })
+    .select('id')
+    .single()
+  if (error) throw error
+  return { saved: 1, id: data?.id, updated: false }
+}
+
 function missingColumn(error) {
   const message = String(error?.message || error || '')
   const match = message.match(/Could not find the '([^']+)' column/i)
@@ -451,16 +525,17 @@ async function insertSafe(supabase, row) {
   throw new Error(`Too many missing-column retries: ${removed.join(', ')}`)
 }
 
-async function hasRecentAccountPick(supabase, cooldownHours) {
+async function getRecentAccountPick(supabase, cooldownHours) {
   const since = new Date(Date.now() - cooldownHours * 60 * 60 * 1000).toISOString()
   const { data, error } = await supabase
     .from('tips')
-    .select('id,created_at,status,fixture_id')
+    .select('*')
     .eq('author_name', AUTHOR_NAME)
     .gte('created_at', since)
+    .order('created_at', { ascending: false })
     .limit(1)
   if (error) throw error
-  return Array.isArray(data) && data.length > 0
+  return Array.isArray(data) && data.length ? data[0] : null
 }
 
 async function fixtureAlreadyUsed(supabase, fixtureId) {
@@ -474,8 +549,8 @@ async function fixtureAlreadyUsed(supabase, fixtureId) {
   return Array.isArray(data) && data.length > 0
 }
 
-// Trzy skany dziennie; blokada konta pozwala opublikować maksymalnie jeden typ na 20 godzin.
-exports.config = { schedule: '17 7,11,15 * * *' }
+// WERSJA 1867.1: pięć lekkich skanów dziennie. Cooldown chroni przed nadmierną publikacją.
+exports.config = { schedule: '17 6,10,14,18,22 * * *' }
 
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
@@ -486,18 +561,18 @@ exports.handler = async function(event) {
   const dryRun = ['1', 'true', 'yes'].includes(String(q.dry_run || '').toLowerCase())
   const force = ['1', 'true', 'yes'].includes(String(q.force || '').toLowerCase())
   const days = clamp(q.days || process.env.BETAI_VALUE_V2_LOOKAHEAD_DAYS || 2, 1, 3)
-  const minMinutes = clamp(q.min_minutes_before_start || process.env.BETAI_VALUE_V2_MIN_MINUTES_BEFORE_START || 180, 60, 720)
-  const maxHours = clamp(q.max_hours_ahead || process.env.BETAI_VALUE_V2_MAX_HOURS_AHEAD || 36, 6, 72)
-  const cooldownHours = clamp(q.cooldown_hours || process.env.BETAI_VALUE_V2_COOLDOWN_HOURS || 20, 8, 48)
+  const minMinutes = clamp(q.min_minutes_before_start || process.env.BETAI_VALUE_V2_MIN_MINUTES_BEFORE_START || 120, 60, 720)
+  const maxHours = clamp(q.max_hours_ahead || process.env.BETAI_VALUE_V2_MAX_HOURS_AHEAD || 48, 6, 72)
+  const cooldownHours = clamp(q.cooldown_hours || process.env.BETAI_VALUE_V2_COOLDOWN_HOURS || 12, 8, 48)
 
   const settings = {
-    minBooks: clamp(q.min_books || process.env.BETAI_VALUE_V2_MIN_BOOKS || 5, 3, 15),
-    minOdds: clamp(q.min_odds || process.env.BETAI_VALUE_V2_MIN_ODDS || 1.55, 1.2, 3),
-    maxOdds: clamp(q.max_odds || process.env.BETAI_VALUE_V2_MAX_ODDS || 2.35, 1.5, 5),
-    minProbability: clamp(q.min_probability || process.env.BETAI_VALUE_V2_MIN_PROBABILITY || 0.46, 0.35, 0.8),
-    minEdge: clamp(q.min_edge || process.env.BETAI_VALUE_V2_MIN_EDGE || 0.045, 0.01, 0.2),
-    maxProbabilitySpread: clamp(q.max_probability_spread || process.env.BETAI_VALUE_V2_MAX_PROBABILITY_SPREAD || 0.045, 0.01, 0.12),
-    maxOddsOutlierRatio: clamp(q.max_odds_outlier_ratio || process.env.BETAI_VALUE_V2_MAX_ODDS_OUTLIER_RATIO || 1.07, 1.01, 1.2)
+    minBooks: clamp(q.min_books || process.env.BETAI_VALUE_V2_MIN_BOOKS || 4, 3, 15),
+    minOdds: clamp(q.min_odds || process.env.BETAI_VALUE_V2_MIN_ODDS || 1.45, 1.2, 3),
+    maxOdds: clamp(q.max_odds || process.env.BETAI_VALUE_V2_MAX_ODDS || 2.50, 1.5, 5),
+    minProbability: clamp(q.min_probability || process.env.BETAI_VALUE_V2_MIN_PROBABILITY || 0.44, 0.35, 0.8),
+    minEdge: clamp(q.min_edge || process.env.BETAI_VALUE_V2_MIN_EDGE || 0.025, 0.01, 0.2),
+    maxProbabilitySpread: clamp(q.max_probability_spread || process.env.BETAI_VALUE_V2_MAX_PROBABILITY_SPREAD || 0.065, 0.01, 0.12),
+    maxOddsOutlierRatio: clamp(q.max_odds_outlier_ratio || process.env.BETAI_VALUE_V2_MAX_ODDS_OUTLIER_RATIO || 1.10, 1.01, 1.2)
   }
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
@@ -505,14 +580,19 @@ exports.handler = async function(event) {
 
   if (!dryRun && !force) {
     try {
-      if (await hasRecentAccountPick(supabase, cooldownHours)) {
+      const recentPick = await getRecentAccountPick(supabase, cooldownHours)
+      if (recentPick) {
+        let aiBetMirror = { saved: 0 }
+        try { aiBetMirror = await saveAiBetMirror(supabase, recentPick) } catch (mirrorError) { errors.push(`ai_bets mirror: ${mirrorError.message || mirrorError}`) }
         return json(200, {
           ok: true,
           version: VERSION,
           author: AUTHOR_NAME,
           inserted: 0,
+          ai_bets_saved: aiBetMirror.saved || 0,
           skipped: 'cooldown',
-          message: `Profil ma już typ z ostatnich ${cooldownHours} godzin. V2 nie publikuje kolejnego.`
+          recent_pick_id: recentPick.id,
+          message: `Profil ma już typ z ostatnich ${cooldownHours} godzin. Nie tworzę duplikatu; istniejący typ został zsynchronizowany z ekranem Typy AI.`
         })
       }
     } catch (error) {
@@ -587,10 +667,12 @@ exports.handler = async function(event) {
   const row = buildTipRow(selected.ev, selected.pick)
   try {
     const out = await insertSafe(supabase, row)
+    let aiBetMirror = { saved: 0 }
+    try { aiBetMirror = await saveAiBetMirror(supabase, row) } catch (mirrorError) { errors.push(`ai_bets mirror: ${mirrorError.message || mirrorError}`) }
     try {
       await supabase.from('ai_pick_runs').insert({
         source: VERSION,
-        picks_created: 1,
+        picks_created: aiBetMirror.saved || 1,
         status: 'success',
         error_message: errors.length ? errors.slice(0, 8).join(' | ').slice(0, 1000) : null,
         finished_at: new Date().toISOString()
@@ -602,8 +684,13 @@ exports.handler = async function(event) {
       version: VERSION,
       author: AUTHOR_NAME,
       inserted: 1,
+      ai_bets_saved: aiBetMirror.saved || 0,
       id: out.data?.id,
+      ai_bet_id: aiBetMirror.id || null,
       removed_columns: out.removed,
+      fixtures_found: fixtures.length,
+      odds_fixtures_found: oddsGroups.size,
+      candidates_found: uniqueFixtures.length,
       strategy: 'real bookmaker consensus + de-vig + best non-outlier price',
       pick: row,
       settings,

@@ -794,13 +794,13 @@ exports.handler = async function(event) {
   const force = ['1', 'true', 'yes'].includes(String(q.force || '').toLowerCase())
   const days = clamp(q.days || process.env.TYPER_EXPERT_LOOKAHEAD_DAYS || 2, 1, 3)
   const minMinutes = clamp(q.min_minutes_before_start || process.env.TYPER_EXPERT_MIN_MINUTES_BEFORE_START || 90, 45, 720)
-  const maxHours = clamp(q.max_hours_ahead || process.env.TYPER_EXPERT_MAX_HOURS_AHEAD || 24, 6, 72)
+  const maxHours = clamp(q.max_hours_ahead || process.env.TYPER_EXPERT_MAX_HOURS_AHEAD || 36, 6, 72)
 
   const settings = {
     minBooks: clamp(q.min_books || process.env.TYPER_EXPERT_MIN_BOOKS || 3, 2, 15),
     minOdds: clamp(q.min_odds || process.env.TYPER_EXPERT_MIN_ODDS || 1.35, 1.2, 3),
     maxOdds: clamp(q.max_odds || process.env.TYPER_EXPERT_MAX_ODDS || 1.95, 1.35, 5),
-    minProbability: clamp(q.min_probability || process.env.TYPER_EXPERT_MIN_PROBABILITY || 0.54, 0.45, 0.85),
+    minProbability: clamp(q.min_probability || process.env.TYPER_EXPERT_MIN_PROBABILITY || 0.52, 0.45, 0.85),
     minEdge: clamp(q.min_edge || process.env.TYPER_EXPERT_MIN_EDGE || 0.005, 0, 0.2),
     maxProbabilitySpread: clamp(q.max_probability_spread || process.env.TYPER_EXPERT_MAX_PROBABILITY_SPREAD || 0.07, 0.01, 0.15),
     maxOddsOutlierRatio: clamp(q.max_odds_outlier_ratio || process.env.TYPER_EXPERT_MAX_ODDS_OUTLIER_RATIO || 1.10, 1.01, 1.2),
@@ -808,9 +808,9 @@ exports.handler = async function(event) {
     maxStake: clamp(q.max_stake || process.env.TYPER_EXPERT_MAX_STAKE || 1000, 1, 1000),
     targetProfit: clamp(q.target_profit || process.env.TYPER_EXPERT_TARGET_PROFIT || 0.4, 0.01, 100),
     apiCandidates: clamp(q.api_candidates || process.env.TYPER_EXPERT_API_CANDIDATES || 5, 1, 8),
-    minApiScore: clamp(q.min_api_score || process.env.TYPER_EXPERT_MIN_API_SCORE || 60, 40, 95),
-    minApiProbability: clamp(q.min_api_probability || process.env.TYPER_EXPERT_MIN_API_PROBABILITY || 55, 40, 85),
-    minCombinedScore: clamp(q.min_combined_score || process.env.TYPER_EXPERT_MIN_COMBINED_SCORE || 62, 40, 95),
+    minApiScore: clamp(q.min_api_score || process.env.TYPER_EXPERT_MIN_API_SCORE || 56, 40, 95),
+    minApiProbability: clamp(q.min_api_probability || process.env.TYPER_EXPERT_MIN_API_PROBABILITY || 52, 40, 85),
+    minCombinedScore: clamp(q.min_combined_score || process.env.TYPER_EXPERT_MIN_COMBINED_SCORE || 58, 40, 95),
     apiWeight: clamp(q.api_weight || process.env.TYPER_EXPERT_API_WEIGHT || 0.55, 0.2, 0.8),
     marketWeight: 0,
     requireApiPrediction: boolEnv(q.require_api_prediction ?? process.env.TYPER_EXPERT_REQUIRE_API_PREDICTION, true),
