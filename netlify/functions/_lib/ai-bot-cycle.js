@@ -6,7 +6,7 @@ const AUTHORS = {
   ograc: { name: 'Ograć Buka', username: 'ograc-buka', source: 'ograc_buka_independent_v1867_9', mirrorAiBets: false }
 }
 
-const VERSION = '1867.10-ai-intelligence-center-real-radar-v1'
+const VERSION = '1867.9-independent-bots-typer-progression-cooldown-2h-v2'
 const DEFAULT_BOTS = ['betai', 'typer', 'ograc']
 
 // Każdy bot działa niezależnie. Nie ma wspólnej rotacji.
@@ -353,13 +353,6 @@ function buildCandidates(events, oddsMap, settings) {
           prediction: label.prediction,
           odds: round(best.odd, 2),
           bookmaker: best.bookmaker,
-          medianOdds: round(medianOdd, 2),
-          minOddsSeen: round(Math.min(...perBook.map(item => item.odd)), 2),
-          maxOddsSeen: round(Math.max(...perBook.map(item => item.odd)), 2),
-          bookmakerOdds: [...perBook]
-            .sort((a, b) => b.odd - a.odd)
-            .slice(0, 8)
-            .map(item => ({ bookmaker: item.bookmaker, odds: round(item.odd, 2) })),
           probability: round(probabilityPct, 1),
           implied: round((1 / best.odd) * 100, 2),
           edge: round(edgePct, 2),
@@ -489,91 +482,6 @@ function selectDistinct(shortlists, bots) {
     if (pick) selected[bot] = pick
   })
   return selected
-}
-
-function radarCandidate(candidate, bot, index, selectedCandidate = null) {
-  if (!candidate) return null
-  const selected = Boolean(selectedCandidate &&
-    selectedCandidate.event?.fixtureId === candidate.event?.fixtureId &&
-    selectedCandidate.marketKey === candidate.marketKey &&
-    selectedCandidate.selectionKey === candidate.selectionKey)
-  const recommendation = candidate.odds >= 2.75
-    ? 'aggressive'
-    : candidate.probability >= 58 && candidate.spread <= 12
-      ? 'safe'
-      : 'value'
-  return {
-    key: `${candidate.event?.fixtureId || ''}|${candidate.marketKey || ''}|${candidate.selectionKey || ''}`,
-    bot,
-    rank: index + 1,
-    selected,
-    status: selected ? 'selected_for_publication' : 'watching',
-    recommendation,
-    fixture_id: candidate.event?.fixtureId || '',
-    match: `${candidate.event?.home || ''} vs ${candidate.event?.away || ''}`,
-    home: candidate.event?.home || '',
-    away: candidate.event?.away || '',
-    league: candidate.event?.league || '',
-    country: candidate.event?.country || '',
-    kickoff: candidate.event?.kickoff || '',
-    market: candidate.market,
-    market_key: candidate.marketKey,
-    selection: candidate.prediction,
-    selection_key: candidate.selectionKey,
-    odds: candidate.odds,
-    median_odds: candidate.medianOdds,
-    min_odds_seen: candidate.minOddsSeen,
-    max_odds_seen: candidate.maxOddsSeen,
-    bookmaker: candidate.bookmaker,
-    bookmaker_odds: candidate.bookmakerOdds || [],
-    probability: candidate.probability,
-    implied_probability: candidate.implied,
-    edge: candidate.edge,
-    books_count: candidate.booksCount,
-    spread: candidate.spread,
-    quality: candidate.quality,
-    score: Math.round(scoreCandidate(candidate, bot)),
-    strategy: candidate.strategyName,
-    strategy_tier: candidate.strategyTier,
-    mode: candidate.mode,
-    api_supported: Boolean(candidate.apiEvidence?.supported),
-    api_contrary: Boolean(candidate.apiEvidence?.contrary),
-    api_available: Boolean(candidate.apiEvidence?.available),
-    api_detail: candidate.apiEvidence?.detail || '',
-    api_advice: candidate.apiEvidence?.advice || ''
-  }
-}
-
-function buildRadar(shortlists, selected, bots, diagnostics = {}) {
-  const byBot = {}
-  bots.forEach(bot => {
-    byBot[bot] = (shortlists[bot] || [])
-      .filter(candidate => apiStrategyPass(candidate, bot))
-      .slice(0, 8)
-      .map((candidate, index) => radarCandidate(candidate, bot, index, selected[bot]))
-      .filter(Boolean)
-  })
-  return {
-    generated_at: new Date().toISOString(),
-    by_bot: byBot,
-    summary: {
-      fixtures_found: diagnostics.fixtures_found || 0,
-      odds_fixtures_found: diagnostics.odds_fixtures_found || 0,
-      candidates_found: diagnostics.candidates_found || 0,
-      candidates_without_publication: Object.values(byBot).reduce((sum, rows) => sum + rows.filter(row => !row.selected).length, 0)
-    }
-  }
-}
-
-function buildPipeline(diagnostics, outcomes = [], blocked = {}) {
-  const inserted = outcomes.reduce((sum, row) => sum + Number(row?.inserted || 0), 0)
-  return [
-    { key: 'fixtures', label: 'Pobrano mecze', done: Number(diagnostics.fixtures_found || 0) > 0, value: Number(diagnostics.fixtures_found || 0) },
-    { key: 'odds', label: 'Pobrano realne kursy', done: Number(diagnostics.odds_fixtures_found || 0) > 0, value: Number(diagnostics.odds_fixtures_found || 0) },
-    { key: 'candidates', label: 'Zbudowano kandydatów', done: Number(diagnostics.candidates_found || 0) > 0, value: Number(diagnostics.candidates_found || 0) },
-    { key: 'strategies', label: 'Strategie oceniły mecze', done: Object.keys(diagnostics.strategy_candidates || {}).length > 0, value: Object.keys(diagnostics.strategy_candidates || {}).length },
-    { key: 'published', label: 'Zapisano typ', done: inserted > 0, value: inserted, blocked }
-  ]
 }
 
 function predictionSupport(candidate, row) {
@@ -1101,8 +1009,6 @@ async function runAiBotCycle(event = {}, options = {}) {
     errors: context.errors.slice(0, 20)
   }
 
-  const radar = buildRadar(shortlists, selected, botsToRun, diagnostics)
-
   if (dryRun) {
     return {
       ok: true,
@@ -1114,8 +1020,6 @@ async function runAiBotCycle(event = {}, options = {}) {
       execution: { max_picks: maxPicks, independent_bots: true, cooldown_hours: { betai: 0, typer: 2, ograc: 0 } },
       bot_policies: botPolicies,
       ...diagnostics,
-      radar,
-      pipeline: buildPipeline(diagnostics, [], blocked),
       selected: Object.fromEntries(Object.entries(selected).map(([bot, candidate]) => [bot, {
         author: AUTHORS[bot].name,
         fixture_id: candidate.event.fixtureId,
@@ -1175,8 +1079,6 @@ async function runAiBotCycle(event = {}, options = {}) {
     settings,
     bot_policies: botPolicies,
     ...diagnostics,
-    radar,
-    pipeline: buildPipeline(diagnostics, outcomes, blocked),
     errors: context.errors.slice(0, 25),
     elapsed_ms: Date.now() - startedAt,
     cooldown: typerCooldown,

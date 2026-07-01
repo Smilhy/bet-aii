@@ -19873,22 +19873,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [selectedId, setSelectedId] = useState('')
   const [statusText, setStatusText] = useState('Gotowe. Aktywna jest piłka nożna. Pozostałe sporty są zablokowane i będą dostępne wkrótce.')
   const [lastRefresh, setLastRefresh] = useState('')
-  const [aiCenter, setAiCenter] = useState(() => {
-    const empty = { latest_run: null, radar: [], recommendations: {}, odds_history: {}, no_pick: null, pipeline: [] }
-    try {
-      const saved = JSON.parse(window.localStorage.getItem('betai_ai_center_snapshot_v1867_10') || 'null')
-      return saved && typeof saved === 'object' ? { ...empty, ...saved } : empty
-    } catch (_) { return empty }
-  })
-  const [aiCenterLoading, setAiCenterLoading] = useState(false)
-  const [selectedRadarKey, setSelectedRadarKey] = useState('')
-  const [watchedRadarKeys, setWatchedRadarKeys] = useState(() => {
-    try { return new Set(JSON.parse(window.localStorage.getItem('betai_ai_watched_radar_v1867_10') || '[]')) } catch (_) { return new Set() }
-  })
-  const [bankroll, setBankroll] = useState(() => {
-    try { return Math.max(1, Number(window.localStorage.getItem('betai_ai_bankroll_v1867_10') || 1000)) } catch (_) { return 1000 }
-  })
-  const tl = (pl, en) => lang === 'en' ? en : pl
 
   const DAILY_AI_PICK_LIMIT_V1086 = 5
   const DAILY_AI_MIN_SCORE_V1086 = 65
@@ -20280,14 +20264,12 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return {
       today: activePlayable,
       tomorrow: 0,
-      radar: Array.isArray(aiCenter?.radar) ? aiCenter.radar.length : 0,
-      watched: Array.isArray(aiCenter?.radar) ? aiCenter.radar.filter(row => watchedRadarKeys.has(row?.key)).length : 0,
       results: resultCards.length,
       stats: resultCards.length,
       leagues,
       pending,
     }
-  }, [allCards, resultCards, activeSport, search, aiCenter, watchedRadarKeys])
+  }, [allCards, resultCards, activeSport, search])
 
   useEffect(() => {
     if (selectedCard && !selectedId) setSelectedId(selectedCard.id)
@@ -20342,129 +20324,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     })
     return Array.from(rows.values()).map(r => ({ ...r, avg: r.total ? Math.round(r.avg / r.total) : 0 })).sort((a,b) => b.total - a.total).slice(0, 12)
   }, [allCards, search])
-
-  const radarCandidatesV186710 = useMemo(() => {
-    return (Array.isArray(aiCenter?.radar) ? aiCenter.radar : [])
-      .filter(Boolean)
-      .sort((a, b) => Number(a.rank || 999) - Number(b.rank || 999))
-  }, [aiCenter])
-
-  const watchedRadarCandidatesV186710 = useMemo(() => {
-    return radarCandidatesV186710.filter(row => watchedRadarKeys.has(row.key))
-  }, [radarCandidatesV186710, watchedRadarKeys])
-
-  const selectedRadarCandidateV186710 = useMemo(() => {
-    const source = activePanel === 'watched' ? watchedRadarCandidatesV186710 : radarCandidatesV186710
-    return source.find(row => row.key === selectedRadarKey) || source[0] || null
-  }, [activePanel, radarCandidatesV186710, watchedRadarCandidatesV186710, selectedRadarKey])
-
-  const recommendationCardsV186710 = useMemo(() => {
-    const rec = aiCenter?.recommendations || {}
-    return [
-      { key: 'safe', icon: '🛡️', label: tl('Bezpieczny', 'Safe'), description: tl('Najwyższa stabilność rynku', 'Highest market stability'), candidate: rec.safe || null },
-      { key: 'value', icon: '💎', label: 'Value', description: tl('Najlepszy stosunek kursu do przewagi', 'Best odds-to-edge ratio'), candidate: rec.value || null },
-      { key: 'aggressive', icon: '🚀', label: tl('Agresywny', 'Aggressive'), description: tl('Wyższy kurs i mniejsza sugerowana stawka', 'Higher odds and smaller suggested stake'), candidate: rec.aggressive || null },
-    ]
-  }, [aiCenter, lang])
-
-  const marketPerformanceRowsV186710 = useMemo(() => {
-    const rows = new Map()
-    const normalizeStatus = card => String(card?.result || card?.status || 'pending').toLowerCase()
-    const normalizeMarket = card => String(card?.market || card?.bet_type || 'Inne').trim() || 'Inne'
-    resultCards.forEach(card => {
-      const market = normalizeMarket(card)
-      const status = normalizeStatus(card)
-      const stake = Number(card?.stake || card?.bet_amount || 100) || 100
-      const odds = Number(card?.odds || 1) || 1
-      const explicit = card?.profit ?? card?.profit_amount
-      const profit = explicit !== undefined && explicit !== null && String(explicit) !== ''
-        ? Number(explicit) || 0
-        : ['won','win'].includes(status) ? (odds - 1) * stake : ['lost','loss','lose'].includes(status) ? -stake : 0
-      const row = rows.get(market) || { market, total: 0, won: 0, lost: 0, pending: 0, profit: 0, oddsSum: 0 }
-      row.total += 1
-      row.oddsSum += odds
-      row.profit += profit
-      if (['won','win'].includes(status)) row.won += 1
-      else if (['lost','loss','lose'].includes(status)) row.lost += 1
-      else row.pending += 1
-      rows.set(market, row)
-    })
-    return Array.from(rows.values())
-      .map(row => ({
-        ...row,
-        avgOdds: row.total ? row.oddsSum / row.total : 0,
-        hitRate: row.won + row.lost ? Math.round((row.won / (row.won + row.lost)) * 100) : 0
-      }))
-      .sort((a, b) => b.total - a.total || b.hitRate - a.hitRate)
-      .slice(0, 8)
-  }, [resultCards])
-
-  function getRadarForCardV186710(card) {
-    if (!card) return null
-    const fixture = String(card.externalFixtureId || card.id || '')
-    const prediction = String(card.prediction || '').toLowerCase()
-    return radarCandidatesV186710.find(row => String(row.fixture_id || '') === fixture && String(row.selection || '').toLowerCase() === prediction)
-      || radarCandidatesV186710.find(row => String(row.fixture_id || '') === fixture)
-      || null
-  }
-
-  function getOddsHistoryV186710(candidate, fallbackOdds = 0) {
-    const points = candidate?.key ? aiCenter?.odds_history?.[candidate.key] : null
-    if (Array.isArray(points) && points.length) return points
-    const odds = Number(candidate?.odds || fallbackOdds || 0)
-    return odds ? [{ at: aiCenter?.latest_run?.finished_at || new Date().toISOString(), odds, median_odds: odds }] : []
-  }
-
-  function getStakeSuggestionV186710(candidateOrCard) {
-    const odds = Number(candidateOrCard?.odds || 0)
-    const probability = Number(candidateOrCard?.probability || candidateOrCard?.aiScore || 0)
-    const edge = Number(candidateOrCard?.edge ?? candidateOrCard?.ev ?? 0)
-    const score = Number(candidateOrCard?.quality || candidateOrCard?.aiScore || 0)
-    let percent = 0.5
-    if (score >= 80 && edge >= 7 && probability >= 55) percent = 1.5
-    else if (score >= 68 && edge >= 2) percent = 1
-    if (odds >= 3.2) percent = Math.min(percent, 0.5)
-    else if (odds >= 2.5) percent = Math.min(percent, 1)
-    const amount = Math.round((Math.max(1, Number(bankroll || 0)) * percent / 100) * 100) / 100
-    return { percent, amount }
-  }
-
-  function getRadarStatusLabelV186710(candidate) {
-    if (!candidate) return tl('Brak danych', 'No data')
-    if (candidate.selected) return tl('WYBRANY DO PUBLIKACJI', 'SELECTED FOR PUBLICATION')
-    if (watchedRadarKeys.has(candidate.key)) return tl('OBSERWOWANY', 'WATCHED')
-    return tl('KANDYDAT AI', 'AI CANDIDATE')
-  }
-
-  function renderOddsSparklineV186710(points = []) {
-    const clean = points.map(point => Number(point?.odds || 0)).filter(value => Number.isFinite(value) && value > 0)
-    if (!clean.length) return <div className="ai-no-chart-v186710">{tl('Brak historii kursu', 'No odds history')}</div>
-    const width = 280
-    const height = 72
-    const min = Math.min(...clean)
-    const max = Math.max(...clean)
-    const range = Math.max(0.01, max - min)
-    const path = clean.map((value, index) => {
-      const x = clean.length === 1 ? width / 2 : (index / (clean.length - 1)) * width
-      const y = height - 8 - ((value - min) / range) * (height - 20)
-      return `${index ? 'L' : 'M'} ${x.toFixed(1)} ${y.toFixed(1)}`
-    }).join(' ')
-    return (
-      <div className="ai-odds-chart-v186710">
-        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={tl('Historia kursu', 'Odds history')}>
-          <defs><linearGradient id="aiOddsFillV186710" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="currentColor" stopOpacity="0.28"/><stop offset="100%" stopColor="currentColor" stopOpacity="0"/></linearGradient></defs>
-          <path className="area" d={`${path} L ${width} ${height} L 0 ${height} Z`} />
-          <path className="line" d={path} />
-          {clean.map((value, index) => {
-            const x = clean.length === 1 ? width / 2 : (index / (clean.length - 1)) * width
-            const y = height - 8 - ((value - min) / range) * (height - 20)
-            return <circle key={`${value}-${index}`} cx={x} cy={y} r="3" />
-          })}
-        </svg>
-        <div><span>{clean[0].toFixed(2)}</span><b>{clean[clean.length - 1].toFixed(2)}</b></div>
-      </div>
-    )
-  }
 
   async function saveCardsToJournal(cards = []) {
     const cardsToSave = (cards || []).filter(card => isBetAiPrematchAvailableV1091(card))
@@ -20952,119 +20811,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
 
-  function persistAiCenterV186710(value) {
-    setAiCenter(value)
-    try { window.localStorage.setItem('betai_ai_center_snapshot_v1867_10', JSON.stringify(value)) } catch (_) {}
-  }
-
-  function buildAiRecommendationsV186710(radar = []) {
-    const rows = Array.isArray(radar) ? radar.filter(Boolean) : []
-    const pick = scorer => [...rows].sort((a, b) => scorer(b) - scorer(a))[0] || null
-    const safe = pick(row => Number(row.probability || 0) * 1.4 - Math.max(0, Number(row.odds || 0) - 2.15) * 18 - Number(row.spread || 0))
-    const value = pick(row => Number(row.edge || 0) * 5 + Number(row.quality || 0) + Number(row.books_count || 0) * 2)
-    const highOdds = rows.filter(row => Number(row.odds || 0) >= 2.25)
-    const aggressive = ([...highOdds].sort((a,b) => (Number(b.odds || 0) * 14 + Number(b.edge || 0) * 3 + Number(b.quality || 0)) - (Number(a.odds || 0) * 14 + Number(a.edge || 0) * 3 + Number(a.quality || 0)))[0])
-      || pick(row => Number(row.odds || 0) * 10 + Number(row.quality || 0))
-    return { safe, value, aggressive }
-  }
-
-  function applyScanJsonToAiCenterV186710(scanJson = {}) {
-    const radar = Array.isArray(scanJson?.radar?.by_bot?.betai) ? scanJson.radar.by_bot.betai : []
-    const previousHistory = aiCenter?.odds_history || {}
-    const at = new Date().toISOString()
-    const oddsHistory = { ...previousHistory }
-    radar.forEach(candidate => {
-      if (!candidate?.key || !candidate?.odds) return
-      const points = Array.isArray(oddsHistory[candidate.key]) ? [...oddsHistory[candidate.key]] : []
-      const point = {
-        at,
-        odds: Number(candidate.odds || 0),
-        median_odds: Number(candidate.median_odds || candidate.odds || 0),
-        min_odds: Number(candidate.min_odds_seen || candidate.odds || 0),
-        max_odds: Number(candidate.max_odds_seen || candidate.odds || 0),
-        bookmaker: candidate.bookmaker || ''
-      }
-      const last = points[points.length - 1]
-      if (!last || last.odds !== point.odds || last.bookmaker !== point.bookmaker) points.push(point)
-      oddsHistory[candidate.key] = points.slice(-12)
-    })
-    const inserted = Number(scanJson?.inserted || scanJson?.ai_bets_inserted || 0)
-    const normalized = {
-      latest_run: {
-        status: scanJson?.ok === false ? 'error' : 'success',
-        finished_at: at,
-        picks_created: inserted,
-        message: scanJson?.message || '',
-        errors: scanJson?.errors || [],
-        fixtures_found: Number(scanJson?.fixtures_found || 0),
-        odds_fixtures_found: Number(scanJson?.odds_fixtures_found || 0),
-        candidates_found: Number(scanJson?.candidates_found || 0),
-        inserted,
-        strategy_candidates: scanJson?.strategy_candidates || {}
-      },
-      radar,
-      recommendations: buildAiRecommendationsV186710(radar),
-      odds_history: oddsHistory,
-      pipeline: Array.isArray(scanJson?.pipeline) ? scanJson.pipeline : [],
-      no_pick: inserted > 0 ? null : {
-        reason: scanJson?.message || tl('Ostatni skan nie opublikował typu.', 'The latest scan did not publish a pick.'),
-        fixtures_found: Number(scanJson?.fixtures_found || 0),
-        odds_fixtures_found: Number(scanJson?.odds_fixtures_found || 0),
-        candidates_found: Number(scanJson?.candidates_found || 0),
-        errors: scanJson?.errors || []
-      }
-    }
-    persistAiCenterV186710(normalized)
-    if (!selectedRadarKey && radar.length) setSelectedRadarKey(radar[0].key || '')
-    return normalized
-  }
-
-  async function loadAiIntelligenceCenterV186710() {
-    if (aiCenterLoading) return aiCenter
-    setAiCenterLoading(true)
-    try {
-      const result = await fetchJsonWithTimeoutV1079('/.netlify/functions/ai-bots-health?center=1', 10000)
-      if (!result.ok) throw new Error(`AI Center HTTP ${result.status}`)
-      const center = result.json?.ai_center || {}
-      const incomingRadar = Array.isArray(center.radar) ? center.radar : []
-      const hasIncoming = Boolean(center.latest_run || incomingRadar.length || Object.keys(center.odds_history || {}).length)
-      if (!hasIncoming) return aiCenter
-      const normalized = {
-        latest_run: center.latest_run || aiCenter.latest_run || null,
-        radar: incomingRadar.length ? incomingRadar : (aiCenter.radar || []),
-        recommendations: Object.keys(center.recommendations || {}).length ? center.recommendations : buildAiRecommendationsV186710(incomingRadar.length ? incomingRadar : aiCenter.radar || []),
-        odds_history: { ...(aiCenter.odds_history || {}), ...(center.odds_history || {}) },
-        no_pick: center.no_pick ?? aiCenter.no_pick ?? null,
-        pipeline: Array.isArray(center.pipeline) && center.pipeline.length ? center.pipeline : (aiCenter.pipeline || [])
-      }
-      persistAiCenterV186710(normalized)
-      if (!selectedRadarKey && normalized.radar.length) setSelectedRadarKey(normalized.radar[0].key || '')
-      return normalized
-    } catch (error) {
-      console.warn('AI Intelligence Center load skipped:', error?.message || error)
-      return aiCenter
-    } finally {
-      setAiCenterLoading(false)
-    }
-  }
-
-  function toggleWatchedRadarV186710(key) {
-    if (!key) return
-    setWatchedRadarKeys(previous => {
-      const next = new Set(previous)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      try { window.localStorage.setItem('betai_ai_watched_radar_v1867_10', JSON.stringify([...next])) } catch (_) {}
-      return next
-    })
-  }
-
-  function saveBankrollV186710(value) {
-    const safe = Math.max(1, Number(value || 0))
-    setBankroll(safe)
-    try { window.localStorage.setItem('betai_ai_bankroll_v1867_10', String(safe)) } catch (_) {}
-  }
-
   async function runSavedAiScanEndpointV1690(mode = 'today') {
     // WERSJA 1867.1: ekran Typy AI korzysta z aktywnego generatora profilu
     // BetAI MultiSport AI. Generator zapisuje równolegle do tips i ai_bets,
@@ -21133,10 +20879,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       // Dzięki temu typ jest widoczny zarówno na profilu systemowym, jak i w zakładce Typy AI.
       try {
         const scanJson = await runSavedAiScanEndpointV1690(mode)
-        // WERSJA 1867.10: od razu zasilamy Radar AI danymi z bieżącego skanu.
-        // Dzięki temu użytkownik widzi kandydatów i diagnostykę nawet zanim
-        // zapis ai_pick_runs zostanie odczytany z Supabase.
-        applyScanJsonToAiCenterV186710(scanJson)
         let [savedToday, savedTomorrow] = await Promise.all([
           loadSavedAiTipsFromDb('today'),
           loadSavedAiTipsFromDb('tomorrow')
@@ -21157,7 +20899,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           }
         }
         await loadSavedAiJournalFromDbV1094()
-        await loadAiIntelligenceCenterV186710()
 
         const inserted = Number(scanJson?.inserted || scanJson?.ai_bets_inserted || scanJson?.ai_bets_saved || 0)
         const fixturesChecked = Number(scanJson?.fixtures_found || scanJson?.matches_checked || 0)
@@ -21348,7 +21089,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       if (savedCount > 0) {
         shouldSetScanCooldownV1482 = true
         await loadSavedAiJournalFromDbV1094()
-        await loadAiIntelligenceCenterV186710()
         markBetAiDailyScanDoneV1086(mode, savedCount)
         const savedAfter = await loadSavedAiTipsFromDb(mode)
         if (savedAfter.length) {
@@ -21432,7 +21172,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   useEffect(() => {
     const reloadAfterAiSettlementV1566 = () => {
       setLoadingAi(true)
-      Promise.all([loadSavedAiJournalFromDbV1094(), loadSavedAiTipsFromDb(aiDayMode), loadAiIntelligenceCenterV186710()])
+      Promise.all([loadSavedAiJournalFromDbV1094(), loadSavedAiTipsFromDb(aiDayMode)])
         .then(([, saved]) => {
           if (saved?.length) {
             setLiveCards([])
@@ -21445,10 +21185,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     window.addEventListener('betai-ai-bets-settled', reloadAfterAiSettlementV1566)
     return () => window.removeEventListener('betai-ai-bets-settled', reloadAfterAiSettlementV1566)
   }, [aiDayMode])
-
-  useEffect(() => {
-    loadAiIntelligenceCenterV186710()
-  }, [])
 
   return (
     <section className="ai-center-page-v747">
@@ -21529,17 +21265,14 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.50); setMaxOdds(999); setMinProb(48); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>{t('Reset filtrów')}</button>
         </div>
 </div>
-<div className={`ai-center-grid-v747 ${!['live','radar','watched'].includes(activePanel) ? 'stats-fullwidth' : ''}`}>
+<div className={`ai-center-grid-v747 ${activePanel !== 'live' ? 'stats-fullwidth' : ''}`}>
         <div className="ai-main-column-v747">
           <div className="ai-league-tabs-actions-v1071">
 <div className="ai-inner-tabs-v747">
             <button type="button" className={activePanel === 'live' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>{t('Typy AI aktywne')} <small className="ai-tab-count-v1095">{aiTabCounters.today}</small></button>
             {[
-              ['radar',tl('Radar AI','AI radar'), aiTabCounters.radar],
-              ['watched',tl('Obserwowane','Watched'), aiTabCounters.watched],
-              ['results',t('Mecze Result'), aiTabCounters.results],
-              ['stats',t('Statystyki'), aiTabCounters.stats]
-            ].map(([key,label,count]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => { setActivePanel(key); if ((key === 'radar' || key === 'watched') && !selectedRadarKey) setSelectedRadarKey((key === 'watched' ? watchedRadarCandidatesV186710[0] : radarCandidatesV186710[0])?.key || '') }}>{label} <small className="ai-tab-count-v1095">{count}</small></button>)}
+              ['results',t('Mecze Result'), aiTabCounters.results], ['stats',t('Statystyki'), aiTabCounters.stats]
+            ].map(([key,label,count]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label} <small className="ai-tab-count-v1095">{count}</small></button>)}
           </div>
   <div className="ai-search-compact-v1073">
     <input
@@ -21614,89 +21347,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             </div>
           )}
 
-          {activePanel === 'radar' && (
-            <div className="ai-intelligence-center-v186710">
-              <section className="ai-scan-control-v186710">
-                <div className="ai-section-heading-v186710">
-                  <div>
-                    <span>LIVE INTELLIGENCE</span>
-                    <h3>{tl('Radar realnego skanu AI', 'Real AI scan radar')}</h3>
-                    <p>{tl('Pokazuje mecze sprawdzone przez ostatni skan przed publikacją typu. Dane pochodzą z API i dziennika ai_pick_runs.', 'Shows matches checked by the latest scan before publication. Data comes from the API and ai_pick_runs journal.')}</p>
-                  </div>
-                  <button type="button" onClick={loadAiIntelligenceCenterV186710} disabled={aiCenterLoading}>{aiCenterLoading ? tl('Ładowanie…','Loading…') : `↻ ${tl('Odśwież radar','Refresh radar')}`}</button>
-                </div>
-                <div className="ai-scan-metrics-v186710">
-                  <article><span>{tl('Mecze','Fixtures')}</span><strong>{aiCenter?.latest_run?.fixtures_found || 0}</strong><small>{tl('pobrane w skanie','loaded in scan')}</small></article>
-                  <article><span>{tl('Z kursami','With odds')}</span><strong>{aiCenter?.latest_run?.odds_fixtures_found || 0}</strong><small>{tl('realne kursy','real odds')}</small></article>
-                  <article><span>{tl('Kandydaci','Candidates')}</span><strong>{aiCenter?.latest_run?.candidates_found || 0}</strong><small>{tl('po normalizacji rynku','after market normalization')}</small></article>
-                  <article className={Number(aiCenter?.latest_run?.inserted || 0) > 0 ? 'is-success' : 'is-warn'}><span>{tl('Opublikowane','Published')}</span><strong>{aiCenter?.latest_run?.inserted || 0}</strong><small>{aiCenter?.latest_run?.finished_at ? new Date(aiCenter.latest_run.finished_at).toLocaleString(locale) : tl('brak skanu','no scan')}</small></article>
-                </div>
-                <div className="ai-pipeline-v186710">
-                  {(aiCenter?.pipeline?.length ? aiCenter.pipeline : [
-                    { key:'fixtures', label:tl('Pobrano mecze','Fixtures loaded'), done:false, value:0 },
-                    { key:'odds', label:tl('Pobrano kursy','Odds loaded'), done:false, value:0 },
-                    { key:'candidates', label:tl('Ocena kandydatów','Candidates scored'), done:false, value:0 },
-                    { key:'published', label:tl('Publikacja typu','Pick published'), done:false, value:0 },
-                  ]).map((stage, index) => <div key={stage.key || index} className={stage.done ? 'done' : ''}><i>{stage.done ? '✓' : index + 1}</i><span>{stage.label}</span><b>{stage.value ?? 0}</b></div>)}
-                </div>
-                <div className={`ai-no-pick-reason-v186710 ${aiCenter?.no_pick ? 'is-warning' : 'is-success'}`}>
-                  <i>{aiCenter?.no_pick ? '!' : '✓'}</i>
-                  <div><b>{aiCenter?.no_pick ? tl('Dlaczego ostatni skan nie dodał typu', 'Why the last scan did not publish a pick') : tl('Ostatni skan opublikował typ', 'The latest scan published a pick')}</b><p>{aiCenter?.no_pick?.reason || aiCenter?.latest_run?.message || tl('Typ przeszedł analizę i został zapisany w dzienniku AI.', 'The pick passed analysis and was saved in the AI journal.')}</p></div>
-                </div>
-              </section>
-
-              <section className="ai-recommendations-v186710">
-                <div className="ai-section-heading-v186710 compact"><div><span>3 PROFILE</span><h3>{tl('Trzy poziomy rekomendacji', 'Three recommendation levels')}</h3></div></div>
-                <div className="ai-recommendation-grid-v186710">
-                  {recommendationCardsV186710.map(item => {
-                    const candidate = item.candidate
-                    const stake = getStakeSuggestionV186710(candidate || {})
-                    return <button key={item.key} type="button" className={`ai-recommendation-card-v186710 ${item.key} ${candidate ? '' : 'empty'}`} onClick={() => { if (candidate?.key) { setSelectedRadarKey(candidate.key); setActivePanel('radar') } }}>
-                      <div className="top"><i>{item.icon}</i><span>{item.label}</span><em>{candidate ? `${Number(candidate.quality || 0)}/100` : '—'}</em></div>
-                      <h4>{candidate?.match || tl('Brak kandydata w ostatnim skanie', 'No candidate in the latest scan')}</h4>
-                      <p>{candidate ? `${candidate.selection} · ${candidate.league}` : item.description}</p>
-                      <div className="metrics"><span>{tl('Kurs','Odds')} <b>{candidate ? Number(candidate.odds || 0).toFixed(2) : '—'}</b></span><span>EV <b>{candidate ? `${Number(candidate.edge || 0) >= 0 ? '+' : ''}${Number(candidate.edge || 0).toFixed(1)}%` : '—'}</b></span><span>{tl('Stawka','Stake')} <b>{candidate ? `${stake.percent}%` : '—'}</b></span></div>
-                    </button>
-                  })}
-                </div>
-              </section>
-
-              <section className="ai-radar-list-v186710">
-                <div className="ai-section-heading-v186710 compact"><div><span>PRE-PUBLISH</span><h3>{tl('Mecze analizowane przed publikacją', 'Matches analysed before publication')}</h3><p>{tl('Kandydat nie jest jeszcze oficjalnym typem. Wybrany mecz po zapisie trafia do Typy AI aktywne.', 'A candidate is not an official pick yet. Once saved, it moves to Active AI picks.')}</p></div></div>
-                {radarCandidatesV186710.length ? radarCandidatesV186710.map(candidate => {
-                  const watched = watchedRadarKeys.has(candidate.key)
-                  return <article key={candidate.key} className={`ai-radar-row-v186710 ${selectedRadarCandidateV186710?.key === candidate.key ? 'selected' : ''}`} onClick={() => setSelectedRadarKey(candidate.key)}>
-                    <div className="rank">#{candidate.rank || '—'}</div>
-                    <div className="match"><span>{candidate.country} · {candidate.league}</span><b>{candidate.match}</b><small>{formatDate(candidate.kickoff)}</small></div>
-                    <div className="pick"><span>{candidate.market}</span><b>{candidate.selection}</b><small>{candidate.bookmaker || tl('rynek','market')}</small></div>
-                    <div className="radar-metric"><span>{tl('Kurs','Odds')}</span><b>{Number(candidate.odds || 0).toFixed(2)}</b><small>{candidate.books_count || 0} {tl('źródeł','sources')}</small></div>
-                    <div className="radar-metric"><span>{tl('Model','Model')}</span><b>{Number(candidate.probability || 0).toFixed(1)}%</b><small>EV {Number(candidate.edge || 0) >= 0 ? '+' : ''}{Number(candidate.edge || 0).toFixed(1)}%</small></div>
-                    <div className={`status ${candidate.selected ? 'published' : 'watching'}`}><b>{getRadarStatusLabelV186710(candidate)}</b><small>{candidate.strategy_tier || candidate.mode}</small></div>
-                    <button type="button" className={watched ? 'watch active' : 'watch'} onClick={event => { event.stopPropagation(); toggleWatchedRadarV186710(candidate.key) }} aria-label={watched ? tl('Usuń z obserwowanych','Remove from watched') : tl('Obserwuj mecz','Watch match')}>{watched ? '★' : '☆'}</button>
-                  </article>
-                }) : <div className="ai-empty-v747"><b>{tl('Radar nie ma jeszcze danych z nowego skanu.', 'The radar has no data from a new scan yet.')}</b><p>{tl('Kliknij Odśwież dziś. Po zakończeniu skanu kandydaci i powody odrzucenia pojawią się tutaj.', 'Click Refresh today. Candidates and rejection reasons will appear here after the scan.')}</p></div>}
-              </section>
-
-              <section className="ai-market-performance-v186710">
-                <div className="ai-section-heading-v186710 compact"><div><span>MARKET EDGE</span><h3>{tl('Skuteczność AI według rynku', 'AI performance by market')}</h3></div></div>
-                <div className="ai-market-grid-v186710">
-                  {marketPerformanceRowsV186710.length ? marketPerformanceRowsV186710.map(row => <article key={row.market}><span>{row.market}</span><strong>{row.hitRate}%</strong><div><b>{row.won}W</b><b>{row.lost}L</b><b>{row.pending}P</b></div><small>{tl('Typy','Picks')}: {row.total} · {tl('Śr. kurs','Avg odds')}: {row.avgOdds.toFixed(2)} · P/L {row.profit >= 0 ? '+' : ''}{row.profit.toFixed(0)}</small></article>) : <div className="ai-no-market-v186710">{tl('Brak rozliczonych danych rynkowych.', 'No settled market data yet.')}</div>}
-                </div>
-              </section>
-            </div>
-          )}
-
-          {activePanel === 'watched' && (
-            <div className="ai-intelligence-center-v186710">
-              <section className="ai-radar-list-v186710 watched-panel-v186710">
-                <div className="ai-section-heading-v186710"><div><span>WATCHLIST</span><h3>{tl('Obserwowane okazje AI', 'Watched AI opportunities')}</h3><p>{tl('Lista jest zapisywana w tej przeglądarce. Kandydat pozostaje obserwowany do usunięcia albo kolejnego skanu.', 'The list is saved in this browser. A candidate stays watched until removed or replaced by a new scan.')}</p></div></div>
-                {watchedRadarCandidatesV186710.length ? watchedRadarCandidatesV186710.map(candidate => <article key={candidate.key} className={`ai-radar-row-v186710 ${selectedRadarCandidateV186710?.key === candidate.key ? 'selected' : ''}`} onClick={() => setSelectedRadarKey(candidate.key)}>
-                  <div className="rank">★</div><div className="match"><span>{candidate.country} · {candidate.league}</span><b>{candidate.match}</b><small>{formatDate(candidate.kickoff)}</small></div><div className="pick"><span>{candidate.market}</span><b>{candidate.selection}</b><small>{candidate.bookmaker}</small></div><div className="radar-metric"><span>{tl('Kurs','Odds')}</span><b>{Number(candidate.odds || 0).toFixed(2)}</b><small>EV {Number(candidate.edge || 0) >= 0 ? '+' : ''}{Number(candidate.edge || 0).toFixed(1)}%</small></div><div className="radar-metric"><span>{tl('Ocena','Score')}</span><b>{candidate.quality || 0}/100</b><small>{candidate.books_count || 0} {tl('źródeł','sources')}</small></div><div className="status watching"><b>{tl('OBSERWOWANY','WATCHED')}</b><small>{candidate.recommendation}</small></div><button type="button" className="watch active" onClick={event => { event.stopPropagation(); toggleWatchedRadarV186710(candidate.key) }}>★</button>
-                </article>) : <div className="ai-empty-v747"><b>{tl('Nie obserwujesz jeszcze żadnego kandydata.', 'You are not watching any candidate yet.')}</b><p>{tl('Wejdź do Radar AI i kliknij gwiazdkę przy wybranym meczu.', 'Open AI radar and click the star next to a match.')}</p></div>}
-              </section>
-            </div>
-          )}
-
           {activePanel === 'results' && (
             <div className="ai-table-card-v747 ai-results-card-v1448">
               <div className="ai-table-title-v747 ai-table-title-results-v1448">
@@ -21762,36 +21412,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                 <div className="team-form-v747"><span>{selectedCard.away}</span><b>{selectedCard.formAway}%</b><i style={{ width: `${selectedCard.formAway}%` }} /></div>
               </div>
 
-              {(() => {
-                const radar = getRadarForCardV186710(selectedCard)
-                const history = getOddsHistoryV186710(radar, selectedCard.odds)
-                const stake = getStakeSuggestionV186710(radar || selectedCard)
-                return <>
-                  <div className="ai-analysis-card-v747 ai-market-intel-v186710">
-                    <h3>{tl('Pełna analiza rynku', 'Full market analysis')}</h3>
-                    <div className="ai-market-intel-grid-v186710">
-                      <div><span>{tl('Najlepszy bukmacher','Best bookmaker')}</span><b>{radar?.bookmaker || selectedCard.source || '—'}</b></div>
-                      <div><span>{tl('Źródła kursów','Odds sources')}</span><b>{radar?.books_count || '—'}</b></div>
-                      <div><span>{tl('Kurs implikowany','Implied probability')}</span><b>{radar?.implied_probability ? `${Number(radar.implied_probability).toFixed(1)}%` : `${(100 / Math.max(1.01, Number(selectedCard.odds || 1))).toFixed(1)}%`}</b></div>
-                      <div><span>{tl('Rozrzut rynku','Market spread')}</span><b>{radar?.spread !== undefined ? `${Number(radar.spread).toFixed(1)}%` : '—'}</b></div>
-                      <div><span>{tl('Poziom selekcji','Selection tier')}</span><b>{radar?.strategy_tier || tl('opublikowany','published')}</b></div>
-                      <div><span>API-Football</span><b>{radar ? (radar.api_supported ? tl('potwierdza','confirmed') : radar.api_contrary ? tl('przeciw','contrary') : tl('neutralne','neutral')) : tl('brak snapshotu','no snapshot')}</b></div>
-                    </div>
-                    {radar?.api_detail || radar?.api_advice ? <p className="ai-api-note-v186710">{radar.api_detail || radar.api_advice}</p> : null}
-                  </div>
-                  <div className="ai-analysis-card-v747 ai-odds-history-card-v186710">
-                    <div className="ai-card-heading-inline-v186710"><div><h3>{tl('Historia kursu', 'Odds history')}</h3><p>{tl('Rzeczywiste snapshoty z kolejnych skanów AI', 'Real snapshots from consecutive AI scans')}</p></div><b>{history.length}×</b></div>
-                    {renderOddsSparklineV186710(history)}
-                    {radar?.bookmaker_odds?.length ? <div className="ai-bookmaker-list-v186710">{radar.bookmaker_odds.slice(0, 5).map(item => <span key={`${item.bookmaker}-${item.odds}`}><i>{item.bookmaker}</i><b>{Number(item.odds).toFixed(2)}</b></span>)}</div> : null}
-                  </div>
-                  <div className="ai-analysis-card-v747 ai-stake-card-v186710">
-                    <div className="ai-card-heading-inline-v186710"><div><h3>{tl('Sugerowana stawka', 'Suggested stake')}</h3><p>{tl('Rekomendacja informacyjna — bez automatycznego stawiania', 'Informational recommendation — no automatic betting')}</p></div><strong>{stake.percent}%</strong></div>
-                    <label><span>{tl('Twój bankroll','Your bankroll')}</span><input type="number" min="1" step="10" value={bankroll} onChange={event => saveBankrollV186710(event.target.value)} /></label>
-                    <div className="ai-stake-result-v186710"><span>{tl('Sugerowana kwota','Suggested amount')}</span><b>{stake.amount.toFixed(2)}</b><small>{tl('Limit ryzyka zależy od kursu, EV i oceny modelu.', 'Risk cap depends on odds, EV and model score.')}</small></div>
-                  </div>
-                </>
-              })()}
-
               <div className="ai-analysis-card-v747 compact">
                 <h3>{t('Dziennik')}</h3>
                 <p>Ten typ zapisuje się do Supabase jako AI Journal. Po rozliczeniu meczu status zmieni się na WON/LOST/VOID i zasili statystyki sportu oraz ligi.</p>
@@ -21801,57 +21421,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <div className="ai-analysis-card-v747"><h3>{t('Brak wybranego typu')}</h3><p>{aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś'} i kliknij dowolny mecz.</p></div>
           )}
         </aside>
-        )}
-
-        {(activePanel === 'radar' || activePanel === 'watched') && (
-          <aside className="ai-analysis-column-v747 ai-radar-analysis-column-v186710">
-            {selectedRadarCandidateV186710 ? (() => {
-              const candidate = selectedRadarCandidateV186710
-              const history = getOddsHistoryV186710(candidate, candidate.odds)
-              const stake = getStakeSuggestionV186710(candidate)
-              const watched = watchedRadarKeys.has(candidate.key)
-              return <>
-                <div className="ai-analysis-card-v747 featured ai-radar-featured-v186710">
-                  <div className="ai-radar-featured-head-v186710"><span className="label">{getRadarStatusLabelV186710(candidate)}</span><button type="button" className={watched ? 'active' : ''} onClick={() => toggleWatchedRadarV186710(candidate.key)}>{watched ? '★' : '☆'}</button></div>
-                  <h2>{candidate.match}</h2>
-                  <p>{candidate.country} · {candidate.league} · {formatDate(candidate.kickoff)}</p>
-                  <div className="ai-radar-pick-v186710"><span>{candidate.market}</span><b>{candidate.selection}</b><small>{candidate.bookmaker || tl('rynek','market')} · {Number(candidate.odds || 0).toFixed(2)}</small></div>
-                  <div className="ai-radar-score-grid-v186710"><div><span>{tl('Ocena','Score')}</span><b>{candidate.quality || 0}/100</b></div><div><span>{tl('Prawdop.','Probability')}</span><b>{Number(candidate.probability || 0).toFixed(1)}%</b></div><div><span>EV</span><b>{Number(candidate.edge || 0) >= 0 ? '+' : ''}{Number(candidate.edge || 0).toFixed(1)}%</b></div><div><span>{tl('Źródła','Sources')}</span><b>{candidate.books_count || 0}</b></div></div>
-                </div>
-
-                <div className="ai-analysis-card-v747 ai-status-timeline-v186710">
-                  <h3>{tl('Status analizy', 'Analysis status')}</h3>
-                  {(aiCenter?.pipeline?.length ? aiCenter.pipeline : []).map((stage, index) => <div key={stage.key || index} className={stage.done ? 'done' : ''}><i>{stage.done ? '✓' : index + 1}</i><span>{stage.label}</span><b>{stage.value ?? 0}</b></div>)}
-                  {!aiCenter?.pipeline?.length ? <p>{tl('Status pojawi się po wykonaniu skanu w wersji 1867.10.', 'Status will appear after a scan in version 1867.10.')}</p> : null}
-                </div>
-
-                <div className="ai-analysis-card-v747 ai-market-intel-v186710">
-                  <h3>{tl('Pełna analiza kandydata', 'Full candidate analysis')}</h3>
-                  <div className="ai-market-intel-grid-v186710">
-                    <div><span>{tl('Strategia','Strategy')}</span><b>{candidate.strategy || 'BetAI Value'}</b></div>
-                    <div><span>{tl('Poziom','Tier')}</span><b>{candidate.strategy_tier || '—'}</b></div>
-                    <div><span>{tl('Mediana kursu','Median odds')}</span><b>{Number(candidate.median_odds || candidate.odds || 0).toFixed(2)}</b></div>
-                    <div><span>{tl('Zakres kursów','Odds range')}</span><b>{Number(candidate.min_odds_seen || candidate.odds || 0).toFixed(2)}–{Number(candidate.max_odds_seen || candidate.odds || 0).toFixed(2)}</b></div>
-                    <div><span>{tl('Implikowane','Implied')}</span><b>{Number(candidate.implied_probability || 0).toFixed(1)}%</b></div>
-                    <div><span>{tl('Rozrzut','Spread')}</span><b>{Number(candidate.spread || 0).toFixed(1)}%</b></div>
-                  </div>
-                  <p>{candidate.api_detail || candidate.api_advice || tl('Kandydat został oceniony na podstawie realnych kursów, konsensusu bukmacherów, EV i stabilności rynku.', 'The candidate was scored using real odds, bookmaker consensus, EV and market stability.')}</p>
-                </div>
-
-                <div className="ai-analysis-card-v747 ai-odds-history-card-v186710">
-                  <div className="ai-card-heading-inline-v186710"><div><h3>{tl('Historia kursu','Odds history')}</h3><p>{tl('Snapshoty z kolejnych skanów','Snapshots from consecutive scans')}</p></div><b>{history.length}×</b></div>
-                  {renderOddsSparklineV186710(history)}
-                  {candidate.bookmaker_odds?.length ? <div className="ai-bookmaker-list-v186710">{candidate.bookmaker_odds.slice(0, 6).map(item => <span key={`${item.bookmaker}-${item.odds}`}><i>{item.bookmaker}</i><b>{Number(item.odds).toFixed(2)}</b></span>)}</div> : null}
-                </div>
-
-                <div className="ai-analysis-card-v747 ai-stake-card-v186710">
-                  <div className="ai-card-heading-inline-v186710"><div><h3>{tl('Sugerowana stawka','Suggested stake')}</h3><p>{tl('Informacja, nie automatyczny zakład','Information, not an automatic bet')}</p></div><strong>{stake.percent}%</strong></div>
-                  <label><span>{tl('Bankroll','Bankroll')}</span><input type="number" min="1" step="10" value={bankroll} onChange={event => saveBankrollV186710(event.target.value)} /></label>
-                  <div className="ai-stake-result-v186710"><span>{tl('Kwota','Amount')}</span><b>{stake.amount.toFixed(2)}</b><small>{tl('Wyższy kurs automatycznie obniża maksymalne ryzyko.', 'Higher odds automatically lower the maximum risk.')}</small></div>
-                </div>
-              </>
-            })() : <div className="ai-analysis-card-v747"><h3>{tl('Brak wybranego kandydata','No candidate selected')}</h3><p>{tl('Uruchom skan lub wybierz mecz z radaru.', 'Run a scan or select a match from the radar.')}</p></div>}
-          </aside>
         )}
       </div>
     </section>

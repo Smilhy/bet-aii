@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-1867-10-ai-intelligence-center",
-  "version": "1.8.6.710",
+  "name": "betai-wersja-1867-9-niezalezne-boty-progresja-typer-expert",
+  "version": "1.8.6.79",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
