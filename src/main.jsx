@@ -19833,6 +19833,64 @@ function buildBetAiFallbackMatchesV1053() {
 }
 
 
+
+function getAiDeepDerivedV186711(card = {}, remote = {}) {
+  const odds = Math.max(1.01, Number(card.odds || remote?.storedTip?.odds || 1.01))
+  const probability = Math.max(0, Math.min(100, Number(card.probability || remote?.storedTip?.probability || remote?.storedTip?.ai_probability || card.aiScore || 0)))
+  const impliedProbability = Math.max(0, Math.min(100, Number(remote?.storedTip?.implied_probability || (100 / odds))))
+  const fairOdds = probability > 0 ? 100 / probability : 0
+  const edgePoints = probability - impliedProbability
+  const ev = Number(card.ev ?? remote?.storedTip?.ev ?? remote?.storedTip?.value_score ?? 0)
+  const score = Math.max(0, Math.min(100, Number(card.aiScore || remote?.storedTip?.ai_score || 0)))
+  const h2h = remote?.h2h?.summary || {}
+  const prediction = remote?.prediction || {}
+  const stored = remote?.storedTip || {}
+  const fixture = remote?.fixture || {}
+  const standings = remote?.standings || {}
+  const injuries = remote?.injuries || {}
+
+  const marketText = `${card.market || stored.market || ''} ${card.prediction || stored.prediction || stored.selection || ''}`.toLowerCase()
+  let marketReason = 'Model porównał kurs rynkowy z własnym prawdopodobieństwem i wybrał wariant o najlepszej relacji potencjalnego zwrotu do ryzyka.'
+  if (marketText.includes('powyżej') || marketText.includes('over')) marketReason = 'Typ na gole został wybrany, ponieważ sygnały ofensywne, profil spotkania i wycena rynku dają przewagę scenariuszowi z większą liczbą bramek.'
+  else if (marketText.includes('poniżej') || marketText.includes('under')) marketReason = 'Typ na niski wynik został wybrany, ponieważ model ocenia tempo, profil defensywny i oczekiwaną liczbę bramek poniżej wyceny rynku.'
+  else if (marketText.includes('obie') || marketText.includes('btts')) marketReason = 'Rynek obu drużyn strzeli został wybrany po porównaniu zdolności obu zespołów do tworzenia sytuacji oraz podatności defensywnej.'
+  else if (marketText.includes('wygra') || marketText.includes('winner') || marketText.includes('1x2')) marketReason = 'Rynek zwycięzcy został wybrany po porównaniu siły zespołów, stabilności kursu i przewagi modelowej nad prawdopodobieństwem wynikającym z kursu.'
+
+  const support = []
+  if (probability) support.push(`Model ocenia powodzenie typu na ${Math.round(probability)}%, podczas gdy kurs ${odds.toFixed(2)} odpowiada około ${impliedProbability.toFixed(1)}%.`)
+  if (edgePoints > 0.5) support.push(`Przewaga modelu nad rynkiem wynosi około ${edgePoints.toFixed(1)} punktu procentowego.`)
+  if (ev > 0) support.push(`Szacowane value jest dodatnie: +${ev.toFixed(1)}%.`)
+  if (prediction?.advice) support.push(`Prognoza API-Football: ${prediction.advice}`)
+  if (prediction?.winner) support.push(`Zewnętrzny model wskazuje przewagę: ${prediction.winner}${prediction.winnerComment ? ` (${prediction.winnerComment})` : ''}.`)
+  if (prediction?.underOver) support.push(`Prognozowany profil bramek API: ${prediction.underOver}.`)
+  if (Number(h2h.count || 0) > 0) support.push(`Analiza obejmuje ${h2h.count} ostatnich bezpośrednich spotkań; średnia bramek: ${Number(h2h.avgGoals || 0).toFixed(2)}.`)
+  if (stored.bookmaker || stored.odds_bookmaker) support.push(`Kurs źródłowy pochodzi od: ${stored.bookmaker || stored.odds_bookmaker}.`)
+  if (!support.length) support.push(card.analysis || 'Typ został wybrany na podstawie danych modelowych i bieżącej wyceny rynku.')
+
+  const risks = []
+  if (odds >= 3) risks.push('Wyższy kurs oznacza większą zmienność i mniejsze prawdopodobieństwo pojedynczego trafienia.')
+  if (edgePoints <= 0) risks.push('Model nie ma wyraźnej przewagi nad prawdopodobieństwem wynikającym z kursu — typ należy traktować ostrożnie.')
+  if (Number(injuries.homeCount || 0) + Number(injuries.awayCount || 0) > 0) risks.push(`API wykryło ${Number(injuries.homeCount || 0) + Number(injuries.awayCount || 0)} zgłoszonych absencji; składy mogą zmienić ocenę.`)
+  if (remote?.partial) risks.push('Część danych zewnętrznych jest chwilowo niedostępna, dlatego analiza opiera się również na zapisanych sygnałach modelu i rynku.')
+  risks.push('Przed rozpoczęciem meczu warto sprawdzić oficjalne składy, nagłe zmiany kursu i status spotkania.')
+  risks.push('Analiza jest rekomendacją modelową, a nie gwarancją wyniku.')
+
+  const curiosities = []
+  if (Number(h2h.count || 0) > 0) {
+    curiosities.push(`W ostatnich ${h2h.count} meczach H2H oba zespoły strzelały w ${h2h.bttsPct}% spotkań.`)
+    curiosities.push(`Powyżej 2.5 gola padało w ${h2h.over25Pct}% ostatnich meczów bezpośrednich.`)
+    curiosities.push(`Bilans H2H z perspektywy gospodarza tego meczu: ${h2h.homeWins} zwycięstw, ${h2h.draws} remisów, ${h2h.awayWins} porażek.`)
+  }
+  if (standings?.home?.rank && standings?.away?.rank) curiosities.push(`Pozycje w tabeli: ${card.home} #${standings.home.rank}, ${card.away} #${standings.away.rank}.`)
+  if (prediction?.percent?.home || prediction?.percent?.draw || prediction?.percent?.away) curiosities.push(`Rozkład 1X2 API: gospodarze ${prediction.percent.home}%, remis ${prediction.percent.draw}%, goście ${prediction.percent.away}%.`)
+  if (fixture?.venue) curiosities.push(`Miejsce spotkania: ${fixture.venue}${fixture.city ? `, ${fixture.city}` : ''}.`)
+  if (fixture?.referee) curiosities.push(`Sędzia wyznaczony na mecz: ${fixture.referee}.`)
+  if (card.curiosity) curiosities.push(card.curiosity)
+
+  const verdict = score >= 82 && edgePoints > 3 ? 'MOCNY SYGNAŁ' : score >= 70 && edgePoints > 0 ? 'DOBRY SYGNAŁ' : score >= 60 ? 'UMIARKOWANY SYGNAŁ' : 'WYSOKIE RYZYKO'
+  return { odds, probability, impliedProbability, fairOdds, edgePoints, ev, score, marketReason, support, risks, curiosities, verdict }
+}
+
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
   const lang = useBetaiLanguageState()
   const t = (value) => translateBetaiTextValue(value, lang)
@@ -19873,6 +19931,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [selectedId, setSelectedId] = useState('')
   const [statusText, setStatusText] = useState('Gotowe. Aktywna jest piłka nożna. Pozostałe sporty są zablokowane i będą dostępne wkrótce.')
   const [lastRefresh, setLastRefresh] = useState('')
+  const [deepAnalysisCardV186711, setDeepAnalysisCardV186711] = useState(null)
+  const [deepAnalysisDataV186711, setDeepAnalysisDataV186711] = useState(null)
+  const [deepAnalysisLoadingV186711, setDeepAnalysisLoadingV186711] = useState(false)
+  const [deepAnalysisErrorV186711, setDeepAnalysisErrorV186711] = useState('')
+  const deepAnalysisCacheV186711 = useRef(new Map())
 
   const DAILY_AI_PICK_LIMIT_V1086 = 5
   const DAILY_AI_MIN_SCORE_V1086 = 65
@@ -20227,6 +20290,67 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     if (value.includes('wys')) return 'high'
     return 'medium'
   }
+
+  const closeAiDeepAnalysisV186711 = () => {
+    setDeepAnalysisCardV186711(null)
+    setDeepAnalysisDataV186711(null)
+    setDeepAnalysisErrorV186711('')
+    setDeepAnalysisLoadingV186711(false)
+  }
+
+  const openAiDeepAnalysisV186711 = async (card) => {
+    if (!card) return
+    setSelectedId(card.id)
+    setDeepAnalysisCardV186711(card)
+    setDeepAnalysisErrorV186711('')
+    const fixtureId = String(card.externalFixtureId || card.apiFixtureId || card.fixture_id || card.id || '').trim()
+    const cacheKey = `${fixtureId}|${card.market || ''}|${card.prediction || ''}`
+    if (deepAnalysisCacheV186711.current.has(cacheKey)) {
+      setDeepAnalysisDataV186711(deepAnalysisCacheV186711.current.get(cacheKey))
+      setDeepAnalysisLoadingV186711(false)
+      return
+    }
+    if (!fixtureId || !/^\d+$/.test(fixtureId)) {
+      setDeepAnalysisDataV186711({ ok: true, apiAvailable: false, partial: true, errors: ['Brak numerycznego ID meczu API — pokazuję pełną analizę modelową z zapisanych danych.'] })
+      setDeepAnalysisLoadingV186711(false)
+      return
+    }
+    setDeepAnalysisLoadingV186711(true)
+    try {
+      const params = new URLSearchParams({
+        fixture: fixtureId,
+        market: String(card.market || ''),
+        prediction: String(card.prediction || ''),
+        odds: String(card.odds || ''),
+        probability: String(card.probability || card.aiScore || ''),
+        ev: String(card.ev || '')
+      })
+      const response = await fetch(`/.netlify/functions/get-ai-deep-analysis?${params.toString()}`, { cache: 'no-store' })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(payload?.error || `HTTP ${response.status}`)
+      deepAnalysisCacheV186711.current.set(cacheKey, payload)
+      setDeepAnalysisDataV186711(payload)
+    } catch (error) {
+      setDeepAnalysisErrorV186711(error?.message || 'Nie udało się pobrać danych rozszerzonych.')
+      setDeepAnalysisDataV186711({ ok: true, apiAvailable: false, partial: true, errors: [error?.message || 'Brak danych API'] })
+    } finally {
+      setDeepAnalysisLoadingV186711(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!deepAnalysisCardV186711) return undefined
+    const onKeyDown = event => {
+      if (event.key === 'Escape') closeAiDeepAnalysisV186711()
+    }
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [deepAnalysisCardV186711])
 
   const resultCards = useMemo(() => {
     const map = new Map()
@@ -21339,7 +21463,14 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   </div>
                   <div className="pick-footer-v1686">
                     <p className="pick-explain-v1051">{getBetAiShortInsightV1052(card)}</p>
-                    <span className="pick-analysis-btn-v1686">↗ {t('Zobacz analizę')}</span>
+                    <button
+                      type="button"
+                      className="pick-analysis-btn-v1686"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        openAiDeepAnalysisV186711(card)
+                      }}
+                    >↗ {t('Zobacz analizę')}</button>
                   </div>
                 </div>
               ))}
@@ -21423,6 +21554,169 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         </aside>
         )}
       </div>
+
+      {deepAnalysisCardV186711 && (() => {
+        const card = deepAnalysisCardV186711
+        const remote = deepAnalysisDataV186711 || {}
+        const deep = getAiDeepDerivedV186711(card, remote)
+        const prediction = remote?.prediction || {}
+        const fixture = remote?.fixture || {}
+        const h2h = remote?.h2h || { matches: [], summary: {} }
+        const injuries = remote?.injuries || { items: [], homeCount: 0, awayCount: 0 }
+        const standings = remote?.standings || {}
+        const storedTip = remote?.storedTip || {}
+        const comparisonRows = prediction?.comparison?.length
+          ? prediction.comparison
+          : [
+              { key: 'form', label: 'Sygnał formy modelu', home: Number(card.formHome || 0), away: Number(card.formAway || 0) },
+              { key: 'market', label: 'Ocena typu', home: deep.score, away: Math.max(0, 100 - deep.score) }
+            ]
+        return (
+          <div className="ai-deep-modal-backdrop-v186711" onMouseDown={closeAiDeepAnalysisV186711}>
+            <section className="ai-deep-modal-v186711" onMouseDown={event => event.stopPropagation()} role="dialog" aria-modal="true" aria-label="Pełna analiza typu AI">
+              <button type="button" className="ai-deep-close-v186711" onClick={closeAiDeepAnalysisV186711} aria-label="Zamknij analizę">×</button>
+
+              <header className="ai-deep-hero-v186711">
+                <div className="ai-deep-hero-copy-v186711">
+                  <div className="ai-deep-kicker-v186711"><span>●</span> BET+AI DEEP MATCH INTELLIGENCE</div>
+                  <div className="ai-deep-teams-v186711">
+                    <div className="ai-deep-team-v186711">
+                      {fixture?.home?.logo ? <img src={fixture.home.logo} alt="" /> : <i>{String(card.home || 'H').slice(0, 1)}</i>}
+                      <strong>{card.home}</strong>
+                    </div>
+                    <em>VS</em>
+                    <div className="ai-deep-team-v186711 away">
+                      {fixture?.away?.logo ? <img src={fixture.away.logo} alt="" /> : <i>{String(card.away || 'A').slice(0, 1)}</i>}
+                      <strong>{card.away}</strong>
+                    </div>
+                  </div>
+                  <p>{card.league} · {card.date}{fixture?.round ? ` · ${fixture.round}` : ''}</p>
+                  <div className="ai-deep-source-v186711">
+                    <span>{storedTip?.quality_label || card.source || 'BETAI AI MODEL'}</span>
+                    {storedTip?.bookmaker || storedTip?.odds_bookmaker ? <span>Kurs: {storedTip.bookmaker || storedTip.odds_bookmaker}</span> : null}
+                    {remote?.generatedAt ? <span>Aktualizacja: {new Date(remote.generatedAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}</span> : null}
+                  </div>
+                </div>
+                <div className="ai-deep-verdict-v186711">
+                  <span>{deep.verdict}</span>
+                  <b>{Math.round(deep.score)}<small>/100</small></b>
+                  <em>AI SCORE</em>
+                  <div className="ai-deep-score-ring-v186711" style={{ '--deep-score': `${Math.max(0, Math.min(360, deep.score * 3.6))}deg` }} />
+                </div>
+              </header>
+
+              <div className="ai-deep-pick-strip-v186711">
+                <div className="main"><small>REKOMENDOWANY TYP</small><b>{card.prediction}</b><span>{card.market}</span></div>
+                <div><small>KURS</small><b>{deep.odds.toFixed(2)}</b></div>
+                <div><small>MODEL</small><b>{deep.probability.toFixed(0)}%</b></div>
+                <div><small>RYNEK</small><b>{deep.impliedProbability.toFixed(1)}%</b></div>
+                <div><small>VALUE</small><b className={deep.ev >= 0 ? 'positive' : 'negative'}>{deep.ev >= 0 ? '+' : ''}{deep.ev.toFixed(1)}%</b></div>
+                <div><small>FAIR KURS</small><b>{deep.fairOdds ? deep.fairOdds.toFixed(2) : '—'}</b></div>
+              </div>
+
+              {deepAnalysisLoadingV186711 ? (
+                <div className="ai-deep-loading-v186711"><i /><b>Pobieram pełne dane meczu…</b><span>Prognoza, H2H, tabela, absencje i porównania</span></div>
+              ) : null}
+              {deepAnalysisErrorV186711 ? <div className="ai-deep-warning-v186711">⚠ {deepAnalysisErrorV186711} — analiza modelowa nadal jest dostępna.</div> : null}
+              {remote?.partial && remote?.errors?.length ? <div className="ai-deep-api-note-v186711"><b>Dane częściowe</b><span>{remote.errors.join(' • ')}</span></div> : null}
+
+              <div className="ai-deep-grid-v186711">
+                <article className="ai-deep-panel-v186711 ai-deep-why-v186711 span-2">
+                  <div className="ai-deep-panel-head-v186711"><span>01</span><div><h3>Dlaczego AI wybrało ten typ?</h3><p>Pełne uzasadnienie decyzji modelu</p></div></div>
+                  <div className="ai-deep-lead-v186711">{storedTip?.analysis || card.analysis || deep.marketReason}</div>
+                  <p className="ai-deep-market-reason-v186711">{deep.marketReason}</p>
+                  <div className="ai-deep-bullets-v186711">
+                    {deep.support.map((item, index) => <div key={`${item}-${index}`}><i>✓</i><span>{item}</span></div>)}
+                  </div>
+                </article>
+
+                <article className="ai-deep-panel-v186711">
+                  <div className="ai-deep-panel-head-v186711"><span>02</span><div><h3>Model kontra rynek</h3><p>Gdzie powstaje przewaga</p></div></div>
+                  <div className="ai-deep-prob-row-v186711"><span>Model AI</span><b>{deep.probability.toFixed(1)}%</b><i><em style={{ width: `${deep.probability}%` }} /></i></div>
+                  <div className="ai-deep-prob-row-v186711 market"><span>Kurs bukmachera</span><b>{deep.impliedProbability.toFixed(1)}%</b><i><em style={{ width: `${deep.impliedProbability}%` }} /></i></div>
+                  <div className={`ai-deep-edge-v186711 ${deep.edgePoints >= 0 ? 'positive' : 'negative'}`}>
+                    <small>PRZEWAGA MODELU</small><b>{deep.edgePoints >= 0 ? '+' : ''}{deep.edgePoints.toFixed(1)} pp</b>
+                  </div>
+                  <div className="ai-deep-mini-pairs-v186711"><div><span>Fair kurs</span><b>{deep.fairOdds ? deep.fairOdds.toFixed(2) : '—'}</b></div><div><span>Kurs dostępny</span><b>{deep.odds.toFixed(2)}</b></div></div>
+                </article>
+
+                <article className="ai-deep-panel-v186711">
+                  <div className="ai-deep-panel-head-v186711"><span>03</span><div><h3>Porównanie zespołów</h3><p>Przewagi według dostępnych danych</p></div></div>
+                  <div className="ai-deep-comparison-head-v186711"><b>{card.home}</b><b>{card.away}</b></div>
+                  <div className="ai-deep-comparison-list-v186711">
+                    {comparisonRows.map((row, index) => (
+                      <div key={`${row.key || row.label}-${index}`}>
+                        <span>{row.home}%</span>
+                        <div><small>{row.label}</small><i><em className="home" style={{ width: `${Math.max(0, Math.min(100, row.home))}%` }} /><em className="away" style={{ width: `${Math.max(0, Math.min(100, row.away))}%` }} /></i></div>
+                        <span>{row.away}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+
+                <article className="ai-deep-panel-v186711 span-2">
+                  <div className="ai-deep-panel-head-v186711"><span>04</span><div><h3>Prognoza i scenariusz meczu</h3><p>Dane API-Football oraz interpretacja rynku</p></div></div>
+                  {prediction?.available ? (
+                    <div className="ai-deep-prediction-v186711">
+                      <div className="ai-deep-prediction-main-v186711">
+                        <small>WSKAZANIE API</small><b>{prediction.winner || prediction.advice || 'Brak jednoznacznego zwycięzcy'}</b>
+                        <p>{prediction.winnerComment || prediction.advice || 'Model zewnętrzny nie przekazał opisu tekstowego.'}</p>
+                      </div>
+                      <div className="ai-deep-1x2-v186711">
+                        <div><span>1</span><b>{prediction.percent?.home || 0}%</b></div>
+                        <div><span>X</span><b>{prediction.percent?.draw || 0}%</b></div>
+                        <div><span>2</span><b>{prediction.percent?.away || 0}%</b></div>
+                      </div>
+                      <div className="ai-deep-goals-v186711"><div><span>Prognoza goli gospodarzy</span><b>{prediction.goals?.home || '—'}</b></div><div><span>Prognoza goli gości</span><b>{prediction.goals?.away || '—'}</b></div><div><span>Profil over/under</span><b>{prediction.underOver || '—'}</b></div></div>
+                    </div>
+                  ) : <div className="ai-deep-empty-v186711">Brak rozszerzonej prognozy API dla tego meczu. Uzasadnienie powyżej pochodzi z zapisanego modelu i realnego kursu.</div>}
+                </article>
+
+                <article className="ai-deep-panel-v186711">
+                  <div className="ai-deep-panel-head-v186711"><span>05</span><div><h3>Ostatnie mecze H2H</h3><p>Bezpośrednie starcia</p></div></div>
+                  {h2h?.available ? (
+                    <>
+                      <div className="ai-deep-h2h-kpis-v186711"><div><span>Mecze</span><b>{h2h.summary.count}</b></div><div><span>Śr. gole</span><b>{Number(h2h.summary.avgGoals || 0).toFixed(2)}</b></div><div><span>BTTS</span><b>{h2h.summary.bttsPct}%</b></div><div><span>Over 2.5</span><b>{h2h.summary.over25Pct}%</b></div></div>
+                      <div className="ai-deep-h2h-list-v186711">{h2h.matches.slice(0, 5).map((match, index) => <div key={`${match.date}-${index}`}><small>{match.date ? new Date(match.date).toLocaleDateString(locale) : '—'}</small><span>{match.home}</span><b>{match.homeGoals}:{match.awayGoals}</b><span>{match.away}</span></div>)}</div>
+                    </>
+                  ) : <div className="ai-deep-empty-v186711">Brak dostępnych spotkań bezpośrednich w odpowiedzi API.</div>}
+                </article>
+
+                <article className="ai-deep-panel-v186711">
+                  <div className="ai-deep-panel-head-v186711"><span>06</span><div><h3>Tabela i forma ligowa</h3><p>Pozycja, punkty i bilans</p></div></div>
+                  {standings?.home || standings?.away ? (
+                    <div className="ai-deep-standings-v186711">
+                      {[['home', card.home, standings.home], ['away', card.away, standings.away]].map(([key, name, row]) => row ? <div key={key}><div><strong>{name}</strong><b>#{row.rank}</b></div><p><span>{row.points} pkt</span><span>{row.played} meczów</span><span>{row.wins}-{row.draws}-{row.losses}</span><span>Bilans bramek {row.goalsFor}:{row.goalsAgainst}</span></p><small>Forma: {row.form || 'brak danych'}</small></div> : null)}
+                    </div>
+                  ) : <div className="ai-deep-empty-v186711">Tabela nie jest dostępna dla tej ligi lub sezonu.</div>}
+                </article>
+
+                <article className="ai-deep-panel-v186711">
+                  <div className="ai-deep-panel-head-v186711"><span>07</span><div><h3>Absencje i informacje meczowe</h3><p>Czynniki mogące zmienić typ</p></div></div>
+                  <div className="ai-deep-fixture-facts-v186711">
+                    <div><span>Stadion</span><b>{fixture?.venue || 'Brak danych'}{fixture?.city ? ` · ${fixture.city}` : ''}</b></div>
+                    <div><span>Sędzia</span><b>{fixture?.referee || 'Brak danych'}</b></div>
+                    <div><span>Status</span><b>{fixture?.status || card.kickoffState || 'PRE-MATCH'}</b></div>
+                  </div>
+                  <div className="ai-deep-injury-count-v186711"><div><span>{card.home}</span><b>{injuries.homeCount || 0}</b><small>zgłoszonych absencji</small></div><div><span>{card.away}</span><b>{injuries.awayCount || 0}</b><small>zgłoszonych absencji</small></div></div>
+                  {injuries?.items?.length ? <div className="ai-deep-injury-list-v186711">{injuries.items.slice(0, 8).map((item, index) => <div key={`${item.player}-${index}`}><b>{item.player || 'Zawodnik'}</b><span>{item.team}</span><small>{item.type || item.reason || 'status nieokreślony'}</small></div>)}</div> : null}
+                </article>
+
+                <article className="ai-deep-panel-v186711">
+                  <div className="ai-deep-panel-head-v186711"><span>08</span><div><h3>Ciekawostki i sygnały</h3><p>Najważniejsze wnioski w skrócie</p></div></div>
+                  <div className="ai-deep-curiosities-v186711">{deep.curiosities.length ? deep.curiosities.map((item, index) => <div key={`${item}-${index}`}><i>◆</i><span>{item}</span></div>) : <div><i>◆</i><span>Brak dodatkowych ciekawostek dla tego spotkania.</span></div>}</div>
+                </article>
+
+                <article className="ai-deep-panel-v186711 ai-deep-risk-v186711 span-2">
+                  <div className="ai-deep-panel-head-v186711"><span>09</span><div><h3>Ryzyka i co sprawdzić przed meczem</h3><p>Elementy, które mogą osłabić rekomendację</p></div></div>
+                  <div className="ai-deep-risk-grid-v186711">{deep.risks.map((item, index) => <div key={`${item}-${index}`}><i>!</i><span>{item}</span></div>)}</div>
+                  <div className="ai-deep-footer-note-v186711"><b>Wniosek AI:</b><span>{deep.edgePoints > 0 ? `Typ ma przewagę modelową około ${deep.edgePoints.toFixed(1)} pp nad wyceną kursową.` : 'Brak wyraźnej przewagi nad kursem — zachowaj ostrożność.'} Ostateczna decyzja i wysokość stawki należą do użytkownika.</span></div>
+                </article>
+              </div>
+            </section>
+          </div>
+        )
+      })()}
     </section>
   )
 }
