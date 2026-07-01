@@ -20345,9 +20345,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    document.body.classList.add('betai-ai-deep-modal-open-v4')
     window.addEventListener('keydown', onKeyDown)
     return () => {
       document.body.style.overflow = previousOverflow
+      document.body.classList.remove('betai-ai-deep-modal-open-v4')
       window.removeEventListener('keydown', onKeyDown)
     }
   }, [deepAnalysisCardV186711])
@@ -21571,7 +21573,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
               { key: 'form', label: 'Sygnał formy modelu', home: Number(card.formHome || 0), away: Number(card.formAway || 0) },
               { key: 'market', label: 'Ocena typu', home: deep.score, away: Math.max(0, 100 - deep.score) }
             ]
-        return (
+        return createPortal((
           <div className="ai-deep-modal-backdrop-v186711" onMouseDown={closeAiDeepAnalysisV186711}>
             <section className="ai-deep-modal-v186711" onMouseDown={event => event.stopPropagation()} role="dialog" aria-modal="true" aria-label="Pełna analiza typu AI">
               <button type="button" className="ai-deep-close-v186711" onClick={closeAiDeepAnalysisV186711} aria-label="Zamknij analizę">×</button>
@@ -21710,7 +21712,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
               </div>
             </section>
           </div>
-        )
+        ), document.body)
       })()}
     </section>
   )

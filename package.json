@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-3-analiza-ai-ultra-refined",
-  "version": "3.0.0",
+  "name": "betai-wersja-4-analiza-ai-modal-layer-fix",
+  "version": "4.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
