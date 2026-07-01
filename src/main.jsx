@@ -21707,11 +21707,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   <div className="ai-deep-curiosities-v186711">{deep.curiosities.length ? deep.curiosities.map((item, index) => <div key={`${item}-${index}`}><i>◆</i><span>{item}</span></div>) : <div><i>◆</i><span>Brak dodatkowych ciekawostek dla tego spotkania.</span></div>}</div>
                 </article>
 
-                <article className="ai-deep-panel-v186711 ai-deep-risk-v186711 span-2">
-                  <div className="ai-deep-panel-head-v186711"><span>09</span><div><h3>Ryzyka i co sprawdzić przed meczem</h3><p>Elementy, które mogą osłabić rekomendację</p></div></div>
-                  <div className="ai-deep-risk-grid-v186711">{deep.risks.map((item, index) => <div key={`${item}-${index}`}><i>!</i><span>{item}</span></div>)}</div>
-                  <div className="ai-deep-footer-note-v186711"><b>Wniosek AI:</b><span>{deep.edgePoints > 0 ? `Typ ma przewagę modelową około ${deep.edgePoints.toFixed(1)} pp nad wyceną kursową.` : 'Brak wyraźnej przewagi nad kursem — zachowaj ostrożność.'} Ostateczna decyzja i wysokość stawki należą do użytkownika.</span></div>
-                </article>
               </div>
             </section>
           </div>

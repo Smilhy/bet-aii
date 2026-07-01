@@ -77208,3 +77208,146 @@ body > .tip-analysis-modal-backdrop > .tip-analysis-modal{
   .ai-deep-injury-list-v186711{grid-template-columns:1fr!important}
   .ai-deep-footer-note-v186711{flex-direction:column!important}
 }
+
+/* ========================================================================== */
+/* WERSJA 3 — ANALIZA AI / ULTRA PREMIUM REFINED                              */
+/* Tylko warstwa wizualna: większa czytelność, spójna hierarchia i proporcje.  */
+/* ========================================================================== */
+
+.ai-deep-modal-v186711{
+  width:min(1640px,calc(100vw - 40px))!important;
+  border-radius:30px!important;
+  border-color:rgba(78,234,239,.38)!important;
+  background:
+    radial-gradient(circle at 83% 0%,rgba(28,229,224,.09),transparent 28%),
+    linear-gradient(180deg,rgba(4,22,36,.997),rgba(1,10,19,.999))!important;
+  box-shadow:0 54px 180px rgba(0,0,0,.82),0 0 0 1px rgba(70,244,240,.06),0 0 110px rgba(0,224,229,.12)!important;
+}
+.ai-deep-hero-v186711{
+  min-height:318px!important;
+  grid-template-columns:minmax(0,1fr) 246px!important;
+  padding:48px 52px 42px!important;
+  gap:40px!important;
+}
+.ai-deep-kicker-v186711{font-size:14px!important;padding:11px 17px!important}
+.ai-deep-teams-v186711{margin-top:31px!important;gap:34px!important}
+.ai-deep-team-v186711{gap:19px!important}
+.ai-deep-team-v186711 img,.ai-deep-team-v186711 i{
+  width:78px!important;height:78px!important;border-radius:22px!important;
+}
+.ai-deep-team-v186711 strong{
+  font-size:clamp(38px,3vw,60px)!important;
+  max-width:560px!important;
+}
+.ai-deep-teams-v186711>em{font-size:18px!important}
+.ai-deep-hero-copy-v186711>p{font-size:18px!important;margin-top:23px!important}
+.ai-deep-source-v186711 span{font-size:13px!important;padding:9px 13px!important}
+.ai-deep-verdict-v186711{width:218px!important;height:218px!important}
+.ai-deep-verdict-v186711>span{font-size:13px!important}
+.ai-deep-verdict-v186711>b{font-size:68px!important}
+.ai-deep-verdict-v186711>b small{font-size:21px!important}
+.ai-deep-verdict-v186711>em{font-size:13px!important}
+
+.ai-deep-pick-strip-v186711{
+  grid-template-columns:minmax(430px,2.15fr) repeat(5,minmax(140px,.72fr))!important;
+}
+.ai-deep-pick-strip-v186711>div{min-height:136px!important;padding:25px 28px!important}
+.ai-deep-pick-strip-v186711 small{font-size:13px!important}
+.ai-deep-pick-strip-v186711 b{font-size:33px!important}
+.ai-deep-pick-strip-v186711 .main b{font-size:35px!important}
+.ai-deep-pick-strip-v186711 span{font-size:16px!important}
+
+.ai-deep-grid-v186711{gap:26px!important;padding:34px 38px 44px!important}
+.ai-deep-panel-v186711{
+  padding:31px!important;
+  border-radius:24px!important;
+  border-color:rgba(91,220,226,.2)!important;
+  background:linear-gradient(145deg,rgba(8,35,51,.955),rgba(2,14,26,.985))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 22px 54px rgba(0,0,0,.24)!important;
+}
+.ai-deep-panel-head-v186711{gap:17px!important;margin-bottom:25px!important}
+.ai-deep-panel-head-v186711>span{width:48px!important;height:48px!important;font-size:14px!important;border-radius:14px!important}
+.ai-deep-panel-head-v186711 h3{font-size:25px!important;line-height:1.12!important}
+.ai-deep-panel-head-v186711 p{font-size:15px!important;line-height:1.45!important}
+.ai-deep-lead-v186711{font-size:17px!important;line-height:1.74!important;padding:22px 23px!important}
+.ai-deep-market-reason-v186711{font-size:16px!important;line-height:1.78!important}
+.ai-deep-bullets-v186711{gap:13px!important}
+.ai-deep-bullets-v186711>div,.ai-deep-curiosities-v186711>div{
+  padding:16px 17px!important;border-radius:14px!important;
+}
+.ai-deep-bullets-v186711 span,.ai-deep-curiosities-v186711 span{font-size:15px!important;line-height:1.62!important}
+.ai-deep-bullets-v186711 i{width:27px!important;height:27px!important;font-size:14px!important}
+
+.ai-deep-prob-row-v186711>span,.ai-deep-prob-row-v186711>b{font-size:16px!important}
+.ai-deep-prob-row-v186711>i{height:11px!important}
+.ai-deep-edge-v186711 small{font-size:12px!important}
+.ai-deep-edge-v186711 b{font-size:31px!important}
+.ai-deep-mini-pairs-v186711 span{font-size:13px!important}
+.ai-deep-mini-pairs-v186711 b{font-size:22px!important}
+
+.ai-deep-comparison-head-v186711 b{font-size:15px!important}
+.ai-deep-comparison-list-v186711>div>span{font-size:15px!important}
+.ai-deep-comparison-list-v186711 small{font-size:13px!important}
+.ai-deep-comparison-list-v186711 i{height:11px!important}
+
+.ai-deep-prediction-main-v186711 small{font-size:12px!important}
+.ai-deep-prediction-main-v186711 b{font-size:27px!important}
+.ai-deep-prediction-main-v186711 p{font-size:16px!important}
+.ai-deep-1x2-v186711 span{font-size:12px!important}
+.ai-deep-1x2-v186711 b{font-size:22px!important}
+.ai-deep-goals-v186711 span{font-size:12px!important}
+.ai-deep-goals-v186711 b{font-size:17px!important}
+
+.ai-deep-h2h-kpis-v186711>div{padding:14px!important;border-radius:13px!important}
+.ai-deep-h2h-kpis-v186711 span{font-size:11px!important}
+.ai-deep-h2h-kpis-v186711 b{font-size:20px!important}
+.ai-deep-h2h-list-v186711>div{font-size:12px!important;padding:11px 12px!important}
+.ai-deep-h2h-list-v186711 b{font-size:15px!important}
+
+.ai-deep-standings-v186711>div{padding:17px!important;border-radius:15px!important}
+.ai-deep-standings-v186711 strong{font-size:15px!important}
+.ai-deep-standings-v186711>div>div>b{font-size:21px!important}
+.ai-deep-standings-v186711 p span{font-size:11px!important;padding:6px 9px!important}
+.ai-deep-standings-v186711 small{font-size:12px!important}
+
+.ai-deep-fixture-facts-v186711>div{padding:12px 13px!important;border-radius:11px!important}
+.ai-deep-fixture-facts-v186711 span,.ai-deep-fixture-facts-v186711 b{font-size:12px!important}
+.ai-deep-injury-count-v186711 span{font-size:11px!important}
+.ai-deep-injury-count-v186711 b{font-size:22px!important}
+.ai-deep-injury-count-v186711 small{font-size:10px!important}
+.ai-deep-injury-list-v186711 b{font-size:12px!important}
+.ai-deep-injury-list-v186711 span,.ai-deep-injury-list-v186711 small{font-size:10px!important}
+.ai-deep-empty-v186711{font-size:14px!important;padding:26px!important}
+
+@media (max-width:1360px){
+  .ai-deep-modal-v186711{width:calc(100vw - 28px)!important}
+  .ai-deep-hero-v186711{padding:40px 38px 36px!important}
+  .ai-deep-team-v186711 strong{font-size:clamp(32px,3vw,48px)!important}
+  .ai-deep-pick-strip-v186711{grid-template-columns:minmax(340px,1.6fr) repeat(5,minmax(118px,.7fr))!important}
+  .ai-deep-pick-strip-v186711 b{font-size:28px!important}
+  .ai-deep-pick-strip-v186711 .main b{font-size:30px!important}
+}
+@media (max-width:1120px){
+  .ai-deep-hero-v186711{grid-template-columns:minmax(0,1fr) 180px!important}
+  .ai-deep-verdict-v186711{width:166px!important;height:166px!important}
+  .ai-deep-verdict-v186711>b{font-size:52px!important}
+  .ai-deep-pick-strip-v186711{grid-template-columns:repeat(3,1fr)!important}
+  .ai-deep-pick-strip-v186711>div.main{grid-column:1/-1!important}
+  .ai-deep-grid-v186711{padding:26px!important}
+}
+@media (max-width:780px){
+  .ai-deep-hero-v186711{padding:70px 20px 26px!important}
+  .ai-deep-team-v186711 img,.ai-deep-team-v186711 i{width:48px!important;height:48px!important;border-radius:14px!important}
+  .ai-deep-team-v186711 strong{font-size:24px!important}
+  .ai-deep-hero-copy-v186711>p{font-size:15px!important}
+  .ai-deep-verdict-v186711{width:110px!important;height:110px!important}
+  .ai-deep-verdict-v186711>b{font-size:34px!important}
+  .ai-deep-pick-strip-v186711{grid-template-columns:1fr 1fr!important}
+  .ai-deep-pick-strip-v186711>div{min-height:108px!important;padding:18px!important}
+  .ai-deep-pick-strip-v186711 .main b{font-size:25px!important}
+  .ai-deep-pick-strip-v186711 b{font-size:24px!important}
+  .ai-deep-grid-v186711{padding:18px!important;gap:16px!important}
+  .ai-deep-panel-v186711{padding:20px!important;border-radius:18px!important}
+  .ai-deep-panel-head-v186711 h3{font-size:21px!important}
+  .ai-deep-bullets-v186711{grid-template-columns:1fr!important}
+}
