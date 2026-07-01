@@ -16,32 +16,38 @@
   to = "/index.html"
   status = 200
 
-# BetAI MultiSport AI — automatyczne publikowanie typów
-# WERSJA 1867.2 — skany UTC o 06:17, 10:17, 14:17, 18:17 i 22:17; cooldown domyślnie 10 godzin i umiarkowanie luźniejsze filtry.
-[functions."publish-betai-multisport-ai"]
-  schedule = "17 6,10,14,18,22 * * *"
+# WERSJA 1867.4 — długie skany AI działają jako Background Functions.
+# Lekkie funkcje harmonogramu tylko kolejkują pracę, więc nie wpadają w 30-sekundowy limit cronów.
 
+[functions."publish-betai-multisport-ai-background"]
+  background = true
+
+[functions."publish-typer-expert-background"]
+  background = true
+
+[functions."publish-ograc-buka-background"]
+  background = true
+
+# BetAI MultiSport AI — 3 skany dziennie UTC.
+[functions."schedule-betai-multisport-ai"]
+  schedule = "17 6,12,18 * * *"
 
 # BetAI MultiSport AI — rozliczanie i naprawa błędnych zwrotów.
-# Funkcja jest ograniczona w kodzie wyłącznie do konta BetAI MultiSport AI.
 [functions."settle-live-ai-picks"]
   schedule = "47 1,7,13,19 * * *"
 
-# WERSJA 1845 — Typer Expert: wyłącznie API-Football (mecze, kursy, predictions, injuries). Skan co 3 godziny (UTC).
-# Publikuje maksymalnie jeden aktywny typ naraz, aby progresja nie nakładała się.
-[functions."publish-typer-expert"]
-  schedule = "0 */3 * * *"
+# Typer Expert — 3 skany dziennie UTC, przesunięte względem BetAI AI.
+[functions."schedule-typer-expert"]
+  schedule = "27 7,13,19 * * *"
 
 # Typer Expert — rozliczanie wyłącznie tego profilu co godzinę.
 [functions."settle-typer-expert"]
   schedule = "37 * * * *"
 
-# WERSJA 1846 — Ograć Buka: selektywny model value, tylko API-Football.
-# Skan co 3 godziny, 10 minut po pełnej godzinie, aby nie dublować obciążenia z Typer Expert.
-[functions."publish-ograc-buka"]
-  schedule = "10 */3 * * *"
+# Ograć Buka — 3 skany dziennie UTC, przesunięte względem pozostałych botów.
+[functions."schedule-ograc-buka"]
+  schedule = "37 8,14,20 * * *"
 
 # Ograć Buka — automatyczne rozliczanie wyłącznie tego profilu co godzinę.
 [functions."settle-ograc-buka"]
   schedule = "52 * * * *"
-

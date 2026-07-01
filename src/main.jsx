@@ -6302,14 +6302,14 @@ async function triggerBetAiRightDailyGeneratorV1157(dayKey = getBetAiWarsawDayKe
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 18000)
   try {
-    const res = await fetch('/.netlify/functions/generate-live-ai-picks?days=1&limit=3', {
+    const res = await fetch('/.netlify/functions/publish-betai-multisport-ai?days=2&manual=1', {
       method: 'POST',
       cache: 'no-store',
       signal: controller.signal
     })
     const json = await res.json().catch(() => ({}))
-    if (res.ok && Number(json.inserted || 0) > 0) {
-      try { localStorage.setItem(attemptKey, JSON.stringify({ at: new Date().toISOString(), inserted: Number(json.inserted || 0) })) } catch (_) {}
+    if (res.ok && (json?.queued || Number(json.inserted || 0) > 0)) {
+      try { localStorage.setItem(attemptKey, JSON.stringify({ at: new Date().toISOString(), queued: Boolean(json?.queued), inserted: Number(json.inserted || 0) })) } catch (_) {}
     }
     return { ok: res.ok, json }
   } catch (err) {
@@ -20817,20 +20817,20 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     // dzięki czemu typ od razu pojawia się na tej stronie i w profilu systemowym.
     const params = new URLSearchParams({
       days: mode === 'tomorrow' ? '2' : '2',
-      min_minutes_before_start: '120',
-      max_hours_ahead: mode === 'tomorrow' ? '72' : '48',
-      cooldown_hours: '12',
-      min_books: '4',
+      min_minutes_before_start: '60',
+      max_hours_ahead: '72',
+      cooldown_hours: '6',
+      min_books: '2',
       min_odds: '1.50',
       max_odds: '5.00',
-      min_probability: '0.44',
-      min_edge: '0.025',
-      max_probability_spread: '0.065',
-      max_odds_outlier_ratio: '1.10',
+      min_probability: '0.18',
+      min_edge: '0.005',
+      max_probability_spread: '0.10',
+      max_odds_outlier_ratio: '1.15',
       manual: '1'
     })
     const url = `/.netlify/functions/publish-betai-multisport-ai?${params.toString()}`
-    const response = await fetch(url, { cache: 'no-store' })
+    const response = await fetch(url, { method: 'POST', cache: 'no-store' })
     const json = await response.json().catch(() => ({}))
     if (!response.ok) throw new Error(json?.error || json?.message || `publish-betai-multisport-ai HTTP ${response.status}`)
     return json
@@ -20879,10 +20879,25 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       // Dzięki temu typ jest widoczny zarówno na profilu systemowym, jak i w zakładce Typy AI.
       try {
         const scanJson = await runSavedAiScanEndpointV1690(mode)
-        const [savedToday, savedTomorrow] = await Promise.all([
+        let [savedToday, savedTomorrow] = await Promise.all([
           loadSavedAiTipsFromDb('today'),
           loadSavedAiTipsFromDb('tomorrow')
         ])
+
+        // WERSJA 1867.4: generator działa jako Background Function. Po odpowiedzi 202
+        // czekamy na realny zapis w Supabase zamiast udawać, że brak natychmiastowej
+        // odpowiedzi oznacza brak kandydata.
+        if (scanJson?.queued && !savedToday.length && !savedTomorrow.length) {
+          setStatusText('Skan AI został uruchomiony w tle. Analizuję realne mecze i kursy — czekam na zapis typu...')
+          const startedAt = Date.now()
+          while (Date.now() - startedAt < 75000 && !savedToday.length && !savedTomorrow.length) {
+            await new Promise(resolve => window.setTimeout(resolve, 5000))
+            ;[savedToday, savedTomorrow] = await Promise.all([
+              loadSavedAiTipsFromDb('today'),
+              loadSavedAiTipsFromDb('tomorrow')
+            ])
+          }
+        }
         await loadSavedAiJournalFromDbV1094()
 
         const inserted = Number(scanJson?.inserted || scanJson?.ai_bets_inserted || scanJson?.ai_bets_saved || 0)
@@ -20917,9 +20932,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           return
         }
 
-        const reason = scanJson?.skipped === 'cooldown'
-          ? 'Generator nie stworzył duplikatu, ponieważ profil ma już świeży typ. Istniejący typ został zsynchronizowany z ekranem.'
-          : (scanJson?.message || 'Brak typu spełniającego aktualne filtry jakości.')
+        const reason = scanJson?.queued
+          ? 'Skan nadal pracuje w tle albo zakończył się bez kandydata. Typ pojawi się automatycznie po zapisie w Supabase; harmonogram ponowi analizę bez klikania.'
+          : scanJson?.skipped === 'cooldown'
+            ? 'Generator nie stworzył duplikatu, ponieważ profil ma już świeży typ. Istniejący typ został zsynchronizowany z ekranem.'
+            : (scanJson?.message || 'Brak typu spełniającego aktualne filtry jakości.')
         setStatusText(`${reason} Sprawdzono meczów: ${fixturesChecked}, meczów z kursami: ${oddsFixtures}, kandydatów: ${candidatesFound}.`)
         setLiveCards([])
         setSelectedId('')
@@ -32286,10 +32303,10 @@ function App() {
   async function runLiveAiEngine() {
     setAiLiveGenerating(true)
     try {
-      const response = await fetch("/.netlify/functions/generate-live-ai-picks", { method: "POST" })
+      const response = await fetch("/.netlify/functions/publish-betai-multisport-ai?days=2&manual=1", { method: "POST" })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || "Nie udało się wygenerować LIVE AI typów")
-      const msg = data.inserted ? `Dodano ${data.inserted} realnych typów z ${data.matches_checked || data.live_matches_checked || 0} meczów.` : (data.message || "Brak meczów live albo brak value picków.")
+      const msg = data.queued ? 'Skan realnych meczów został uruchomiony w tle. Typ pojawi się po zakończeniu analizy.' : (data.inserted ? `Dodano ${data.inserted} realnych typów z ${data.matches_checked || data.live_matches_checked || 0} meczów.` : (data.message || 'Brak meczów albo brak value picków.'))
       showToast({ type: data.inserted ? "success" : "info", title: "LIVE AI", message: msg })
       await fetchTips(sessionUser?.id)
     } catch (error) {

@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-1867-3-ai-odds-1-5-to-5",
-  "version": "1.8.6.73",
+  "name": "betai-wersja-1867-4-ai-boty-background-fix",
+  "version": "1.8.6.74",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
