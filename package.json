@@ -1,12 +1,13 @@
 {
-  "name": "betai-wersja-10-bot-fixture-id-recovery",
-  "version": "10.0.0",
+  "name": "betai-wersja-11-ai-prediction-live",
+  "version": "11.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
     "preview": "node ./node_modules/vite/bin/vite.js preview --host 0.0.0.0",
     "test:settlement": "node TEST_WERSJA_6_DNB_90MIN.js",
-    "test:ai-source": "node TEST_WERSJA_7_AI_SOURCE_FILTER.js"
+    "test:ai-source": "node TEST_WERSJA_7_AI_SOURCE_FILTER.js",
+    "test:ai-predictions": "node TEST_WERSJA_11_AI_PREDICTIONS.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.45.4",

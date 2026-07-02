@@ -34,6 +34,7 @@ import { createRoot } from 'react-dom/client'
 import { createPortal } from 'react-dom'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
+import AiPredictionsView from './AiPredictionsView'
 import achievementFanatykV1772 from './assets/achievements-v1772/fanatyk.svg'
 import achievementWinnerV1772 from './assets/achievements-v1772/prawdziwy-wygrany.svg'
 import achievementFearlessV1772 from './assets/achievements-v1772/nieustraszony.svg'
@@ -4767,6 +4768,7 @@ const LOCKED_SIDEBAR_ITEMS_V1129 = Object.freeze([
   Object.freeze({ id: 'leaderboard', label: '🏆 Ranking', activeViews: Object.freeze(['leaderboard']) }),
   Object.freeze({ id: 'referrals', label: '👥 Społeczność', activeViews: Object.freeze(['referrals']) }),
   Object.freeze({ id: 'aiPicks', label: '🧠 Typy AI', activeViews: Object.freeze(['aiPicks']) }),
+  Object.freeze({ id: 'aiPredictions', label: '🔮 AI Prediction', activeViews: Object.freeze(['aiPredictions']) }),
   Object.freeze({ id: 'topTipsters', label: '♕ Top typerzy', activeViews: Object.freeze(['topTipsters']) }),
   Object.freeze({ id: 'articles', label: '📰 Artykuły/TV Live', activeViews: Object.freeze(['articles']) }),
   Object.freeze({ id: 'rewardsBonuses', label: '🎁 Nagrody/Bonusy', activeViews: Object.freeze(['rewardsBonuses']) })
@@ -35579,6 +35581,10 @@ function App() {
 
         {view === 'aiPicks' && (
           <AiPicksView tips={tips} loading={loading} liveGenerating={aiLiveGenerating} settleGenerating={aiSettleGenerating} onGenerateLive={runLiveAiEngine} onSettle={runAiSettlement} onRefresh={() => fetchTips(sessionUser?.id)} />
+        )}
+
+        {view === 'aiPredictions' && (
+          <AiPredictionsView />
         )}
 
         {view === 'aiStats' && (
