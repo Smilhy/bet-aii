@@ -35,6 +35,7 @@ import { createPortal } from 'react-dom'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 import AiPredictionsView from './AiPredictionsView'
+import AiControlCenter from './AiControlCenter'
 import achievementFanatykV1772 from './assets/achievements-v1772/fanatyk.svg'
 import achievementWinnerV1772 from './assets/achievements-v1772/prawdziwy-wygrany.svg'
 import achievementFearlessV1772 from './assets/achievements-v1772/nieustraszony.svg'
@@ -4770,6 +4771,7 @@ const LOCKED_SIDEBAR_ITEMS_V1130 = Object.freeze([
   Object.freeze({ id: 'referrals', label: '👥 Społeczność', activeViews: Object.freeze(['referrals']) }),
   Object.freeze({ id: 'aiPicks', label: '🧠 Typy AI', activeViews: Object.freeze(['aiPicks']) }),
   Object.freeze({ id: 'aiPredictions', label: '🔮 AI Prediction', activeViews: Object.freeze(['aiPredictions']) }),
+  Object.freeze({ id: 'aiControlCenter', label: '🛰 Centrum AI', activeViews: Object.freeze(['aiControlCenter']), adminOnly: true }),
   Object.freeze({ id: 'articles', label: '📰 Artykuły/TV Live', activeViews: Object.freeze(['articles']) }),
   Object.freeze({ id: 'rewardsBonuses', label: '🎁 Nagrody/Bonusy', activeViews: Object.freeze(['rewardsBonuses']) })
 ])
@@ -4815,7 +4817,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
         ...LOCKED_ADMIN_SIDEBAR_ITEMS_V1129,
         ...LOCKED_SIDEBAR_ITEMS_V1130.slice(8)
       ]
-    : LOCKED_SIDEBAR_ITEMS_V1130
+    : LOCKED_SIDEBAR_ITEMS_V1130.filter(item => !item.adminOnly)
 
   return (
     <div className="sidebar-stack">
@@ -35585,6 +35587,10 @@ function App() {
 
         {view === 'aiPredictions' && (
           <AiPredictionsView />
+        )}
+
+        {view === 'aiControlCenter' && isAdminUser(effectiveAccountProfile || sessionUser) && (
+          <AiControlCenter />
         )}
 
         {view === 'aiStats' && (

@@ -1116,7 +1116,7 @@ function createHandler(options = {}) {
     if (event.httpMethod === 'OPTIONS') return json(204, {})
     try {
       const result = await runAiBotCycle(event, options)
-      return json(result.ok === false ? 500 : 200, result)
+      return json(result.error ? 500 : 200, result)
     } catch (error) {
       return json(500, { ok: false, version: VERSION, inserted: 0, error: error.message || String(error) })
     }

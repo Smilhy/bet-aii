@@ -13,3 +13,7 @@ exports.handler = async function handler() {
     }
   })
 }
+
+// WERSJA 15 — realny dziennik uruchomień dla Centrum AI.
+const { monitorHandler: monitorPredictionCaptureV15 } = require('./_lib/ai-system-monitor')
+exports.handler = monitorPredictionCaptureV15({ systemKey: 'predictions', runType: 'capture' }, exports.handler)

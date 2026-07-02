@@ -945,3 +945,7 @@ exports.handler = async function (event) {
 
 // Test helpers — bez wpływu na Netlify handler.
 exports.__test = { isBetaiMultisportRowV1764, resolvePick, isSupportedResolvableTipV1763, isPotentiallyWrongVoidV1823 }
+
+// WERSJA 15 — realny dziennik uruchomień dla Centrum AI.
+const { monitorHandler: monitorBetaiSettlementV15 } = require('./_lib/ai-system-monitor')
+exports.handler = monitorBetaiSettlementV15({ systemKey: 'betai', runType: 'settlement' }, exports.handler)
