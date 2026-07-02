@@ -31,9 +31,10 @@
 [functions."publish-ograc-buka"]
   schedule = "47 */2 * * *"
 
-# BetAI MultiSport AI — rozliczanie i naprawa błędnych zwrotów.
+# WERSJA 7 / FIX 1870 — BetAI MultiSport AI rozlicza co godzinę.
+# Poprzednio działało tylko 4 razy dziennie, więc zakończony mecz mógł długo wisieć jako PENDING.
 [functions."settle-live-ai-picks"]
-  schedule = "47 1,7,13,19 * * *"
+  schedule = "17 * * * *"
 
 # Typer Expert — rozliczanie własnych typów co godzinę.
 [functions."settle-typer-expert"]

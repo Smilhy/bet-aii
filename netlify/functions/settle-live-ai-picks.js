@@ -453,10 +453,32 @@ function isBetaiMultisportRowV1764(row = {}) {
     row.ai_source,
     row.ai_model_version,
     row.source,
-    row.tip_source
+    row.tip_source,
+    row.ai_external_key
   ].filter(Boolean).join(' ')
   const compact = compactSyncV1764(raw)
-  return compact.includes('betaimultisport') || compact.includes('multisportai')
+
+  // WERSJA 7 / FIX 1870:
+  // Nowy publisher zapisuje w ai_bets tylko source=betai_independent_value_v1867_9.
+  // Poprzedni filtr znał wyłącznie tekst "BetAI MultiSport AI", przez co wszystkie
+  // nowe rekordy ai_bets były pomijane przez settlement (checked=0) i zostawały PENDING.
+  // Rozpoznajemy zarówno aktualne źródło, jak i historyczny generator 1703.
+  const explicitOtherBot =
+    compact.includes('typerexpert') ||
+    compact.includes('ogracbuka') ||
+    compact.includes('typerexpertprogression') ||
+    compact.includes('ogracbukaindependent')
+  if (explicitOtherBot) return false
+
+  return [
+    'betaimultisport',
+    'multisportai',
+    'betaiindependentvalue',
+    'betaivalue',
+    'dailyai',
+    '1703realapifootballoddsstrictfulltime',
+    'realaiengine'
+  ].some(marker => compact.includes(marker))
 }
 
 function anyIdValuesV1764(row = {}) {
@@ -594,7 +616,9 @@ exports.handler = async function (event) {
     const hasScore = tip => scoreN(tip.live_score_home ?? tip.score_home ?? tip.home_score ?? tip.final_score_home ?? tip.goals_home) !== null && scoreN(tip.live_score_away ?? tip.score_away ?? tip.away_score ?? tip.final_score_away ?? tip.goals_away) !== null
     const hasVerifiedScore = tip => hasScore(tip) && Boolean(tip.live_status || tip.settlement_source === 'auto_ai_result_api')
     const now = Date.now()
-    const candidates = (rows || []).filter(isBetaiMultisportRowV1764).filter(tip => {
+    const allRows = rows || []
+    const recognizedRows = allRows.filter(isBetaiMultisportRowV1764)
+    const candidates = recognizedRows.filter(tip => {
       const current = norm(tip.status || tip.result_status || tip.result || '')
       const likelyWrongVoidOrSupported = isPotentiallyWrongVoidV1823(tip)
       if (!(forceResettle || isPending(tip) || !hasVerifiedScore(tip) || likelyWrongVoidOrSupported)) return false
@@ -854,7 +878,7 @@ exports.handler = async function (event) {
       await supabase
         .from('ai_pick_runs')
         .insert({
-          source: 'settle-ai-bets-v1823-decimal-lines-repair',
+          source: 'settle-ai-bets-v1870-source-filter-hourly-fix',
           picks_created: settled + directTipsSettled,
           status: errors.length ? 'partial' : 'success',
           finished_at: new Date().toISOString(),
@@ -863,9 +887,12 @@ exports.handler = async function (event) {
     } catch (_) {
       // Log run jest pomocniczy. Nie może wysadzać settlementu ani mulić strony.
     }
-    return json(200, { version: '1823-settle-betai-multisport-decimal-lines-repair', table: 'ai_bets+tips_direct', checked, settled, backfilled, skipped, fallbackUpdates, syncedTips, syncedTipsFallback, directTipsChecked, directTipsSettled, directTipsSkipped, directTipsFallback, errors: errors.slice(0, 20) })
+    return json(200, { version: '1870-settle-betai-source-filter-hourly-fix', table: 'ai_bets+tips_direct', rowsLoaded: allRows.length, recognizedRows: recognizedRows.length, candidates: candidates.length, ignoredBySource: Math.max(0, allRows.length - recognizedRows.length), checked, settled, backfilled, skipped, fallbackUpdates, syncedTips, syncedTipsFallback, directTipsChecked, directTipsSettled, directTipsSkipped, directTipsFallback, errors: errors.slice(0, 20) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'Settle error' })
   }
 }
+
+// Test helpers — bez wpływu na Netlify handler.
+exports.__test = { isBetaiMultisportRowV1764, resolvePick, isSupportedResolvableTipV1763 }
