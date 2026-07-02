@@ -169,6 +169,14 @@ function PredictionDetails({ row, onClose }) {
 
 function MatchCard({ row, onOpen }) {
   const live = row.status === 'live'
+  const hasLiveScore = live
+    && row.score?.home !== null
+    && row.score?.home !== undefined
+    && row.score?.away !== null
+    && row.score?.away !== undefined
+    && Number.isFinite(Number(row.score.home))
+    && Number.isFinite(Number(row.score.away))
+  const liveScore = hasLiveScore ? `${Number(row.score.home)} : ${Number(row.score.away)}` : ''
   return (
     <article className={`aip-match-card-v11 ${live ? 'is-live' : ''}`}>
       <div className="aip-card-meta-v11">
@@ -177,14 +185,14 @@ function MatchCard({ row, onOpen }) {
           <div><b>{row.country || 'International'} · {row.league}</b><small>{row.round || row.market}</small></div>
         </div>
         <div className={live ? 'aip-time-v11 is-live' : 'aip-time-v11'}>
-          {live ? <><i /> LIVE {row.elapsed ? `${row.elapsed}'` : ''}</> : formatTime(row.kickoff)}
+          {live ? <><i /><span>LIVE {row.elapsed ? `${row.elapsed}'` : ''}</span>{hasLiveScore && <b>{liveScore}</b>}</> : formatTime(row.kickoff)}
         </div>
       </div>
 
       <div className="aip-card-main-v11">
         <div className="aip-card-teams-v11">
           <div><TeamMark team={row.home} /><strong>{row.home.name}</strong></div>
-          <span>{live && row.score?.home !== null ? `${row.score.home} : ${row.score.away}` : '—'}</span>
+          <span>{liveScore || '—'}</span>
           <div><TeamMark team={row.away} /><strong>{row.away.name}</strong></div>
         </div>
 
