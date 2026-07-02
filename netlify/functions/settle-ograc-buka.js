@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 
 const AUTHOR_NAME = 'Ograć Buka'
-const VERSION = '1846-ograc-buka-settlement-v1'
+const VERSION = '1881.0-ograc-buka-fixture-id-recovery-v10'
 
 const FINISHED = ['FT', 'AET', 'PEN']
 const VOIDED = ['CANC', 'ABD', 'AWD', 'WO', 'PST']
@@ -322,13 +322,107 @@ function settleByKeys(tip, homeGoals, awayGoals, fixtureStats) {
   return { status: 'pending_admin_review', reason: 'Nieobslugiwany market_key=' + market + ' selection_key=' + selection }
 }
 
-async function fetchFixture(id) {
+const fixtureByIdCache = new Map()
+const fixturesByDateCache = new Map()
+
+async function apiFootballJson(url) {
   const key = getApiKey()
   if (!key) throw new Error('Brak API_FOOTBALL_KEY/API_SPORTS_KEY/APISPORTS_KEY w Netlify ENV')
-  const res = await fetch('https://v3.football.api-sports.io/fixtures?id=' + encodeURIComponent(id), { headers: { 'x-apisports-key': key } })
-  const data = await res.json()
-  const item = data && data.response && data.response[0]
-  return item || null
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 8000)
+  try {
+    const res = await fetch(url, { signal: controller.signal, headers: { 'x-apisports-key': key } })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error('API-Football HTTP ' + res.status)
+    if (data && data.errors && Object.keys(data.errors).length) throw new Error('API-Football: ' + JSON.stringify(data.errors))
+    return Array.isArray(data && data.response) ? data.response : []
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+async function fetchFixture(id) {
+  const key = String(id || '').trim()
+  if (!key) return null
+  if (!fixtureByIdCache.has(key)) {
+    fixtureByIdCache.set(key, apiFootballJson('https://v3.football.api-sports.io/fixtures?id=' + encodeURIComponent(key)).then(rows => rows[0] || null))
+  }
+  return fixtureByIdCache.get(key)
+}
+
+async function fetchFixturesByDate(dateKey) {
+  const key = String(dateKey || '').slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return []
+  if (!fixturesByDateCache.has(key)) {
+    fixturesByDateCache.set(key, apiFootballJson('https://v3.football.api-sports.io/fixtures?date=' + encodeURIComponent(key)))
+  }
+  return fixturesByDateCache.get(key)
+}
+
+function tipDateKey(tip) {
+  const values = [tip.match_time, tip.event_time, tip.kickoff_time, tip.match_date, tip.created_at]
+  for (const value of values) {
+    const raw = String(value == null ? '' : value).trim()
+    const direct = raw.match(/^(\d{4}-\d{2}-\d{2})/)
+    if (direct) return direct[1]
+    const parsed = Date.parse(raw)
+    if (Number.isFinite(parsed)) return new Date(parsed).toISOString().slice(0, 10)
+  }
+  return ''
+}
+
+function shiftDate(dateKey, days) {
+  const parsed = Date.parse(String(dateKey || '') + 'T12:00:00Z')
+  if (!Number.isFinite(parsed)) return ''
+  return new Date(parsed + Number(days || 0) * 86400000).toISOString().slice(0, 10)
+}
+
+function namesClose(a, b) {
+  const aa = compact(a)
+  const bb = compact(b)
+  if (!aa || !bb) return false
+  if (aa === bb) return true
+  return Math.min(aa.length, bb.length) >= 5 && (aa.includes(bb) || bb.includes(aa))
+}
+
+function fixtureKickoffMs(fix) {
+  const raw = fix && fix.fixture && fix.fixture.date
+  const parsed = Date.parse(raw || '')
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+async function resolveFixtureForTip(tip) {
+  const storedId = fixtureId(tip)
+  if (storedId) return { id: storedId, fix: await fetchFixture(storedId), resolvedBy: 'stored_fixture_id' }
+
+  const teams = teamNamesFromTip(tip)
+  if (!teams.homeRaw || !teams.awayRaw) return { id: '', fix: null, resolvedBy: 'missing_teams' }
+  const baseDate = tipDateKey(tip)
+  if (!baseDate) return { id: '', fix: null, resolvedBy: 'missing_date' }
+
+  const dates = [baseDate, shiftDate(baseDate, -1), shiftDate(baseDate, 1)].filter(Boolean)
+  const all = []
+  for (const dateKey of [...new Set(dates)]) {
+    const rows = await fetchFixturesByDate(dateKey)
+    for (const fix of rows) {
+      const home = fix && fix.teams && fix.teams.home && fix.teams.home.name
+      const away = fix && fix.teams && fix.teams.away && fix.teams.away.name
+      if (namesClose(home, teams.homeRaw) && namesClose(away, teams.awayRaw)) all.push(fix)
+    }
+  }
+  if (!all.length) return { id: '', fix: null, resolvedBy: 'teams_date_not_found' }
+
+  const targetRaw = tip.match_time || tip.event_time || tip.kickoff_time || ''
+  const targetMs = Date.parse(targetRaw)
+  all.sort((a, b) => {
+    if (!Number.isFinite(targetMs)) return fixtureKickoffMs(b) - fixtureKickoffMs(a)
+    return Math.abs(fixtureKickoffMs(a) - targetMs) - Math.abs(fixtureKickoffMs(b) - targetMs)
+  })
+  const fix = all[0]
+  const recoveredId = String(fix && fix.fixture && fix.fixture.id || '').trim()
+  if (!recoveredId) return { id: '', fix: null, resolvedBy: 'matched_without_id' }
+  fixtureByIdCache.set(recoveredId, Promise.resolve(fix))
+  return { id: recoveredId, fix, resolvedBy: 'teams_and_date' }
 }
 
 async function fetchStats(id) {
@@ -351,18 +445,18 @@ function scoreFromFixture(fix) {
 }
 
 async function settleTip(tip) {
-  const id = fixtureId(tip)
-  if (!id) return { status: 'skipped', reason: 'brak fixture_id' }
-  const fix = await fetchFixture(id)
-  if (!fix) return { status: 'skipped', reason: 'API nie zwrocilo meczu ' + id }
+  const resolved = await resolveFixtureForTip(tip)
+  const id = resolved.id
+  const fix = resolved.fix
+  if (!id || !fix) return { status: 'skipped', reason: 'Nie znaleziono fixture_id: ' + resolved.resolvedBy, resolved_by: resolved.resolvedBy }
   const st = String((((fix.fixture || {}).status || {}).short) || '')
-  if (VOIDED.includes(st)) return { status: 'void', reason: 'Mecz void status=' + st }
-  if (!FINISHED.includes(st)) return { status: 'pending', reason: 'Mecz nie jest zakonczony status=' + st }
+  if (VOIDED.includes(st)) return { status: 'void', reason: 'Mecz void status=' + st, resolved_fixture_id: id, resolved_by: resolved.resolvedBy }
+  if (!FINISHED.includes(st)) return { status: 'pending', reason: 'Mecz nie jest zakonczony status=' + st, resolved_fixture_id: id, resolved_by: resolved.resolvedBy }
   const sc = scoreFromFixture(fix)
   const keys = fallbackKeys(tip)
   let stats = []
   if (norm(keys.market).includes('corner') || norm(keys.market).includes('card')) stats = await fetchStats(id)
-  return settleByKeys(tip, sc.h, sc.a, stats)
+  return { ...settleByKeys(tip, sc.h, sc.a, stats), resolved_fixture_id: id, resolved_by: resolved.resolvedBy }
 }
 
 function isAkoTip(tip) {
@@ -541,14 +635,49 @@ function updatePayload(result, tip = {}) {
     updated_at: new Date().toISOString()
   }
 
+  if (result.resolved_fixture_id) {
+    payload.fixture_id = String(result.resolved_fixture_id)
+    payload.api_fixture_id = String(result.resolved_fixture_id)
+    payload.external_fixture_id = String(result.resolved_fixture_id)
+  }
   if (Array.isArray(result.legs_json)) payload.legs_json = result.legs_json
   return payload
 }
 
 
 
+function missingUpdateColumn(error) {
+  const message = String(error?.message || error || '')
+  const match = message.match(/Could not find the '([^']+)' column/i)
+  return match ? match[1] : ''
+}
+
+async function updateTipSafe(supabase, tipId, originalPayload, maxAttempts = 12) {
+  const payload = { ...originalPayload }
+  const removedColumns = []
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const { error } = await supabase.from('tips').update(payload).eq('id', tipId)
+    if (!error) return { error: null, removedColumns }
+
+    const missing = missingUpdateColumn(error)
+    if (missing && Object.prototype.hasOwnProperty.call(payload, missing)) {
+      delete payload[missing]
+      removedColumns.push(missing)
+      continue
+    }
+
+    return { error, removedColumns }
+  }
+
+  return {
+    error: new Error(`Nie udało się zapisać rozliczenia po ${maxAttempts} próbach`),
+    removedColumns
+  }
+}
+
 // Rozliczanie wyłącznie wirtualnych typów profilu Ograć Buka.
-exports.config = { schedule: '37 * * * *' }
+exports.config = { schedule: '52 * * * *' }
 
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders, body: '' }
@@ -558,8 +687,8 @@ exports.handler = async function(event) {
     .select('*')
     .eq('author_name', AUTHOR_NAME)
     .or('status.eq.pending,settlement_status.eq.pending,status.is.null,settlement_status.is.null')
-    .order('created_at', { ascending: true })
-    .limit(40)
+    .order('created_at', { ascending: false })
+    .limit(20)
   if (error) return json(500, { ok: false, error: error.message })
 
   const checked = []
@@ -571,27 +700,39 @@ exports.handler = async function(event) {
       checked.push({
         id: tip.id,
         type: isAkoTip(tip) ? 'ako' : 'single',
-        fixture_id: fixtureId(tip),
+        fixture_id: res.resolved_fixture_id || fixtureId(tip),
+        resolved_by: res.resolved_by || null,
         result: res.status,
         reason: res.reason,
         leg_statuses: res.leg_statuses || null
       })
       if (['won','lost','void'].includes(res.status)) {
-        const { error: upErr } = await supabase.from('tips').update(updatePayload(res, tip)).eq('id', tip.id)
-        if (upErr) skipped.push({ id: tip.id, reason: upErr.message })
-        else settled.push({ id: tip.id, status: res.status, type: isAkoTip(tip) ? 'ako' : 'single' })
+        const save = await updateTipSafe(supabase, tip.id, updatePayload(res, tip))
+        if (save.error) skipped.push({ id: tip.id, reason: save.error.message, removed_columns: save.removedColumns })
+        else settled.push({ id: tip.id, status: res.status, type: isAkoTip(tip) ? 'ako' : 'single', removed_columns: save.removedColumns })
+      } else if (!isAkoTip(tip) && res.resolved_fixture_id && !fixtureId(tip)) {
+        // Stary rekord zapisany bez fixture_id: odzyskaj ID nawet wtedy,
+        // gdy mecz jest jeszcze live/pending. Następne uruchomienie użyje już ID.
+        const save = await updateTipSafe(supabase, tip.id, {
+          fixture_id: String(res.resolved_fixture_id),
+          api_fixture_id: String(res.resolved_fixture_id),
+          external_fixture_id: String(res.resolved_fixture_id),
+          updated_at: new Date().toISOString()
+        })
+        if (save.error) skipped.push({ id: tip.id, reason: save.error.message, removed_columns: save.removedColumns })
       } else if (isAkoTip(tip) && Array.isArray(res.legs_json)) {
         // AKO jeszcze nie jest całe rozstrzygnięte, ale zapisujemy statusy pojedynczych nóg
         // np. jedna noga live/pending, druga już won.
-        const { error: upErr } = await supabase
-          .from('tips')
-          .update({ legs_json: res.legs_json, settlement_reason: res.reason || null, updated_at: new Date().toISOString() })
-          .eq('id', tip.id)
-        if (upErr) skipped.push({ id: tip.id, reason: upErr.message })
+        const save = await updateTipSafe(supabase, tip.id, {
+          legs_json: res.legs_json,
+          settlement_reason: res.reason || null,
+          updated_at: new Date().toISOString()
+        })
+        if (save.error) skipped.push({ id: tip.id, reason: save.error.message, removed_columns: save.removedColumns })
       }
     } catch (e) {
       skipped.push({ id: tip.id, reason: e.message || String(e) })
     }
   }
-  return json(200, { ok: true, version: VERSION, author: AUTHOR_NAME, checked: checked.length, settled, skipped, sample: checked.slice(0, 20) })
+  return json(200, { ok: true, version: VERSION, author: AUTHOR_NAME, checked: checked.length, settled, skipped, schemaFallbackUsed: settled.some(row => (row.removed_columns || []).length > 0), sample: checked.slice(0, 20) })
 }

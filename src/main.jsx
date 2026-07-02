@@ -32638,23 +32638,50 @@ function App() {
     setAiSettleGenerating(true)
     try {
       const batchLimit = isAuto ? 8 : 20
-      const response = await fetch(`/.netlify/functions/settle-live-ai-picks?limit=${batchLimit}`, { method: "POST" })
-      const raw = await response.text()
-      let data = {}
-      try { data = raw ? JSON.parse(raw) : {} } catch (_) { data = {} }
-      if (!response.ok) {
-        const gatewayHint = raw && !data.error ? raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 180) : ''
-        throw new Error(data.error || gatewayHint || `Błąd funkcji Netlify HTTP ${response.status}`)
-      }
-      const totalChecked = Number(data.checked || 0) + Number(data.directTipsChecked || 0)
-      const totalSettled = Number(data.settled || 0) + Number(data.directTipsSettled || 0)
-      const totalSkipped = Number(data.skipped || 0) + Number(data.directTipsSkipped || 0)
-      const remaining = Number(data.remainingCandidates || 0)
-      const extra = `${data.errors?.length ? ` Błędy: ${data.errors.length}.` : ''}${remaining ? ` Zostało w kolejce: ${remaining}.` : ''}`
+      const endpoints = isAuto
+        ? [{ key: 'betai', url: `/.netlify/functions/settle-live-ai-picks?limit=${batchLimit}` }]
+        : [
+            { key: 'betai', url: `/.netlify/functions/settle-live-ai-picks?limit=${batchLimit}` },
+            { key: 'typer', url: '/.netlify/functions/settle-typer-expert' },
+            { key: 'ograc', url: '/.netlify/functions/settle-ograc-buka' }
+          ]
+
+      const responses = await Promise.all(endpoints.map(async endpoint => {
+        const response = await fetch(endpoint.url, { method: 'POST' })
+        const raw = await response.text()
+        let data = {}
+        try { data = raw ? JSON.parse(raw) : {} } catch (_) { data = {} }
+        if (!response.ok) {
+          const gatewayHint = raw && !data.error ? raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 180) : ''
+          throw new Error(`${endpoint.key}: ${data.error || gatewayHint || `HTTP ${response.status}`}`)
+        }
+        return { key: endpoint.key, data }
+      }))
+
+      let totalChecked = 0
+      let totalSettled = 0
+      let totalSkipped = 0
+      let remaining = 0
+      let errorCount = 0
+
+      responses.forEach(({ key, data }) => {
+        const settledCount = Array.isArray(data.settled) ? data.settled.length : Number(data.settled || 0)
+        const skippedCount = Array.isArray(data.skipped) ? data.skipped.length : Number(data.skipped || 0)
+        totalChecked += Number(data.checked || 0) + Number(data.directTipsChecked || 0)
+        totalSettled += settledCount + Number(data.directTipsSettled || 0)
+        totalSkipped += skippedCount + Number(data.directTipsSkipped || 0)
+        remaining += Number(data.remainingCandidates || 0)
+        errorCount += Array.isArray(data.errors) ? data.errors.length : 0
+        if (key !== 'betai' && Array.isArray(data.skipped) && data.skipped.length) {
+          console.warn(`${key} settlement skipped`, data.skipped)
+        }
+      })
+
+      const extra = `${errorCount ? ` Błędy: ${errorCount}.` : ''}${remaining ? ` Zostało w kolejce: ${remaining}.` : ''}`
       if (!isAuto || totalSettled > 0) {
-        showToast({ type: totalSettled ? "success" : "info", title: isAuto ? "Auto rozliczenie AI" : "AI Settlement", message: `Sprawdzono ${totalChecked}, rozliczono ${totalSettled}, pominięto ${totalSkipped}.${extra}` })
+        showToast({ type: totalSettled ? "success" : "info", title: isAuto ? "Auto rozliczenie AI" : "Rozliczenie AI i botów", message: `Sprawdzono ${totalChecked}, rozliczono ${totalSettled}, pominięto ${totalSkipped}.${extra}` })
       }
-      try { window.dispatchEvent(new CustomEvent('betai-ai-bets-settled', { detail: data })) } catch (_) {}
+      try { window.dispatchEvent(new CustomEvent('betai-ai-bets-settled', { detail: responses })) } catch (_) {}
       await fetchTips(sessionUser?.id)
     } catch (error) {
       console.error("runAiSettlement error", error)

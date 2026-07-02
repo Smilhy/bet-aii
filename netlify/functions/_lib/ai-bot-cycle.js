@@ -6,7 +6,7 @@ const AUTHORS = {
   ograc: { name: 'Ograć Buka', username: 'ograc-buka', source: 'ograc_buka_independent_v1867_9', mirrorAiBets: false }
 }
 
-const VERSION = '1867.9-independent-bots-typer-progression-cooldown-2h-v2'
+const VERSION = '1881.0-bot-fixture-id-preservation-and-recovery-v10'
 const DEFAULT_BOTS = ['betai', 'typer', 'ograc']
 
 // Każdy bot działa niezależnie. Nie ma wspólnej rotacji.
@@ -555,10 +555,19 @@ function missingColumn(error) {
   return match ? match[1] : ''
 }
 const FALLBACK_COLUMNS = {
+  // V10: fallback nie może usuwać identyfikatorów meczu ani kluczy rynku.
+  // Bez nich typ zapisuje się jako PENDING, ale później nie da się go automatycznie rozliczyć.
   tips: [
-    'created_at', 'author_id', 'author_name', 'league', 'team_home', 'team_away',
-    'match_time', 'bet_type', 'odds', 'analysis', 'ai_probability', 'access_type',
-    'price', 'status', 'tags', 'notify_followers'
+    'created_at', 'updated_at', 'author_id', 'author_name', 'username', 'public_slug',
+    'league', 'country', 'team_home', 'team_away', 'match_name', 'match',
+    'match_time', 'event_time', 'kickoff_time', 'match_date',
+    'fixture_id', 'external_fixture_id', 'api_fixture_id', 'league_id',
+    'sport', 'sport_key', 'bet_type', 'prediction', 'pick', 'selection',
+    'market', 'market_key', 'selection_key', 'odds', 'bookmaker',
+    'analysis', 'ai_probability', 'probability', 'ai_score', 'source', 'tip_source',
+    'access_type', 'is_premium', 'price', 'status', 'result', 'settlement_status',
+    'result_status', 'stake', 'profit', 'payout', 'return_amount',
+    'coupon_type', 'is_ako', 'legs_count', 'tags', 'notify_followers'
   ],
   ai_bets: [
     'created_at', 'updated_at', 'external_fixture_id', 'match_date', 'match_time',
@@ -566,7 +575,7 @@ const FALLBACK_COLUMNS = {
     'probability', 'ev', 'ai_score', 'status', 'result', 'profit', 'source'
   ]
 }
-async function insertSafe(supabase, table, row, maxAttempts = 8) {
+async function insertSafe(supabase, table, row, maxAttempts = 60) {
   const full = { ...row }
   const first = await supabase.from(table).insert(full).select('id').single()
   if (!first.error) return { data: first.data, removed: [] }
@@ -575,6 +584,9 @@ async function insertSafe(supabase, table, row, maxAttempts = 8) {
   const allowed = new Set(FALLBACK_COLUMNS[table] || Object.keys(full))
   const payload = Object.fromEntries(Object.entries(full).filter(([key, value]) => allowed.has(key) && value !== undefined))
   const removed = Object.keys(full).filter(key => !Object.prototype.hasOwnProperty.call(payload, key))
+
+  // Supabase zgłasza brakujące kolumny po jednej. Usuwamy wyłącznie tę,
+  // której faktycznie nie ma, zamiast kasować cały zestaw danych rozliczeniowych.
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     const { data, error } = await supabase.from(table).insert(payload).select('id').single()
     if (!error) return { data, removed }
