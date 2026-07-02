@@ -133,7 +133,14 @@ function isCancelledOrVoidStatus(status) {
   ].some(x => s.includes(x))
 }
 function extractScore(item, cfg) {
-  if (cfg.type === 'football') return { home: scoreN(item?.goals?.home ?? item?.score?.fulltime?.home ?? item?.score?.extratime?.home ?? item?.score?.penalty?.home), away: scoreN(item?.goals?.away ?? item?.score?.fulltime?.away ?? item?.score?.extratime?.away ?? item?.score?.penalty?.away) }
+  if (cfg.type === 'football') {
+    // DNB/1X2/BTTS/totale są rynkami 90-minutowymi. Przy AET/PEN pole `goals`
+    // może zawierać wynik po dogrywce, więc najpierw bierzemy score.fulltime.
+    return {
+      home: scoreN(item?.score?.fulltime?.home ?? item?.goals?.home ?? item?.score?.extratime?.home ?? item?.score?.penalty?.home),
+      away: scoreN(item?.score?.fulltime?.away ?? item?.goals?.away ?? item?.score?.extratime?.away ?? item?.score?.penalty?.away)
+    }
+  }
   if (cfg.type === 'fight') {
     const f1Win = item?.fighters?.first?.winner ?? item?.fighters?.home?.winner
     const f2Win = item?.fighters?.second?.winner ?? item?.fighters?.away?.winner

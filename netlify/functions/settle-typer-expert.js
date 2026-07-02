@@ -342,10 +342,11 @@ async function fetchStats(id) {
 }
 
 function scoreFromFixture(fix) {
+  // Standardowe rynki piłkarskie są rozliczane po 90 minutach, bez dogrywki/karnych.
+  const regular = fix && fix.score && fix.score.fulltime ? fix.score.fulltime : {}
   const goals = fix && fix.goals ? fix.goals : {}
-  const score = fix && fix.score && fix.score.fulltime ? fix.score.fulltime : {}
-  const h = goals.home != null ? goals.home : score.home
-  const a = goals.away != null ? goals.away : score.away
+  const h = regular.home != null ? regular.home : goals.home
+  const a = regular.away != null ? regular.away : goals.away
   return { h: toNum(h, 0), a: toNum(a, 0) }
 }
 

@@ -490,12 +490,15 @@ function periodScoresFromFixture(fix) {
 }
 
 function scoreFromFixture(fix) {
-  // Zachowujemy dotychczasową logikę rozliczania istniejących rynków.
-  // Wyniki okresów są używane wyłącznie przez nowe zakłady połowowe.
+  // WERSJA 6 — wszystkie standardowe rynki piłkarskie rozliczamy po 90 minutach.
+  // W API-Football `goals` może zawierać wynik po dogrywce albo karnych, natomiast
+  // `score.fulltime` przechowuje wynik po regulaminowym czasie gry. DNB, 1X2,
+  // BTTS, gole, handicap i dokładny wynik nie mogą uwzględniać dogrywki, chyba że
+  // rynek wyraźnie ją obejmuje (takich rynków ten automat obecnie nie publikuje).
+  const regular = fix && fix.score && fix.score.fulltime ? fix.score.fulltime : {}
   const goals = fix && fix.goals ? fix.goals : {}
-  const score = fix && fix.score && fix.score.fulltime ? fix.score.fulltime : {}
-  const h = goals.home != null ? goals.home : score.home
-  const a = goals.away != null ? goals.away : score.away
+  const h = regular.home != null ? regular.home : goals.home
+  const a = regular.away != null ? regular.away : goals.away
   return { h: toNum(h, 0), a: toNum(a, 0) }
 }
 
@@ -670,6 +673,42 @@ function profitFromSettlement(tip, status) {
   return toNum(tip && tip.profit, 0)
 }
 
+function missingColumnName(error) {
+  const message = String(error && (error.message || error.details || error.hint) || '')
+  const patterns = [
+    /Could not find the ['"]([^'"]+)['"] column/i,
+    /column ['"]?([a-z0-9_]+)['"]? of relation ['"]?tips['"]? does not exist/i,
+    /column (?:public\.)?tips\.([a-z0-9_]+) does not exist/i,
+    /column ['"]?([a-z0-9_]+)['"]? does not exist/i
+  ]
+  for (const pattern of patterns) {
+    const match = message.match(pattern)
+    if (match && match[1]) return match[1]
+  }
+  return ''
+}
+
+async function updateTipWithSchemaFallback(supabase, tipId, payload) {
+  let safePayload = { ...payload }
+  const removedColumns = []
+
+  for (let attempt = 0; attempt < 16; attempt += 1) {
+    const { error } = await supabase.from('tips').update(safePayload).eq('id', tipId)
+    if (!error) return { error: null, removedColumns }
+
+    const missing = missingColumnName(error)
+    if (!missing || !(missing in safePayload)) return { error, removedColumns }
+
+    delete safePayload[missing]
+    removedColumns.push(missing)
+  }
+
+  return {
+    error: new Error('Nie udało się zaktualizować tips po usunięciu brakujących kolumn'),
+    removedColumns
+  }
+}
+
 function updatePayload(result, tip = {}) {
   const status = ['won','lost','void'].includes(result.status) ? result.status : 'pending'
   const stake = toNum(tip && (tip.stake ?? tip.amount ?? tip.bet_amount), 0)
@@ -696,6 +735,8 @@ function updatePayload(result, tip = {}) {
     payout,
     return_amount: payout,
     settlement_reason: result.reason || null,
+    settlement_note: result.reason || null,
+    settled_at: ['won','lost','void'].includes(status) ? new Date().toISOString() : null,
     updated_at: new Date().toISOString()
   }
 
@@ -711,7 +752,12 @@ exports.handler = async function(event) {
   const supabase = getSupabase()
   const query = event.queryStringParameters || {}
   const requestedLimit = Math.max(1, Math.min(500, Number(query.limit || 120) || 120))
-  const repairDnb = ['1', 'true', 'yes'].includes(norm(query.repair_dnb || query.repairDnb || ''))
+  const repairDnbRaw = query.repair_dnb ?? query.repairDnb
+  // Domyślnie włączone: dzięki temu stary błędnie rozliczony DNB naprawi się także
+  // po ręcznym lub zaplanowanym wywołaniu funkcji bez dodatkowego parametru.
+  const repairDnb = repairDnbRaw == null
+    ? true
+    : ['1', 'true', 'yes'].includes(norm(repairDnbRaw))
 
   const pendingRequest = supabase
     .from('tips')
@@ -720,16 +766,17 @@ exports.handler = async function(event) {
     .order('created_at', { ascending: true })
     .limit(requestedLimit)
 
-  // Jednorazowe samonaprawianie starszych DNB. Pobieramy ostatnie rekordy tylko
-  // gdy frontend poprosi o repair_dnb=1. Rekord oznaczony źródłem v5 nie jest
-  // ponownie odpytywany przy kolejnych cyklach.
+  // WERSJA 6 — jednorazowe samonaprawianie starszych DNB.
+  // Nie filtrujemy po market/bet_type po stronie PostgREST, bo część starszych
+  // rekordów ma DNB tylko w prediction/selection albo błędny market_key.
+  // Pobieramy ostatnie rozliczone rekordy i rozpoznajemy DNB bezpiecznie w JS.
   const repairRequest = repairDnb
     ? supabase
       .from('tips')
       .select('*')
-      .or('market.ilike.%DNB%,bet_type.ilike.%DNB%')
+      .or('status.eq.won,status.eq.win,status.eq.lost,status.eq.loss,status.eq.void,status.eq.push')
       .order('created_at', { ascending: false })
-      .limit(500)
+      .limit(1000)
     : Promise.resolve({ data: [], error: null })
 
   const [pendingResult, repairResult] = await Promise.all([pendingRequest, repairRequest])
@@ -741,7 +788,7 @@ exports.handler = async function(event) {
     if (!looksLikeDnbTip(tip)) return false
     const status = norm(tip.status || tip.result || tip.settlement_status || tip.result_status)
     if (!['won', 'win', 'lost', 'loss', 'void', 'push'].includes(status)) return false
-    return !norm(tip.settlement_source).includes('dnb_void_fix_v5')
+    return !norm(tip.settlement_source).includes('dnb_regular_time_fix_v6')
   })
 
   const unique = new Map()
@@ -766,20 +813,27 @@ exports.handler = async function(event) {
       if (['won','lost','void'].includes(res.status)) {
         if (looksLikeDnbTip(tip)) {
           res.settlement_source = repairIds.has(String(tip.id))
-            ? 'auto_dnb_void_fix_v5_repaired'
-            : 'auto_dnb_void_fix_v5'
+            ? 'auto_dnb_regular_time_fix_v6_repaired'
+            : 'auto_dnb_regular_time_fix_v6'
         }
-        const { error: upErr } = await supabase.from('tips').update(updatePayload(res, tip)).eq('id', tip.id)
-        if (upErr) skipped.push({ id: tip.id, reason: upErr.message })
-        else settled.push({ id: tip.id, status: res.status, type: isAkoTip(tip) ? 'ako' : 'single' })
+        const updateResult = await updateTipWithSchemaFallback(supabase, tip.id, updatePayload(res, tip))
+        if (updateResult.error) skipped.push({ id: tip.id, reason: updateResult.error.message, removed_columns: updateResult.removedColumns })
+        else settled.push({
+          id: tip.id,
+          status: res.status,
+          type: isAkoTip(tip) ? 'ako' : 'single',
+          schema_fallback_removed: updateResult.removedColumns
+        })
       } else if (isAkoTip(tip) && Array.isArray(res.legs_json)) {
         // AKO jeszcze nie jest całe rozstrzygnięte, ale zapisujemy statusy pojedynczych nóg
         // np. jedna noga live/pending, druga już won.
-        const { error: upErr } = await supabase
-          .from('tips')
-          .update({ legs_json: res.legs_json, settlement_reason: res.reason || null, updated_at: new Date().toISOString() })
-          .eq('id', tip.id)
-        if (upErr) skipped.push({ id: tip.id, reason: upErr.message })
+        const updateResult = await updateTipWithSchemaFallback(supabase, tip.id, {
+          legs_json: res.legs_json,
+          settlement_reason: res.reason || null,
+          settlement_note: res.reason || null,
+          updated_at: new Date().toISOString()
+        })
+        if (updateResult.error) skipped.push({ id: tip.id, reason: updateResult.error.message, removed_columns: updateResult.removedColumns })
       }
     } catch (e) {
       skipped.push({ id: tip.id, reason: e.message || String(e) })
@@ -787,7 +841,7 @@ exports.handler = async function(event) {
   }
   return json(200, {
     ok: true,
-    version: '5-dnb-remis-zwrot-global-fix',
+    version: '6-dnb-regular-time-90min-fix',
     checked: checked.length,
     pending_checked: pendingTips.length,
     dnb_repair_candidates: dnbRepairTips.length,
@@ -796,3 +850,7 @@ exports.handler = async function(event) {
     sample: checked.slice(0, 20)
   })
 }
+
+
+// Eksport wyłącznie do lokalnych testów regresji; Netlify używa exports.handler.
+exports.__test = { scoreFromFixture, settleByKeys, fallbackKeys, looksLikeDnbTip, dnbSelectionFromTip, updatePayload, missingColumnName, updateTipWithSchemaFallback }
