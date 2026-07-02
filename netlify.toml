@@ -47,3 +47,8 @@
 # WERSJA 13 — AI Prediction: automatyczne rozliczanie historii i skuteczności.
 [functions."settle-ai-prediction-history"]
   schedule = "42 * * * *"
+
+# WERSJA 14 — automatyczny zapis predykcji do historii nawet bez otwierania strony.
+# Co 2 godziny pobiera najbliższe mecze i zapisuje pierwszy przedmeczowy snapshot.
+[functions."capture-ai-predictions"]
+  schedule = "12 */2 * * *"

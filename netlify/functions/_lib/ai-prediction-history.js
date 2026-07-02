@@ -1,7 +1,8 @@
 const { createClient } = require('@supabase/supabase-js')
 
-const MODEL_VERSION = 'betai-ai-prediction-v13'
+const MODEL_VERSION = 'betai-ai-prediction-v14'
 const TABLE = 'ai_prediction_history'
+const HISTORY_SELECT = 'fixture_id,kickoff,country,league,home_team,away_team,home_logo,away_logo,market_key,pick_key,pick_label,confidence,true_odds,best_odds,bookmaker,edge,model_source,model_version,status,actual_key,home_score,away_score,profit_units,settlement_reason,settled_at,created_at,updated_at'
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
@@ -9,7 +10,7 @@ function getSupabase() {
   if (!url || !key) return null
   return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
-    global: { headers: { 'X-Client-Info': 'betai-ai-prediction-history-v13' } }
+    global: { headers: { 'X-Client-Info': 'betai-ai-prediction-history-v14' } }
   })
 }
 
@@ -64,14 +65,14 @@ async function recordPredictionSnapshots(predictions = []) {
   const supabase = getSupabase()
   if (!supabase) return { ok: false, skipped: true, reason: 'missing_supabase_env' }
   const rows = predictions.map(serializePrediction).filter(Boolean)
-  if (!rows.length) return { ok: true, inserted: 0 }
+  if (!rows.length) return { ok: true, attempted: 0 }
 
   const { error } = await supabase
     .from(TABLE)
     .upsert(rows, { onConflict: 'fixture_id', ignoreDuplicates: true })
 
   if (error) return { ok: false, error: error.message, code: error.code }
-  return { ok: true, inserted: rows.length }
+  return { ok: true, attempted: rows.length }
 }
 
 function computeWindow(rows, days = null) {
@@ -120,56 +121,92 @@ function computeStreak(rows) {
   }
 }
 
-async function getPredictionStats() {
-  const supabase = getSupabase()
-  if (!supabase) return { available: false, reason: 'missing_supabase_env' }
-
-  const [{ data, error }, pendingResult] = await Promise.all([
-    supabase
-      .from(TABLE)
-      .select('fixture_id,kickoff,country,league,home_team,away_team,home_logo,away_logo,pick_key,pick_label,confidence,true_odds,best_odds,bookmaker,edge,status,actual_key,home_score,away_score,profit_units,settlement_reason,settled_at,created_at')
-      .in('status', ['won', 'lost', 'void'])
-      .order('settled_at', { ascending: false, nullsFirst: false })
-      .limit(10000),
-    supabase
-      .from(TABLE)
-      .select('fixture_id', { count: 'exact', head: true })
-      .eq('status', 'pending')
-  ])
-
-  if (error) return { available: false, reason: error.message, code: error.code }
-  if (pendingResult.error) return { available: false, reason: pendingResult.error.message, code: pendingResult.error.code }
-
-  const rows = Array.isArray(data) ? data : []
-  const recent = rows.slice(0, 12).map(row => ({
+function mapHistoryRow(row) {
+  return {
     id: row.fixture_id,
     kickoff: row.kickoff,
-    country: row.country,
-    league: row.league,
-    home: { name: row.home_team, logo: row.home_logo },
-    away: { name: row.away_team, logo: row.away_logo },
+    country: row.country || '',
+    league: row.league || '',
+    home: { name: row.home_team || '', logo: row.home_logo || '' },
+    away: { name: row.away_team || '', logo: row.away_logo || '' },
+    market_key: row.market_key || '1x2',
     pick_key: row.pick_key,
-    pick_label: row.pick_label,
+    pick_label: row.pick_label || '',
     confidence: numberOrNull(row.confidence),
+    true_odds: numberOrNull(row.true_odds),
     best_odds: numberOrNull(row.best_odds),
     bookmaker: row.bookmaker || '',
     edge: numberOrNull(row.edge),
+    model_source: row.model_source || '',
+    model_version: row.model_version || '',
     status: row.status,
     actual_key: row.actual_key,
     score: { home: row.home_score, away: row.away_score },
     profit_units: numberOrNull(row.profit_units),
     settled_at: row.settled_at,
-    settlement_reason: row.settlement_reason || ''
-  }))
+    settlement_reason: row.settlement_reason || '',
+    created_at: row.created_at,
+    updated_at: row.updated_at
+  }
+}
+
+async function fetchAllHistoryRows(supabase, maxRows = 20000) {
+  const rows = []
+  const pageSize = 1000
+  for (let from = 0; from < maxRows; from += pageSize) {
+    const to = Math.min(from + pageSize - 1, maxRows - 1)
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select(HISTORY_SELECT)
+      .order('settled_at', { ascending: false, nullsFirst: false })
+      .order('kickoff', { ascending: false })
+      .range(from, to)
+    if (error) throw error
+    const page = Array.isArray(data) ? data : []
+    rows.push(...page)
+    if (page.length < pageSize) break
+  }
+  return rows
+}
+
+async function getPredictionStats() {
+  const supabase = getSupabase()
+  if (!supabase) return { available: false, reason: 'missing_supabase_env' }
+
+  let rows
+  try {
+    rows = await fetchAllHistoryRows(supabase)
+  } catch (error) {
+    return { available: false, reason: error.message, code: error.code }
+  }
+
+  const settledRows = rows
+    .filter(row => ['won', 'lost', 'void'].includes(row.status))
+    .sort((a, b) => Date.parse(b.settled_at || b.kickoff || 0) - Date.parse(a.settled_at || a.kickoff || 0))
+  const pendingRows = rows.filter(row => row.status === 'pending')
+  const recent = settledRows.slice(0, 12).map(mapHistoryRow)
+  const counts = rows.reduce((acc, row) => {
+    if (Object.prototype.hasOwnProperty.call(acc, row.status)) acc[row.status] += 1
+    acc.total += 1
+    return acc
+  }, { total: 0, pending: 0, won: 0, lost: 0, void: 0 })
 
   return {
     available: true,
-    tracked_since: rows.length ? rows[rows.length - 1].created_at : null,
-    pending: Number(pendingResult.count || 0),
-    all: computeWindow(rows),
-    last_30_days: computeWindow(rows, 30),
-    last_7_days: computeWindow(rows, 7),
-    streak: computeStreak(rows),
+    tracked_since: rows.length ? (() => {
+      const oldest = rows.reduce((value, row) => {
+        const current = Date.parse(row.created_at || row.kickoff || '')
+        if (!Number.isFinite(current)) return value
+        return value === null || current < value ? current : value
+      }, null)
+      return oldest === null ? null : new Date(oldest).toISOString()
+    })() : null,
+    pending: pendingRows.length,
+    status_counts: counts,
+    all: computeWindow(settledRows),
+    last_30_days: computeWindow(settledRows, 30),
+    last_7_days: computeWindow(settledRows, 7),
+    streak: computeStreak(settledRows),
     recent
   }
 }
@@ -177,10 +214,13 @@ async function getPredictionStats() {
 module.exports = {
   MODEL_VERSION,
   TABLE,
+  HISTORY_SELECT,
   getSupabase,
   serializePrediction,
   recordPredictionSnapshots,
   getPredictionStats,
   computeWindow,
-  computeStreak
+  computeStreak,
+  mapHistoryRow,
+  fetchAllHistoryRows
 }

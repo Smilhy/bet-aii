@@ -115,18 +115,19 @@ exports.handler = async function handler(event = {}) {
   const supabase = getSupabase()
   if (!supabase) return json(500, { ok: false, error: 'Brak SUPABASE_URL lub SUPABASE_SERVICE_ROLE_KEY.' })
 
-  const requestedLimit = Number(event.queryStringParameters?.limit || 24)
-  const limit = Math.max(1, Math.min(60, Number.isFinite(requestedLimit) ? requestedLimit : 24))
-  const cutoff = new Date(Date.now() - 70 * 60 * 1000).toISOString()
-  const oldest = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  const requestedLimit = Number(event.queryStringParameters?.limit || 60)
+  const limit = Math.max(1, Math.min(100, Number.isFinite(requestedLimit) ? requestedLimit : 60))
+  // Nie zakładamy, że każdy mecz kończy się po dokładnie 90 minutach.
+  // Po 105 minutach od planowanego startu sprawdzamy API; jeżeli mecz nadal trwa,
+  // rekord pozostaje pending i wróci do kolejnego przebiegu.
+  const cutoff = new Date(Date.now() - 105 * 60 * 1000).toISOString()
 
   const { data, error } = await supabase
     .from(TABLE)
     .select('fixture_id,pick_key,best_odds,kickoff,status')
     .eq('status', 'pending')
     .lte('kickoff', cutoff)
-    .gte('kickoff', oldest)
-    .order('kickoff', { ascending: true })
+    .order('kickoff', { ascending: false })
     .limit(limit)
 
   if (error) return json(500, { ok: false, error: error.message, code: error.code })

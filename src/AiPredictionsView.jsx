@@ -212,6 +212,40 @@ function MatchCard({ row, onOpen }) {
   )
 }
 
+function historyStatusLabel(status) {
+  if (status === 'won') return 'WYGRANY'
+  if (status === 'lost') return 'PRZEGRANY'
+  if (status === 'void') return 'ZWROT'
+  return 'OCZEKUJE'
+}
+
+function HistoryPredictionRow({ row }) {
+  const hasScore = Number.isFinite(Number(row.score?.home)) && Number.isFinite(Number(row.score?.away))
+  return (
+    <article className={`aip-ledger-row-v14 is-${row.status || 'pending'}`}>
+      <div className="aip-ledger-date-v14">
+        <strong>{formatDate(row.kickoff)}</strong>
+        <span>{formatTime(row.kickoff)}</span>
+        <small>{row.country || 'International'} · {row.league || 'Liga'}</small>
+      </div>
+      <div className="aip-ledger-match-v14">
+        <div><TeamMark team={row.home} /><strong>{row.home?.name || 'Gospodarz'}</strong></div>
+        <span>{hasScore ? `${row.score.home} : ${row.score.away}` : 'VS'}</span>
+        <div><TeamMark team={row.away} /><strong>{row.away?.name || 'Gość'}</strong></div>
+      </div>
+      <div className="aip-ledger-pick-v14">
+        <span>AI PREDICTION</span>
+        <strong>{row.pick_label || row.pick_key || '—'}</strong>
+        <small>{Number(row.confidence || 0).toFixed(1)}% · kurs {Number(row.best_odds || 0) > 1 ? Number(row.best_odds).toFixed(2) : '—'}</small>
+      </div>
+      <div className={`aip-ledger-status-v14 is-${row.status || 'pending'}`}>
+        <b>{historyStatusLabel(row.status)}</b>
+        <span>{row.status === 'pending' ? 'czeka na wynik' : row.profit_units === null ? 'bez kursu' : signedNumber(row.profit_units, ' j.')}</span>
+      </div>
+    </article>
+  )
+}
+
 export default function AiPredictionsView() {
   const [payload, setPayload] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -221,36 +255,86 @@ export default function AiPredictionsView() {
   const [sort, setSort] = useState('kickoff')
   const [statsWindow, setStatsWindow] = useState('all')
   const [selected, setSelected] = useState(null)
+  const [contentTab, setContentTab] = useState('predictions')
+  const [historyFilter, setHistoryFilter] = useState('all')
+  const [historyData, setHistoryData] = useState({ rows: [], page: 0, total: 0, has_more: false })
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState('')
+
+  const loadHistory = useCallback(async ({ reset = false, statusOverride = null } = {}) => {
+    const status = statusOverride || historyFilter
+    const nextPage = reset ? 1 : Math.max(1, Number(historyData.page || 0) + 1)
+    setHistoryLoading(true)
+    setHistoryError('')
+    try {
+      const response = await fetch(`/.netlify/functions/get-ai-prediction-history?page=${nextPage}&limit=100&status=${encodeURIComponent(status)}&t=${Date.now()}`, {
+        cache: 'no-store'
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok || data.ok === false) throw new Error(data.error || `Błąd HTTP ${response.status}`)
+      setHistoryData(previous => ({
+        ...data,
+        rows: reset ? (data.rows || []) : [...(previous.rows || []), ...(data.rows || [])]
+      }))
+      if (data.stats?.available) setPayload(previous => ({ ...(previous || {}), stats: data.stats }))
+      return data
+    } catch (historyLoadError) {
+      setHistoryError(historyLoadError?.message || 'Nie udało się pobrać historii predykcji.')
+      return null
+    } finally {
+      setHistoryLoading(false)
+    }
+  }, [historyFilter, historyData.page])
 
   const load = useCallback(async ({ manual = false } = {}) => {
     manual ? setRefreshing(true) : setLoading(true)
     setError('')
     try {
       if (manual) {
-        await fetch('/.netlify/functions/settle-ai-prediction-history?limit=24', {
+        await fetch('/.netlify/functions/settle-ai-prediction-history?limit=100', {
           method: 'POST',
           cache: 'no-store'
         }).catch(() => null)
       }
-      const response = await fetch(`/.netlify/functions/get-ai-predictions?hours=12&limit=40&t=${manual ? Date.now() : ''}`, {
-        cache: manual ? 'no-store' : 'default'
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok || data.ok === false) throw new Error(data.error || `Błąd HTTP ${response.status}`)
+
+      const timestamp = Date.now()
+      const [predictionResponse, statsResponse] = await Promise.all([
+        fetch(`/.netlify/functions/get-ai-predictions?hours=12&limit=40&t=${timestamp}`, { cache: 'no-store' }),
+        fetch(`/.netlify/functions/get-ai-prediction-history?page=1&limit=1&status=all&t=${timestamp}`, { cache: 'no-store' }).catch(() => null)
+      ])
+
+      const data = await predictionResponse.json().catch(() => ({}))
+      if (!predictionResponse.ok || data.ok === false) throw new Error(data.error || `Błąd HTTP ${predictionResponse.status}`)
+
+      if (statsResponse?.ok) {
+        const historyPayload = await statsResponse.json().catch(() => ({}))
+        if (historyPayload.stats?.available) data.stats = historyPayload.stats
+      }
       setPayload(data)
+      return data
     } catch (loadError) {
       setError(loadError?.message || 'Nie udało się pobrać predykcji.')
+      return null
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
   }, [])
 
+  const refreshAll = useCallback(async () => {
+    await load({ manual: true })
+    if (contentTab === 'results') await loadHistory({ reset: true })
+  }, [contentTab, load, loadHistory])
+
   useEffect(() => {
     load()
     const timer = window.setInterval(() => load(), REFRESH_MS)
     return () => window.clearInterval(timer)
   }, [load])
+
+  useEffect(() => {
+    if (contentTab === 'results') loadHistory({ reset: true })
+  }, [contentTab, historyFilter]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const rows = useMemo(() => {
     let list = Array.isArray(payload?.predictions) ? [...payload.predictions] : []
@@ -275,22 +359,42 @@ export default function AiPredictionsView() {
     return [...map.values()]
   }, [rows])
 
-  function exportCsv() {
-    const header = ['Data', 'Godzina', 'Kraj', 'Liga', 'Gospodarz', 'Gość', 'AI pick', 'Confidence', 'True odds', 'Najlepszy kurs', 'Bukmacher', 'Edge']
-    const lines = rows.map(row => [
-      dateKey(row.kickoff), formatTime(row.kickoff), row.country, row.league, row.home.name, row.away.name,
-      row.pick_label, row.confidence, row.true_odds, row.best_odds, row.best_bookmaker, row.edge
-    ])
+  function downloadCsv(header, lines, filename) {
     const csv = [header, ...lines].map(line => line.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(';')).join('\n')
     const blob = new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
-    anchor.download = `betai-ai-predictions-${dateKey(new Date())}.csv`
+    anchor.download = filename
     document.body.appendChild(anchor)
     anchor.click()
     anchor.remove()
     URL.revokeObjectURL(url)
+  }
+
+  function exportCsv() {
+    if (contentTab === 'results') {
+      const historyRows = historyData.rows || []
+      downloadCsv(
+        ['Data', 'Godzina', 'Kraj', 'Liga', 'Gospodarz', 'Gość', 'AI pick', 'Confidence', 'Kurs', 'Wynik', 'Status', 'Zysk j.'],
+        historyRows.map(row => [
+          dateKey(row.kickoff), formatTime(row.kickoff), row.country, row.league, row.home?.name, row.away?.name,
+          row.pick_label, row.confidence, row.best_odds,
+          Number.isFinite(Number(row.score?.home)) ? `${row.score.home}:${row.score.away}` : '', historyStatusLabel(row.status), row.profit_units
+        ]),
+        `betai-ai-prediction-history-${dateKey(new Date())}.csv`
+      )
+      return
+    }
+
+    downloadCsv(
+      ['Data', 'Godzina', 'Kraj', 'Liga', 'Gospodarz', 'Gość', 'AI pick', 'Confidence', 'True odds', 'Najlepszy kurs', 'Bukmacher', 'Edge'],
+      rows.map(row => [
+        dateKey(row.kickoff), formatTime(row.kickoff), row.country, row.league, row.home.name, row.away.name,
+        row.pick_label, row.confidence, row.true_odds, row.best_odds, row.best_bookmaker, row.edge
+      ]),
+      `betai-ai-predictions-${dateKey(new Date())}.csv`
+    )
   }
 
   const generatedAt = payload?.generated_at ? new Date(payload.generated_at) : null
@@ -301,6 +405,7 @@ export default function AiPredictionsView() {
       ? stats?.last_30_days
       : stats?.all
   const recentResults = Array.isArray(stats?.recent) ? stats.recent : []
+  const statusCounts = stats?.status_counts || { total: 0, pending: 0, won: 0, lost: 0, void: 0 }
 
   return (
     <section className="aip-page-v11">
@@ -310,14 +415,14 @@ export default function AiPredictionsView() {
           <h1>AI <em>Prediction</em></h1>
           <p>Realne mecze, prawdziwe kursy i rozkład prawdopodobieństwa modelu. Zielone pole wskazuje wybór AI, a kurs fair pokazuje cenę po usunięciu marży bukmachera.</p>
           <div className="aip-hero-actions-v11">
-            <button type="button" className="is-primary" onClick={() => load({ manual: true })} disabled={refreshing}>{refreshing ? 'Odświeżam…' : '↻ Odśwież dane i statystyki'}</button>
-            <button type="button" onClick={exportCsv} disabled={!rows.length}>⇩ Eksport do Excel / CSV</button>
+            <button type="button" className="is-primary" onClick={refreshAll} disabled={refreshing}>{refreshing ? 'Odświeżam…' : '↻ Odśwież dane i statystyki'}</button>
+            <button type="button" onClick={exportCsv} disabled={contentTab === 'results' ? !historyData.rows?.length : !rows.length}>⇩ Eksport do Excel / CSV</button>
           </div>
         </div>
         <div className="aip-hero-visual-v11" aria-hidden="true">
           <div className="aip-radar-v11"><i /><i /><i /><span>AI</span></div>
           <div className="aip-floating-card-v11 one"><span>CONFIDENCE</span><b>{rows[0] ? `${Number(rows[0].confidence || 0).toFixed(0)}%` : '—'}</b></div>
-          <div className="aip-floating-card-v11 two"><span>LIVE DATA</span><b>{payload?.matches ?? 0}</b></div>
+          <div className="aip-floating-card-v11 two"><span>HISTORIA</span><b>{statusCounts.total || 0}</b></div>
         </div>
       </header>
 
@@ -334,7 +439,7 @@ export default function AiPredictionsView() {
           <div>
             <span>WYNIKI MODELU 1X2</span>
             <h2>Statystyki i skuteczność AI Prediction</h2>
-            <p>Każda predykcja jest zapisywana przed rozpoczęciem meczu i później automatycznie rozliczana wynikiem po 90 minutach.</p>
+            <p>Każda predykcja jest automatycznie zapisywana przed meczem, również gdy nikt nie ma otwartej strony, a następnie rozliczana wynikiem po 90 minutach.</p>
           </div>
           <div className="aip-performance-tabs-v13">
             <button type="button" className={statsWindow === '7' ? 'active' : ''} onClick={() => setStatsWindow('7')}>7 dni</button>
@@ -357,7 +462,10 @@ export default function AiPredictionsView() {
             </div>
 
             <div className="aip-history-v13">
-              <div className="aip-history-head-v13"><div><h3>Ostatnie rozliczone predykcje</h3><span>wynik, wybór AI i zysk jednostkowy</span></div><b>{recentResults.length}</b></div>
+              <div className="aip-history-head-v13">
+                <div><h3>Ostatnie rozliczone predykcje</h3><span>wynik, wybór AI i zysk jednostkowy</span></div>
+                <button type="button" className="aip-history-open-v14" onClick={() => setContentTab('results')}>Wszystkie wyniki · {statusCounts.won + statusCounts.lost + statusCounts.void}</button>
+              </div>
               {recentResults.length ? (
                 <div className="aip-history-list-v13">
                   {recentResults.slice(0, 8).map(row => (
@@ -380,43 +488,85 @@ export default function AiPredictionsView() {
         )}
       </section>
 
-      <div className="aip-toolbar-v11">
-        <div className="aip-filters-v11">
-          <button type="button" className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>Wszystkie <b>{payload?.matches ?? 0}</b></button>
-          <button type="button" className={filter === 'football' ? 'active' : ''} onClick={() => setFilter('football')}>⚽ Piłka nożna <b>{payload?.matches ?? 0}</b></button>
-          <button type="button" className={filter === 'live' ? 'active' : ''} onClick={() => setFilter('live')}>● Live <b>{payload?.live_matches ?? 0}</b></button>
-          <button type="button" className={filter === 'value' ? 'active' : ''} onClick={() => setFilter('value')}>↗ Value <b>{payload?.value_bets ?? 0}</b></button>
-        </div>
-        <label className="aip-sort-v11">Sortuj:
-          <select value={sort} onChange={event => setSort(event.target.value)}>
-            <option value="kickoff">Start meczu</option>
-            <option value="confidence">Pewność AI</option>
-            <option value="value">Najwyższe value</option>
-            <option value="league">Liga</option>
-          </select>
-        </label>
-      </div>
+      <nav className="aip-content-tabs-v14" aria-label="Widok AI Prediction">
+        <button type="button" className={contentTab === 'predictions' ? 'active' : ''} onClick={() => setContentTab('predictions')}><span>🔮</span><strong>Aktualne predykcje</strong><b>{payload?.matches ?? 0}</b></button>
+        <button type="button" className={contentTab === 'results' ? 'active' : ''} onClick={() => setContentTab('results')}><span>✓</span><strong>Rozliczone mecze i wyniki</strong><b>{statusCounts.total || historyData.total || 0}</b></button>
+      </nav>
 
-      {error && (
-        <div className="aip-error-v11">
-          <strong>Nie udało się pobrać danych AI Prediction</strong>
-          <span>{error}</span>
-          <button type="button" onClick={() => load({ manual: true })}>Spróbuj ponownie</button>
-        </div>
-      )}
+      {contentTab === 'predictions' ? (
+        <>
+          <div className="aip-toolbar-v11">
+            <div className="aip-filters-v11">
+              <button type="button" className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>Wszystkie <b>{payload?.matches ?? 0}</b></button>
+              <button type="button" className={filter === 'football' ? 'active' : ''} onClick={() => setFilter('football')}>⚽ Piłka nożna <b>{payload?.matches ?? 0}</b></button>
+              <button type="button" className={filter === 'live' ? 'active' : ''} onClick={() => setFilter('live')}>● Live <b>{payload?.live_matches ?? 0}</b></button>
+              <button type="button" className={filter === 'value' ? 'active' : ''} onClick={() => setFilter('value')}>↗ Value <b>{payload?.value_bets ?? 0}</b></button>
+            </div>
+            <label className="aip-sort-v11">Sortuj:
+              <select value={sort} onChange={event => setSort(event.target.value)}>
+                <option value="kickoff">Start meczu</option>
+                <option value="confidence">Pewność AI</option>
+                <option value="value">Najwyższe value</option>
+                <option value="league">Liga</option>
+              </select>
+            </label>
+          </div>
 
-      {loading && !payload ? (
-        <div className="aip-loading-v11"><i /><strong>Model pobiera mecze i kursy…</strong><span>API-Football · rynek 1X2 · dane na żywo</span></div>
+          {error && (
+            <div className="aip-error-v11">
+              <strong>Nie udało się pobrać danych AI Prediction</strong>
+              <span>{error}</span>
+              <button type="button" onClick={() => load({ manual: true })}>Spróbuj ponownie</button>
+            </div>
+          )}
+
+          {loading && !payload ? (
+            <div className="aip-loading-v11"><i /><strong>Model pobiera mecze i kursy…</strong><span>API-Football · rynek 1X2 · dane na żywo</span></div>
+          ) : (
+            <div className="aip-groups-v11">
+              {grouped.map(group => (
+                <section className="aip-day-v11" key={`${group.label}-${group.date}`}>
+                  <div className="aip-day-head-v11"><div><h2>{group.label}</h2><span>{group.date}</span></div><b>{group.rows.length} {group.rows.length === 1 ? 'mecz' : 'meczów'}</b></div>
+                  <div className="aip-card-list-v11">{group.rows.map(row => <MatchCard key={row.id} row={row} onOpen={setSelected} />)}</div>
+                </section>
+              ))}
+              {!error && !rows.length && <div className="aip-empty-v11"><span>◌</span><strong>Brak meczów z pełnymi danymi modelu w najbliższych 12 godzinach.</strong><small>Lista odświeży się automatycznie, gdy API udostępni terminarz i kursy.</small></div>}
+            </div>
+          )}
+        </>
       ) : (
-        <div className="aip-groups-v11">
-          {grouped.map(group => (
-            <section className="aip-day-v11" key={`${group.label}-${group.date}`}>
-              <div className="aip-day-head-v11"><div><h2>{group.label}</h2><span>{group.date}</span></div><b>{group.rows.length} {group.rows.length === 1 ? 'mecz' : 'meczów'}</b></div>
-              <div className="aip-card-list-v11">{group.rows.map(row => <MatchCard key={row.id} row={row} onOpen={setSelected} />)}</div>
-            </section>
-          ))}
-          {!error && !rows.length && <div className="aip-empty-v11"><span>◌</span><strong>Brak meczów z pełnymi danymi modelu w najbliższych 12 godzinach.</strong><small>Lista odświeży się automatycznie, gdy API udostępni terminarz i kursy.</small></div>}
-        </div>
+        <section className="aip-ledger-v14">
+          <header className="aip-ledger-head-v14">
+            <div><span>PEŁNY REJESTR MODELU</span><h2>Wszystkie mecze, które miały AI Prediction</h2><p>Widzisz zapisany przed meczem wybór AI, późniejszy wynik po 90 minutach oraz wpływ na skuteczność.</p></div>
+            <strong>{historyData.total || 0} rekordów</strong>
+          </header>
+
+          <div className="aip-ledger-filters-v14">
+            {[
+              ['all', 'Wszystkie', statusCounts.total],
+              ['settled', 'Rozliczone', statusCounts.won + statusCounts.lost + statusCounts.void],
+              ['won', 'Wygrane', statusCounts.won],
+              ['lost', 'Przegrane', statusCounts.lost],
+              ['void', 'Zwroty', statusCounts.void],
+              ['pending', 'Oczekujące', statusCounts.pending]
+            ].map(([key, label, count]) => (
+              <button type="button" key={key} className={historyFilter === key ? 'active' : ''} onClick={() => setHistoryFilter(key)}>{label} <b>{count || 0}</b></button>
+            ))}
+          </div>
+
+          {historyError && <div className="aip-error-v11"><strong>Nie udało się pobrać wyników</strong><span>{historyError}</span><button type="button" onClick={() => loadHistory({ reset: true })}>Spróbuj ponownie</button></div>}
+          {historyLoading && !historyData.rows?.length ? (
+            <div className="aip-loading-v11"><i /><strong>Pobieram pełną historię predykcji…</strong><span>Supabase · wyniki po 90 minutach</span></div>
+          ) : historyData.rows?.length ? (
+            <div className="aip-ledger-list-v14">
+              {historyData.rows.map(row => <HistoryPredictionRow key={`${row.id}-${row.status}`} row={row} />)}
+            </div>
+          ) : (
+            <div className="aip-history-empty-v13">Brak predykcji w wybranym filtrze.</div>
+          )}
+
+          {historyData.has_more && <button type="button" className="aip-load-more-v14" onClick={() => loadHistory()} disabled={historyLoading}>{historyLoading ? 'Pobieram…' : 'Załaduj kolejne wyniki'}</button>}
+        </section>
       )}
 
       <footer className="aip-footer-note-v11">
