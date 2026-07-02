@@ -32637,12 +32637,22 @@ function App() {
     }
     setAiSettleGenerating(true)
     try {
-      const response = await fetch("/.netlify/functions/settle-live-ai-picks", { method: "POST" })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || "Nie udało się rozliczyć zakończonych meczów")
-      const extra = data.errors?.length ? ` Błędy: ${data.errors.length}` : ""
-      if (!isAuto || Number(data.settled || 0) > 0) {
-        showToast({ type: data.settled ? "success" : "info", title: isAuto ? "Auto rozliczenie AI" : "AI Settlement", message: `Sprawdzono ${data.checked || 0}, rozliczono ${data.settled || 0}, pominięto ${data.skipped || 0}.${extra}` })
+      const batchLimit = isAuto ? 8 : 20
+      const response = await fetch(`/.netlify/functions/settle-live-ai-picks?limit=${batchLimit}`, { method: "POST" })
+      const raw = await response.text()
+      let data = {}
+      try { data = raw ? JSON.parse(raw) : {} } catch (_) { data = {} }
+      if (!response.ok) {
+        const gatewayHint = raw && !data.error ? raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 180) : ''
+        throw new Error(data.error || gatewayHint || `Błąd funkcji Netlify HTTP ${response.status}`)
+      }
+      const totalChecked = Number(data.checked || 0) + Number(data.directTipsChecked || 0)
+      const totalSettled = Number(data.settled || 0) + Number(data.directTipsSettled || 0)
+      const totalSkipped = Number(data.skipped || 0) + Number(data.directTipsSkipped || 0)
+      const remaining = Number(data.remainingCandidates || 0)
+      const extra = `${data.errors?.length ? ` Błędy: ${data.errors.length}.` : ''}${remaining ? ` Zostało w kolejce: ${remaining}.` : ''}`
+      if (!isAuto || totalSettled > 0) {
+        showToast({ type: totalSettled ? "success" : "info", title: isAuto ? "Auto rozliczenie AI" : "AI Settlement", message: `Sprawdzono ${totalChecked}, rozliczono ${totalSettled}, pominięto ${totalSkipped}.${extra}` })
       }
       try { window.dispatchEvent(new CustomEvent('betai-ai-bets-settled', { detail: data })) } catch (_) {}
       await fetchTips(sessionUser?.id)

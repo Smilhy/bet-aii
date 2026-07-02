@@ -97,7 +97,16 @@ async function fetchApiSportsResult(tip) {
   const headers = { 'x-apisports-key': APISPORTS_KEY }
 
   async function request(url) {
-    const res = await fetch(url, { headers })
+    // Nie pozwalamy pojedynczemu zapytaniu do API-Sports zablokować całej
+    // funkcji Netlify. Bez limitu jeden wolny request potrafił wywołać 504.
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 8000)
+    let res
+    try {
+      res = await fetch(url, { headers, signal: controller.signal })
+    } finally {
+      clearTimeout(timer)
+    }
     const text = await res.text()
     let data = null
     try { data = JSON.parse(text) } catch { data = null }
@@ -601,16 +610,28 @@ exports.handler = async function (event) {
     if (!SUPABASE_URL || !SERVICE_KEY || !APISPORTS_KEY) return json(500, { error: 'Missing env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY albo APISPORTS_KEY.' })
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
 
+    const query = event.queryStringParameters || {}
+    const forceResettle = ['1', 'true', 'yes'].includes(norm(query.force || query.resettle || ''))
+    const backfillScores = ['1', 'true', 'yes'].includes(norm(query.backfill || ''))
+    const requestedLimitRaw = Number.parseInt(String(query.limit || ''), 10)
+    const requestedLimit = Number.isFinite(requestedLimitRaw)
+      ? Math.max(1, Math.min(requestedLimitRaw, 40))
+      : 16
+    const rowLoadLimit = Math.max(120, Math.min(500, requestedLimit * 12))
+    const startedAt = Date.now()
+    // Scheduled Functions mają krótszy limit wykonania niż zwykłe wywołania.
+    // Kończymy partię wcześniej i następne uruchomienie bierze kolejne rekordy.
+    const hardDeadline = startedAt + 22000
+
     const { data: rows, error } = await supabase
       .from('ai_bets')
       .select('*')
-      .order('match_date', { ascending: true })
-      .order('match_time', { ascending: true })
-      .limit(700)
+      // Najnowsze rekordy najpierw. Poprzednio ASC + LIMIT mogło całkowicie
+      // pominąć dzisiejszy mecz, gdy tabela miała dużo historii.
+      .order('match_date', { ascending: false })
+      .order('match_time', { ascending: false })
+      .limit(rowLoadLimit)
     if (error) throw error
-
-    const query = event.queryStringParameters || {}
-    const forceResettle = ['1', 'true', 'yes'].includes(norm(query.force || query.resettle || ''))
     const isSettled = tip => ['won','lost','void','win','loss','push'].includes(norm(tip.status || tip.result || tip.result_status))
     const isPending = tip => ['pending','live',''].includes(norm(tip.status || tip.result || tip.result_status))
     const hasScore = tip => scoreN(tip.live_score_home ?? tip.score_home ?? tip.home_score ?? tip.final_score_home ?? tip.goals_home) !== null && scoreN(tip.live_score_away ?? tip.score_away ?? tip.away_score ?? tip.final_score_away ?? tip.goals_away) !== null
@@ -618,19 +639,24 @@ exports.handler = async function (event) {
     const now = Date.now()
     const allRows = rows || []
     const recognizedRows = allRows.filter(isBetaiMultisportRowV1764)
-    const candidates = recognizedRows.filter(tip => {
-      const current = norm(tip.status || tip.result_status || tip.result || '')
+    const allCandidateRows = recognizedRows.filter(tip => {
       const likelyWrongVoidOrSupported = isPotentiallyWrongVoidV1823(tip)
-      if (!(forceResettle || isPending(tip) || !hasVerifiedScore(tip) || likelyWrongVoidOrSupported)) return false
+      // Krytyczna naprawa V8:
+      // zwykłe kliknięcie i harmonogram rozliczają tylko PENDING/LIVE oraz
+      // podejrzane błędne VOID. Wersja 7 brała również każdy stary WON/LOST
+      // bez live_score, przez co wykonywała setki requestów i kończyła 504.
+      const shouldInspect = forceResettle || isPending(tip) || likelyWrongVoidOrSupported || (backfillScores && !hasVerifiedScore(tip))
+      if (!shouldInspect) return false
       const d = new Date(`${tip.match_date || tipDateKey(tip)}T${String(tip.match_time || '23:59').slice(0,5)}:00`)
       return forceResettle || Number.isNaN(d.getTime()) || d.getTime() < now + 3 * 60 * 60 * 1000
     })
+    const candidates = allCandidateRows.slice(0, requestedLimit)
 
     const { data: linkedTipRowsRaw } = await supabase
       .from('tips')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(2000)
+      .limit(500)
 
     const linkedTipRows = Array.isArray(linkedTipRowsRaw)
       ? linkedTipRowsRaw.filter(isBetaiMultisportRowV1764)
@@ -638,7 +664,22 @@ exports.handler = async function (event) {
 
     let settled = 0, checked = 0, skipped = 0, backfilled = 0, fallbackUpdates = 0, syncedTips = 0, syncedTipsFallback = 0
     const errors = []
+    const resultCache = new Map()
+    const cachedResult = tip => {
+      const cfg = cfgForTip(tip)
+      const directId = tip.external_fixture_id || tip.ai_external_key || tip.fixture_id || ''
+      const key = directId && /^\d+$/.test(String(directId))
+        ? `${cfg.type}:id:${directId}`
+        : `${cfg.type}:date:${tipDateKey(tip)}:${cleanName(tipHome(tip))}:${cleanName(tipAway(tip))}`
+      if (!resultCache.has(key)) resultCache.set(key, fetchApiSportsResult(tip))
+      return resultCache.get(key)
+    }
+    let stoppedByDeadline = false
     for (const tip of candidates) {
+      if (Date.now() >= hardDeadline) {
+        stoppedByDeadline = true
+        break
+      }
       checked++
       try {
         const currentStatusBeforeFetch = norm(tip.status || tip.result_status || tip.result || '')
@@ -665,7 +706,7 @@ exports.handler = async function (event) {
           backfilled++
         }
 
-        const { cfg, item } = await fetchApiSportsResult(tip)
+        const { cfg, item } = await cachedResult(tip)
         if (!item) {
           // FIX 1750:
           // Jeśli stary BTTS ma VOID, ale nie mamy wyniku/API nie znalazło meczu,
@@ -791,13 +832,21 @@ exports.handler = async function (event) {
       .from('tips')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(2000)
+      .limit(300)
 
-    const directBotTips = Array.isArray(directBotTipsRaw)
+    const directBotTipsAll = Array.isArray(directBotTipsRaw)
       ? directBotTipsRaw.filter(isBetaiMultisportRowV1764)
       : []
+    const directBotTips = directBotTipsAll.filter(botTip => {
+      const suspiciousVoid = isPotentiallyWrongVoidV1823(botTip)
+      return forceResettle || isPending(botTip) || suspiciousVoid || (backfillScores && !hasVerifiedScore(botTip))
+    }).slice(0, Math.max(4, Math.min(12, requestedLimit)))
 
     for (const botTip of directBotTips) {
+      if (Date.now() >= hardDeadline) {
+        stoppedByDeadline = true
+        break
+      }
       directTipsChecked++
       try {
         const suspiciousVoid = isPotentiallyWrongVoidV1823(botTip)
@@ -811,7 +860,7 @@ exports.handler = async function (event) {
           continue
         }
 
-        const { cfg, item } = await fetchApiSportsResult(botTip)
+        const { cfg, item } = await cachedResult(botTip)
         if (!item) {
           directTipsSkipped++
           continue
@@ -878,7 +927,7 @@ exports.handler = async function (event) {
       await supabase
         .from('ai_pick_runs')
         .insert({
-          source: 'settle-ai-bets-v1870-source-filter-hourly-fix',
+          source: 'settle-ai-bets-v1880-timeout-batch-fix',
           picks_created: settled + directTipsSettled,
           status: errors.length ? 'partial' : 'success',
           finished_at: new Date().toISOString(),
@@ -887,7 +936,7 @@ exports.handler = async function (event) {
     } catch (_) {
       // Log run jest pomocniczy. Nie może wysadzać settlementu ani mulić strony.
     }
-    return json(200, { version: '1870-settle-betai-source-filter-hourly-fix', table: 'ai_bets+tips_direct', rowsLoaded: allRows.length, recognizedRows: recognizedRows.length, candidates: candidates.length, ignoredBySource: Math.max(0, allRows.length - recognizedRows.length), checked, settled, backfilled, skipped, fallbackUpdates, syncedTips, syncedTipsFallback, directTipsChecked, directTipsSettled, directTipsSkipped, directTipsFallback, errors: errors.slice(0, 20) })
+    return json(200, { version: '1880-settle-betai-timeout-batch-fix', table: 'ai_bets+tips_direct', rowsLoaded: allRows.length, recognizedRows: recognizedRows.length, candidatesFound: allCandidateRows.length, candidatesProcessed: checked, requestedLimit, remainingCandidates: Math.max(0, allCandidateRows.length - checked), ignoredBySource: Math.max(0, allRows.length - recognizedRows.length), checked, settled, backfilled, skipped, fallbackUpdates, syncedTips, syncedTipsFallback, directTipsChecked, directTipsSettled, directTipsSkipped, directTipsFallback, stoppedByDeadline, durationMs: Date.now() - startedAt, errors: errors.slice(0, 20) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'Settle error' })
@@ -895,4 +944,4 @@ exports.handler = async function (event) {
 }
 
 // Test helpers — bez wpływu na Netlify handler.
-exports.__test = { isBetaiMultisportRowV1764, resolvePick, isSupportedResolvableTipV1763 }
+exports.__test = { isBetaiMultisportRowV1764, resolvePick, isSupportedResolvableTipV1763, isPotentiallyWrongVoidV1823 }
