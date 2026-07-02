@@ -461,23 +461,6 @@ export default function AiPredictionsView() {
               <article><span>AKTUALNA SERIA</span><strong>{stats.streak?.label || '—'}</strong><small>{stats.streak?.type === 'won' ? 'kolejne trafienia' : stats.streak?.type === 'lost' ? 'kolejne nietrafione' : 'brak rozliczeń'}</small></article>
             </div>
 
-            <div className="aip-history-v13">
-              <div className="aip-history-head-v13">
-                <div><h3>Ostatnie rozliczone predykcje</h3><span>wynik, wybór AI i zysk jednostkowy</span></div>
-                <button type="button" className="aip-history-open-v14" onClick={() => setContentTab('results')}>Wszystkie wyniki · {statusCounts.won + statusCounts.lost + statusCounts.void}</button>
-              </div>
-              {recentResults.length ? (
-                <div className="aip-history-list-v13">
-                  {recentResults.slice(0, 8).map(row => (
-                    <article key={row.id}>
-                      <div className="aip-history-match-v13"><small>{formatDate(row.kickoff)} · {row.league || row.country}</small><strong>{row.home?.name} — {row.away?.name}</strong><span>AI: {row.pick_label} · {Number(row.confidence || 0).toFixed(1)}%</span></div>
-                      <div className="aip-history-score-v13"><strong>{row.score?.home ?? '—'} : {row.score?.away ?? '—'}</strong><small>90 min</small></div>
-                      <div className={`aip-history-result-v13 is-${row.status}`}><b>{resultLabel(row.status)}</b><span>{row.profit_units === null ? '—' : signedNumber(row.profit_units, ' j.')}</span></div>
-                    </article>
-                  ))}
-                </div>
-              ) : <div className="aip-history-empty-v13">Pierwsze statystyki pojawią się po zakończeniu i automatycznym rozliczeniu zapisanych meczów.</div>}
-            </div>
           </>
         ) : (
           <div className="aip-performance-empty-v13">
