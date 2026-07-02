@@ -168,7 +168,3 @@ exports.handler = async function handler(event = {}) {
 }
 
 exports._test = { classifyFixture, regularTimeScore, actualOutcome, settlementFor }
-
-// WERSJA 15 — realny dziennik uruchomień dla Centrum AI.
-const { monitorHandler: monitorPredictionSettlementV15 } = require('./_lib/ai-system-monitor')
-exports.handler = monitorPredictionSettlementV15({ systemKey: 'predictions', runType: 'settlement' }, exports.handler)

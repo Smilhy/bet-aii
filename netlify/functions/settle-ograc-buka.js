@@ -736,7 +736,3 @@ exports.handler = async function(event) {
   }
   return json(200, { ok: true, version: VERSION, author: AUTHOR_NAME, checked: checked.length, settled, skipped, schemaFallbackUsed: settled.some(row => (row.removed_columns || []).length > 0), sample: checked.slice(0, 20) })
 }
-
-// WERSJA 15 — realny dziennik uruchomień dla Centrum AI.
-const { monitorHandler: monitorOgracSettlementV15 } = require('./_lib/ai-system-monitor')
-exports.handler = monitorOgracSettlementV15({ systemKey: 'ograc', runType: 'settlement' }, exports.handler)
