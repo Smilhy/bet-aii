@@ -17,7 +17,7 @@ const SYSTEM_ICONS = {
 
 const STATUS_TEXT = {
   ok: 'DZIAŁA',
-  warning: 'OSTRZEŻENIE',
+  warning: 'UWAGA',
   error: 'BŁĄD'
 }
 
@@ -33,9 +33,9 @@ function formatDate(value, withSeconds = false) {
 
 function formatAgo(value, now = Date.now()) {
   const time = Date.parse(value || '')
-  if (!Number.isFinite(time)) return 'brak danych'
+  if (!Number.isFinite(time)) return 'Brak danych'
   const seconds = Math.max(0, Math.round((now - time) / 1000))
-  if (seconds < 60) return `${seconds} s temu`
+  if (seconds < 60) return 'Przed chwilą'
   const minutes = Math.floor(seconds / 60)
   if (minutes < 60) return `${minutes} min temu`
   const hours = Math.floor(minutes / 60)
@@ -77,9 +77,23 @@ function systemName(key) {
   }[key] || key
 }
 
+function isSetupNoiseAlert(alert) {
+  const text = String(alert?.text || '').toLowerCase()
+  return text.includes('brak jeszcze zapisanego logu') ||
+    text.includes('po wdrożeniu wersji 15') ||
+    text.includes('logi zaczną się zapisywać')
+}
+
 function ResultBadge({ status }) {
   const normalized = String(status || '').toLowerCase()
-  return <span className={`aicc-run-badge is-${normalized || 'unknown'}`}>{normalized === 'success' ? 'SUKCES' : normalized === 'partial' ? 'CZĘŚCIOWO' : normalized === 'error' ? 'BŁĄD' : 'BRAK'}</span>
+  const label = normalized === 'success'
+    ? 'SUKCES'
+    : normalized === 'partial'
+      ? 'CZĘŚCIOWO'
+      : normalized === 'error'
+        ? 'BŁĄD'
+        : 'BRAK'
+  return <span className={`aicc-run-badge is-${normalized || 'unknown'}`}>{label}</span>
 }
 
 function RunBlock({ title, run, next, now }) {
@@ -87,17 +101,25 @@ function RunBlock({ title, run, next, now }) {
     <div className="aicc-run-block">
       <div className="aicc-run-title">
         <span>{title}</span>
-        {run ? <ResultBadge status={run.status} /> : <span className="aicc-run-badge is-unknown">BRAK LOGU</span>}
+        {run ? <ResultBadge status={run.status} /> : null}
       </div>
-      <strong>{run ? formatDate(run.finished_at) : 'Czeka na pierwszy przebieg'}</strong>
-      <small>{run ? `${formatAgo(run.finished_at, now)} · ${formatDuration(run.duration_ms)} · ${run.trigger === 'manual' ? 'ręcznie' : 'automat'}` : 'Logi zaczną się zapisywać po wdrożeniu i SQL.'}</small>
-      <div className="aicc-next-run"><span>Następny:</span><b>{formatCountdown(next, now)}</b><em>{formatDate(next)}</em></div>
+      <strong>{run ? formatAgo(run.finished_at, now) : 'Jeszcze nie uruchomiono'}</strong>
+      <small>{run ? formatDate(run.finished_at) : 'Pierwszy przebieg pojawi się po skanie.'}</small>
+      <div className="aicc-next-run">
+        <span>Następny automat</span>
+        <b>{formatCountdown(next, now)}</b>
+      </div>
     </div>
   )
 }
 
 function Metric({ label, value, tone = '' }) {
-  return <div className={`aicc-metric ${tone ? `is-${tone}` : ''}`}><span>{label}</span><strong>{value ?? '—'}</strong></div>
+  return (
+    <div className={`aicc-metric ${tone ? `is-${tone}` : ''}`}>
+      <strong>{value ?? '—'}</strong>
+      <span>{label}</span>
+    </div>
+  )
 }
 
 function SystemCard({ system, now, actionKey, onAction }) {
@@ -106,16 +128,19 @@ function SystemCard({ system, now, actionKey, onAction }) {
   const scanBusy = actionKey === actions.scan
   const settleBusy = actionKey === actions.settle
   const created = Number(system.last_scan?.created || 0)
-  const candidates = Number(system.last_scan?.candidates || 0)
-  const checked = Number(system.last_settlement?.checked || 0)
   const settled = Number(system.last_settlement?.settled || 0)
+  const visibleAlerts = (system.alerts || []).filter(alert => !isSetupNoiseAlert(alert)).slice(0, 2)
+  const scanLabel = system.key === 'predictions' ? 'Zapisz predykcje' : 'Uruchom skan'
 
   return (
     <article className={`aicc-system-card is-${system.status}`}>
       <header>
         <div className="aicc-system-identity">
           <span className="aicc-system-icon">{SYSTEM_ICONS[system.key] || '🤖'}</span>
-          <div><h3>{system.name}</h3><small>{system.schedules?.scan}</small></div>
+          <div>
+            <h3>{system.name}</h3>
+            <small>{system.schedules?.scan || 'Harmonogram aktywny'}</small>
+          </div>
         </div>
         <span className={`aicc-health-pill is-${system.status}`}><i />{STATUS_TEXT[system.status] || system.status}</span>
       </header>
@@ -126,36 +151,43 @@ function SystemCard({ system, now, actionKey, onAction }) {
       </div>
 
       <div className="aicc-metrics-grid">
-        <Metric label={system.key === 'predictions' ? 'Zapisane ostatnio' : 'Kandydaci'} value={system.key === 'predictions' ? created : candidates} />
-        <Metric label={system.key === 'predictions' ? 'Predykcje dodane' : 'Typy dodane'} value={created} tone={created > 0 ? 'good' : ''} />
-        <Metric label="Sprawdzone" value={checked} />
+        <Metric label={system.key === 'predictions' ? 'Zapisane' : 'Dodane typy'} value={created} tone={created > 0 ? 'good' : ''} />
         <Metric label="Rozliczone" value={settled} tone={settled > 0 ? 'good' : ''} />
         <Metric label="Oczekujące" value={system.total_pending} tone={system.total_pending > 0 ? 'warn' : 'good'} />
-        <Metric label="Brak fixture_id" value={system.missing_fixture_id} tone={system.missing_fixture_id > 0 ? 'bad' : 'good'} />
+        <Metric label="Brak ID meczu" value={system.missing_fixture_id} tone={system.missing_fixture_id > 0 ? 'bad' : 'good'} />
       </div>
 
       <div className="aicc-latest-item">
-        <span>Ostatni rekord</span>
-        {latest ? <><strong>{latest.match}</strong><small>{latest.pick || '—'} · {String(latest.status || '').toUpperCase()} · ID {latest.fixture_id || 'BRAK'}</small></> : <strong>Brak rekordów</strong>}
+        <div>
+          <span>Ostatni rekord</span>
+          <strong>{latest?.match || 'Brak zapisanych rekordów'}</strong>
+          {latest ? <small>{latest.pick || 'Bez opisu typu'}</small> : null}
+        </div>
+        {latest ? <span className={`aicc-record-status is-${String(latest.status || 'pending').toLowerCase()}`}>{String(latest.status || 'pending').toUpperCase()}</span> : null}
       </div>
 
       {system.oldest_pending ? (
-        <div className="aicc-oldest-pending">
+        <div className="aicc-pending-note">
           <span>Najstarszy oczekujący</span>
           <strong>{system.oldest_pending.match}</strong>
-          <small>{formatDate(system.oldest_pending.kickoff || system.oldest_pending.created_at)} · ID {system.oldest_pending.fixture_id || 'BRAK'}</small>
+          <small>{formatDate(system.oldest_pending.kickoff || system.oldest_pending.created_at)}</small>
         </div>
       ) : null}
 
-      {system.alerts?.length ? (
+      {visibleAlerts.length ? (
         <div className="aicc-card-alerts">
-          {system.alerts.slice(0, 3).map((alert, index) => <div className={`is-${alert.level}`} key={`${alert.text}-${index}`}><i>{alert.level === 'error' ? '!' : '⚠'}</i><span>{alert.text}</span></div>)}
+          {visibleAlerts.map((alert, index) => (
+            <div className={`is-${alert.level}`} key={`${alert.text}-${index}`}>
+              <i>{alert.level === 'error' ? '!' : '⚠'}</i>
+              <span>{alert.text}</span>
+            </div>
+          ))}
         </div>
-      ) : <div className="aicc-card-ok">✓ Brak wykrytych problemów.</div>}
+      ) : null}
 
       <footer>
         <button type="button" className="aicc-action secondary" disabled={Boolean(actionKey)} onClick={() => onAction(actions.scan, system.key === 'predictions' ? 'Zapis predykcji' : `Skan ${system.name}`)}>
-          {scanBusy ? <span className="aicc-spinner" /> : '↻'} {system.key === 'predictions' ? 'Zapisz predykcje teraz' : 'Uruchom skan teraz'}
+          {scanBusy ? <span className="aicc-spinner" /> : '↻'} {scanLabel}
         </button>
         <button type="button" className="aicc-action primary" disabled={Boolean(actionKey)} onClick={() => onAction(actions.settle, `Rozliczanie ${system.name}`)}>
           {settleBusy ? <span className="aicc-spinner" /> : '✓'} Rozlicz teraz
@@ -265,7 +297,7 @@ export default function AiControlCenter() {
         await runAction(action, label, true)
       } catch (_) {}
     }
-    setActionMessage('Rozliczanie wszystkich systemów zakończone. Panel został odświeżony.')
+    setActionMessage('Wszystkie systemy zostały sprawdzone i rozliczone.')
   }, [runAction])
 
   const runAllScans = useCallback(async () => {
@@ -281,43 +313,61 @@ export default function AiControlCenter() {
         await runAction(action, label, true)
       } catch (_) {}
     }
-    setActionMessage('Skanowanie wszystkich systemów zakończone. Panel został odświeżony.')
+    setActionMessage('Skanowanie wszystkich systemów zakończone.')
   }, [runAction])
 
   const apiRemaining = useMemo(() => data?.api?.requests?.calculated_remaining ?? data?.api?.requests?.remaining ?? '—', [data])
+  const visibleAlerts = useMemo(() => (data?.alerts || []).filter(alert => !isSetupNoiseAlert(alert)), [data])
+  const systemsCount = data?.systems?.length || 4
 
   if (loading && !data) {
-    return <section className="aicc-shell"><div className="aicc-loading"><span className="aicc-spinner large" /><strong>Łączenie z Centrum AI...</strong><small>Pobieram realny stan Netlify, Supabase i API-Sports.</small></div></section>
+    return (
+      <section className="aicc-shell">
+        <div className="aicc-loading">
+          <span className="aicc-spinner large" />
+          <strong>Łączenie z Centrum AI</strong>
+          <small>Pobieram aktualny stan systemów.</small>
+        </div>
+      </section>
+    )
   }
 
   return (
-    <section className="aicc-shell">
+    <section className="aicc-shell aicc-premium-v16">
       <header className="aicc-hero">
         <div>
-          <span className="aicc-eyebrow">PANEL ADMINISTRATORA · LIVE</span>
-          <h1>Centrum Kontroli AI</h1>
-          <p>Realny monitoring publikowania, rozliczania, API-Sports, Supabase i harmonogramów wszystkich systemów.</p>
+          <span className="aicc-eyebrow"><i /> CENTRUM AI · LIVE</span>
+          <h1>Kontrola systemów AI</h1>
+          <p>Publikowanie, rozliczanie i stan wszystkich modeli w jednym miejscu.</p>
         </div>
         <div className="aicc-hero-actions">
-          <button type="button" onClick={() => load(false, true)} disabled={loading || Boolean(actionKey)}>{loading ? <span className="aicc-spinner" /> : '↻'} Odśwież</button>
-          <span>Auto-refresh co 30 s · {formatDate(data?.generated_at, true)}</span>
+          <span className="aicc-live-time">Aktualizacja co 30 s<br /><b>{formatDate(data?.generated_at, true)}</b></span>
+          <button type="button" onClick={() => load(false, true)} disabled={loading || Boolean(actionKey)}>{loading ? <span className="aicc-spinner" /> : '↻'} Odśwież dane</button>
         </div>
       </header>
 
       {error ? <div className="aicc-fatal"><strong>Nie udało się pobrać panelu.</strong><span>{error}</span><button type="button" onClick={() => load(false, true)}>Spróbuj ponownie</button></div> : null}
 
       <div className="aicc-summary-grid">
-        <div className={`aicc-summary-card ${data?.summary?.systems_error ? 'is-bad' : 'is-good'}`}><span>Stan systemów</span><strong>{data?.summary?.systems_ok || 0}/4</strong><small>{data?.summary?.systems_error || 0} błędów · {data?.summary?.systems_warning || 0} ostrzeżeń</small></div>
-        <div className={`aicc-summary-card ${data?.api?.ok ? 'is-good' : 'is-bad'}`}><span>API-Sports</span><strong>{data?.api?.ok ? 'ONLINE' : 'BŁĄD'}</strong><small>Pozostało zapytań: {apiRemaining}</small></div>
-        <div className={`aicc-summary-card ${data?.environment?.supabase && data?.environment?.service_role ? 'is-good' : 'is-bad'}`}><span>Supabase</span><strong>{data?.environment?.supabase && data?.environment?.service_role ? 'POŁĄCZONY' : 'BRAK ENV'}</strong><small>Service Role: {data?.environment?.service_role ? 'aktywny' : 'brak'}</small></div>
-        <div className={`aicc-summary-card ${data?.summary?.missing_fixture_total ? 'is-bad' : data?.summary?.pending_total ? 'is-warn' : 'is-good'}`}><span>Oczekujące</span><strong>{data?.summary?.pending_total || 0}</strong><small>Brak fixture_id: {data?.summary?.missing_fixture_total || 0}</small></div>
+        <div className={`aicc-summary-card ${data?.summary?.systems_error ? 'is-bad' : data?.summary?.systems_warning ? 'is-warn' : 'is-good'}`}>
+          <span className="aicc-summary-icon">◆</span><div><span>Systemy aktywne</span><strong>{data?.summary?.systems_ok || 0}<em>/{systemsCount}</em></strong></div>
+        </div>
+        <div className={`aicc-summary-card ${data?.api?.ok ? 'is-good' : 'is-bad'}`}>
+          <span className="aicc-summary-icon">↗</span><div><span>API-Sports</span><strong>{data?.api?.ok ? 'ONLINE' : 'BŁĄD'}</strong><small>Limit: {apiRemaining}</small></div>
+        </div>
+        <div className={`aicc-summary-card ${data?.environment?.supabase && data?.environment?.service_role ? 'is-good' : 'is-bad'}`}>
+          <span className="aicc-summary-icon">◉</span><div><span>Supabase</span><strong>{data?.environment?.supabase && data?.environment?.service_role ? 'ONLINE' : 'BŁĄD'}</strong></div>
+        </div>
+        <div className={`aicc-summary-card ${data?.summary?.missing_fixture_total ? 'is-bad' : data?.summary?.pending_total ? 'is-warn' : 'is-good'}`}>
+          <span className="aicc-summary-icon">◷</span><div><span>Do rozliczenia</span><strong>{data?.summary?.pending_total || 0}</strong><small>Brak ID: {data?.summary?.missing_fixture_total || 0}</small></div>
+        </div>
       </div>
 
       <div className="aicc-toolbar">
         <div className="aicc-tabs">
-          <button type="button" className={activeTab === 'systems' ? 'active' : ''} onClick={() => setActiveTab('systems')}>Systemy AI</button>
-          <button type="button" className={activeTab === 'alerts' ? 'active' : ''} onClick={() => setActiveTab('alerts')}>Alerty <b>{data?.alerts?.length || 0}</b></button>
-          <button type="button" className={activeTab === 'logs' ? 'active' : ''} onClick={() => setActiveTab('logs')}>Logi uruchomień</button>
+          <button type="button" className={activeTab === 'systems' ? 'active' : ''} onClick={() => setActiveTab('systems')}>Przegląd</button>
+          <button type="button" className={activeTab === 'alerts' ? 'active' : ''} onClick={() => setActiveTab('alerts')}>Alerty <b>{visibleAlerts.length}</b></button>
+          <button type="button" className={activeTab === 'logs' ? 'active' : ''} onClick={() => setActiveTab('logs')}>Logi</button>
         </div>
         <div className="aicc-bulk-actions">
           <button type="button" disabled={Boolean(actionKey)} onClick={runAllScans}>↻ Skanuj wszystkie</button>
@@ -335,23 +385,23 @@ export default function AiControlCenter() {
 
       {activeTab === 'alerts' ? (
         <div className="aicc-panel">
-          <div className="aicc-panel-head"><div><h2>Alerty techniczne</h2><p>Wszystkie wpisy powstają z realnych danych i ostatnich uruchomień.</p></div><strong>{data?.alerts?.length || 0}</strong></div>
+          <div className="aicc-panel-head"><div><h2>Alerty wymagające uwagi</h2><p>Tylko istotne problemy i ostrzeżenia.</p></div><strong>{visibleAlerts.length}</strong></div>
           <div className="aicc-alert-list">
-            {data?.alerts?.length ? data.alerts.map((alert, index) => (
+            {visibleAlerts.length ? visibleAlerts.map((alert, index) => (
               <div className={`aicc-alert-row is-${alert.level}`} key={`${alert.system_key}-${index}-${alert.text}`}>
                 <span>{alert.level === 'error' ? '!' : '⚠'}</span><div><strong>{alert.system}</strong><p>{alert.text}</p></div>
               </div>
-            )) : <div className="aicc-empty"><strong>✓ Wszystko wygląda prawidłowo</strong><span>Nie wykryto błędów ani ostrzeżeń.</span></div>}
+            )) : <div className="aicc-empty"><strong>✓ Wszystko działa prawidłowo</strong><span>Brak aktywnych problemów.</span></div>}
           </div>
         </div>
       ) : null}
 
       {activeTab === 'logs' ? (
         <div className="aicc-panel">
-          <div className="aicc-panel-head"><div><h2>Ostatnie uruchomienia</h2><p>Harmonogram i ręczne akcje administratora.</p></div><strong>{data?.recent_runs?.length || 0}</strong></div>
+          <div className="aicc-panel-head"><div><h2>Historia uruchomień</h2><p>Pełne dane techniczne skanów i rozliczeń.</p></div><strong>{data?.recent_runs?.length || 0}</strong></div>
           <div className="aicc-table-wrap">
             <table className="aicc-table">
-              <thead><tr><th>Czas</th><th>System</th><th>Operacja</th><th>Status</th><th>Trigger</th><th>Sprawdzone</th><th>Kandydaci</th><th>Dodane</th><th>Rozliczone</th><th>Czas</th><th>Komunikat</th></tr></thead>
+              <thead><tr><th>Czas</th><th>System</th><th>Operacja</th><th>Status</th><th>Tryb</th><th>Sprawdzone</th><th>Kandydaci</th><th>Dodane</th><th>Rozliczone</th><th>Czas</th><th>Komunikat</th></tr></thead>
               <tbody>
                 {(data?.recent_runs || []).map(run => (
                   <tr key={run.id}>
@@ -371,14 +421,9 @@ export default function AiControlCenter() {
               </tbody>
             </table>
           </div>
-          {!data?.recent_runs?.length ? <div className="aicc-empty"><strong>Brak logów</strong><span>Uruchom SQL wersji 15 i wykonaj pierwszy skan albo poczekaj na harmonogram.</span></div> : null}
+          {!data?.recent_runs?.length ? <div className="aicc-empty"><strong>Brak historii</strong><span>Wykonaj pierwszy skan lub rozliczenie.</span></div> : null}
         </div>
       ) : null}
-
-      <footer className="aicc-footer-note">
-        <span>●</span>
-        <div><strong>Dane są żywe, nie demonstracyjne.</strong><p>Centrum odczytuje rekordy z Supabase, sprawdza API-Sports i zapisuje każde nowe uruchomienie funkcji Netlify.</p></div>
-      </footer>
     </section>
   )
 }

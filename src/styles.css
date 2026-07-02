@@ -77478,3 +77478,142 @@ body > .ai-deep-modal-backdrop-v186711 > .ai-deep-modal-v186711{
 @media(max-width:1350px){.aicc-metrics-grid{grid-template-columns:repeat(3,1fr)}.aicc-summary-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:1050px){.aicc-systems-grid{grid-template-columns:1fr}.aicc-hero{align-items:flex-start;flex-direction:column}.aicc-hero-actions{justify-items:start}.aicc-toolbar{align-items:stretch;flex-direction:column}.aicc-tabs,.aicc-bulk-actions{width:100%}.aicc-tabs button,.aicc-bulk-actions button{flex:1}}
 @media(max-width:650px){.aicc-hero{padding:22px 18px;border-radius:18px}.aicc-hero h1{font-size:27px}.aicc-summary-grid{grid-template-columns:1fr 1fr;gap:8px}.aicc-summary-card{min-height:94px;padding:14px}.aicc-summary-card strong{font-size:20px}.aicc-tabs{display:grid;grid-template-columns:1fr}.aicc-bulk-actions{display:grid;grid-template-columns:1fr}.aicc-system-card{padding:14px;border-radius:16px}.aicc-system-card>header{align-items:flex-start;flex-direction:column}.aicc-card-runs{grid-template-columns:1fr}.aicc-metrics-grid{grid-template-columns:repeat(2,1fr)}.aicc-system-card>footer{grid-template-columns:1fr}.aicc-hero-actions{width:100%}.aicc-hero-actions button{width:100%}}
+
+/* =========================================================
+   WERSJA 16 — CENTRUM AI PREMIUM UI
+   Czytelniejszy przegląd, większa typografia, mniej szumu.
+   ========================================================= */
+.aicc-premium-v16{gap:22px;padding:8px 0 38px}
+.aicc-premium-v16 .aicc-hero{min-height:190px;padding:38px 42px;border-color:rgba(66,234,225,.28);border-radius:28px;background:radial-gradient(circle at 88% 12%,rgba(41,224,216,.19),transparent 31%),radial-gradient(circle at 8% 110%,rgba(56,132,255,.15),transparent 35%),linear-gradient(145deg,#06121e 0%,#082a39 100%);box-shadow:inset 0 1px rgba(255,255,255,.06),0 28px 75px rgba(0,0,0,.27)}
+.aicc-premium-v16 .aicc-eyebrow{display:flex;align-items:center;gap:9px;color:#73fff3;font-size:13px;letter-spacing:.14em}
+.aicc-premium-v16 .aicc-eyebrow i{width:9px;height:9px;border-radius:50%;background:#4ff7c2;box-shadow:0 0 18px rgba(79,247,194,.9)}
+.aicc-premium-v16 .aicc-hero h1{margin-top:14px;font-size:46px;line-height:1.02;letter-spacing:-.045em}
+.aicc-premium-v16 .aicc-hero p{max-width:720px;margin-top:16px;color:#9bbbc3;font-size:16px;font-weight:720;line-height:1.5}
+.aicc-premium-v16 .aicc-hero-actions{display:flex;align-items:center;gap:16px;min-width:0}
+.aicc-premium-v16 .aicc-live-time{color:#73949d;font-size:12px;font-weight:800;line-height:1.55;text-align:right}
+.aicc-premium-v16 .aicc-live-time b{color:#b9ffff;font-size:13px}
+.aicc-premium-v16 .aicc-hero-actions button,.aicc-premium-v16 .aicc-bulk-actions button{min-height:52px;padding:0 22px;border-radius:15px;font-size:14px;letter-spacing:-.01em;box-shadow:inset 0 1px rgba(255,255,255,.06)}
+.aicc-premium-v16 .aicc-hero-actions button{background:linear-gradient(135deg,#0c3b48,#0a2c38)}
+.aicc-premium-v16 .aicc-summary-grid{gap:16px}
+.aicc-premium-v16 .aicc-summary-card{display:flex;align-items:center;gap:18px;min-height:132px;padding:24px;border-color:rgba(68,164,182,.23);border-radius:22px;background:radial-gradient(circle at 92% 10%,rgba(80,231,223,.11),transparent 35%),linear-gradient(145deg,#071723,#092a37);box-shadow:inset 0 1px rgba(255,255,255,.035),0 14px 35px rgba(0,0,0,.13)}
+.aicc-premium-v16 .aicc-summary-card:after{display:none}
+.aicc-premium-v16 .aicc-summary-icon{display:grid;place-items:center;flex:0 0 auto;width:52px;height:52px;border:1px solid rgba(89,231,222,.24);border-radius:17px;background:rgba(12,58,70,.78);color:#71fff1;font-size:22px;box-shadow:inset 0 1px rgba(255,255,255,.05)}
+.aicc-premium-v16 .aicc-summary-card>div{min-width:0}
+.aicc-premium-v16 .aicc-summary-card>div>span{font-size:12px;letter-spacing:.11em}
+.aicc-premium-v16 .aicc-summary-card strong{margin-top:9px;font-size:32px;letter-spacing:-.035em}
+.aicc-premium-v16 .aicc-summary-card strong em{color:#718f98;font-size:18px;font-style:normal}
+.aicc-premium-v16 .aicc-summary-card small{margin-top:7px;font-size:12px}
+.aicc-premium-v16 .aicc-toolbar{padding:10px;border-radius:19px;background:linear-gradient(145deg,#061823,#08212c)}
+.aicc-premium-v16 .aicc-tabs{gap:8px}
+.aicc-premium-v16 .aicc-tabs button{min-height:48px;padding:0 20px;border-radius:13px;font-size:14px}
+.aicc-premium-v16 .aicc-tabs button b{min-width:24px;height:24px;font-size:11px}
+.aicc-premium-v16 .aicc-bulk-actions{gap:10px}
+.aicc-premium-v16 .aicc-bulk-actions button.primary{box-shadow:0 8px 26px rgba(42,204,187,.16)}
+.aicc-premium-v16 .aicc-action-message{min-height:52px;padding:0 18px;border-radius:15px;font-size:14px}
+.aicc-premium-v16 .aicc-systems-grid{gap:20px}
+.aicc-premium-v16 .aicc-system-card{gap:18px;padding:26px;border-color:rgba(57,166,184,.22);border-radius:26px;background:radial-gradient(circle at 100% 0%,rgba(48,218,207,.11),transparent 29%),linear-gradient(148deg,#06141f,#082633);box-shadow:inset 0 1px rgba(255,255,255,.04),0 20px 48px rgba(0,0,0,.18);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.aicc-premium-v16 .aicc-system-card:hover{transform:translateY(-2px);border-color:rgba(75,218,216,.34);box-shadow:inset 0 1px rgba(255,255,255,.05),0 26px 58px rgba(0,0,0,.24)}
+.aicc-premium-v16 .aicc-system-card.is-warning{border-color:rgba(255,199,75,.32)}
+.aicc-premium-v16 .aicc-system-card.is-error{border-color:rgba(255,85,124,.38)}
+.aicc-premium-v16 .aicc-system-card>header{gap:18px}
+.aicc-premium-v16 .aicc-system-identity{gap:16px}
+.aicc-premium-v16 .aicc-system-icon{width:58px;height:58px;border-radius:18px;font-size:28px;background:linear-gradient(145deg,#0d3441,#09232e);box-shadow:inset 0 1px rgba(255,255,255,.06)}
+.aicc-premium-v16 .aicc-system-identity h3{font-size:24px;letter-spacing:-.03em}
+.aicc-premium-v16 .aicc-system-identity small{margin-top:7px;color:#7898a1;font-size:12px}
+.aicc-premium-v16 .aicc-health-pill{min-height:36px;padding:0 14px;font-size:11px;letter-spacing:.07em}
+.aicc-premium-v16 .aicc-health-pill i{width:8px;height:8px}
+.aicc-premium-v16 .aicc-card-runs{gap:12px}
+.aicc-premium-v16 .aicc-run-block{gap:8px;padding:18px;border-radius:17px;background:linear-gradient(145deg,#071b26,#071923)}
+.aicc-premium-v16 .aicc-run-title>span:first-child{font-size:11px;letter-spacing:.11em}
+.aicc-premium-v16 .aicc-run-block>strong{font-size:18px;letter-spacing:-.02em}
+.aicc-premium-v16 .aicc-run-block>small{font-size:11px;line-height:1.45}
+.aicc-premium-v16 .aicc-run-badge{min-height:25px;padding:0 9px;border-radius:8px;font-size:9px}
+.aicc-premium-v16 .aicc-next-run{grid-template-columns:1fr auto;margin-top:5px;padding-top:11px}
+.aicc-premium-v16 .aicc-next-run span{font-size:10px}
+.aicc-premium-v16 .aicc-next-run b{font-size:12px}
+.aicc-premium-v16 .aicc-metrics-grid{grid-template-columns:repeat(4,1fr);gap:10px}
+.aicc-premium-v16 .aicc-metric{display:grid;justify-items:center;gap:7px;min-height:96px;padding:16px 12px;border-radius:16px;background:linear-gradient(145deg,#071923,#08202a)}
+.aicc-premium-v16 .aicc-metric strong{order:0;margin:0;font-size:29px;letter-spacing:-.04em}
+.aicc-premium-v16 .aicc-metric span{order:1;color:#78969f;font-size:11px;letter-spacing:.02em;text-transform:none}
+.aicc-premium-v16 .aicc-latest-item{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:17px 18px;border-radius:17px;background:linear-gradient(145deg,#071923,#08212b)}
+.aicc-premium-v16 .aicc-latest-item>div{display:grid;gap:5px;min-width:0}
+.aicc-premium-v16 .aicc-latest-item>div>span{color:#6f9099;font-size:10px;font-weight:1000;letter-spacing:.1em;text-transform:uppercase}
+.aicc-premium-v16 .aicc-latest-item>div>strong{overflow:hidden;color:#edffff;font-size:16px;text-overflow:ellipsis;white-space:nowrap}
+.aicc-premium-v16 .aicc-latest-item>div>small{overflow:hidden;color:#7b9aa3;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.aicc-premium-v16 .aicc-record-status{flex:0 0 auto;min-width:80px;padding:9px 12px;border:1px solid rgba(255,194,67,.25);border-radius:11px;background:rgba(112,83,16,.15);color:#ffd06b;font-size:10px;font-weight:1000;text-align:center}
+.aicc-premium-v16 .aicc-record-status.is-won,.aicc-premium-v16 .aicc-record-status.is-success{border-color:rgba(50,232,161,.25);background:rgba(18,103,73,.16);color:#5effb1}
+.aicc-premium-v16 .aicc-record-status.is-lost,.aicc-premium-v16 .aicc-record-status.is-error{border-color:rgba(255,79,118,.27);background:rgba(126,22,51,.16);color:#ff7896}
+.aicc-premium-v16 .aicc-pending-note{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:13px 15px;border:1px solid rgba(255,193,67,.2);border-radius:14px;background:rgba(100,72,13,.12)}
+.aicc-premium-v16 .aicc-pending-note span{color:#d3a94c;font-size:10px;font-weight:1000;text-transform:uppercase}
+.aicc-premium-v16 .aicc-pending-note strong{overflow:hidden;color:#fff0bf;font-size:13px;text-overflow:ellipsis;white-space:nowrap}
+.aicc-premium-v16 .aicc-pending-note small{color:#9e874f;font-size:11px}
+.aicc-premium-v16 .aicc-card-alerts{gap:8px}
+.aicc-premium-v16 .aicc-card-alerts>div{grid-template-columns:30px 1fr;min-height:44px;padding:9px 12px;border-radius:12px;font-size:11px}
+.aicc-premium-v16 .aicc-card-alerts i{width:27px;height:27px;border-radius:9px}
+.aicc-premium-v16 .aicc-system-card>footer{gap:11px}
+.aicc-premium-v16 .aicc-action{min-height:52px;border-radius:14px;font-size:14px;letter-spacing:-.01em}
+.aicc-premium-v16 .aicc-action.primary{box-shadow:0 10px 28px rgba(44,196,190,.17)}
+.aicc-premium-v16 .aicc-panel{border-radius:24px;box-shadow:0 20px 48px rgba(0,0,0,.16)}
+.aicc-premium-v16 .aicc-panel-head{padding:25px 28px}
+.aicc-premium-v16 .aicc-panel-head h2{font-size:27px;letter-spacing:-.03em}
+.aicc-premium-v16 .aicc-panel-head p{margin-top:8px;font-size:13px}
+.aicc-premium-v16 .aicc-panel-head>strong{min-width:45px;height:40px;border-radius:12px;font-size:14px}
+.aicc-premium-v16 .aicc-alert-row{grid-template-columns:48px 1fr;gap:16px;padding:18px 24px}
+.aicc-premium-v16 .aicc-alert-row>span{width:42px;height:42px;border-radius:13px;font-size:18px}
+.aicc-premium-v16 .aicc-alert-row strong{font-size:15px}
+.aicc-premium-v16 .aicc-alert-row p{margin-top:6px;font-size:13px}
+.aicc-premium-v16 .aicc-empty{min-height:210px}
+.aicc-premium-v16 .aicc-empty strong{font-size:20px}
+.aicc-premium-v16 .aicc-empty span{font-size:13px}
+.aicc-premium-v16 .aicc-table th{padding:15px 14px;font-size:10px}
+.aicc-premium-v16 .aicc-table td{padding:15px 14px;font-size:12px}
+.aicc-premium-v16 .aicc-table td>strong{font-size:12px}
+.aicc-premium-v16 .aicc-table td>small{font-size:10px}
+.aicc-premium-v16 .aicc-loading{min-height:420px;border-radius:26px}
+.aicc-premium-v16 .aicc-loading strong{font-size:24px}
+.aicc-premium-v16 .aicc-loading small{font-size:13px}
+
+@media(max-width:1450px){
+  .aicc-premium-v16 .aicc-summary-grid{grid-template-columns:repeat(2,1fr)}
+  .aicc-premium-v16 .aicc-metrics-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:1120px){
+  .aicc-premium-v16 .aicc-systems-grid{grid-template-columns:1fr}
+  .aicc-premium-v16 .aicc-hero{align-items:flex-start;flex-direction:column}
+  .aicc-premium-v16 .aicc-hero-actions{justify-content:space-between;width:100%}
+  .aicc-premium-v16 .aicc-live-time{text-align:left}
+  .aicc-premium-v16 .aicc-toolbar{align-items:stretch;flex-direction:column}
+  .aicc-premium-v16 .aicc-tabs,.aicc-premium-v16 .aicc-bulk-actions{width:100%}
+  .aicc-premium-v16 .aicc-tabs button,.aicc-premium-v16 .aicc-bulk-actions button{flex:1}
+}
+@media(max-width:700px){
+  .aicc-premium-v16{gap:15px}
+  .aicc-premium-v16 .aicc-hero{min-height:0;padding:27px 21px;border-radius:21px}
+  .aicc-premium-v16 .aicc-eyebrow{font-size:10px}
+  .aicc-premium-v16 .aicc-hero h1{font-size:34px}
+  .aicc-premium-v16 .aicc-hero p{font-size:14px}
+  .aicc-premium-v16 .aicc-hero-actions{align-items:stretch;flex-direction:column}
+  .aicc-premium-v16 .aicc-hero-actions button{width:100%}
+  .aicc-premium-v16 .aicc-summary-grid{grid-template-columns:1fr 1fr;gap:9px}
+  .aicc-premium-v16 .aicc-summary-card{gap:12px;min-height:112px;padding:16px;border-radius:17px}
+  .aicc-premium-v16 .aicc-summary-icon{width:40px;height:40px;border-radius:13px;font-size:17px}
+  .aicc-premium-v16 .aicc-summary-card>div>span{font-size:9px}
+  .aicc-premium-v16 .aicc-summary-card strong{font-size:23px}
+  .aicc-premium-v16 .aicc-summary-card small{font-size:9px}
+  .aicc-premium-v16 .aicc-tabs{display:grid;grid-template-columns:repeat(3,1fr)}
+  .aicc-premium-v16 .aicc-tabs button{padding:0 9px;font-size:11px}
+  .aicc-premium-v16 .aicc-bulk-actions{display:grid;grid-template-columns:1fr}
+  .aicc-premium-v16 .aicc-system-card{padding:19px;border-radius:21px}
+  .aicc-premium-v16 .aicc-system-card>header{align-items:flex-start;flex-direction:column}
+  .aicc-premium-v16 .aicc-system-icon{width:50px;height:50px;font-size:23px}
+  .aicc-premium-v16 .aicc-system-identity h3{font-size:20px}
+  .aicc-premium-v16 .aicc-card-runs{grid-template-columns:1fr}
+  .aicc-premium-v16 .aicc-metrics-grid{grid-template-columns:repeat(2,1fr)}
+  .aicc-premium-v16 .aicc-metric{min-height:82px;padding:13px 8px}
+  .aicc-premium-v16 .aicc-metric strong{font-size:24px}
+  .aicc-premium-v16 .aicc-latest-item{align-items:flex-start;flex-direction:column}
+  .aicc-premium-v16 .aicc-pending-note{grid-template-columns:1fr}
+  .aicc-premium-v16 .aicc-system-card>footer{grid-template-columns:1fr}
+  .aicc-premium-v16 .aicc-panel-head{align-items:flex-start;padding:21px;}
+  .aicc-premium-v16 .aicc-panel-head h2{font-size:22px}
+}
