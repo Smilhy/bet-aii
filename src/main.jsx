@@ -4756,20 +4756,20 @@ const staticTips = []
 
 
 
-// 🔒 SIDEBAR LOCK v1129 — NIE RUSZAĆ UKŁADU ZAKŁADEK BEZ WYRAŹNEJ PROŚBY PAWŁA.
+// 🔒 SIDEBAR LOCK v1130 — kolejność zmieniona na wyraźną prośbę Pawła: Top typerzy bezpośrednio po Mój profil.
 // Te pozycje trzymają stałą kolejność menu, żeby kolejne poprawki Top typerów/profili
 // nie rozjechały lewego panelu ani aktywnej zakładki.
-const LOCKED_SIDEBAR_ITEMS_V1129 = Object.freeze([
+const LOCKED_SIDEBAR_ITEMS_V1130 = Object.freeze([
   Object.freeze({ id: 'dashboard', label: '⌂ Dashboard', activeViews: Object.freeze(['dashboard']), clearTipster: true }),
   Object.freeze({ id: 'add', label: '＋ Dodaj typ', activeViews: Object.freeze(['add']) }),
   Object.freeze({ id: 'wallet', label: '💼 Portfel', activeViews: Object.freeze(['wallet', 'deposits', 'payouts', 'payments', 'subscriptions', 'earnings']) }),
   Object.freeze({ id: 'profile', label: '👤 Mój profil', activeViews: Object.freeze(['profile']) }),
+  Object.freeze({ id: 'topTipsters', label: '♕ Top typerzy', activeViews: Object.freeze(['topTipsters']) }),
   Object.freeze({ id: 'unlockedTips', label: '🔓 Kupione single', activeViews: Object.freeze(['unlockedTips']) }),
   Object.freeze({ id: 'leaderboard', label: '🏆 Ranking', activeViews: Object.freeze(['leaderboard']) }),
   Object.freeze({ id: 'referrals', label: '👥 Społeczność', activeViews: Object.freeze(['referrals']) }),
   Object.freeze({ id: 'aiPicks', label: '🧠 Typy AI', activeViews: Object.freeze(['aiPicks']) }),
   Object.freeze({ id: 'aiPredictions', label: '🔮 AI Prediction', activeViews: Object.freeze(['aiPredictions']) }),
-  Object.freeze({ id: 'topTipsters', label: '♕ Top typerzy', activeViews: Object.freeze(['topTipsters']) }),
   Object.freeze({ id: 'articles', label: '📰 Artykuły/TV Live', activeViews: Object.freeze(['articles']) }),
   Object.freeze({ id: 'rewardsBonuses', label: '🎁 Nagrody/Bonusy', activeViews: Object.freeze(['rewardsBonuses']) })
 ])
@@ -4811,11 +4811,11 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
   const openPremiumCheckout = () => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))
   const lockedMenuItems = isAdminUser(user)
     ? [
-        ...LOCKED_SIDEBAR_ITEMS_V1129.slice(0, 7),
+        ...LOCKED_SIDEBAR_ITEMS_V1130.slice(0, 8),
         ...LOCKED_ADMIN_SIDEBAR_ITEMS_V1129,
-        ...LOCKED_SIDEBAR_ITEMS_V1129.slice(7)
+        ...LOCKED_SIDEBAR_ITEMS_V1130.slice(8)
       ]
-    : LOCKED_SIDEBAR_ITEMS_V1129
+    : LOCKED_SIDEBAR_ITEMS_V1130
 
   return (
     <div className="sidebar-stack">

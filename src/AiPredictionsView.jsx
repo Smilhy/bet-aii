@@ -44,6 +44,19 @@ function dayLabel(value) {
   return formatDate(value)
 }
 
+function signedNumber(value, suffix = '') {
+  const number = Number(value || 0)
+  const prefix = number > 0 ? '+' : ''
+  return `${prefix}${number.toFixed(2)}${suffix}`
+}
+
+function resultLabel(status) {
+  if (status === 'won') return 'WON'
+  if (status === 'lost') return 'LOST'
+  if (status === 'void') return 'VOID'
+  return 'PENDING'
+}
+
 function initials(name = '') {
   const words = String(name).trim().split(/\s+/).filter(Boolean)
   if (!words.length) return 'AI'
@@ -206,12 +219,19 @@ export default function AiPredictionsView() {
   const [error, setError] = useState('')
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('kickoff')
+  const [statsWindow, setStatsWindow] = useState('all')
   const [selected, setSelected] = useState(null)
 
   const load = useCallback(async ({ manual = false } = {}) => {
     manual ? setRefreshing(true) : setLoading(true)
     setError('')
     try {
+      if (manual) {
+        await fetch('/.netlify/functions/settle-ai-prediction-history?limit=24', {
+          method: 'POST',
+          cache: 'no-store'
+        }).catch(() => null)
+      }
       const response = await fetch(`/.netlify/functions/get-ai-predictions?hours=12&limit=40&t=${manual ? Date.now() : ''}`, {
         cache: manual ? 'no-store' : 'default'
       })
@@ -274,6 +294,13 @@ export default function AiPredictionsView() {
   }
 
   const generatedAt = payload?.generated_at ? new Date(payload.generated_at) : null
+  const stats = payload?.stats || null
+  const activeStats = statsWindow === '7'
+    ? stats?.last_7_days
+    : statsWindow === '30'
+      ? stats?.last_30_days
+      : stats?.all
+  const recentResults = Array.isArray(stats?.recent) ? stats.recent : []
 
   return (
     <section className="aip-page-v11">
@@ -283,7 +310,7 @@ export default function AiPredictionsView() {
           <h1>AI <em>Prediction</em></h1>
           <p>Realne mecze, prawdziwe kursy i rozkład prawdopodobieństwa modelu. Zielone pole wskazuje wybór AI, a kurs fair pokazuje cenę po usunięciu marży bukmachera.</p>
           <div className="aip-hero-actions-v11">
-            <button type="button" className="is-primary" onClick={() => load({ manual: true })} disabled={refreshing}>{refreshing ? 'Odświeżam…' : '↻ Odśwież dane'}</button>
+            <button type="button" className="is-primary" onClick={() => load({ manual: true })} disabled={refreshing}>{refreshing ? 'Odświeżam…' : '↻ Odśwież dane i statystyki'}</button>
             <button type="button" onClick={exportCsv} disabled={!rows.length}>⇩ Eksport do Excel / CSV</button>
           </div>
         </div>
@@ -301,6 +328,57 @@ export default function AiPredictionsView() {
         <article><span>Value bety</span><strong>{payload?.value_bets ?? 0}</strong><small>przewaga ≥ 3%</small></article>
         <article><span>Aktualizacja</span><strong>{generatedAt ? formatTime(generatedAt) : '—'}</strong><small>czas polski</small></article>
       </div>
+
+      <section className="aip-performance-v13">
+        <div className="aip-performance-head-v13">
+          <div>
+            <span>WYNIKI MODELU 1X2</span>
+            <h2>Statystyki i skuteczność AI Prediction</h2>
+            <p>Każda predykcja jest zapisywana przed rozpoczęciem meczu i później automatycznie rozliczana wynikiem po 90 minutach.</p>
+          </div>
+          <div className="aip-performance-tabs-v13">
+            <button type="button" className={statsWindow === '7' ? 'active' : ''} onClick={() => setStatsWindow('7')}>7 dni</button>
+            <button type="button" className={statsWindow === '30' ? 'active' : ''} onClick={() => setStatsWindow('30')}>30 dni</button>
+            <button type="button" className={statsWindow === 'all' ? 'active' : ''} onClick={() => setStatsWindow('all')}>Całość</button>
+          </div>
+        </div>
+
+        {stats?.available ? (
+          <>
+            <div className="aip-performance-grid-v13">
+              <article className="is-accuracy"><span>SKUTECZNOŚĆ</span><strong>{Number(activeStats?.accuracy || 0).toFixed(2)}%</strong><small>{activeStats?.wins || 0} trafionych z {activeStats?.settled || 0}</small></article>
+              <article className="is-win"><span>WYGRANE</span><strong>{activeStats?.wins || 0}</strong><small>rozliczone na plus</small></article>
+              <article className="is-loss"><span>PRZEGRANE</span><strong>{activeStats?.losses || 0}</strong><small>rozliczone na minus</small></article>
+              <article className={Number(activeStats?.roi || 0) >= 0 ? 'is-positive' : 'is-negative'}><span>ROI</span><strong>{signedNumber(activeStats?.roi, '%')}</strong><small>stała stawka 1 jednostka</small></article>
+              <article className={Number(activeStats?.profit_units || 0) >= 0 ? 'is-positive' : 'is-negative'}><span>ZYSK</span><strong>{signedNumber(activeStats?.profit_units, ' j.')}</strong><small>na realnym najlepszym kursie</small></article>
+              <article><span>ŚR. KURS</span><strong>{Number(activeStats?.avg_odds || 0).toFixed(2)}</strong><small>dla rozliczonych predykcji</small></article>
+              <article className="is-pending"><span>OCZEKUJE</span><strong>{stats.pending || 0}</strong><small>mecze jeszcze nierozliczone</small></article>
+              <article><span>AKTUALNA SERIA</span><strong>{stats.streak?.label || '—'}</strong><small>{stats.streak?.type === 'won' ? 'kolejne trafienia' : stats.streak?.type === 'lost' ? 'kolejne nietrafione' : 'brak rozliczeń'}</small></article>
+            </div>
+
+            <div className="aip-history-v13">
+              <div className="aip-history-head-v13"><div><h3>Ostatnie rozliczone predykcje</h3><span>wynik, wybór AI i zysk jednostkowy</span></div><b>{recentResults.length}</b></div>
+              {recentResults.length ? (
+                <div className="aip-history-list-v13">
+                  {recentResults.slice(0, 8).map(row => (
+                    <article key={row.id}>
+                      <div className="aip-history-match-v13"><small>{formatDate(row.kickoff)} · {row.league || row.country}</small><strong>{row.home?.name} — {row.away?.name}</strong><span>AI: {row.pick_label} · {Number(row.confidence || 0).toFixed(1)}%</span></div>
+                      <div className="aip-history-score-v13"><strong>{row.score?.home ?? '—'} : {row.score?.away ?? '—'}</strong><small>90 min</small></div>
+                      <div className={`aip-history-result-v13 is-${row.status}`}><b>{resultLabel(row.status)}</b><span>{row.profit_units === null ? '—' : signedNumber(row.profit_units, ' j.')}</span></div>
+                    </article>
+                  ))}
+                </div>
+              ) : <div className="aip-history-empty-v13">Pierwsze statystyki pojawią się po zakończeniu i automatycznym rozliczeniu zapisanych meczów.</div>}
+            </div>
+          </>
+        ) : (
+          <div className="aip-performance-empty-v13">
+            <strong>Statystyki czekają na uruchomienie historii</strong>
+            <span>Uruchom plik SQL wersji 13 w Supabase. Od tej chwili system zacznie zapisywać predykcje i liczyć prawdziwą skuteczność.</span>
+            {stats?.reason && <small>{stats.reason}</small>}
+          </div>
+        )}
+      </section>
 
       <div className="aip-toolbar-v11">
         <div className="aip-filters-v11">

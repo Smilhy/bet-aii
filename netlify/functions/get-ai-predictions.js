@@ -1,3 +1,4 @@
+const { recordPredictionSnapshots, getPredictionStats } = require('./_lib/ai-prediction-history')
 const API_SPORTS_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY
 const API_BASE = 'https://v3.football.api-sports.io'
 const TIMEZONE = process.env.BETAI_PREDICTIONS_TIMEZONE || 'Europe/Warsaw'
@@ -379,6 +380,18 @@ exports.handler = async function handler(event = {}) {
     const valueBets = predictions.reduce((sum, row) => sum + Number(row.value_bets || 0), 0)
     const liveCount = predictions.filter(row => row.status === 'live').length
 
+    // WERSJA 13: zapisujemy tylko pierwszą, przedmeczową wersję predykcji.
+    // Dzięki ignoreDuplicates późniejsze zmiany kursów nie przepisują historii
+    // i skuteczność pozostaje uczciwa oraz audytowalna.
+    const snapshotResult = await recordPredictionSnapshots(predictions).catch(snapshotError => ({
+      ok: false,
+      error: snapshotError?.message || String(snapshotError)
+    }))
+    const stats = await getPredictionStats().catch(statsError => ({
+      available: false,
+      reason: statsError?.message || String(statsError)
+    }))
+
     return json(200, {
       ok: true,
       generated_at: new Date().toISOString(),
@@ -389,12 +402,14 @@ exports.handler = async function handler(event = {}) {
       sports_live: predictions.length ? 1 : 0,
       value_bets: valueBets,
       predictions,
+      stats,
       diagnostics: {
         fixture_rows: fixtures.length,
         eligible_rows: eligible.length,
         odds_rows: oddsRows.length,
         odds_fixtures: oddsMap.size,
         deep_model_calls: deepFixtures.length,
+        history_snapshot: snapshotResult,
         errors: errors.slice(0, 8)
       }
     })

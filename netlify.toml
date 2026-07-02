@@ -43,3 +43,7 @@
 # Ograć Buka — rozliczanie własnych typów co godzinę.
 [functions."settle-ograc-buka"]
   schedule = "52 * * * *"
+
+# WERSJA 13 — AI Prediction: automatyczne rozliczanie historii i skuteczności.
+[functions."settle-ai-prediction-history"]
+  schedule = "42 * * * *"
