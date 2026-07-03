@@ -6,7 +6,7 @@
 [functions]
   node_bundler = "esbuild"
 
-# WERSJA 18 — brakujący stary bundle po nowym deployu ma zwrócić 404,
+# WERSJA 19 — brakujący stary bundle po nowym deployu ma zwrócić 404,
 # a nie index.html udający JavaScript. Inline watchdog wtedy pobierze świeżą wersję.
 [[redirects]]
   from = "/assets/*"
@@ -24,7 +24,7 @@
   status = 200
 
 
-# WERSJA 18 — dokument aplikacji zawsze jest sprawdzany ponownie,
+# WERSJA 19 — dokument aplikacji zawsze jest sprawdzany ponownie,
 # natomiast pliki z hashem Vite mogą być długo cacheowane.
 [[headers]]
   for = "/"

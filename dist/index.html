@@ -4,16 +4,36 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script>
-    // WERSJA 18 — odzyskiwanie aplikacji po uśpieniu/odrzuceniu karty.
-    // Ten kod działa przed bundlerem React, więc potrafi naprawić także brakujący/stary plik JS po deployu.
+    // WERSJA 19 — stabilny powrót z ukrytej, zamrożonej lub odrzuconej karty.
+    // Naprawia dwa przypadki: brak startu aplikacji oraz pusty obraz przy istniejącym DOM-ie
+    // (problem warstwy renderującej Chromium/Opera po wznowieniu karty).
     (function () {
-      var RECOVERY_KEY = 'betai_runtime_recovery_v18';
-      var RECOVERY_WINDOW_MS = 45000;
+      var RECOVERY_KEY = 'betai_runtime_recovery_v19';
+      var RECOVERY_WINDOW_MS = 30000;
+      var hiddenAt = document.visibilityState === 'hidden' ? Date.now() : 0;
       var recovering = false;
 
+      function getRoot() {
+        return document.getElementById('root');
+      }
+
       function rootIsEmpty() {
-        var root = document.getElementById('root');
+        var root = getRoot();
         return !!root && root.childElementCount === 0 && !String(root.textContent || '').trim();
+      }
+
+      function appSurfaceIsHealthy() {
+        var root = getRoot();
+        if (!root || rootIsEmpty()) return false;
+        var surface = root.querySelector('.app-shell, .auth-screen, .auth609-screen');
+        if (!surface) return false;
+        try {
+          var style = window.getComputedStyle(surface);
+          var rect = surface.getBoundingClientRect();
+          if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity || 1) <= 0.01) return false;
+          if (rect.width < 8 || rect.height < 8) return false;
+        } catch (_) {}
+        return true;
       }
 
       function mayRecover() {
@@ -31,7 +51,7 @@
       function recover(reason) {
         if (recovering || !mayRecover()) return;
         recovering = true;
-        try { console.warn('[BetAI v18] odzyskiwanie aplikacji:', reason); } catch (_) {}
+        try { console.warn('[BetAI v19] odzyskiwanie aplikacji:', reason); } catch (_) {}
         try {
           var url = new URL(window.location.href);
           url.searchParams.set('__betai_recover', String(Date.now()));
@@ -41,18 +61,50 @@
         }
       }
 
-      function checkAfterResume(reason) {
-        window.setTimeout(function () {
-          if (document.visibilityState !== 'visible' || !rootIsEmpty()) return;
-          var wasReady = window.__BETAI_APP_READY_V18__ === true;
-          var bundleNeverStarted = document.readyState === 'complete' && window.__BETAI_APP_BOOT_STARTED_V18__ !== true;
-          if (wasReady || bundleNeverStarted) recover(reason);
-        }, 2500);
+      function forceRepaint(reason) {
+        var root = getRoot();
+        if (!root) return;
+        try {
+          var x = window.scrollX || 0;
+          var y = window.scrollY || 0;
+          document.documentElement.classList.remove('betai-resume-repaint-v19');
+          root.classList.remove('betai-resume-repaint-v19');
+          void root.offsetHeight;
+          document.documentElement.classList.add('betai-resume-repaint-v19');
+          root.classList.add('betai-resume-repaint-v19');
+          window.dispatchEvent(new Event('resize'));
+          window.requestAnimationFrame(function () {
+            try { window.scrollTo(x, y + 1); } catch (_) {}
+            window.requestAnimationFrame(function () {
+              try { window.scrollTo(x, y); } catch (_) {}
+              document.documentElement.classList.remove('betai-resume-repaint-v19');
+              root.classList.remove('betai-resume-repaint-v19');
+              try { window.dispatchEvent(new CustomEvent('betai:resume-v19', { detail: { reason: reason || 'resume' } })); } catch (_) {}
+            });
+          });
+        } catch (_) {}
       }
 
-      window.__BETAI_RECOVER_APP_V18__ = recover;
+      function checkAfterResume(reason) {
+        forceRepaint(reason);
+        window.setTimeout(function () {
+          if (document.visibilityState !== 'visible') return;
+          var bundleNeverStarted = document.readyState === 'complete' && window.__BETAI_APP_BOOT_STARTED_V19__ !== true;
+          var appNotReady = window.__BETAI_APP_READY_V19__ !== true;
+          if (rootIsEmpty() || bundleNeverStarted || (appNotReady && !appSurfaceIsHealthy()) || !appSurfaceIsHealthy()) {
+            recover(reason + '-unhealthy');
+          }
+        }, 1800);
+      }
 
-      // Błąd pobrania głównego modułu/chunka lub zwrócenie HTML zamiast JS.
+      window.__BETAI_RECOVER_APP_V19__ = recover;
+      window.__BETAI_FORCE_REPAINT_V19__ = forceRepaint;
+
+      // Odrzucona karta musi dostać świeży dokument i świeży bundle.
+      if (document.wasDiscarded === true) {
+        window.setTimeout(function () { recover('document-was-discarded'); }, 0);
+      }
+
       window.addEventListener('error', function (event) {
         var target = event && event.target;
         var tag = target && target.tagName ? String(target.tagName).toUpperCase() : '';
@@ -78,24 +130,45 @@
         }
       });
 
-      window.addEventListener('pageshow', function () { checkAfterResume('empty-root-after-pageshow'); });
-      window.addEventListener('online', function () { checkAfterResume('empty-root-after-online'); });
+      document.addEventListener('freeze', function () {
+        hiddenAt = hiddenAt || Date.now();
+      });
+      document.addEventListener('resume', function () {
+        checkAfterResume('document-resume');
+      });
+      window.addEventListener('pageshow', function (event) {
+        checkAfterResume(event && event.persisted ? 'pageshow-bfcache' : 'pageshow');
+      });
+      window.addEventListener('focus', function () {
+        if (document.visibilityState === 'visible') checkAfterResume('window-focus');
+      });
+      window.addEventListener('online', function () {
+        checkAfterResume('online');
+      });
       document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible') checkAfterResume('empty-root-after-tab-resume');
+        if (document.visibilityState === 'hidden') {
+          hiddenAt = Date.now();
+          return;
+        }
+        var awayMs = hiddenAt ? Date.now() - hiddenAt : 0;
+        hiddenAt = 0;
+        checkAfterResume(awayMs > 15000 ? 'tab-resume-long' : 'tab-resume');
       });
 
-      // Gdy karta została przywrócona z pamięci, ale moduł w ogóle nie wystartował.
       window.addEventListener('load', function () {
         window.setTimeout(function () {
-          if (rootIsEmpty()) recover('empty-root-after-load');
-        }, 10000);
+          if (rootIsEmpty() || !appSurfaceIsHealthy()) checkAfterResume('load-healthcheck');
+        }, 6000);
       });
 
-      window.addEventListener('betai:app-ready-v18', function () {
-        // Zachowaj blokadę przez chwilę, aby awaria nie utworzyła pętli przeładowań.
+      window.addEventListener('betai:app-ready-v19', function () {
+        try {
+          var root = getRoot();
+          if (root) root.setAttribute('data-betai-app-ready-v19', '1');
+        } catch (_) {}
         window.setTimeout(function () {
           try { sessionStorage.removeItem(RECOVERY_KEY); } catch (_) {}
-        }, RECOVERY_WINDOW_MS + 5000);
+        }, 5000);
         try {
           var url = new URL(window.location.href);
           if (url.searchParams.has('__betai_recover')) {
@@ -140,44 +213,7 @@
       } catch (e) {}
     })();
   </script>
-
-
-  <script>
-    // WERSJA 1612 — FHD 1920x1080 / 24" AUTO 80% przez prawdziwy CSS zoom.
-    // Łapie też Windows scaling 125% (screen 1536 CSS px * DPR 1.25 = 1920 fizycznie).
-    // Nie dotyka 2K, 1680x1050, tabletu ani telefonu. Nie aktywuje się, gdy użytkownik sam ustawi zoom 80%.
-    (function () {
-      try {
-        var dpr = window.devicePixelRatio || 1;
-        var swCss = window.screen && window.screen.width ? window.screen.width : 0;
-        var shCss = window.screen && window.screen.height ? window.screen.height : 0;
-        var swPhys = Math.round(swCss * dpr);
-        var shPhys = Math.round(shCss * dpr);
-        var maxPhys = Math.max(swPhys, shPhys);
-        var minPhys = Math.min(swPhys, shPhys);
-        var vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0, 0);
-        var vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0, 0);
-        var maxView = Math.max(vw, vh);
-        var minView = Math.min(vw, vh);
-        var touchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
-        var isTouch = touchPoints > 1;
-        var manualZoomOut = swCss > 0 && vw > swCss * 1.08;
-        var isFhdPhysical = maxPhys >= 1880 && maxPhys <= 1945 && minPhys >= 1030 && minPhys <= 1115;
-        var isFhdCss = Math.max(swCss, shCss) >= 1880 && Math.max(swCss, shCss) <= 1945 && Math.min(swCss, shCss) >= 1030 && Math.min(swCss, shCss) <= 1115;
-        var isViewFhdLike = maxView >= 1450 && maxView <= 1945 && minView >= 760 && minView <= 1085;
-        var is2k = maxPhys >= 2450 || maxView >= 2200;
-        var is1680x1050 = maxPhys >= 1640 && maxPhys <= 1725 && minPhys >= 1010 && minPhys <= 1085;
-        if (!isTouch && !manualZoomOut && !is2k && !is1680x1050 && (isFhdPhysical || isFhdCss || isViewFhdLike)) {
-          document.documentElement.classList.add('betai-fhd-auto80-v1612');
-          document.documentElement.style.setProperty('--betai-fhd-auto80-scale', '0.8');
-          document.documentElement.style.setProperty('--betai-fhd-auto80-width', '125vw');
-          window.__BETAI_FHD_AUTO80_V1612__ = true;
-        }
-      } catch (e) {}
-    })();
-  </script>
-
-  <script>
+<script>
     // WERSJA 1592 — tablet 10": zostawia efekt 50%, ale rozciąga stronę do pełnej szerokości tabletu.
     // Nie dotyka desktopu 2K, TV 2K, laptopów bez dotyku ani telefonów.
     (function () {
@@ -221,8 +257,8 @@
   <link rel="preload" as="image" href="/auth-right-484.png" fetchpriority="high">
 
 
-    <script type="module" crossorigin src="/assets/index-DpRChFbH.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-5Y_SApcm.css">
+    <script type="module" crossorigin src="/assets/index-0MotlXPt.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CBvJqsNV.css">
   </head>
 <body>
   <div id="root"></div>

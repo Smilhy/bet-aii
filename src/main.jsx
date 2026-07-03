@@ -35793,138 +35793,131 @@ function App() {
 function BetaiExactScaleProvider({ children }) {
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return
-    const root = document.documentElement
+
+    const html = document.documentElement
     const body = document.body
-    const clearExactScale = () => {
-      root.style.removeProperty('--betai-exact-scale')
-      root.removeAttribute('data-betai-exact-scale')
-      root.classList.remove('betai-fhd-monitor80-v1323')
-      body?.classList?.remove('betai-fhd-monitor80-v1323')
-      if (body?.dataset) delete body.dataset.betaiFhdMonitor80
+    const appRoot = document.getElementById('root')
+    const legacyScaleClasses = [
+      'betai-fhd-monitor80-v1323',
+      'betai-fhd-auto80-v1612'
+    ]
+
+    const clearLegacyBodyScale = () => {
+      legacyScaleClasses.forEach(className => {
+        html.classList.remove(className)
+        body?.classList?.remove(className)
+        appRoot?.classList?.remove(className)
+      })
+      body?.classList?.remove('betai-fhd-auto75-v1613')
+      appRoot?.classList?.remove('betai-fhd-auto75-v1613')
+      if (body?.dataset) {
+        delete body.dataset.betaiFhdMonitor80
+        delete body.dataset.betaiGlobalZoom80V1528
+      }
+      if (body?.style) {
+        body.style.removeProperty('zoom')
+        body.style.removeProperty('width')
+        body.style.removeProperty('min-width')
+        body.style.removeProperty('max-width')
+        body.style.removeProperty('transform')
+        body.style.removeProperty('transform-origin')
+      }
     }
-    const isManualBrowserZoomOut = () => {
-      const vw = window.innerWidth || document.documentElement.clientWidth || 0
-      const sw = window.screen?.width || 0
-      return sw > 0 && vw > sw * 1.08
-    }
-    const isPawel2k27 = () => {
-      const vw = window.innerWidth || document.documentElement.clientWidth || 0
-      const vh = window.innerHeight || document.documentElement.clientHeight || 0
-      const sw = window.screen?.width || 0
-      const sh = window.screen?.height || 0
-      const maxScreen = Math.max(sw, sh)
-      const minScreen = Math.min(sw, sh)
+
+    const shouldUseFhd75 = () => {
+      const dpr = window.devicePixelRatio || 1
+      const swCss = window.screen?.width || 0
+      const shCss = window.screen?.height || 0
+      const swPhys = Math.round(swCss * dpr)
+      const shPhys = Math.round(shCss * dpr)
+      const maxPhys = Math.max(swPhys, shPhys)
+      const minPhys = Math.min(swPhys, shPhys)
+      const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0, 0)
+      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0, 0)
       const maxView = Math.max(vw, vh)
       const minView = Math.min(vw, vh)
-      return (
-        (maxScreen >= 2450 && maxScreen <= 2700 && minScreen >= 1320 && minScreen <= 1505) ||
-        (maxView >= 2350 && maxView <= 2700 && minView >= 1180 && minView <= 1505)
+      const touchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0
+      const isTouch = touchPoints > 1
+      const manualZoomOut = swCss > 0 && vw > swCss * 1.08
+      const is2k = maxPhys >= 2450 || maxView >= 2200
+      const is1680x1050 = maxPhys >= 1640 && maxPhys <= 1725 && minPhys >= 1010 && minPhys <= 1085
+      const isFhdPhysical = maxPhys >= 1880 && maxPhys <= 1945 && minPhys >= 1030 && minPhys <= 1115
+      const isFhdCss = Math.max(swCss, shCss) >= 1880 && Math.max(swCss, shCss) <= 1945 && Math.min(swCss, shCss) >= 1030 && Math.min(swCss, shCss) <= 1115
+      const isFhdScaledViewport = maxView >= 1500 && maxView <= 1605 && minView >= 760 && minView <= 930
+      const isFhdNativeViewport = maxView >= 1800 && maxView <= 1945 && minView >= 900 && minView <= 1115
+
+      return !isTouch && !manualZoomOut && !is2k && !is1680x1050 && (
+        isFhdPhysical || isFhdCss || isFhdScaledViewport || isFhdNativeViewport
       )
     }
-    const isTrueAutoZoom80Mode = () => {
-      const html = document.documentElement
-      return Boolean(
-        html.classList.contains('betai-global-zoom80-v1528') ||
-        html.classList.contains('betai-fhd-monitor80-v1323') ||
-        html.classList.contains('betai-laptop-browser90-v1233') ||
-        body?.dataset?.betaiGlobalZoom80V1528 ||
-        body?.dataset?.betaiFhdMonitor80
-      )
-    }
-    const isFhd24Auto80 = () => {
-      const vw = window.innerWidth || document.documentElement.clientWidth || 0
-      const vh = window.innerHeight || document.documentElement.clientHeight || 0
-      const sw = window.screen?.width || 0
-      const sh = window.screen?.height || 0
-      const maxScreen = Math.max(sw, sh)
-      const minScreen = Math.min(sw, sh)
-      const maxView = Math.max(vw, vh)
-      // 24 cale / FHD 1920x1080 przy zoomie 100%.
-      // Nie łapiemy ręcznego zoomu 80%, bo wtedy innerWidth robi się ~2400.
-      return (
-        maxScreen >= 1880 && maxScreen <= 1945 &&
-        minScreen >= 1030 && minScreen <= 1115 &&
-        maxView <= 2050 &&
-        !isManualBrowserZoomOut() &&
-        !isPawel2k27()
-      )
-    }
+
     const apply = () => {
-      // WERSJA 1610: tylko FHD 1920x1080/24 cale dostaje automatyczny widok jak zoom 80%.
-      // 2K, TV 2K, 1680x1050 i tablet zostają bez zmian.
-      clearExactScale()
-      if (isFhd24Auto80()) {
-        root.classList.add('betai-fhd-monitor80-v1323')
-        body?.classList?.add('betai-fhd-monitor80-v1323')
-        if (body?.dataset) body.dataset.betaiFhdMonitor80 = '1'
+      clearLegacyBodyScale()
+      const useFhd75 = shouldUseFhd75()
+      html.classList.toggle('betai-fhd-auto75-v1613', useFhd75)
+      if (useFhd75) {
+        html.style.setProperty('--betai-fhd-auto75-scale', '0.75')
+        html.style.setProperty('--betai-fhd-auto75-width', '133.333vw')
+      } else {
+        html.style.removeProperty('--betai-fhd-auto75-scale')
+        html.style.removeProperty('--betai-fhd-auto75-width')
       }
-      // WERSJA 1612: jeśli index.html wykrył FHD/24", wymuś realny CSS zoom 80%.
-      // Nie czyścimy tej klasy w clearExactScale, bo musi działać od startu strony.
-      if (window.__BETAI_FHD_AUTO80_V1612__) {
-        root.classList.add('betai-fhd-auto80-v1612')
-        body?.classList?.add('betai-fhd-auto80-v1612')
-        if (body?.style) {
-          body.style.zoom = '0.8'
-          body.style.width = '125vw'
-          body.style.minWidth = '125vw'
-        }
-      }
-      // WERSJA 1613: FHD/24" ma działać jak ręczny zoom 75%, ale użytkownik zostawia przeglądarkę 100%.
-      const vw1613 = window.innerWidth || document.documentElement.clientWidth || 0
-      const vh1613 = window.innerHeight || document.documentElement.clientHeight || 0
-      const maxView1613 = Math.max(vw1613, vh1613)
-      const minView1613 = Math.min(vw1613, vh1613)
-      const isFhdNativeViewport1613 = maxView1613 >= 1800 && maxView1613 <= 1945 && minView1613 >= 900 && minView1613 <= 1115
-      const isFhdScaledViewport1613 = maxView1613 >= 1500 && maxView1613 <= 1605 && minView1613 >= 760 && minView1613 <= 930
-      if (window.__BETAI_FHD_AUTO75_V1613__ || (!isPawel2k27() && !isManualBrowserZoomOut() && !isFhd24Auto80() && (isFhdNativeViewport1613 || isFhdScaledViewport1613))) {
-        root.classList.add('betai-fhd-auto75-v1613')
-        body?.classList?.add('betai-fhd-auto75-v1613')
-        if (body?.style) {
-          body.style.zoom = '0.75'
-          body.style.width = '133.333vw'
-          body.style.minWidth = '133.333vw'
-          body.style.maxWidth = 'none'
-        }
-      }
+      window.__BETAI_FHD_AUTO75_V1613__ = useFhd75
     }
+
+    const applyAfterResume = () => {
+      window.requestAnimationFrame(apply)
+    }
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') applyAfterResume()
+    }
+
     apply()
     window.addEventListener('resize', apply)
     window.addEventListener('orientationchange', apply)
     window.addEventListener('load', apply)
+    window.addEventListener('betai:resume-v19', applyAfterResume)
+    document.addEventListener('visibilitychange', onVisibility)
     const timers = [60, 250, 800, 1600].map(ms => window.setTimeout(apply, ms))
+
     return () => {
       window.removeEventListener('resize', apply)
       window.removeEventListener('orientationchange', apply)
       window.removeEventListener('load', apply)
+      window.removeEventListener('betai:resume-v19', applyAfterResume)
+      document.removeEventListener('visibilitychange', onVisibility)
       timers.forEach(timer => window.clearTimeout(timer))
-      clearExactScale()
+      clearLegacyBodyScale()
     }
   }, [])
   return children
 }
 
-try { window.__BETAI_APP_BOOT_STARTED_V18__ = true } catch (_) {}
+try { window.__BETAI_APP_BOOT_STARTED_V19__ = true } catch (_) {}
 
-function BetaiRuntimeReadyV18({ children }) {
+function BetaiRuntimeReadyV19({ children }) {
   useEffect(() => {
     try {
-      window.__BETAI_APP_READY_V18__ = true
-      window.dispatchEvent(new Event('betai:app-ready-v18'))
+      window.__BETAI_APP_READY_V19__ = true
+      const root = document.getElementById('root')
+      if (root) root.setAttribute('data-betai-app-ready-v19', '1')
+      window.dispatchEvent(new Event('betai:app-ready-v19'))
     } catch (_) {}
   }, [])
   return children
 }
 
-const betaiRootElementV18 = document.getElementById('root')
-if (!betaiRootElementV18) {
+const betaiRootElementV19 = document.getElementById('root')
+if (!betaiRootElementV19) {
   throw new Error('Brak elementu #root aplikacji BetAI')
 }
 
-createRoot(betaiRootElementV18).render(
+createRoot(betaiRootElementV19).render(
   <ErrorBoundary>
-    <BetaiRuntimeReadyV18>
+    <BetaiRuntimeReadyV19>
       <BetaiExactScaleProvider><App /></BetaiExactScaleProvider>
-    </BetaiRuntimeReadyV18>
+    </BetaiRuntimeReadyV19>
   </ErrorBoundary>
 )
 

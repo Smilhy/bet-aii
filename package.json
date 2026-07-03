@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-18-fix-czarny-ekran-po-powrocie",
-  "version": "18.0.0",
+  "name": "betai-wersja-19-fix-powrot-z-karty-render",
+  "version": "19.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
