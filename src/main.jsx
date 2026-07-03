@@ -35903,7 +35903,30 @@ function BetaiExactScaleProvider({ children }) {
   return children
 }
 
-createRoot(document.getElementById('root')).render(<ErrorBoundary><BetaiExactScaleProvider><App /></BetaiExactScaleProvider></ErrorBoundary>)
+try { window.__BETAI_APP_BOOT_STARTED_V18__ = true } catch (_) {}
+
+function BetaiRuntimeReadyV18({ children }) {
+  useEffect(() => {
+    try {
+      window.__BETAI_APP_READY_V18__ = true
+      window.dispatchEvent(new Event('betai:app-ready-v18'))
+    } catch (_) {}
+  }, [])
+  return children
+}
+
+const betaiRootElementV18 = document.getElementById('root')
+if (!betaiRootElementV18) {
+  throw new Error('Brak elementu #root aplikacji BetAI')
+}
+
+createRoot(betaiRootElementV18).render(
+  <ErrorBoundary>
+    <BetaiRuntimeReadyV18>
+      <BetaiExactScaleProvider><App /></BetaiExactScaleProvider>
+    </BetaiRuntimeReadyV18>
+  </ErrorBoundary>
+)
 
 
 // BETAI TIP ALERT SYSTEM

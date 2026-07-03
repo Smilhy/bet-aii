@@ -3,6 +3,109 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    // WERSJA 18 — odzyskiwanie aplikacji po uśpieniu/odrzuceniu karty.
+    // Ten kod działa przed bundlerem React, więc potrafi naprawić także brakujący/stary plik JS po deployu.
+    (function () {
+      var RECOVERY_KEY = 'betai_runtime_recovery_v18';
+      var RECOVERY_WINDOW_MS = 45000;
+      var recovering = false;
+
+      function rootIsEmpty() {
+        var root = document.getElementById('root');
+        return !!root && root.childElementCount === 0 && !String(root.textContent || '').trim();
+      }
+
+      function mayRecover() {
+        try {
+          var now = Date.now();
+          var last = Number(sessionStorage.getItem(RECOVERY_KEY) || 0);
+          if (last && now - last < RECOVERY_WINDOW_MS) return false;
+          sessionStorage.setItem(RECOVERY_KEY, String(now));
+          return true;
+        } catch (_) {
+          return true;
+        }
+      }
+
+      function recover(reason) {
+        if (recovering || !mayRecover()) return;
+        recovering = true;
+        try { console.warn('[BetAI v18] odzyskiwanie aplikacji:', reason); } catch (_) {}
+        try {
+          var url = new URL(window.location.href);
+          url.searchParams.set('__betai_recover', String(Date.now()));
+          window.location.replace(url.toString());
+        } catch (_) {
+          window.location.reload();
+        }
+      }
+
+      function checkAfterResume(reason) {
+        window.setTimeout(function () {
+          if (document.visibilityState !== 'visible' || !rootIsEmpty()) return;
+          var wasReady = window.__BETAI_APP_READY_V18__ === true;
+          var bundleNeverStarted = document.readyState === 'complete' && window.__BETAI_APP_BOOT_STARTED_V18__ !== true;
+          if (wasReady || bundleNeverStarted) recover(reason);
+        }, 2500);
+      }
+
+      window.__BETAI_RECOVER_APP_V18__ = recover;
+
+      // Błąd pobrania głównego modułu/chunka lub zwrócenie HTML zamiast JS.
+      window.addEventListener('error', function (event) {
+        var target = event && event.target;
+        var tag = target && target.tagName ? String(target.tagName).toUpperCase() : '';
+        var assetUrl = String((target && (target.src || target.href)) || '');
+        var sameOriginAsset = false;
+        var assetPath = '';
+        try {
+          var parsedAssetUrl = new URL(assetUrl, window.location.href);
+          sameOriginAsset = parsedAssetUrl.origin === window.location.origin;
+          assetPath = parsedAssetUrl.pathname || '';
+        } catch (_) {}
+        var assetError = sameOriginAsset && (tag === 'SCRIPT' || (tag === 'LINK' && assetPath.indexOf('/assets/') === 0));
+        var message = String((event && event.message) || (event && event.error && event.error.message) || '');
+        var moduleError = /failed to fetch dynamically imported module|importing a module script failed|loading chunk|mime type|unexpected token\s*[<]/i.test(message);
+        if (assetError || moduleError) recover('module-or-asset-error');
+      }, true);
+
+      window.addEventListener('unhandledrejection', function (event) {
+        var reason = event && event.reason;
+        var message = String((reason && reason.message) || reason || '');
+        if (/failed to fetch dynamically imported module|importing a module script failed|loading chunk|networkerror|mime type/i.test(message)) {
+          recover('module-promise-error');
+        }
+      });
+
+      window.addEventListener('pageshow', function () { checkAfterResume('empty-root-after-pageshow'); });
+      window.addEventListener('online', function () { checkAfterResume('empty-root-after-online'); });
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') checkAfterResume('empty-root-after-tab-resume');
+      });
+
+      // Gdy karta została przywrócona z pamięci, ale moduł w ogóle nie wystartował.
+      window.addEventListener('load', function () {
+        window.setTimeout(function () {
+          if (rootIsEmpty()) recover('empty-root-after-load');
+        }, 10000);
+      });
+
+      window.addEventListener('betai:app-ready-v18', function () {
+        // Zachowaj blokadę przez chwilę, aby awaria nie utworzyła pętli przeładowań.
+        window.setTimeout(function () {
+          try { sessionStorage.removeItem(RECOVERY_KEY); } catch (_) {}
+        }, RECOVERY_WINDOW_MS + 5000);
+        try {
+          var url = new URL(window.location.href);
+          if (url.searchParams.has('__betai_recover')) {
+            url.searchParams.delete('__betai_recover');
+            window.history.replaceState(window.history.state, document.title, url.pathname + url.search + url.hash);
+          }
+        } catch (_) {}
+      });
+    })();
+  </script>
 <script>
     // WERSJA 1613 — FHD 1920x1080 / 24" AUTO 75%.
     // Mocniejsze wykrywanie: łapie zarówno 1920x1080, jak i ~1536x864 przy skalowaniu Windows.

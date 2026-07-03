@@ -6,6 +6,13 @@
 [functions]
   node_bundler = "esbuild"
 
+# WERSJA 18 — brakujący stary bundle po nowym deployu ma zwrócić 404,
+# a nie index.html udający JavaScript. Inline watchdog wtedy pobierze świeżą wersję.
+[[redirects]]
+  from = "/assets/*"
+  to = "/404.html"
+  status = 404
+
 [[redirects]]
   from = "/tipster/*"
   to = "/index.html"
@@ -15,6 +22,30 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+
+# WERSJA 18 — dokument aplikacji zawsze jest sprawdzany ponownie,
+# natomiast pliki z hashem Vite mogą być długo cacheowane.
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/tipster/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    X-Content-Type-Options = "nosniff"
 
 # WERSJA 1867.9 — każdy bot działa niezależnie.
 # To są częstotliwości skanowania, niezależne dla każdego bota.
