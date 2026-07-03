@@ -249,6 +249,102 @@
       } catch (e) {}
     })();
   </script>
+
+  <script>
+    // WERSJA 20 — Opera/Chromium: twarde odzyskanie po powrocie z innej karty.
+    // Wersje 18/19 próbowały tylko odmalować istniejący DOM. U użytkownika DOM zostawał,
+    // ale warstwa renderująca karty w Operze robiła czarny ekran. Dlatego po dłuższym
+    // pobycie w tle wykonujemy jedno świeże uruchomienie aplikacji po powrocie.
+    (function () {
+      var KEY_HIDDEN_AT = 'betai_hidden_at_v20';
+      var KEY_RELOAD_AT = 'betai_resume_reload_at_v20';
+      var MIN_AWAY_MS = 8000;
+      var RELOAD_LOCK_MS = 7000;
+      var hiddenAt = document.visibilityState === 'hidden' ? Date.now() : 0;
+      var scheduled = false;
+
+      function now() { return Date.now ? Date.now() : new Date().getTime(); }
+
+      function saveHiddenAt(ts) {
+        hiddenAt = ts || now();
+        try { sessionStorage.setItem(KEY_HIDDEN_AT, String(hiddenAt)); } catch (_) {}
+      }
+
+      function readHiddenAt() {
+        if (hiddenAt) return hiddenAt;
+        try { return Number(sessionStorage.getItem(KEY_HIDDEN_AT) || 0) || 0; } catch (_) { return 0; }
+      }
+
+      function clearHiddenAt() {
+        hiddenAt = 0;
+        try { sessionStorage.removeItem(KEY_HIDDEN_AT); } catch (_) {}
+      }
+
+      function canReload() {
+        try {
+          var t = now();
+          var last = Number(sessionStorage.getItem(KEY_RELOAD_AT) || 0) || 0;
+          if (last && t - last < RELOAD_LOCK_MS) return false;
+          sessionStorage.setItem(KEY_RELOAD_AT, String(t));
+        } catch (_) {}
+        return true;
+      }
+
+      function cleanUrlFlag() {
+        try {
+          var url = new URL(window.location.href);
+          if (url.searchParams.has('__betai_resume_v20')) {
+            url.searchParams.delete('__betai_resume_v20');
+            window.history.replaceState(window.history.state, document.title, url.pathname + url.search + url.hash);
+          }
+        } catch (_) {}
+      }
+
+      function hardResumeReload(reason) {
+        if (scheduled || !canReload()) return;
+        scheduled = true;
+        try { console.warn('[BetAI v20] świeże uruchomienie po powrocie z karty:', reason); } catch (_) {}
+        try {
+          var url = new URL(window.location.href);
+          url.searchParams.set('__betai_resume_v20', String(now()));
+          window.location.replace(url.toString());
+        } catch (_) {
+          window.location.reload();
+        }
+      }
+
+      function checkReturn(reason) {
+        if (document.visibilityState === 'hidden') return;
+        var awayMs = readHiddenAt() ? now() - readHiddenAt() : 0;
+        clearHiddenAt();
+        if (document.wasDiscarded === true || awayMs >= MIN_AWAY_MS) {
+          window.setTimeout(function () { hardResumeReload(reason + '-' + awayMs + 'ms'); }, 120);
+        }
+      }
+
+      window.__BETAI_HARD_RESUME_RELOAD_V20__ = hardResumeReload;
+
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') saveHiddenAt(now());
+        else checkReturn('visibility');
+      });
+      window.addEventListener('blur', function () {
+        if (document.visibilityState === 'hidden') saveHiddenAt(now());
+      });
+      window.addEventListener('focus', function () { checkReturn('focus'); });
+      window.addEventListener('pageshow', function (event) {
+        if (event && event.persisted) hardResumeReload('pageshow-bfcache');
+        else if (document.wasDiscarded === true) hardResumeReload('document-was-discarded');
+        else cleanUrlFlag();
+      });
+      document.addEventListener('resume', function () { checkReturn('document-resume'); });
+      window.addEventListener('load', function () {
+        cleanUrlFlag();
+        window.setTimeout(function () { try { sessionStorage.removeItem(KEY_RELOAD_AT); } catch (_) {} }, 5000);
+      });
+    })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
