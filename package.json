@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-14-ai-prediction-results",
-  "version": "14.0.0",
+  "name": "betai-wersja-17-fix-subskrypcja-profilu",
+  "version": "17.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",

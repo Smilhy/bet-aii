@@ -21269,38 +21269,23 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   useEffect(() => {
     let alive = true
-    setLoadingAi(true)
-    loadSavedAiTipsBootstrapV1487().then(({ today, tomorrow }) => {
-      if (!alive) return
-      const activeSaved = today
-      if (activeSaved.length) {
-        setLiveCards([])
-        setSelectedId(activeSaved[0]?.id || '')
-        setStatusText(`Automatycznie wczytano zapisane typy AI na dziś: ${today.length}. Nie uruchamiam skanu API bez kliknięcia.`)
-      } else {
-        setSelectedId('')
-        setStatusText('Brak zapisanych typów AI na dziś. Kliknij ręcznie Odśwież dziś, żeby uruchomić jeden bezpieczny skan.')
-      }
-    }).finally(() => { if (alive) setLoadingAi(false) })
-    return () => { alive = false }
-    // V1487: tylko pierwszy lekki auto-load z Supabase, bez automatycznego skanu API.
-  }, [])
 
-  useEffect(() => {
-    let alive = true
-    setLoadingAi(true)
-    loadSavedAiJournalFromDbV1094()
-    loadSavedAiTipsFromDb('today').then(saved => {
+    // WERSJA 16: po wejściu w „Typy AI” uruchamiamy dokładnie ten sam mechanizm,
+    // który wcześniej działał dopiero po kliknięciu „Odśwież dziś”. Najpierw odczytujemy
+    // pełny dziennik, a następnie automatycznie pobieramy aktywny typ z ai_bets lub,
+    // gdy go jeszcze nie ma, uruchamiamy bezpieczny skan zapisujący.
+    const autoLoadActiveAiPickV16 = async () => {
+      await loadSavedAiJournalFromDbV1094()
       if (!alive) return
-      if (saved.length) {
-        setLiveCards([])
-        setSelectedId(saved[0]?.id || '')
-        setStatusText(`Wczytano ${saved.length} zapisanych typów AI na dziś. Nie uruchamiam automatycznego skanu — baza jest chroniona.`)
-      } else {
-        setSelectedId('')
-        setStatusText('Brak zapisanych typów AI na dziś. Kliknij ręcznie Odśwież dziś, żeby uruchomić jeden bezpieczny skan.')
-      }
-    }).finally(() => { if (alive) setLoadingAi(false) })
+      await fetchLiveAiPicks('today')
+    }
+
+    autoLoadActiveAiPickV16().catch(err => {
+      if (!alive) return
+      console.warn('AI automatic initial refresh skipped:', err?.message || err)
+      setStatusText(`Nie udało się automatycznie odświeżyć Typów AI: ${err?.message || err}. Możesz ponowić przyciskiem Odśwież dziś.`)
+    })
+
     return () => { alive = false }
   }, [])
 
@@ -24215,6 +24200,8 @@ function TipsterPricingSettings({ user, onToast }) {
 }
 
 function ProfileSubscriptionModal({ tip, user, onClose }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
   const [plans, setPlans] = useState(TIPSTER_PLAN_OPTIONS.map(p => ({ ...p, price: p.defaultPrice })))
   const [pricingIdentity, setPricingIdentity] = useState(null)
   const [loadingKey, setLoadingKey] = useState('')
