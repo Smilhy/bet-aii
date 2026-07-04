@@ -83,3 +83,12 @@
 # Co 2 godziny pobiera najbliższe mecze i zapisuje pierwszy przedmeczowy snapshot.
 [functions."capture-ai-predictions"]
   schedule = "12 */2 * * *"
+# WERSJA 22 — watchdog dla botów profili.
+# Pilnuje minimum 1 typu dziennie dla Typer Expert i Ograć Buka.
+# Sprawdza co godzinę, rozlicza stare typy i jeśli bot nie ma typu dzisiaj,
+# odpala publikację awaryjną.
+[functions."ai-bot-watchdog"]
+  schedule = "9 * * * *"
+
+[functions."ai-bot-maintenance-background"]
+  background = true

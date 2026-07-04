@@ -6,7 +6,7 @@ const AUTHORS = {
   ograc: { name: 'Ograć Buka', username: 'ograc-buka', source: 'ograc_buka_independent_v1867_9', mirrorAiBets: false }
 }
 
-const VERSION = '1881.0-bot-fixture-id-preservation-and-recovery-v10'
+const VERSION = '1882.0-force-bot-min-1-tip-daily-v22'
 const DEFAULT_BOTS = ['betai', 'typer', 'ograc']
 
 // Każdy bot działa niezależnie. Nie ma wspólnej rotacji.
@@ -885,6 +885,9 @@ async function runAiBotCycle(event = {}, options = {}) {
   const bots = parseBots(options.bots || query.bots)
   const dryRun = ['1', 'true', 'yes'].includes(String(query.dry_run || '').toLowerCase())
   const force = ['1', 'true', 'yes'].includes(String(query.force || '').toLowerCase())
+  // WERSJA 22: awaryjny tryb minimum dziennego z watchdoga.
+  // Działa tylko wtedy, gdy bot nie ma jeszcze typu w bieżącym dniu.
+  const dailyForce = ['1', 'true', 'yes', 'tak'].includes(String(query.daily_force || query.force_daily || query.min_daily || '').toLowerCase())
   const requestedMaxPicks = options.maxPicks ?? query.max_picks ?? bots.length
   const maxPicks = Math.max(1, Math.min(bots.length, Math.round(number(requestedMaxPicks, bots.length))))
   const settings = {
@@ -931,14 +934,17 @@ async function runAiBotCycle(event = {}, options = {}) {
 
   const blocked = {}
   let typerCooldown = null
+  const bypassedBlocks = {}
   if (bots.includes('typer')) {
     if (!typerProgressionState) {
       blocked.typer = 'progression_state_unavailable'
     } else if (typerProgressionState.pending.length > 0) {
-      blocked.typer = 'previous_pick_pending_progression'
-    } else {
+      if (dailyForce || force) bypassedBlocks.typer = 'previous_pick_pending_progression_daily_minimum'
+      else blocked.typer = 'previous_pick_pending_progression'
+    }
+    if (!blocked.typer) {
       const cooldownHours = Number(botPolicies.typer?.cooldownHours || 0)
-      const latestTyperTip = [...(typerProgressionState.rows || [])]
+      const latestTyperTip = [...(typerProgressionState?.rows || [])]
         .filter(row => Number.isFinite(Date.parse(row?.created_at || '')))
         .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0] || null
       if (latestTyperTip && cooldownHours > 0) {
@@ -950,7 +956,10 @@ async function runAiBotCycle(event = {}, options = {}) {
           last_pick_at: latestTyperTip.created_at,
           remaining_minutes: Math.ceil(remainingMs / 60_000)
         }
-        if (remainingMs > 0) blocked.typer = 'typer_expert_cooldown_2h'
+        if (remainingMs > 0) {
+          if (dailyForce || force) bypassedBlocks.typer = bypassedBlocks.typer || 'typer_expert_cooldown_2h_daily_minimum'
+          else blocked.typer = 'typer_expert_cooldown_2h'
+        }
       }
     }
   }
@@ -962,6 +971,8 @@ async function runAiBotCycle(event = {}, options = {}) {
       version: VERSION,
       inserted: 0,
       skipped: blocked,
+      bypassed_blocks: bypassedBlocks,
+      daily_force: dailyForce,
       cooldown: typerCooldown,
       progression_state: typerProgressionState
         ? {
@@ -1029,7 +1040,7 @@ async function runAiBotCycle(event = {}, options = {}) {
       bots,
       blocked,
       settings,
-      execution: { max_picks: maxPicks, independent_bots: true, cooldown_hours: { betai: 0, typer: 2, ograc: 0 } },
+      execution: { max_picks: maxPicks, independent_bots: true, cooldown_hours: { betai: 0, typer: 2, ograc: 0 }, daily_force: dailyForce, bypassed_blocks: bypassedBlocks },
       bot_policies: botPolicies,
       ...diagnostics,
       selected: Object.fromEntries(Object.entries(selected).map(([bot, candidate]) => [bot, {
@@ -1085,8 +1096,9 @@ async function runAiBotCycle(event = {}, options = {}) {
     bots_requested: bots,
     bots_run: botsToRun,
     bots_insert_attempted: botsForInsert,
-    execution: { max_picks: maxPicks, independent_bots: true, cooldown_hours: { betai: 0, typer: 2, ograc: 0 } },
+    execution: { max_picks: maxPicks, independent_bots: true, cooldown_hours: { betai: 0, typer: 2, ograc: 0 }, daily_force: dailyForce, bypassed_blocks: bypassedBlocks },
     skipped: blocked,
+    bypassed_blocks: bypassedBlocks,
     outcomes,
     settings,
     bot_policies: botPolicies,
@@ -1104,7 +1116,7 @@ async function runAiBotCycle(event = {}, options = {}) {
         }
       : null,
     message: inserted > 0
-      ? `Zapisano ${inserted} niezależny typ. BetAI AI i Ograć Buka nie mają cooldownu; Typer Expert ma 2 h.`
+      ? `Zapisano ${inserted} niezależny typ${dailyForce ? ' w trybie minimum dziennego' : ''}. BetAI AI i Ograć Buka nie mają cooldownu; Typer Expert ma 2 h poza trybem awaryjnym.`
       : 'Nie zapisano typu. Odpowiedź zawiera liczbę meczów, kursów, kandydatów i błędy API.'
   }
   await recordRun(supabase, result)

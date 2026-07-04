@@ -32170,6 +32170,8 @@ function App() {
   const [aiSettleGenerating, setAiSettleGenerating] = useState(false)
   const aiAutoSettleRunningRef = useRef(false)
   const aiAutoSettleLastRunRef = useRef(0)
+  const aiBotMaintenanceRunningRef = useRef(false)
+  const aiBotMaintenanceLastRunRef = useRef(0)
   const [selectedTipsterId, setSelectedTipsterId] = useState(null)
   const [pendingPublicSlug, setPendingPublicSlug] = useState(() => {
     if (typeof window === 'undefined') return null
@@ -32593,6 +32595,54 @@ function App() {
     }
   }
 
+  async function runAiBotMaintenanceFallback(options = {}) {
+    const isAdmin = isAdminUser(effectiveAccountProfile || sessionUser)
+    if (!isAdmin || typeof window === 'undefined') return null
+    if (aiBotMaintenanceRunningRef.current) return null
+
+    const now = Date.now()
+    const force = Boolean(options?.force)
+    const storageKey = 'betai_ai_bot_maintenance_last_v21'
+    let lastStored = 0
+    try { lastStored = Number(window.localStorage.getItem(storageKey) || 0) } catch (_) {}
+    const lastRun = Math.max(Number(aiBotMaintenanceLastRunRef.current || 0), lastStored)
+
+    // WERSJA 21: awaryjny watchdog ma być spokojny, nie spamować API.
+    // Normalny harmonogram nadal jest w Netlify; ten fallback odpala się tylko,
+    // gdy admin wraca na stronę i od ostatniej próby minęło minimum 90 minut.
+    if (!force && now - lastRun < 90 * 60 * 1000) return null
+
+    aiBotMaintenanceRunningRef.current = true
+    aiBotMaintenanceLastRunRef.current = now
+    try { window.localStorage.setItem(storageKey, String(now)) } catch (_) {}
+
+    try {
+      const response = await fetch('/.netlify/functions/ai-bot-maintenance-background?source=frontend-admin-v21&stale_minutes=150', {
+        method: 'POST',
+        cache: 'no-store',
+        keepalive: true
+      })
+
+      // Background function zwykle zwraca 202 bez treści. Nie pokazujemy toastów,
+      // bo to tylko zabezpieczenie w tle dla Typer Expert i Ograć Buka.
+      if (!response.ok && response.status !== 202) {
+        const raw = await response.text().catch(() => '')
+        console.warn('ai bot maintenance skipped', response.status, raw.slice(0, 240))
+      }
+
+      window.setTimeout(() => {
+        fetchTips(sessionUser?.id).catch(() => {})
+        fetchRealRanking().catch(() => {})
+      }, 45000)
+      return true
+    } catch (error) {
+      console.warn('ai bot maintenance fallback skipped', error)
+      return null
+    } finally {
+      aiBotMaintenanceRunningRef.current = false
+    }
+  }
+
   async function runLiveAiEngine() {
     setAiLiveGenerating(true)
     try {
@@ -32690,6 +32740,30 @@ function App() {
     }, 1600)
     return () => window.clearTimeout(timer)
   }, [view, sessionUser?.id])
+
+  useEffect(() => {
+    if (!sessionUser?.id) return
+    if (!isAdminUser(effectiveAccountProfile || sessionUser)) return
+
+    const timer = window.setTimeout(() => {
+      runAiBotMaintenanceFallback().catch(() => {})
+    }, 3500)
+
+    const onReturnToTab = () => {
+      if (document.visibilityState === 'visible') {
+        runAiBotMaintenanceFallback().catch(() => {})
+      }
+    }
+
+    document.addEventListener('visibilitychange', onReturnToTab)
+    window.addEventListener('focus', onReturnToTab)
+
+    return () => {
+      window.clearTimeout(timer)
+      document.removeEventListener('visibilitychange', onReturnToTab)
+      window.removeEventListener('focus', onReturnToTab)
+    }
+  }, [sessionUser?.id, sessionUser?.email, accountProfile?.id, accountProfile?.email, accountProfile?.username])
 
 
   async function runUserTipsAutoSettlement({ force = false } = {}) {
