@@ -6,7 +6,7 @@ const AUTHORS = {
   ograc: { name: 'Ograć Buka', username: 'ograc-buka', source: 'ograc_buka_independent_v1867_9', mirrorAiBets: false }
 }
 
-const VERSION = '1882.0-force-bot-min-1-tip-daily-v22'
+const VERSION = '1883.0-hard-force-bot-min-1-tip-daily-v23'
 const DEFAULT_BOTS = ['betai', 'typer', 'ograc']
 
 // Każdy bot działa niezależnie. Nie ma wspólnej rotacji.
@@ -115,6 +115,20 @@ function todayWarsaw(offsetDays = 0) {
     return acc
   }, {})
   return `${parts.year}-${parts.month}-${parts.day}`
+}
+function warsawDateFrom(value = new Date()) {
+  const date = value instanceof Date ? value : new Date(value)
+  if (!Number.isFinite(date.getTime())) return ''
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(date).reduce((acc, part) => {
+    if (part.type !== 'literal') acc[part.type] = part.value
+    return acc
+  }, {})
+  return `${parts.year}-${parts.month}-${parts.day}`
+}
+function rowCreatedTodayWarsaw(row = {}) {
+  return Boolean(row?.created_at) && warsawDateFrom(row.created_at) === todayWarsaw()
 }
 function futureWithin(iso, minMinutes, maxHours) {
   const ts = Date.parse(iso)
@@ -484,6 +498,74 @@ function selectDistinct(shortlists, bots) {
   return selected
 }
 
+function syntheticDailySelectionKey(event, bot) {
+  const digits = String(event?.fixtureId || '').replace(/\D/g, '')
+  const seed = Number(digits.slice(-6) || 0)
+  if (bot === 'typer') return seed % 3 === 0 ? 'over_2_5' : (seed % 2 ? 'home' : 'away')
+  return seed % 4 === 0 ? 'yes' : (seed % 2 ? 'away' : 'home')
+}
+
+function buildSyntheticDailyCandidate(event, bot, policy = {}) {
+  if (!event) return null
+  let marketKey = 'match_winner'
+  let selectionKey = syntheticDailySelectionKey(event, bot)
+  if (selectionKey === 'over_2_5') marketKey = 'goals_2_5'
+  if (selectionKey === 'yes') marketKey = 'btts'
+  if (!policy.allowedMarkets?.includes(marketKey) || !policy.allowedSelections?.includes(selectionKey)) {
+    marketKey = 'match_winner'
+    selectionKey = policy.allowedSelections?.includes('home') ? 'home' : 'away'
+  }
+  const label = labelFor(event, marketKey, selectionKey)
+  if (!label) return null
+  const odds = bot === 'typer' ? 1.78 : 1.84
+  const probability = bot === 'typer' ? 56 : 54
+  const implied = round((1 / odds) * 100, 2)
+  const edge = round((probability / 100) * odds * 100 - 100, 2)
+  return {
+    event,
+    marketKey,
+    selectionKey,
+    market: label.market,
+    prediction: label.prediction,
+    odds,
+    bookmaker: 'Awaryjny model dzienny',
+    probability,
+    implied,
+    edge,
+    booksCount: 0,
+    spread: 0,
+    quality: bot === 'typer' ? 70 : 68,
+    mode: 'daily_force_synthetic',
+    strategyTier: 'daily_force_no_odds',
+    strategyName: policy.strategyName || 'Minimum dzienne',
+    syntheticDaily: true,
+    apiEvidence: { supported: false, contrary: false, unavailable: true, available: false, detail: 'Tryb awaryjny minimum 1 typu dziennie.', advice: '' }
+  }
+}
+
+function selectDailyEmergencyCandidate({ candidates = [], events = [], bot, policy = {}, ownRecentFixtures = new Set() }) {
+  const relaxed = (candidates || [])
+    .filter(candidate => candidate?.event?.fixtureId && !ownRecentFixtures.has(candidate.event.fixtureId))
+    .filter(candidate => (policy.allowedMarkets || []).includes(candidate.marketKey))
+    .filter(candidate => (policy.allowedSelections || []).includes(candidate.selectionKey))
+    .filter(candidate => number(candidate.odds, 0) >= number(policy.minOdds, 1.2) && number(candidate.odds, 0) <= number(policy.maxOdds, 5))
+    .sort((a, b) => scoreCandidate(b, bot) - scoreCandidate(a, bot))
+  if (relaxed[0]) {
+    return {
+      ...relaxed[0],
+      strategyTier: relaxed[0].strategyTier || 'daily_force_relaxed',
+      strategyName: policy.strategyName || relaxed[0].strategyName || 'Minimum dzienne',
+      dailyForceEmergency: true
+    }
+  }
+
+  const futureEvents = (events || [])
+    .filter(event => event?.fixtureId && !ownRecentFixtures.has(event.fixtureId))
+    .sort((a, b) => Date.parse(a.kickoff) - Date.parse(b.kickoff))
+  const event = futureEvents[0] || (events || []).sort((a, b) => Date.parse(a.kickoff) - Date.parse(b.kickoff))[0]
+  return buildSyntheticDailyCandidate(event, bot, policy)
+}
+
 function predictionSupport(candidate, row) {
   const predictions = row?.predictions || {}
   const winner = clean(predictions?.winner?.name).toLowerCase()
@@ -626,7 +708,7 @@ function buildTipRow(candidate, bot, progressionState = null, policy = null) {
   const analysisParts = [
     strategyText,
     `${candidate.mode === 'value' ? 'Model value' : 'Konsensus rynku'}: ${candidate.prediction}.`,
-    `Realny kurs ${candidate.odds} u ${candidate.bookmaker}.`,
+    candidate.syntheticDaily ? `Kurs awaryjny/modelowy ${candidate.odds} (${candidate.bookmaker}) — użyty tylko, żeby bot dodał minimum 1 typ dziennie.` : `Realny kurs ${candidate.odds} u ${candidate.bookmaker}.`,
     `Konsensus ${candidate.probability}% z ${candidate.booksCount} bukmacherów; szacowane value ${candidate.edge}%.`,
     `Poziom selekcji: ${candidate.strategyTier === 'strict' ? 'główny' : candidate.strategyTier === 'fallback' ? 'rezerwowy' : 'otwarty awaryjny'}.`,
     evidence?.detail || '',
@@ -891,9 +973,9 @@ async function runAiBotCycle(event = {}, options = {}) {
   const requestedMaxPicks = options.maxPicks ?? query.max_picks ?? bots.length
   const maxPicks = Math.max(1, Math.min(bots.length, Math.round(number(requestedMaxPicks, bots.length))))
   const settings = {
-    days: Math.round(clamp(query.days || 3, 1, 4)),
-    minMinutes: clamp(query.min_minutes_before_start || 45, 30, 360),
-    maxHours: clamp(query.max_hours_ahead || 96, 12, 120),
+    days: Math.round(clamp(query.days || (dailyForce ? 7 : 3), 1, 7)),
+    minMinutes: clamp(query.min_minutes_before_start || (dailyForce ? 5 : 45), 5, 360),
+    maxHours: clamp(query.max_hours_ahead || (dailyForce ? 168 : 96), 12, 168),
     // Surowa pula jest szeroka. Właściwe progi są osobne dla każdego bota.
     minOdds: clamp(query.min_odds || 1.50, 1.2, 5),
     maxOdds: clamp(query.max_odds || 5.00, 1.5, 5),
@@ -1001,12 +1083,16 @@ async function runAiBotCycle(event = {}, options = {}) {
   const candidates = buildCandidates(events, oddsMap, settings)
   const shortlists = {}
   const strategyDiagnostics = {}
+  const ownRecentFixturesByBot = {}
   botsToRun.forEach(bot => {
     const ownName = AUTHORS[bot].name
-    const ownRecentFixtures = new Set(recentTips
-      .filter(row => row.author_name === ownName)
+    const ownRecentRows = recentTips.filter(row => row.author_name === ownName)
+    const ownRecentFixtures = new Set(ownRecentRows
+      // WERSJA 23: w trybie minimum dziennego nie blokujemy bota typem z poprzednich dni.
+      .filter(row => !dailyForce || rowCreatedTodayWarsaw(row))
       .map(duplicateKey)
       .filter(Boolean))
+    ownRecentFixturesByBot[bot] = ownRecentFixtures
     const ownFreshPool = candidates.filter(candidate => !ownRecentFixtures.has(candidate.event.fixtureId))
     const ranked = rankBotCandidates(ownFreshPool, bot, botPolicies[bot])
     shortlists[bot] = ranked.slice(0, Math.max(8, botPolicies[bot].predictionLookups || 0))
@@ -1020,6 +1106,25 @@ async function runAiBotCycle(event = {}, options = {}) {
   })
   await enrichPredictionShortlists(context, shortlists)
   const selected = selectDistinct(shortlists, botsToRun)
+  const forcedDailySelections = {}
+  if (dailyForce) {
+    botsToRun.forEach(bot => {
+      if (selected[bot]) return
+      const emergency = selectDailyEmergencyCandidate({
+        candidates,
+        events,
+        bot,
+        policy: botPolicies[bot],
+        ownRecentFixtures: ownRecentFixturesByBot[bot] || new Set()
+      })
+      if (emergency) {
+        selected[bot] = emergency
+        forcedDailySelections[bot] = emergency.syntheticDaily ? 'synthetic_fixture_minimum_daily' : 'relaxed_real_odds_minimum_daily'
+      } else {
+        forcedDailySelections[bot] = 'no_fixture_available_for_daily_minimum'
+      }
+    })
+  }
 
   const diagnostics = {
     fixtures_found: events.length,
@@ -1029,7 +1134,8 @@ async function runAiBotCycle(event = {}, options = {}) {
     api_calls: context.apiCalls,
     api_remaining: context.apiRemaining,
     api_durations: context.apiDurations,
-    errors: context.errors.slice(0, 20)
+    errors: context.errors.slice(0, 20),
+    forced_daily_selections: forcedDailySelections
   }
 
   if (dryRun) {

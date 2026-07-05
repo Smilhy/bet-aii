@@ -32602,29 +32602,27 @@ function App() {
 
     const now = Date.now()
     const force = Boolean(options?.force)
-    const storageKey = 'betai_ai_bot_maintenance_last_v21'
+    const storageKey = 'betai_ai_bot_maintenance_last_v23'
     let lastStored = 0
     try { lastStored = Number(window.localStorage.getItem(storageKey) || 0) } catch (_) {}
     const lastRun = Math.max(Number(aiBotMaintenanceLastRunRef.current || 0), lastStored)
 
-    // WERSJA 21: awaryjny watchdog ma być spokojny, nie spamować API.
-    // Normalny harmonogram nadal jest w Netlify; ten fallback odpala się tylko,
-    // gdy admin wraca na stronę i od ostatniej próby minęło minimum 90 minut.
-    if (!force && now - lastRun < 90 * 60 * 1000) return null
+    // WERSJA 23: admin fallback nie czeka już 90 minut.
+    // Ma sprawdzić minimum dzienne szybko po wejściu i po powrocie do karty.
+    if (!force && now - lastRun < 20 * 60 * 1000) return null
 
     aiBotMaintenanceRunningRef.current = true
     aiBotMaintenanceLastRunRef.current = now
     try { window.localStorage.setItem(storageKey, String(now)) } catch (_) {}
 
     try {
-      const response = await fetch('/.netlify/functions/ai-bot-maintenance-background?source=frontend-admin-v21&stale_minutes=150', {
+      const response = await fetch('/.netlify/functions/force-daily-bot-tips?source=frontend-admin-v23&force_daily=1&daily_force=1&days=7&min_minutes_before_start=5&max_hours_ahead=168', {
         method: 'POST',
         cache: 'no-store',
         keepalive: true
       })
 
-      // Background function zwykle zwraca 202 bez treści. Nie pokazujemy toastów,
-      // bo to tylko zabezpieczenie w tle dla Typer Expert i Ograć Buka.
+      // Nie pokazujemy toastów, bo to tylko zabezpieczenie w tle dla Typer Expert i Ograć Buka.
       if (!response.ok && response.status !== 202) {
         const raw = await response.text().catch(() => '')
         console.warn('ai bot maintenance skipped', response.status, raw.slice(0, 240))
@@ -32633,7 +32631,7 @@ function App() {
       window.setTimeout(() => {
         fetchTips(sessionUser?.id).catch(() => {})
         fetchRealRanking().catch(() => {})
-      }, 45000)
+      }, 18000)
       return true
     } catch (error) {
       console.warn('ai bot maintenance fallback skipped', error)

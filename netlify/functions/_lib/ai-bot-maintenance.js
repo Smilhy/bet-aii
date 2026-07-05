@@ -3,7 +3,7 @@ const { AUTHORS, VERSION, runAiBotCycle, json } = require('./ai-bot-cycle')
 const settleTyper = require('../settle-typer-expert')
 const settleOgrac = require('../settle-ograc-buka')
 
-const MAINTENANCE_VERSION = `${VERSION}-maintenance-v22-daily-minimum`
+const MAINTENANCE_VERSION = `${VERSION}-maintenance-v23-hard-daily-minimum`
 
 function env(name) { return process.env[name] || '' }
 function num(value, fallback = 0) {
@@ -68,7 +68,7 @@ function isTodayWarsaw(iso) {
 }
 async function safeSettle(handlerModule, label) {
   try {
-    const result = await handlerModule.handler({ httpMethod: 'POST', queryStringParameters: { source: 'maintenance-v21' } })
+    const result = await handlerModule.handler({ httpMethod: 'POST', queryStringParameters: { source: 'maintenance-v23' } })
     let body = {}
     try { body = result?.body ? JSON.parse(result.body) : {} } catch (_) { body = {} }
     return { ok: Number(result?.statusCode || 500) < 400, label, statusCode: result?.statusCode || null, body }
@@ -92,8 +92,8 @@ async function runMaintenance(event = {}) {
   const query = event.queryStringParameters || {}
   const supabase = getSupabase()
   const force = bool(query.force)
-  // WERSJA 22: tryb minimum dziennego. Watchdog ma dopisać co najmniej
-  // jeden typ dziennie dla wskazanych botów, gdy danego dnia nie mają jeszcze typu.
+  // WERSJA 23: twarde minimum dzienne. Watchdog ma dopisać co najmniej
+  // jeden typ dziennie dla wskazanych botów, nawet gdy nie przejdzie normalny ranking value.
   const forceDaily = bool(query.force_daily || query.daily || query.min_daily)
   const staleMinutes = Math.max(45, Math.round(num(query.stale_minutes, forceDaily ? 1440 : 150)))
   const bots = parseBots(query.bots)
@@ -145,10 +145,12 @@ async function runMaintenance(event = {}) {
     ...event,
     queryStringParameters: {
       ...query,
-      days: query.days || '4',
-      min_minutes_before_start: query.min_minutes_before_start || '30',
-      max_hours_ahead: query.max_hours_ahead || '120',
-      // WERSJA 22: pozwala cyklowi pominąć blokady cooldown/pending tylko dla awaryjnego minimum dziennego.
+      // WERSJA 23: w trybie minimum dziennego skanujemy szerzej i bliżej startu,
+      // żeby bot nie wracał z pustą pulą, gdy normalny value scan nie znajdzie typu.
+      days: query.days || (forceDaily ? '7' : '4'),
+      min_minutes_before_start: query.min_minutes_before_start || (forceDaily ? '5' : '30'),
+      max_hours_ahead: query.max_hours_ahead || (forceDaily ? '168' : '120'),
+      force: forceDaily ? '1' : (query.force || ''),
       daily_force: forceDaily ? '1' : (query.daily_force || '')
     }
   }

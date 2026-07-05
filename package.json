@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-22-force-bot-min-1-typ-dziennie",
-  "version": "22.0.0",
+  "name": "betai-wersja-23-hard-force-bot-min-1-typ-dziennie",
+  "version": "23.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
