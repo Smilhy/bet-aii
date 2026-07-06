@@ -1,6 +1,6 @@
 const { runMaintenance, json, MAINTENANCE_VERSION } = require('./_lib/ai-bot-maintenance')
 
-// WERSJA 23: ręczny i frontendowy twardy trigger.
+// WERSJA 24: ręczny i frontendowy twardy trigger.
 // Używany gdy boty nie dodały dzisiaj typu, bez czekania na cron Netlify.
 exports.handler = async function handler(event = {}) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
@@ -10,7 +10,7 @@ exports.handler = async function handler(event = {}) {
       ...event,
       queryStringParameters: {
         ...query,
-        source: query.source || 'force-daily-bot-tips-v23',
+        source: query.source || 'force-daily-bot-tips-v24',
         bots: query.bots || 'typer,ograc',
         force_daily: '1',
         daily_force: '1',

@@ -1,6 +1,6 @@
 const { runMaintenance, json, MAINTENANCE_VERSION } = require('./_lib/ai-bot-maintenance')
 
-// WERSJA 23: twardy watchdog minimum 1 typu dziennie.
+// WERSJA 24: twardy watchdog minimum 1 typu dziennie.
 // Jeśli Typer Expert albo Ograć Buka nie mają typu dzisiaj, endpoint:
 // 1) próbuje rozliczyć stare typy,
 // 2) odpala szeroki skan,
@@ -13,7 +13,7 @@ exports.handler = async function handler(event = {}) {
       ...event,
       queryStringParameters: {
         ...query,
-        source: query.source || 'scheduled-watchdog-v23-hard-daily-minimum',
+        source: query.source || 'scheduled-watchdog-v24-hard-daily-minimum',
         force_daily: query.force_daily || '1',
         daily_force: query.daily_force || '1',
         days: query.days || '7',

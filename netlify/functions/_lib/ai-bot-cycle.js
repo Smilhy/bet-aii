@@ -6,7 +6,7 @@ const AUTHORS = {
   ograc: { name: 'Ograć Buka', username: 'ograc-buka', source: 'ograc_buka_independent_v1867_9', mirrorAiBets: false }
 }
 
-const VERSION = '1883.0-hard-force-bot-min-1-tip-daily-v23'
+const VERSION = '1884.0-typer-expert-strict-progression-v24'
 const DEFAULT_BOTS = ['betai', 'typer', 'ograc']
 
 // Każdy bot działa niezależnie. Nie ma wspólnej rotacji.
@@ -864,6 +864,132 @@ function profitFromTip(row = {}) {
   return status === 'won' ? round((odds - 1) * stake, 2) : round(-stake, 2)
 }
 
+
+function rowKickoffMs(row = {}) {
+  const candidates = [
+    row.event_time,
+    row.kickoff_time,
+    row.match_time,
+    row.fixture_date,
+    row.date,
+    row.match_date && row.match_time ? `${row.match_date}T${row.match_time}` : '',
+    row.match_date
+  ].filter(Boolean)
+  for (const value of candidates) {
+    const ts = Date.parse(value)
+    if (Number.isFinite(ts)) return ts
+  }
+  return null
+}
+
+function canRepairPendingStake(row = {}) {
+  const kickoffMs = rowKickoffMs(row)
+  // Jeśli nie znamy startu meczu, nadal pozwalamy poprawić stawkę, bo rekord jest pending.
+  // Jeśli start jest znany, nie zmieniamy stawki po rozpoczęciu meczu.
+  return kickoffMs == null || kickoffMs > Date.now() + 60_000
+}
+
+function applySettledTipToProgressionState(state, row, targetProfit) {
+  const status = rowTipStatus(row)
+  if (status === 'pending') return state
+  const profit = profitFromTip(row)
+  const next = {
+    cycleNet: round(number(state.cycleNet, 0), 2),
+    cycleStep: Number(state.cycleStep || 0),
+    completedCycles: Number(state.completedCycles || 0),
+    totalNet: round(number(state.totalNet, 0) + profit, 2)
+  }
+  if (status === 'void') return next
+  next.cycleStep += 1
+  next.cycleNet = round(next.cycleNet + profit, 2)
+  if (next.cycleNet >= targetProfit - 0.005) {
+    next.completedCycles += 1
+    next.cycleNet = 0
+    next.cycleStep = 0
+  }
+  return next
+}
+
+async function repairTyperPendingProgression(supabase, settings = {}, options = {}) {
+  const targetProfit = clamp(settings.targetProfit || 0.4, 0.01, 100)
+  const { data, error } = await supabase
+    .from('tips')
+    .select('*')
+    .eq('author_name', AUTHORS.typer.name)
+    .order('created_at', { ascending: true })
+    .limit(1500)
+  if (error) throw error
+
+  const rows = Array.isArray(data) ? data : []
+  let state = { cycleNet: 0, cycleStep: 0, completedCycles: 0, totalNet: 0 }
+  let pendingCount = 0
+  const repairs = []
+  const skipped = []
+
+  for (const row of rows) {
+    const status = rowTipStatus(row)
+    if (status !== 'pending') {
+      state = applySettledTipToProgressionState(state, row, targetProfit)
+      continue
+    }
+
+    pendingCount += 1
+    const odds = Math.max(1.01, number(row.odds, 1))
+    const expected = progressionForOdds(state, odds, settings)
+    const currentStake = Math.max(0, number(row.stake ?? row.amount ?? row.bet_amount, 1))
+    const stakeDiff = round(expected.stake - currentStake, 2)
+    const baseInfo = {
+      id: row.id,
+      created_at: row.created_at,
+      fixture_id: duplicateKey(row) || null,
+      odds: round(odds, 2),
+      current_stake: round(currentStake, 2),
+      expected_stake: expected.stake,
+      cycle_net_before: expected.cycleNetBefore,
+      step: expected.step
+    }
+
+    if (pendingCount > 1) {
+      skipped.push({ ...baseInfo, reason: 'more_than_one_pending_tip_progression_waits_for_first_result' })
+      continue
+    }
+    if (!canRepairPendingStake(row)) {
+      skipped.push({ ...baseInfo, reason: 'match_already_started_or_finished' })
+      continue
+    }
+    if (Math.abs(stakeDiff) < 0.01) {
+      skipped.push({ ...baseInfo, reason: 'stake_already_correct' })
+      continue
+    }
+
+    if (!options.dryRun) {
+      const { error: updateError } = await supabase
+        .from('tips')
+        .update({ stake: expected.stake })
+        .eq('id', row.id)
+      if (updateError) throw updateError
+    }
+    repairs.push({ ...baseInfo, previous_stake: round(currentStake, 2), new_stake: expected.stake, diff: stakeDiff })
+  }
+
+  return {
+    ok: true,
+    version: VERSION,
+    dry_run: Boolean(options.dryRun),
+    checked_rows: rows.length,
+    pending: pendingCount,
+    repaired: repairs.length,
+    repairs,
+    skipped: skipped.slice(0, 10),
+    final_settled_state: {
+      cycle_net: round(state.cycleNet, 2),
+      next_step: Number(state.cycleStep || 0) + 1,
+      completed_cycles: Number(state.completedCycles || 0),
+      total_net: round(state.totalNet, 2)
+    }
+  }
+}
+
 async function readTyperProgressionState(supabase, targetProfit = 0.4) {
   const { data, error } = await supabase
     .from('tips')
@@ -967,8 +1093,8 @@ async function runAiBotCycle(event = {}, options = {}) {
   const bots = parseBots(options.bots || query.bots)
   const dryRun = ['1', 'true', 'yes'].includes(String(query.dry_run || '').toLowerCase())
   const force = ['1', 'true', 'yes'].includes(String(query.force || '').toLowerCase())
-  // WERSJA 22: awaryjny tryb minimum dziennego z watchdoga.
-  // Działa tylko wtedy, gdy bot nie ma jeszcze typu w bieżącym dniu.
+  // WERSJA 24: minimum dzienne dalej działa, ale Typer Expert nigdy nie omija progresji.
+  // Jeśli ma nierozliczony typ, najpierw naprawiamy jego stawkę i czekamy na rozliczenie.
   const dailyForce = ['1', 'true', 'yes', 'tak'].includes(String(query.daily_force || query.force_daily || query.min_daily || '').toLowerCase())
   const requestedMaxPicks = options.maxPicks ?? query.max_picks ?? bots.length
   const maxPicks = Math.max(1, Math.min(bots.length, Math.round(number(requestedMaxPicks, bots.length))))
@@ -1017,12 +1143,32 @@ async function runAiBotCycle(event = {}, options = {}) {
   const blocked = {}
   let typerCooldown = null
   const bypassedBlocks = {}
+  let typerProgressionRepair = null
+  if (bots.includes('typer') && typerProgressionState?.pending?.length > 0) {
+    try {
+      typerProgressionRepair = await repairTyperPendingProgression(
+        supabase,
+        botPolicies.typer?.progression || BOT_POLICIES.typer.progression,
+        { dryRun }
+      )
+      if (typerProgressionRepair?.repaired && !dryRun) {
+        typerProgressionState = await readTyperProgressionState(
+          supabase,
+          botPolicies.typer?.progression?.targetProfit || 0.4
+        )
+      }
+    } catch (error) {
+      context.errors.push(`typer progression repair: ${error.message || error}`)
+    }
+  }
+
   if (bots.includes('typer')) {
     if (!typerProgressionState) {
       blocked.typer = 'progression_state_unavailable'
     } else if (typerProgressionState.pending.length > 0) {
-      if (dailyForce || force) bypassedBlocks.typer = 'previous_pick_pending_progression_daily_minimum'
-      else blocked.typer = 'previous_pick_pending_progression'
+      // WERSJA 24: Typer Expert nigdy nie dodaje kolejnego typu przed rozliczeniem poprzedniego.
+      // Minimum dzienne i force nie mogą ominąć progresji, bo wtedy stawka wracała do 1.00.
+      blocked.typer = 'previous_pick_pending_progression'
     }
     if (!blocked.typer) {
       const cooldownHours = Number(botPolicies.typer?.cooldownHours || 0)
@@ -1039,7 +1185,7 @@ async function runAiBotCycle(event = {}, options = {}) {
           remaining_minutes: Math.ceil(remainingMs / 60_000)
         }
         if (remainingMs > 0) {
-          if (dailyForce || force) bypassedBlocks.typer = bypassedBlocks.typer || 'typer_expert_cooldown_2h_daily_minimum'
+          if (dailyForce || force) bypassedBlocks.typer = bypassedBlocks.typer || 'typer_expert_cooldown_2h_bypassed_progression_safe'
           else blocked.typer = 'typer_expert_cooldown_2h'
         }
       }
@@ -1056,6 +1202,7 @@ async function runAiBotCycle(event = {}, options = {}) {
       bypassed_blocks: bypassedBlocks,
       daily_force: dailyForce,
       cooldown: typerCooldown,
+      progression_repair: typerProgressionRepair,
       progression_state: typerProgressionState
         ? {
             pending: typerProgressionState.pending.length,
@@ -1147,6 +1294,7 @@ async function runAiBotCycle(event = {}, options = {}) {
       blocked,
       settings,
       execution: { max_picks: maxPicks, independent_bots: true, cooldown_hours: { betai: 0, typer: 2, ograc: 0 }, daily_force: dailyForce, bypassed_blocks: bypassedBlocks },
+      progression_repair: typerProgressionRepair,
       bot_policies: botPolicies,
       ...diagnostics,
       selected: Object.fromEntries(Object.entries(selected).map(([bot, candidate]) => [bot, {
@@ -1212,6 +1360,7 @@ async function runAiBotCycle(event = {}, options = {}) {
     errors: context.errors.slice(0, 25),
     elapsed_ms: Date.now() - startedAt,
     cooldown: typerCooldown,
+    progression_repair: typerProgressionRepair,
     progression_state: typerProgressionState
       ? {
           pending: typerProgressionState.pending.length,
@@ -1222,7 +1371,7 @@ async function runAiBotCycle(event = {}, options = {}) {
         }
       : null,
     message: inserted > 0
-      ? `Zapisano ${inserted} niezależny typ${dailyForce ? ' w trybie minimum dziennego' : ''}. BetAI AI i Ograć Buka nie mają cooldownu; Typer Expert ma 2 h poza trybem awaryjnym.`
+      ? `Zapisano ${inserted} niezależny typ${dailyForce ? ' w trybie minimum dziennego' : ''}. Typer Expert zawsze liczy progresję i nie omija nierozliczonego poprzedniego typu.`
       : 'Nie zapisano typu. Odpowiedź zawiera liczbę meczów, kursów, kandydatów i błędy API.'
   }
   await recordRun(supabase, result)
@@ -1241,4 +1390,4 @@ function createHandler(options = {}) {
   }
 }
 
-module.exports = { AUTHORS, VERSION, BOT_POLICIES, runAiBotCycle, createHandler, json, _test: { parseMarket, buildCandidates, scoreCandidate, labelFor, candidateTier, rankBotCandidates, apiStrategyPass, getBotPolicy, normalizeTipStatus, rowTipStatus, profitFromTip, progressionForOdds } }
+module.exports = { AUTHORS, VERSION, BOT_POLICIES, runAiBotCycle, repairTyperPendingProgression, createHandler, json, _test: { parseMarket, buildCandidates, scoreCandidate, labelFor, candidateTier, rankBotCandidates, apiStrategyPass, getBotPolicy, normalizeTipStatus, rowTipStatus, profitFromTip, progressionForOdds, repairTyperPendingProgression } }
