@@ -27,6 +27,11 @@ function normalizeCountryCode(value) {
   return clean === 'UK' ? 'GB' : clean
 }
 
+function isKnownCountry(value) {
+  const clean = normalizeCountryCode(value)
+  return Boolean(clean && clean !== 'ZZ')
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders, body: '' }
   if (event.httpMethod !== 'POST') return json(405, { ok: false, error: 'Method not allowed' })
@@ -58,6 +63,31 @@ exports.handler = async (event) => {
       updated_at: new Date().toISOString()
     }
 
+    const source = String(body.source || 'browser_hint_v32').trim().slice(0, 80) || 'browser_hint_v32'
+
+    // WERSJA 32: nie nadpisujemy kraju ustawionego ręcznie lub zapisanego wcześniej.
+    // Dzięki temu manualne UK/PL nie zostanie zmienione przez locale przeglądarki.
+    try {
+      const existing = await admin
+        .from('profiles')
+        .select('id,country_code,registered_country_code,country_name,registered_country_name')
+        .eq('id', userId)
+        .maybeSingle()
+      const existingCode = existing?.data?.registered_country_code || existing?.data?.country_code || ''
+      if (!body.force && isKnownCountry(existingCode)) {
+        const metaPatch = {
+          id: userId,
+          email,
+          username: baseRow.username,
+          locale,
+          timezone,
+          updated_at: new Date().toISOString()
+        }
+        await admin.from('profiles').upsert(metaPatch, { onConflict: 'id' })
+        return json(200, { ok: true, saved: true, country_saved: false, preserved_existing_country: true })
+      }
+    } catch (_) {}
+
     const countryPatch = {
       registered_country_code: countryCode,
       registered_country_name: countryName || countryCode,
@@ -65,7 +95,7 @@ exports.handler = async (event) => {
       country_name: countryName || countryCode,
       locale,
       timezone,
-      registration_country_source: 'browser_hint_v30'
+      registration_country_source: source
     }
 
     // Najpierw próbujemy pełnego zapisu. Jeśli kolumny kraju nie są jeszcze dodane w Supabase,

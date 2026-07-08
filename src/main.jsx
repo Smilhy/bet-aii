@@ -4809,11 +4809,11 @@ const staticTips = []
 
 
 // 🔒 SIDEBAR LOCK v1130 — kolejność zmieniona na wyraźną prośbę Pawła: Top typerzy bezpośrednio po Mój profil.
+// WERSJA 31 — Mapa świata przeniesiona na sam dół menu, za Nagrody/Bonusy.
 // Te pozycje trzymają stałą kolejność menu, żeby kolejne poprawki Top typerów/profili
 // nie rozjechały lewego panelu ani aktywnej zakładki.
 const LOCKED_SIDEBAR_ITEMS_V1130 = Object.freeze([
   Object.freeze({ id: 'dashboard', label: '⌂ Dashboard', activeViews: Object.freeze(['dashboard']), clearTipster: true }),
-  Object.freeze({ id: 'worldMap', label: '🗺️ Mapa świata', activeViews: Object.freeze(['worldMap']), clearTipster: true }),
   Object.freeze({ id: 'add', label: '＋ Dodaj typ', activeViews: Object.freeze(['add']) }),
   Object.freeze({ id: 'wallet', label: '💼 Portfel', activeViews: Object.freeze(['wallet', 'deposits', 'payouts', 'payments', 'subscriptions', 'earnings']) }),
   Object.freeze({ id: 'profile', label: '👤 Mój profil', activeViews: Object.freeze(['profile']) }),
@@ -4823,7 +4823,8 @@ const LOCKED_SIDEBAR_ITEMS_V1130 = Object.freeze([
   Object.freeze({ id: 'referrals', label: '👥 Społeczność', activeViews: Object.freeze(['referrals']) }),
   Object.freeze({ id: 'aiPicks', label: '🧠 Typy AI', activeViews: Object.freeze(['aiPicks']) }),
   Object.freeze({ id: 'articles', label: '📰 Artykuły/TV Live', activeViews: Object.freeze(['articles']) }),
-  Object.freeze({ id: 'rewardsBonuses', label: '🎁 Nagrody/Bonusy', activeViews: Object.freeze(['rewardsBonuses']) })
+  Object.freeze({ id: 'rewardsBonuses', label: '🎁 Nagrody/Bonusy', activeViews: Object.freeze(['rewardsBonuses']) }),
+  Object.freeze({ id: 'worldMap', label: '🗺️ Mapa świata', activeViews: Object.freeze(['worldMap']), clearTipster: true })
 ])
 
 const LOCKED_ADMIN_SIDEBAR_ITEMS_V1129 = Object.freeze([
@@ -5184,6 +5185,45 @@ const BETAI_WORLD_MAP_NAME_TO_CODE_V30 = Object.freeze({
   'izrael': 'IL', 'israel': 'IL'
 })
 
+// WERSJA 32 — ręczne uzupełnienie obecnych kont + bezpieczny fallback przed migracją SQL.
+// UK: buchajson1988, p.kucharski, smilhytv. Aktualne konta bez kraju uzupełniamy SQL-em na PL.
+const BETAI_WORLD_MAP_MANUAL_COUNTRY_OVERRIDES_V32 = Object.freeze({
+  'buchajson1988': 'GB',
+  'p kucharski': 'GB',
+  'p.kucharski': 'GB',
+  'smilhytv': 'GB'
+})
+
+const BETAI_WORLD_MAP_EXISTING_BACKFILL_CUTOFF_V32 = Date.parse('2026-07-09T00:00:00.000Z')
+
+function getBetaiWorldManualCountryCodeV32(row = {}) {
+  const candidates = [
+    row.username,
+    row.display_name,
+    row.full_name,
+    row.profile_name,
+    row.name,
+    row.email ? String(row.email).split('@')[0] : ''
+  ]
+  for (const candidate of candidates) {
+    const raw = String(candidate || '').trim()
+    if (!raw) continue
+    const normalized = normalizeBetaiWorldCountryKeyV30(raw)
+    if (BETAI_WORLD_MAP_MANUAL_COUNTRY_OVERRIDES_V32[normalized]) return BETAI_WORLD_MAP_MANUAL_COUNTRY_OVERRIDES_V32[normalized]
+    if (BETAI_WORLD_MAP_MANUAL_COUNTRY_OVERRIDES_V32[raw.toLowerCase()]) return BETAI_WORLD_MAP_MANUAL_COUNTRY_OVERRIDES_V32[raw.toLowerCase()]
+  }
+  return ''
+}
+
+function shouldBetaiWorldUsePolandBackfillV32(row = {}) {
+  const manual = getBetaiWorldManualCountryCodeV32(row)
+  if (manual) return false
+  const rawCreated = row.created_at || row.createdAt || row.inserted_at || row.created || ''
+  const createdMs = rawCreated ? Date.parse(rawCreated) : NaN
+  if (Number.isFinite(createdMs) && createdMs <= BETAI_WORLD_MAP_EXISTING_BACKFILL_CUTOFF_V32) return true
+  return false
+}
+
 const BETAI_WORLD_MAP_TZ_TO_CODE_V30 = Object.freeze({
   'Europe/Warsaw': 'PL', 'Europe/London': 'GB', 'Europe/Berlin': 'DE', 'Europe/Paris': 'FR', 'Europe/Madrid': 'ES', 'Europe/Rome': 'IT', 'Europe/Amsterdam': 'NL',
   'Europe/Brussels': 'BE', 'Europe/Lisbon': 'PT', 'Europe/Dublin': 'IE', 'Europe/Oslo': 'NO', 'Europe/Stockholm': 'SE', 'Europe/Helsinki': 'FI',
@@ -5207,6 +5247,9 @@ function normalizeBetaiWorldCountryKeyV30(value = '') {
 }
 
 function getBetaiWorldCountryCodeV30(row = {}) {
+  const manualCountryCode = getBetaiWorldManualCountryCodeV32(row)
+  if (manualCountryCode) return manualCountryCode
+
   const codeCandidates = [
     row.country_code,
     row.countryCode,
@@ -5251,6 +5294,8 @@ function getBetaiWorldCountryCodeV30(row = {}) {
   const tz = String(row.timezone || row.time_zone || row.registered_timezone || row.tz || '').trim()
   if (BETAI_WORLD_MAP_TZ_TO_CODE_V30[tz]) return BETAI_WORLD_MAP_TZ_TO_CODE_V30[tz]
 
+  if (shouldBetaiWorldUsePolandBackfillV32(row)) return 'PL'
+
   return 'ZZ'
 }
 
@@ -5289,6 +5334,43 @@ function getBetaiBrowserCountryHintV30() {
   }
 }
 
+async function recordBetaiProfileCountryHintV32(user = null, { force = false } = {}) {
+  if (!user?.id) return false
+  try {
+    const hint = getBetaiBrowserCountryHintV30()
+    if (!hint.code) return false
+    const storageKey = `betai_country_hint_synced_v32_${user.id}_${hint.code}`
+    try {
+      if (!force && localStorage.getItem(storageKey) === '1') return true
+    } catch (_) {}
+    let accessToken = ''
+    try {
+      const sessionResult = await supabase?.auth?.getSession?.()
+      accessToken = sessionResult?.data?.session?.access_token || ''
+    } catch (_) {}
+    await fetch('/.netlify/functions/record-profile-country', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+      },
+      body: JSON.stringify({
+        user_id: user.id,
+        email: user.email || '',
+        country_code: hint.code,
+        country_name: hint.name,
+        locale: hint.locale,
+        timezone: hint.timezone,
+        source: 'auto_app_v32'
+      })
+    }).catch(() => null)
+    try { localStorage.setItem(storageKey, '1') } catch (_) {}
+    return true
+  } catch (_) {
+    return false
+  }
+}
+
 function getBetaiWorldProfileNameV30(row = {}) {
   const resolved = typeof resolveRealProfileUsername === 'function' ? resolveRealProfileUsername(row) : ''
   const fallback = row.username || row.display_name || row.full_name || row.profile_name || row.name || row.email || 'Użytkownik'
@@ -5308,36 +5390,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
   const [status, setStatus] = useState('')
 
   const syncCountryHint = useCallback(async () => {
-    if (!user?.id) return
-    try {
-      const hint = getBetaiBrowserCountryHintV30()
-      if (!hint.code) return
-      const storageKey = `betai_country_hint_synced_v30_${user.id}_${hint.code}`
-      try {
-        if (localStorage.getItem(storageKey) === '1') return
-      } catch (_) {}
-      let accessToken = ''
-      try {
-        const sessionResult = await supabase?.auth?.getSession?.()
-        accessToken = sessionResult?.data?.session?.access_token || ''
-      } catch (_) {}
-      await fetch('/.netlify/functions/record-profile-country', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
-        },
-        body: JSON.stringify({
-          user_id: user.id,
-          email: user.email || '',
-          country_code: hint.code,
-          country_name: hint.name,
-          locale: hint.locale,
-          timezone: hint.timezone
-        })
-      }).catch(() => null)
-      try { localStorage.setItem(storageKey, '1') } catch (_) {}
-    } catch (_) {}
+    await recordBetaiProfileCountryHintV32(user)
   }, [user?.id, user?.email])
 
   const loadProfiles = useCallback(async () => {
@@ -5399,7 +5452,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
       const key = row._worldCountryCode || 'ZZ'
       const prev = map.get(key) || { code: key, name: row._worldCountryName || getBetaiWorldCountryNameV30(key), flag: row._worldFlag || getBetaiFlagEmojiV30(key), count: 0, users: [] }
       prev.count += 1
-      if (prev.users.length < 8) prev.users.push(row)
+      if (prev.users.length < 12) prev.users.push(row)
       map.set(key, prev)
     })
     return [...map.values()].sort((a, b) => (b.count - a.count) || String(a.name).localeCompare(String(b.name), 'pl'))
@@ -5410,119 +5463,181 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
     return rows
       .filter(row => selectedCountry === 'all' || row._worldCountryCode === selectedCountry)
       .filter(row => !q || `${row._worldName} ${row.email || ''} ${row._worldCountryName}`.toLowerCase().includes(q))
-      .slice(0, 96)
+      .slice(0, 400)
   }, [rows, query, selectedCountry])
 
-  const mapUsers = visibleUsers.slice(0, 48).map((row, index, arr) => {
+  const filteredCountryRows = useMemo(() => {
+    const map = new Map()
+    visibleUsers.forEach(row => {
+      const key = row._worldCountryCode || 'ZZ'
+      const prev = map.get(key) || { code: key, name: row._worldCountryName || getBetaiWorldCountryNameV30(key), flag: row._worldFlag || getBetaiFlagEmojiV30(key), count: 0, users: [] }
+      prev.count += 1
+      if (prev.users.length < 5) prev.users.push(row)
+      map.set(key, prev)
+    })
+    return [...map.values()].sort((a, b) => (b.count - a.count) || String(a.name).localeCompare(String(b.name), 'pl'))
+  }, [visibleUsers])
+
+  const nowMs = Date.now()
+  const oneDayMs = 24 * 60 * 60 * 1000
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+  const startOfMonth = new Date()
+  startOfMonth.setDate(1)
+  startOfMonth.setHours(0, 0, 0, 0)
+  const registeredToday = rows.filter(row => Date.parse(row.created_at || row.createdAt || '') >= startOfToday.getTime()).length
+  const registeredWeek = rows.filter(row => Date.parse(row.created_at || row.createdAt || '') >= nowMs - (7 * oneDayMs)).length
+  const registeredMonth = rows.filter(row => Date.parse(row.created_at || row.createdAt || '') >= startOfMonth.getTime()).length
+  const totalCountries = countryRows.filter(row => row.code !== 'ZZ').length
+  const topCountryCount = Math.max(1, countryRows[0]?.count || 1)
+  const latestUsers = rows.slice(0, 7)
+
+  const premiumCountryNodes = (filteredCountryRows.length ? filteredCountryRows : countryRows).slice(0, 16).map((country, index, arr) => {
     const total = Math.max(arr.length, 1)
-    const ring = index % 3
-    const radius = ring === 0 ? 34 : ring === 1 ? 43 : 51
-    const angle = (-90 + (index * 360 / total) + (ring * 7)) * Math.PI / 180
+    const ring = index % 2
+    const radius = ring === 0 ? 39 : 48
+    const angle = (-90 + (index * 360 / total) + (ring ? 10 : 0)) * Math.PI / 180
     const x = 50 + Math.cos(angle) * radius
     const y = 50 + Math.sin(angle) * radius
-    return { ...row, _x: Math.max(4, Math.min(96, x)), _y: Math.max(6, Math.min(94, y)) }
+    return { ...country, _x: Math.max(6, Math.min(94, x)), _y: Math.max(8, Math.min(92, y)) }
   })
 
-  const centerPoint = { x: 50, y: 50 }
-  const totalCountries = countryRows.filter(row => row.code !== 'ZZ').length
-  const latestUsers = rows.slice(0, 6)
+  const remainingCountriesCount = Math.max(0, filteredCountryRows.length - premiumCountryNodes.length)
+
 
   return (
-    <section className="world-map-page-v30">
-      <div className="world-map-hero-v30">
+    <section className="world-map-page-v30 world-map-page-premium-v32">
+      <div className="world-map-premium-top-v32">
         <div>
           <span className="world-map-kicker-v30">🌍 {t('Mapa świata')}</span>
-          <h1>{t('Mapa świata zarejestrowanych')}</h1>
-          <p>{t('Każda flaga oznacza kraj użytkownika. Obok flagi pokazuję nick, a lista krajów aktualizuje się z profili Supabase.')}</p>
+          <h1>{t('Mapa świata rejestrujących')}</h1>
+          <p>{t('Zobacz, skąd pochodzą użytkownicy Bet+AI. Flagi, kraje i statystyki aktualizują się automatycznie z profili Supabase.')}</p>
         </div>
-        <div className="world-map-stats-v30">
-          <div><strong>{rows.length}</strong><span>{t('użytkowników')}</span></div>
-          <div><strong>{totalCountries}</strong><span>{t('krajów')}</span></div>
+        <div className="world-map-premium-actions-v32">
+          <select value={selectedCountry} onChange={event => setSelectedCountry(event.target.value)}>
+            <option value="all">🌐 {t('Wszystkie kraje')}</option>
+            {countryRows.map(country => <option key={country.code} value={country.code}>{country.flag} {country.name} ({country.count})</option>)}
+          </select>
           <button type="button" onClick={loadProfiles} disabled={loading}>{loading ? t('Odświeżam...') : t('Odśwież')}</button>
         </div>
       </div>
 
-      <div className="world-map-toolbar-v30">
+      <div className="world-map-premium-search-v32">
         <label>
           <span>⌕</span>
           <input value={query} onChange={event => setQuery(event.target.value)} placeholder={t('Szukaj nicku albo kraju...')} />
         </label>
-        <select value={selectedCountry} onChange={event => setSelectedCountry(event.target.value)}>
-          <option value="all">{t('Wszystkie kraje')}</option>
-          {countryRows.map(country => <option key={country.code} value={country.code}>{country.flag} {country.name} ({country.count})</option>)}
-        </select>
       </div>
 
-      <div className="world-map-layout-v30">
-        <div className="world-map-orbit-card-v30">
-          <div className="world-map-orbit-v30">
-            <svg className="world-map-lines-v30" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              {mapUsers.map((row, index) => (
-                <line key={`${row.id || row.email || index}-line`} x1={centerPoint.x} y1={centerPoint.y} x2={row._x} y2={row._y} />
+      <div className="world-map-premium-grid-v32">
+        <div className="world-map-premium-stage-v32">
+          <div className="world-map-premium-orbit-v32">
+            <svg className="world-map-premium-lines-v32" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <circle cx="50" cy="50" r="22" />
+              <circle cx="50" cy="50" r="34" />
+              <circle cx="50" cy="50" r="46" />
+              {premiumCountryNodes.map((country, index) => (
+                <line key={`${country.code}-${index}-line`} x1="50" y1="50" x2={country._x} y2={country._y} />
               ))}
             </svg>
-            <div className="world-map-center-v30">
-              <b>Bet+AI</b>
-              <span>{rows.length}</span>
-              <small>{t('users')}</small>
+            <div className="world-map-globe-v32" aria-hidden="true">
+              <span className="world-map-globe-grid-v32" />
             </div>
-            {mapUsers.map((row, index) => (
+            <div className="world-map-center-premium-v32">
+              <strong>{rows.length}</strong>
+              <span>{t('użytkowników')}</span>
+              <small>{t('łącznie')}</small>
+            </div>
+
+            {premiumCountryNodes.map((country, index) => (
               <button
                 type="button"
-                key={row.id || row.email || `${row._worldCountryCode}-${index}`}
-                className="world-map-node-v30"
-                style={{ '--x': `${row._x}%`, '--y': `${row._y}%`, '--delay': `${index * 35}ms` }}
-                title={`${row._worldName} • ${row._worldCountryName}`}
-                onClick={() => {
-                  if (onOpenTipster && row.id) onOpenTipster(row.id)
-                  else onToast?.({ type: 'info', title: row._worldName, message: row._worldCountryName })
-                }}
+                key={country.code}
+                className={`world-map-country-node-v32 ${selectedCountry === country.code ? 'active' : ''}`}
+                style={{ '--x': `${country._x}%`, '--y': `${country._y}%`, '--delay': `${index * 45}ms` }}
+                title={`${country.name}: ${country.count}`}
+                onClick={() => setSelectedCountry(country.code)}
               >
-                <span className="world-map-flag-v30">{row._worldFlag}</span>
-                <span className="world-map-nick-v30" data-no-translate="true">{row._worldName}</span>
+                <span className="world-map-country-flag-v32">{country.flag}</span>
+                <span className="world-map-country-text-v32">
+                  <b>{country.name}</b>
+                  <small>{country.count} {country.count === 1 ? t('użytkownik') : t('użytkowników')}</small>
+                </span>
               </button>
             ))}
-            {!mapUsers.length && !loading ? (
+
+            {remainingCountriesCount > 0 ? (
+              <button type="button" className="world-map-other-node-v32" onClick={() => setSelectedCountry('all')}>
+                <span>＋</span>
+                <b>{t('Pozostałe kraje')}</b>
+                <small>{remainingCountriesCount}</small>
+              </button>
+            ) : null}
+
+            {!premiumCountryNodes.length && !loading ? (
               <div className="world-map-empty-v30">
                 <strong>{t('Brak danych krajów')}</strong>
-                <span>{t('Nowi użytkownicy pojawią się tutaj po rejestracji i uzupełnieniu kraju.')}</span>
+                <span>{t('Nowi użytkownicy pojawią się tutaj po rejestracji i zapisaniu kraju.')}</span>
               </div>
             ) : null}
           </div>
+
+          <div className="world-map-premium-bottom-stats-v32">
+            <div><b>{registeredToday}</b><span>{t('dzisiaj')}</span></div>
+            <div><b>{registeredWeek}</b><span>{t('w tym tygodniu')}</span></div>
+            <div><b>{registeredMonth || rows.length}</b><span>{t('ten miesiąc')}</span></div>
+            <div><b>{totalCountries}</b><span>{t('kraje')}</span></div>
+          </div>
         </div>
 
-        <aside className="world-map-side-v30">
-          <div className="world-map-panel-v30">
+        <aside className="world-map-premium-side-v32">
+          <div className="world-map-panel-v30 world-map-panel-premium-v32">
             <div className="world-map-panel-head-v30">
-              <strong>{t('Kraje')}</strong>
+              <strong>{t('Użytkownicy według kraju')}</strong>
               <span>{countryRows.length}</span>
             </div>
-            <div className="world-map-country-list-v30">
-              {countryRows.slice(0, 16).map(country => (
-                <button key={country.code} type="button" className={selectedCountry === country.code ? 'active' : ''} onClick={() => setSelectedCountry(country.code)}>
-                  <span>{country.flag}</span>
-                  <b>{country.name}</b>
-                  <em>{country.count}</em>
-                </button>
-              ))}
+            <div className="world-map-top-countries-v32">
+              {countryRows.slice(0, 8).map((country, index) => {
+                const percent = rows.length ? Math.round((country.count / rows.length) * 1000) / 10 : 0
+                const width = Math.max(8, Math.round((country.count / topCountryCount) * 100))
+                return (
+                  <button key={country.code} type="button" className={selectedCountry === country.code ? 'active' : ''} onClick={() => setSelectedCountry(country.code)}>
+                    <em>{index + 1}</em>
+                    <span className="world-map-side-flag-v32">{country.flag}</span>
+                    <b>{country.name}</b>
+                    <strong>{country.count}</strong>
+                    <small>{percent}%</small>
+                    <i style={{ '--w': `${width}%` }} />
+                  </button>
+                )
+              })}
+              {!countryRows.length ? <div className="world-map-mini-empty-v30">{loading ? t('Ładowanie...') : t('Brak krajów.')}</div> : null}
             </div>
           </div>
 
-          <div className="world-map-panel-v30">
+          <div className="world-map-panel-v30 world-map-panel-premium-v32">
             <div className="world-map-panel-head-v30">
               <strong>{t('Ostatnie rejestracje')}</strong>
               <span>LIVE</span>
             </div>
-            <div className="world-map-latest-v30">
+            <div className="world-map-latest-v30 world-map-latest-premium-v32">
               {latestUsers.map((row, index) => (
-                <div key={row.id || row.email || index} className="world-map-latest-row-v30">
+                <button
+                  type="button"
+                  key={row.id || row.email || index}
+                  className="world-map-latest-row-v30"
+                  onClick={() => {
+                    if (onOpenTipster && row.id) onOpenTipster(row.id)
+                    else onToast?.({ type: 'info', title: row._worldName, message: row._worldCountryName })
+                  }}
+                >
                   <span>{row._worldFlag}</span>
                   <div>
                     <b data-no-translate="true">{row._worldName}</b>
                     <small>{row._worldCountryName}</small>
                   </div>
                   <em>{row.created_at ? new Date(row.created_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL') : '—'}</em>
-                </div>
+                </button>
               ))}
               {!latestUsers.length ? <div className="world-map-mini-empty-v30">{loading ? t('Ładowanie...') : t('Brak rejestracji do pokazania.')}</div> : null}
             </div>
@@ -5532,10 +5647,11 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
 
       {status ? <div className="world-map-status-v30">{status}</div> : null}
       <div className="world-map-note-v30">
-        {t('Jeśli przy profilu nie ma jeszcze kraju, system pokazuje go jako Nieznany kraj. Nowe konta mogą zapisywać kraj po uruchomieniu migracji WERSJA 30.')}
+        {t('WERSJA 32: obecne konta można uzupełnić SQL-em, a nowe konta zapisują kraj automatycznie przy logowaniu/rejestracji.')}
       </div>
     </section>
   )
+
 }
 
 function AnimatedDashboardHero() {
@@ -32865,6 +32981,11 @@ function App() {
       window.removeEventListener('storage', syncLanguage)
     }
   }, [])
+
+  useEffect(() => {
+    if (!sessionUser?.id) return
+    recordBetaiProfileCountryHintV32(sessionUser)
+  }, [sessionUser?.id, sessionUser?.email])
 
   useEffect(() => {
     if (typeof window === 'undefined') return

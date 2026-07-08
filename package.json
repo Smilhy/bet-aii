@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-30-mapa-swiata-zarejestrowanych",
-  "version": "30.0.0",
+  "name": "betai-wersja-32-mapa-premium-automat-flagi",
+  "version": "32.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
