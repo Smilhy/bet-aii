@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-34-netlify-build-command-clean",
-  "version": "34.0.0",
+  "name": "betai-wersja-35-netlify-install-stabilny",
+  "version": "35.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",

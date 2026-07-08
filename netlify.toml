@@ -3,6 +3,14 @@
   publish = "dist"
   functions = "netlify/functions"
 
+[build.environment]
+  NPM_FLAGS = "--no-audit --no-fund --prefer-offline --loglevel=warn"
+  NPM_CONFIG_AUDIT = "false"
+  NPM_CONFIG_FUND = "false"
+  NPM_CONFIG_PROGRESS = "false"
+  NPM_CONFIG_FETCH_RETRIES = "2"
+
+
 [functions]
   node_bundler = "esbuild"
 
