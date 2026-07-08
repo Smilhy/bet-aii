@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "chmod +x node_modules/@esbuild/linux-x64/bin/esbuild node_modules/.bin/esbuild node_modules/.bin/vite 2>/dev/null || true && npm run build"
   publish = "dist"
   functions = "netlify/functions"
 

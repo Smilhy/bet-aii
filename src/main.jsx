@@ -5119,15 +5119,17 @@ function getTipErrorToast(cleanMessage) {
 const BETAI_WORLD_MAP_COUNTRIES_V30 = Object.freeze({
   PL: 'Polska', GB: 'Wielka Brytania', UK: 'Wielka Brytania', DE: 'Niemcy', FR: 'Francja', ES: 'Hiszpania', IT: 'Włochy', NL: 'Holandia', BE: 'Belgia', PT: 'Portugalia',
   IE: 'Irlandia', NO: 'Norwegia', SE: 'Szwecja', FI: 'Finlandia', DK: 'Dania', IS: 'Islandia', CH: 'Szwajcaria', AT: 'Austria', CZ: 'Czechy', SK: 'Słowacja',
-  UA: 'Ukraina', LT: 'Litwa', LV: 'Łotwa', EE: 'Estonia', RO: 'Rumunia', BG: 'Bułgaria', HR: 'Chorwacja', RS: 'Serbia', GR: 'Grecja', TR: 'Turcja',
-  US: 'USA', CA: 'Kanada', MX: 'Meksyk', BR: 'Brazylia', AR: 'Argentyna', CO: 'Kolumbia', CL: 'Chile', PE: 'Peru', EC: 'Ekwador', UY: 'Urugwaj',
-  MA: 'Maroko', DZ: 'Algieria', EG: 'Egipt', ZA: 'RPA', NG: 'Nigeria', KE: 'Kenia', JP: 'Japonia', KR: 'Korea Południowa', CN: 'Chiny', IN: 'Indie',
-  ID: 'Indonezja', TH: 'Tajlandia', VN: 'Wietnam', AU: 'Australia', NZ: 'Nowa Zelandia', SA: 'Arabia Saudyjska', AE: 'ZEA', IL: 'Izrael'
+  UA: 'Ukraina', LT: 'Litwa', LV: 'Łotwa', EE: 'Estonia', RO: 'Rumunia', BG: 'Bułgaria', HR: 'Chorwacja', SI: 'Słowenia', HU: 'Węgry', RS: 'Serbia', GR: 'Grecja', TR: 'Turcja',
+  BA: 'Bośnia i Hercegowina', ME: 'Czarnogóra', MK: 'Macedonia Północna', AL: 'Albania', MD: 'Mołdawia', BY: 'Białoruś', LU: 'Luksemburg', MT: 'Malta', CY: 'Cypr', GE: 'Gruzja', AM: 'Armenia', AZ: 'Azerbejdżan',
+  US: 'Stany Zjednoczone', CA: 'Kanada', MX: 'Meksyk', BR: 'Brazylia', AR: 'Argentyna', CO: 'Kolumbia', CL: 'Chile', PE: 'Peru', EC: 'Ekwador', UY: 'Urugwaj', PY: 'Paragwaj', BO: 'Boliwia', VE: 'Wenezuela', CR: 'Kostaryka', PA: 'Panama',
+  MA: 'Maroko', DZ: 'Algieria', EG: 'Egipt', ZA: 'RPA', NG: 'Nigeria', KE: 'Kenia', GH: 'Ghana', TN: 'Tunezja', SN: 'Senegal', CM: 'Kamerun', CI: 'Wybrzeże Kości Słoniowej', ET: 'Etiopia', TZ: 'Tanzania', UG: 'Uganda',
+  JP: 'Japonia', KR: 'Korea Południowa', CN: 'Chiny', IN: 'Indie', PK: 'Pakistan', BD: 'Bangladesz', LK: 'Sri Lanka', ID: 'Indonezja', MY: 'Malezja', SG: 'Singapur', PH: 'Filipiny', TH: 'Tajlandia', VN: 'Wietnam', TW: 'Tajwan', HK: 'Hongkong',
+  AU: 'Australia', NZ: 'Nowa Zelandia', SA: 'Arabia Saudyjska', AE: 'ZEA', QA: 'Katar', KW: 'Kuwejt', BH: 'Bahrajn', OM: 'Oman', JO: 'Jordania', LB: 'Liban', IL: 'Izrael', IQ: 'Irak', IR: 'Iran'
 })
 
 const BETAI_WORLD_MAP_NAME_TO_CODE_V30 = Object.freeze({
   'polska': 'PL', 'poland': 'PL',
-  'wielka brytania': 'GB', 'uk': 'GB', 'united kingdom': 'GB', 'great britain': 'GB', 'anglia': 'GB', 'england': 'GB',
+  'wielka brytania': 'GB', 'uk': 'GB', 'united kingdom': 'GB', 'great britain': 'GB', 'anglia': 'GB', 'england': 'GB', 'scotland': 'GB', 'szkocja': 'GB', 'walia': 'GB', 'wales': 'GB',
   'niemcy': 'DE', 'germany': 'DE', 'deutschland': 'DE',
   'francja': 'FR', 'france': 'FR',
   'hiszpania': 'ES', 'spain': 'ES',
@@ -5152,10 +5154,24 @@ const BETAI_WORLD_MAP_NAME_TO_CODE_V30 = Object.freeze({
   'rumunia': 'RO', 'romania': 'RO',
   'bulgaria': 'BG', 'bułgaria': 'BG',
   'chorwacja': 'HR', 'croatia': 'HR',
+  'slowenia': 'SI', 'słowenia': 'SI', 'slovenia': 'SI',
+  'wegry': 'HU', 'węgry': 'HU', 'hungary': 'HU',
   'serbia': 'RS',
   'grecja': 'GR', 'greece': 'GR',
   'turcja': 'TR', 'turkey': 'TR',
-  'usa': 'US', 'stany zjednoczone': 'US', 'united states': 'US', 'america': 'US',
+  'bosnia': 'BA', 'bośnia': 'BA', 'bosnia and herzegovina': 'BA', 'bosnia herzegovina': 'BA',
+  'czarnogora': 'ME', 'czarnogóra': 'ME', 'montenegro': 'ME',
+  'macedonia polnocna': 'MK', 'macedonia północna': 'MK', 'north macedonia': 'MK',
+  'albania': 'AL',
+  'moldawia': 'MD', 'mołdawia': 'MD', 'moldova': 'MD',
+  'bialorus': 'BY', 'białoruś': 'BY', 'belarus': 'BY',
+  'luksemburg': 'LU', 'luxembourg': 'LU',
+  'malta': 'MT',
+  'cypr': 'CY', 'cyprus': 'CY',
+  'gruzja': 'GE', 'georgia': 'GE',
+  'armenia': 'AM',
+  'azerbejdzan': 'AZ', 'azerbejdżan': 'AZ', 'azerbaijan': 'AZ',
+  'usa': 'US', 'stany zjednoczone': 'US', 'united states': 'US', 'america': 'US', 'u s a': 'US',
   'kanada': 'CA', 'canada': 'CA',
   'meksyk': 'MX', 'mexico': 'MX',
   'brazylia': 'BR', 'brazil': 'BR',
@@ -5165,25 +5181,71 @@ const BETAI_WORLD_MAP_NAME_TO_CODE_V30 = Object.freeze({
   'peru': 'PE',
   'ekwador': 'EC', 'ecuador': 'EC',
   'urugwaj': 'UY', 'uruguay': 'UY',
+  'paragwaj': 'PY', 'paraguay': 'PY',
+  'boliwia': 'BO', 'bolivia': 'BO',
+  'wenezuela': 'VE', 'venezuela': 'VE',
+  'kostaryka': 'CR', 'costa rica': 'CR',
+  'panama': 'PA',
   'maroko': 'MA', 'morocco': 'MA',
   'algieria': 'DZ', 'algeria': 'DZ',
   'egipt': 'EG', 'egypt': 'EG',
   'rpa': 'ZA', 'republika poludniowej afryki': 'ZA', 'republika południowej afryki': 'ZA', 'south africa': 'ZA',
   'nigeria': 'NG',
   'kenia': 'KE', 'kenya': 'KE',
+  'ghana': 'GH',
+  'tunezja': 'TN', 'tunisia': 'TN',
+  'senegal': 'SN',
+  'kamerun': 'CM', 'cameroon': 'CM',
+  'wybrzeze kosci sloniowej': 'CI', 'wybrzeże kości słoniowej': 'CI', 'ivory coast': 'CI', 'cote d ivoire': 'CI',
+  'etiopia': 'ET', 'ethiopia': 'ET',
+  'tanzania': 'TZ',
+  'uganda': 'UG',
   'japonia': 'JP', 'japan': 'JP',
   'korea poludniowa': 'KR', 'korea południowa': 'KR', 'south korea': 'KR',
   'chiny': 'CN', 'china': 'CN',
   'indie': 'IN', 'india': 'IN',
+  'pakistan': 'PK',
+  'bangladesz': 'BD', 'bangladesh': 'BD',
+  'sri lanka': 'LK',
   'indonezja': 'ID', 'indonesia': 'ID',
+  'malezja': 'MY', 'malaysia': 'MY',
+  'singapur': 'SG', 'singapore': 'SG',
+  'filipiny': 'PH', 'philippines': 'PH',
   'tajlandia': 'TH', 'thailand': 'TH',
   'wietnam': 'VN', 'vietnam': 'VN',
+  'tajwan': 'TW', 'taiwan': 'TW',
+  'hongkong': 'HK', 'hong kong': 'HK',
   'australia': 'AU',
   'nowa zelandia': 'NZ', 'new zealand': 'NZ',
   'arabia saudyjska': 'SA', 'saudi arabia': 'SA',
-  'zea': 'AE', 'uae': 'AE', 'united arab emirates': 'AE',
-  'izrael': 'IL', 'israel': 'IL'
+  'zea': 'AE', 'uae': 'AE', 'united arab emirates': 'AE', 'emiraty arabskie': 'AE',
+  'katar': 'QA', 'qatar': 'QA',
+  'kuwejt': 'KW', 'kuwait': 'KW',
+  'bahrajn': 'BH', 'bahrain': 'BH',
+  'oman': 'OM',
+  'jordania': 'JO', 'jordan': 'JO',
+  'liban': 'LB', 'lebanon': 'LB',
+  'izrael': 'IL', 'israel': 'IL',
+  'irak': 'IQ', 'iraq': 'IQ',
+  'iran': 'IR'
 })
+
+const BETAI_WORLD_MAP_CONTINENTS_V34 = Object.freeze({
+  PL: 'Europa', GB: 'Europa', DE: 'Europa', FR: 'Europa', ES: 'Europa', IT: 'Europa', NL: 'Europa', BE: 'Europa', PT: 'Europa', IE: 'Europa', NO: 'Europa', SE: 'Europa', FI: 'Europa', DK: 'Europa', IS: 'Europa', CH: 'Europa', AT: 'Europa', CZ: 'Europa', SK: 'Europa', UA: 'Europa', LT: 'Europa', LV: 'Europa', EE: 'Europa', RO: 'Europa', BG: 'Europa', HR: 'Europa', SI: 'Europa', HU: 'Europa', RS: 'Europa', GR: 'Europa', BA: 'Europa', ME: 'Europa', MK: 'Europa', AL: 'Europa', MD: 'Europa', BY: 'Europa', LU: 'Europa', MT: 'Europa', CY: 'Europa',
+  TR: 'Europa/Azja', GE: 'Europa/Azja', AM: 'Europa/Azja', AZ: 'Europa/Azja',
+  US: 'Ameryka Płn.', CA: 'Ameryka Płn.', MX: 'Ameryka Płn.', CR: 'Ameryka Płn.', PA: 'Ameryka Płn.',
+  BR: 'Ameryka Płd.', AR: 'Ameryka Płd.', CO: 'Ameryka Płd.', CL: 'Ameryka Płd.', PE: 'Ameryka Płd.', EC: 'Ameryka Płd.', UY: 'Ameryka Płd.', PY: 'Ameryka Płd.', BO: 'Ameryka Płd.', VE: 'Ameryka Płd.',
+  MA: 'Afryka', DZ: 'Afryka', EG: 'Afryka', ZA: 'Afryka', NG: 'Afryka', KE: 'Afryka', GH: 'Afryka', TN: 'Afryka', SN: 'Afryka', CM: 'Afryka', CI: 'Afryka', ET: 'Afryka', TZ: 'Afryka', UG: 'Afryka',
+  JP: 'Azja', KR: 'Azja', CN: 'Azja', IN: 'Azja', PK: 'Azja', BD: 'Azja', LK: 'Azja', ID: 'Azja', MY: 'Azja', SG: 'Azja', PH: 'Azja', TH: 'Azja', VN: 'Azja', TW: 'Azja', HK: 'Azja', SA: 'Azja', AE: 'Azja', QA: 'Azja', KW: 'Azja', BH: 'Azja', OM: 'Azja', JO: 'Azja', LB: 'Azja', IL: 'Azja', IQ: 'Azja', IR: 'Azja',
+  AU: 'Oceania', NZ: 'Oceania'
+})
+
+function getBetaiWorldContinentV34(code = 'ZZ') {
+  const clean = String(code || '').toUpperCase()
+  if (!clean || clean === 'ZZ') return ''
+  return BETAI_WORLD_MAP_CONTINENTS_V34[clean] || 'Inne'
+}
+
 
 // WERSJA 32 — ręczne uzupełnienie obecnych kont + bezpieczny fallback przed migracją SQL.
 // UK: buchajson1988, p.kucharski, smilhytv. Aktualne konta bez kraju uzupełniamy SQL-em na PL.
@@ -5233,7 +5295,9 @@ const BETAI_WORLD_MAP_TZ_TO_CODE_V30 = Object.freeze({
   'America/Toronto': 'CA', 'America/Vancouver': 'CA', 'America/Mexico_City': 'MX', 'America/Sao_Paulo': 'BR', 'America/Argentina/Buenos_Aires': 'AR',
   'America/Bogota': 'CO', 'America/Santiago': 'CL', 'America/Lima': 'PE', 'America/Guayaquil': 'EC', 'Africa/Casablanca': 'MA', 'Africa/Algiers': 'DZ',
   'Africa/Cairo': 'EG', 'Africa/Johannesburg': 'ZA', 'Africa/Lagos': 'NG', 'Africa/Nairobi': 'KE', 'Asia/Tokyo': 'JP', 'Asia/Seoul': 'KR',
-  'Asia/Shanghai': 'CN', 'Asia/Kolkata': 'IN', 'Asia/Jakarta': 'ID', 'Asia/Bangkok': 'TH', 'Asia/Ho_Chi_Minh': 'VN', 'Australia/Sydney': 'AU', 'Pacific/Auckland': 'NZ'
+  'Asia/Shanghai': 'CN', 'Asia/Hong_Kong': 'HK', 'Asia/Taipei': 'TW', 'Asia/Kolkata': 'IN', 'Asia/Karachi': 'PK', 'Asia/Dhaka': 'BD', 'Asia/Colombo': 'LK', 'Asia/Jakarta': 'ID',
+  'Asia/Kuala_Lumpur': 'MY', 'Asia/Singapore': 'SG', 'Asia/Manila': 'PH', 'Asia/Bangkok': 'TH', 'Asia/Ho_Chi_Minh': 'VN', 'Asia/Dubai': 'AE', 'Asia/Riyadh': 'SA', 'Asia/Qatar': 'QA', 'Asia/Kuwait': 'KW', 'Asia/Bahrain': 'BH', 'Asia/Muscat': 'OM', 'Asia/Amman': 'JO', 'Asia/Beirut': 'LB', 'Asia/Jerusalem': 'IL', 'Asia/Baghdad': 'IQ', 'Asia/Tehran': 'IR',
+  'Australia/Sydney': 'AU', 'Australia/Melbourne': 'AU', 'Australia/Brisbane': 'AU', 'Australia/Perth': 'AU', 'Pacific/Auckland': 'NZ'
 })
 
 function normalizeBetaiWorldCountryKeyV30(value = '') {
@@ -5380,6 +5444,48 @@ function getBetaiWorldProfileNameV30(row = {}) {
   return clean
 }
 
+
+function formatBetaiWorldCompactNumberV33(value) {
+  const parsed = Number(value)
+  const safe = Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0
+  if (safe >= 1000000) return `${(safe / 1000000).toFixed(safe >= 10000000 ? 0 : 1)} mln`
+  if (safe >= 1000) return safe.toLocaleString('pl-PL')
+  return String(safe)
+}
+
+function formatBetaiWorldRelativeTimeV34(value, lang = 'pl') {
+  const ts = Date.parse(value || '')
+  if (!Number.isFinite(ts)) return '—'
+  const diffMs = Date.now() - ts
+  if (diffMs < 0) return lang === 'en' ? 'now' : 'teraz'
+  const minute = 60 * 1000
+  const hour = 60 * minute
+  const day = 24 * hour
+  const month = 30 * day
+  if (diffMs < minute) return lang === 'en' ? 'now' : 'teraz'
+  if (diffMs < hour) {
+    const value = Math.max(1, Math.floor(diffMs / minute))
+    return lang === 'en' ? `${value} min ago` : `${value} min temu`
+  }
+  if (diffMs < day) {
+    const value = Math.max(1, Math.floor(diffMs / hour))
+    return lang === 'en' ? `${value} h ago` : `${value} godz. temu`
+  }
+  if (diffMs < month) {
+    const value = Math.max(1, Math.floor(diffMs / day))
+    return lang === 'en' ? `${value} d ago` : `${value} dni temu`
+  }
+  return new Date(ts).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL')
+}
+
+function renderBetaiWorldMapIconV34(icon = 'spark') {
+  if (icon === 'pulse') return <svg viewBox="0 0 24 24"><path d="M4 13h3.2l2-5 4.1 10 2.1-5H20"/><path d="M12 3.5c4.7 0 8.5 3.8 8.5 8.5S16.7 20.5 12 20.5 3.5 16.7 3.5 12 7.3 3.5 12 3.5Z"/></svg>
+  if (icon === 'crown') return <svg viewBox="0 0 24 24"><path d="m4 8 4.5 3.5L12 5l3.5 6.5L20 8l-1.6 10H5.6L4 8Z"/><path d="M6.5 18.5h11"/></svg>
+  if (icon === 'shield') return <svg viewBox="0 0 24 24"><path d="M12 3.5 19 6v5.2c0 4.4-2.8 7.4-7 9.3-4.2-1.9-7-4.9-7-9.3V6l7-2.5Z"/><path d="m8.5 12 2.2 2.1 4.8-5"/></svg>
+  if (icon === 'continent') return <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.2 2.2 3.3 5 3.3 8.5S14.2 18.3 12 20.5"/><path d="M12 3.5C9.8 5.7 8.7 8.5 8.7 12s1.1 6.3 3.3 8.5"/></svg>
+  return <svg viewBox="0 0 24 24"><path d="M12 3.5v17"/><path d="M3.5 12h17"/><path d="m6.4 6.4 11.2 11.2"/><path d="m17.6 6.4-11.2 11.2"/></svg>
+}
+
 function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = null }) {
   const lang = useBetaiLanguageState()
   const t = (value) => translateBetaiTextValue(value, lang)
@@ -5419,6 +5525,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
             _worldName: getBetaiWorldProfileNameV30(row),
             _worldCountryCode: code,
             _worldCountryName: getBetaiWorldCountryNameV30(code),
+            _worldContinent: getBetaiWorldContinentV34(code),
             _worldFlag: getBetaiFlagEmojiV30(code),
             _worldAvatar: typeof getProfileAvatarUrl === 'function' ? getProfileAvatarUrl(row) : ''
           }
@@ -5450,7 +5557,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
     const map = new Map()
     rows.forEach(row => {
       const key = row._worldCountryCode || 'ZZ'
-      const prev = map.get(key) || { code: key, name: row._worldCountryName || getBetaiWorldCountryNameV30(key), flag: row._worldFlag || getBetaiFlagEmojiV30(key), count: 0, users: [] }
+      const prev = map.get(key) || { code: key, name: row._worldCountryName || getBetaiWorldCountryNameV30(key), continent: row._worldContinent || getBetaiWorldContinentV34(key), flag: row._worldFlag || getBetaiFlagEmojiV30(key), count: 0, users: [] }
       prev.count += 1
       if (prev.users.length < 12) prev.users.push(row)
       map.set(key, prev)
@@ -5470,7 +5577,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
     const map = new Map()
     visibleUsers.forEach(row => {
       const key = row._worldCountryCode || 'ZZ'
-      const prev = map.get(key) || { code: key, name: row._worldCountryName || getBetaiWorldCountryNameV30(key), flag: row._worldFlag || getBetaiFlagEmojiV30(key), count: 0, users: [] }
+      const prev = map.get(key) || { code: key, name: row._worldCountryName || getBetaiWorldCountryNameV30(key), continent: row._worldContinent || getBetaiWorldContinentV34(key), flag: row._worldFlag || getBetaiFlagEmojiV30(key), count: 0, users: [] }
       prev.count += 1
       if (prev.users.length < 5) prev.users.push(row)
       map.set(key, prev)
@@ -5489,39 +5596,34 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
   const registeredWeek = rows.filter(row => Date.parse(row.created_at || row.createdAt || '') >= nowMs - (7 * oneDayMs)).length
   const registeredMonth = rows.filter(row => Date.parse(row.created_at || row.createdAt || '') >= startOfMonth.getTime()).length
   const totalCountries = countryRows.filter(row => row.code !== 'ZZ').length
+  const unknownCountryCount = countryRows.find(row => row.code === 'ZZ')?.count || 0
+  const knownUsersCount = Math.max(0, rows.length - unknownCountryCount)
+  const topCountry = countryRows.find(row => row.code !== 'ZZ') || countryRows[0] || null
+  const selectedCountryRow = selectedCountry !== 'all' ? countryRows.find(row => row.code === selectedCountry) : null
   const topCountryCount = Math.max(1, countryRows[0]?.count || 1)
+  const totalContinents = new Set(countryRows.filter(row => row.code !== 'ZZ').map(row => row.continent || getBetaiWorldContinentV34(row.code)).filter(Boolean)).size
   const latestUsers = rows.slice(0, 7)
-  const weekTrend = rows.length ? Math.max(1, Math.round((registeredWeek / Math.max(1, rows.length)) * 1000) / 10) : 0
-  const monthTrend = rows.length ? Math.max(1, Math.round(((registeredMonth || rows.length) / Math.max(1, rows.length)) * 1000) / 10) : 0
-  const newCountriesTrend = Math.max(0, totalCountries)
-  const statCardsV37 = [
-    { key: 'today', icon: 'users', label: t('Dzisiaj'), value: registeredToday, sub: t('nowych użytkowników'), trend: registeredToday ? `↑ ${registeredToday} ${t('dzisiaj')}` : `↗ ${t('na podstawie rejestracji dziś')}` },
-    { key: 'week', icon: 'calendar', label: t('W tym tygodniu'), value: registeredWeek, sub: t('nowych użytkowników'), trend: `↑ ${weekTrend}% ${t('ostatnie 7 dni')}` },
-    { key: 'month', icon: 'bars', label: t('Ten miesiąc'), value: registeredMonth || rows.length, sub: t('nowych użytkowników'), trend: `↑ ${monthTrend}% ${t('bieżący miesiąc')}` },
-    { key: 'countries', icon: 'globe', label: t('Kraje'), value: totalCountries, sub: t('kraje z rejestracjami'), trend: `↑ ${newCountriesTrend} ${t('aktywnych krajów')}` }
+  const premiumStatsV33 = [
+    { icon: 'userPlus', label: t('Dzisiaj'), value: registeredToday, text: t('nowych użytkowników'), trend: t('na podstawie rejestracji dziś') },
+    { icon: 'calendar', label: t('W tym tygodniu'), value: registeredWeek, text: t('nowych użytkowników'), trend: t('ostatnie 7 dni') },
+    { icon: 'chart', label: t('Ten miesiąc'), value: registeredMonth || rows.length, text: t('nowych użytkowników'), trend: t('bieżący miesiąc') },
+    { icon: 'globe', label: t('Kraje'), value: totalCountries, text: t('kraje z rejestracjami'), trend: `${knownUsersCount} ${t('użytkowników z flagą')}` }
   ]
-  const orbitPinsV37 = Array.from({ length: 18 }, (_, index) => {
-    const angle = (-90 + (index * 360 / 18)) * Math.PI / 180
-    const radius = index % 3 === 0 ? 35 : 46
-    return {
-      x: Math.round((50 + Math.cos(angle) * radius) * 100) / 100,
-      y: Math.round((50 + Math.sin(angle) * radius) * 100) / 100
-    }
-  })
-  const countryPresetPositionsV37 = {
-    PL: [50, 8], GB: [61.5, 14], US: [17, 33], DE: [23, 25], FR: [19, 57], ES: [16, 46], IT: [72, 40], NL: [62, 82], BE: [39, 82], CH: [50, 83],
-    BR: [33, 14], JP: [73, 23], CA: [78, 50], AU: [74, 65], IN: [24, 72], PT: [31, 78], SE: [16, 18], NO: [78, 23], IE: [80, 30], ZZ: [86, 78]
-  }
-  const premiumSourceCountriesV37 = (filteredCountryRows.length ? filteredCountryRows : countryRows).slice(0, 16)
-  const premiumCountryNodes = premiumSourceCountriesV37.map((country, index, arr) => {
-    const preset = countryPresetPositionsV37[country.code]
-    if (preset) return { ...country, _x: preset[0], _y: preset[1] }
+  const worldMapInsightCardsV34 = [
+    { icon: 'pulse', label: t('Live status'), value: loading ? t('SYNC') : t('ONLINE'), text: loading ? t('Pobieram Supabase') : t('Auto-odświeżanie aktywne') },
+    { icon: 'crown', label: t('Top kraj'), value: topCountry ? `${topCountry.flag} ${topCountry.name}` : '—', text: topCountry ? `${topCountry.count} ${topCountry.count === 1 ? t('użytkownik') : t('użytkowników')}` : t('Brak danych') },
+    { icon: 'shield', label: t('Wykryte flagi'), value: formatBetaiWorldCompactNumberV33(knownUsersCount), text: `${unknownCountryCount} ${t('bez kraju')}` },
+    { icon: 'continent', label: t('Kontynenty'), value: totalContinents || '—', text: t('aktywne regiony świata') }
+  ]
+
+  const premiumCountryNodes = (filteredCountryRows.length ? filteredCountryRows : countryRows).slice(0, 20).map((country, index, arr) => {
     const total = Math.max(arr.length, 1)
-    const angle = (-90 + (index * 360 / total)) * Math.PI / 180
-    const radius = 43
+    const ring = index % 3
+    const radius = ring === 0 ? 36 : ring === 1 ? 44 : 49
+    const angle = (-90 + (index * 360 / total) + (ring === 1 ? 8 : ring === 2 ? -8 : 0)) * Math.PI / 180
     const x = 50 + Math.cos(angle) * radius
     const y = 50 + Math.sin(angle) * radius
-    return { ...country, _x: Math.max(9, Math.min(91, x)), _y: Math.max(9, Math.min(91, y)) }
+    return { ...country, _x: Math.max(7, Math.min(93, x)), _y: Math.max(8, Math.min(92, y)) }
   })
 
   const remainingCountriesCount = Math.max(0, filteredCountryRows.length - premiumCountryNodes.length)
@@ -5533,7 +5635,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
         <div>
           <span className="world-map-kicker-v30">🌍 {t('Mapa świata')}</span>
           <h1>{t('Mapa świata rejestrujących')}</h1>
-          <p>{t('Zobacz, skąd pochodzą użytkownicy Bet+AI. Flagi, kraje i statystyki aktualizują się automatycznie z profili Supabase.')}</p>
+          <p>{t('Zobacz, skąd pochodzą Twoi nowi użytkownicy. Flagi, kraje i statystyki aktualizują się automatycznie z profili Supabase.')}</p>
         </div>
         <div className="world-map-premium-actions-v32">
           <select value={selectedCountry} onChange={event => setSelectedCountry(event.target.value)}>
@@ -5549,12 +5651,33 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
           <span>⌕</span>
           <input value={query} onChange={event => setQuery(event.target.value)} placeholder={t('Szukaj nicku albo kraju...')} />
         </label>
+        {selectedCountryRow ? (
+          <button type="button" className="world-map-selected-chip-v34" onClick={() => setSelectedCountry('all')}>
+            <span>{selectedCountryRow.flag}</span>
+            <b>{selectedCountryRow.name}</b>
+            <small>{selectedCountryRow.count}</small>
+            <em>×</em>
+          </button>
+        ) : null}
+      </div>
+
+      <div className="world-map-premium-overview-v34" aria-label={t('Dane mapy świata')}>
+        {worldMapInsightCardsV34.map(item => (
+          <div key={item.icon} className="world-map-premium-overview-card-v34">
+            <span className={`world-map-premium-overview-icon-v34 ${item.icon}`} aria-hidden="true">{renderBetaiWorldMapIconV34(item.icon)}</span>
+            <span className="world-map-premium-overview-body-v34">
+              <strong>{item.label}</strong>
+              <b>{item.value}</b>
+              <small>{item.text}</small>
+            </span>
+          </div>
+        ))}
       </div>
 
       <div className="world-map-premium-grid-v32">
         <div className="world-map-premium-stage-v32">
           <div className="world-map-premium-orbit-v32">
-            <svg className="world-map-premium-lines-v32" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+            <svg className="world-map-premium-lines-v32" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               <circle cx="50" cy="50" r="22" />
               <circle cx="50" cy="50" r="34" />
               <circle cx="50" cy="50" r="46" />
@@ -5562,18 +5685,12 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
                 <line key={`${country.code}-${index}-line`} x1="50" y1="50" x2={country._x} y2={country._y} />
               ))}
             </svg>
-            {orbitPinsV37.map((pin, index) => (
-              <span key={`orbit-pin-${index}`} className="world-map-orbit-pin-v37" style={{ '--x': `${pin.x}%`, '--y': `${pin.y}%` }} />
-            ))}
             <div className="world-map-globe-v32" aria-hidden="true">
               <span className="world-map-globe-grid-v32" />
-              <span className="world-map-globe-land-v37 land-a" />
-              <span className="world-map-globe-land-v37 land-b" />
-              <span className="world-map-globe-land-v37 land-c" />
             </div>
             <div className="world-map-center-premium-v32">
               <strong>{rows.length}</strong>
-              <span>{t('użytkowników')}</span>
+              <span>{t('Nowi użytkownicy')}</span>
               <small>{t('łącznie')}</small>
             </div>
 
@@ -5610,25 +5727,25 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
             ) : null}
           </div>
 
-          <div className="world-map-premium-bottom-stats-v32">
-            {statCardsV37.map(card => (
-              <div key={card.key} className="world-map-stat-card-v37">
-                <span className={`world-map-stat-icon-v37 ${card.icon}`} aria-hidden="true">
-                  {card.icon === 'users' ? (
-                    <svg viewBox="0 0 24 24"><path d="M8.5 11.5a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm7.5-1a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4ZM2.7 20.5c.5-4.2 2.7-6.3 6.4-6.3 3.8 0 5.9 2.1 6.4 6.3H2.7Zm11.8-6.4c3.2.3 5 2.1 5.4 5.7h-3.2c-.3-2.3-1-4.1-2.2-5.7Z" /></svg>
-                  ) : card.icon === 'calendar' ? (
-                    <svg viewBox="0 0 24 24"><path d="M7 2h2v3h6V2h2v3h3a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3V2Zm13 8H4v10h16V10ZM4 8h16V7H4v1Zm3 5h3v3H7v-3Zm5 0h3v3h-3v-3Z" /></svg>
-                  ) : card.icon === 'bars' ? (
-                    <svg viewBox="0 0 24 24"><path d="M3 20h18v2H3v-2Zm2-8h3v7H5v-7Zm5-5h3v12h-3V7Zm5 3h3v9h-3v-9Zm5-7h3v16h-3V3Z" /></svg>
+          <div className="world-map-premium-bottom-stats-v32" aria-label={t('Statystyki rejestracji')}>
+            {premiumStatsV33.map(item => (
+              <div key={item.icon} className="world-map-premium-stat-card-v33">
+                <span className={`world-map-premium-stat-icon-v33 ${item.icon}`} aria-hidden="true">
+                  {item.icon === 'userPlus' ? (
+                    <svg viewBox="0 0 24 24"><path d="M15 19.5c0-3.1-2.7-5.6-6-5.6s-6 2.5-6 5.6"/><path d="M9 11.2A3.35 3.35 0 1 0 9 4.5a3.35 3.35 0 0 0 0 6.7Z"/><path d="M18 8v6"/><path d="M15 11h6"/></svg>
+                  ) : item.icon === 'calendar' ? (
+                    <svg viewBox="0 0 24 24"><path d="M6.5 3.5v4"/><path d="M17.5 3.5v4"/><path d="M4.5 6h15a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-11A1.5 1.5 0 0 1 4.5 6Z"/><path d="M3 10h18"/><path d="M7.5 14h3"/><path d="M13.5 14h3"/></svg>
+                  ) : item.icon === 'chart' ? (
+                    <svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6.2 20V12"/><path d="M12 20V7"/><path d="M17.8 20V4"/><path d="M6 9.5l5.3-4.1 3.7 3.1 4-5"/></svg>
                   ) : (
-                    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm7.7 9h-3.1a15.3 15.3 0 0 0-1.2-5 8.1 8.1 0 0 1 4.3 5ZM12 4.1c.9 1.3 1.6 3.7 1.8 6.9h-3.6c.2-3.2.9-5.6 1.8-6.9ZM4.3 13h3.1c.1 1.8.5 3.5 1.2 5a8.1 8.1 0 0 1-4.3-5Zm3.1-2H4.3a8.1 8.1 0 0 1 4.3-5 15.3 15.3 0 0 0-1.2 5ZM12 19.9c-.9-1.3-1.6-3.7-1.8-6.9h3.6c-.2 3.2-.9 5.6-1.8 6.9Zm3.4-1.9c.7-1.5 1.1-3.2 1.2-5h3.1a8.1 8.1 0 0 1-4.3 5Z" /></svg>
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.2 2.2 3.3 5 3.3 8.5S14.2 18.3 12 20.5"/><path d="M12 3.5C9.8 5.7 8.7 8.5 8.7 12s1.1 6.3 3.3 8.5"/></svg>
                   )}
                 </span>
-                <span className="world-map-stat-copy-v37">
-                  <small>{card.label}</small>
-                  <b>{card.value.toLocaleString(lang === 'en' ? 'en-GB' : 'pl-PL')}</b>
-                  <em>{card.sub}</em>
-                  <i>{card.trend}</i>
+                <span className="world-map-premium-stat-body-v33">
+                  <strong>{item.label}</strong>
+                  <b>{formatBetaiWorldCompactNumberV33(item.value)}</b>
+                  <small>{item.text}</small>
+                  <em>↗ {item.trend}</em>
                 </span>
               </div>
             ))}
@@ -5657,10 +5774,12 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
                 )
               })}
               {!countryRows.length ? <div className="world-map-mini-empty-v30">{loading ? t('Ładowanie...') : t('Brak krajów.')}</div> : null}
-              {countryRows.length > 5 ? (
-                <button type="button" className="world-map-see-all-v37" onClick={() => setSelectedCountry('all')}>{t('Zobacz wszystkie kraje')}</button>
-              ) : null}
             </div>
+            {countryRows.length ? (
+              <button type="button" className="world-map-panel-link-v34" onClick={() => setSelectedCountry('all')}>
+                {t('Zobacz wszystkie kraje')}
+              </button>
+            ) : null}
           </div>
 
           <div className="world-map-panel-v30 world-map-panel-premium-v32">
@@ -5684,12 +5803,16 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
                     <b data-no-translate="true">{row._worldName}</b>
                     <small>{row._worldCountryName}</small>
                   </div>
-                  <em>{row.created_at ? new Date(row.created_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL') : '—'}</em>
+                  <em>{formatBetaiWorldRelativeTimeV34(row.created_at || row.createdAt, lang)}</em>
                 </button>
               ))}
               {!latestUsers.length ? <div className="world-map-mini-empty-v30">{loading ? t('Ładowanie...') : t('Brak rejestracji do pokazania.')}</div> : null}
-              {latestUsers.length ? <button type="button" className="world-map-see-all-v37" onClick={() => setSelectedCountry('all')}>{t('Zobacz wszystkie')}</button> : null}
             </div>
+            {rows.length ? (
+              <button type="button" className="world-map-panel-link-v34" onClick={() => { setSelectedCountry('all'); setQuery('') }}>
+                {t('Zobacz wszystkich')}
+              </button>
+            ) : null}
           </div>
         </aside>
       </div>
