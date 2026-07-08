@@ -5844,9 +5844,6 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
       </div>
 
       {status ? <div className="world-map-status-v30">{status}</div> : null}
-      <div className="world-map-note-v30">
-        {t('WERSJA 32: obecne konta można uzupełnić SQL-em, a nowe konta zapisują kraj automatycznie przy logowaniu/rejestracji.')}
-      </div>
     </section>
   )
 
