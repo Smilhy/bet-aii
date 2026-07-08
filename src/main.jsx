@@ -4591,6 +4591,11 @@ function getTipsterPricingKeys(source = {}) {
   return [...keys].filter(Boolean)
 }
 
+
+function isSupabaseUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || '').trim())
+}
+
 function readLocalTipsterPlans(keys = []) {
   if (typeof window === 'undefined') return null
   for (const key of keys) {
@@ -4665,15 +4670,18 @@ async function loadTipsterPlansForSource(source = {}) {
     return localPlans || normalizeTipsterPlanRows([])
   }
 
-  const idCandidates = [...new Set([
+  const rawIdCandidates = [...new Set([
     identity.id,
     source?.id,
     source?.user_id,
     source?.author_id,
     source?.tipster_id,
     source?.profile_id,
-  ].filter(Boolean).map(value => String(value)))]
+  ].filter(Boolean).map(value => String(value).trim()))]
+  const idCandidates = rawIdCandidates.filter(isSupabaseUuid)
 
+  // WERSJA 27: tipster_plans.tipster_id jest UUID. Boty/profilowe aliasy typu
+  // "user:typer expert" nie mogą iść do filtra Supabase, bo powodują 400/PGRST invalid uuid.
   if (!idCandidates.length) {
     return localPlans || normalizeTipsterPlanRows([])
   }
@@ -4710,12 +4718,12 @@ async function saveTipsterPlansForSource(source = {}, plans = []) {
   const cleanPlans = normalizeTipsterPlanRows(plans)
   writeLocalTipsterPlans(keys, cleanPlans)
 
-  if (!isSupabaseConfigured || !supabase || !identity.id) {
+  if (!isSupabaseConfigured || !supabase || !isSupabaseUuid(identity.id)) {
     return { savedRemote: false, plans: cleanPlans }
   }
 
   const rows = cleanPlans.map(plan => ({
-    tipster_id: identity.id,
+    tipster_id: String(identity.id).trim(),
     plan_key: plan.key,
     label: plan.label,
     duration_days: Number(plan.durationDays),

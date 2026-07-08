@@ -12,6 +12,10 @@ function roundMoney(value) {
   return Math.round(Number(value || 0) * 100) / 100;
 }
 
+function isUuidLike(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || '').trim());
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
@@ -38,6 +42,9 @@ exports.handler = async function(event) {
 
     if (!buyerId || !tipsterId) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Brak buyerId albo tipsterId.' }) };
+    }
+    if (!isUuidLike(buyerId) || !isUuidLike(tipsterId)) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Niepoprawny identyfikator użytkownika albo typera.' }) };
     }
     if (String(buyerId) === String(tipsterId)) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Nie możesz kupić dostępu do własnego profilu.' }) };
