@@ -78421,3 +78421,262 @@ html.betai-opera-stability-v29 .app-shell *::after{
   .world-map-country-text-v32 small{font-size:9px;}
   .world-map-premium-bottom-stats-v32{grid-template-columns:repeat(2,minmax(0,1fr));}
 }
+
+/* =========================================================
+   WERSJA 33 — mapa premium 1:1: ikony statystyk i złoty układ
+   ========================================================= */
+.world-map-page-premium-v32{
+  background:
+    radial-gradient(circle at 48% 36%, rgba(17,67,126,.30), transparent 35%),
+    radial-gradient(circle at 88% 8%, rgba(214,161,58,.12), transparent 28%),
+    linear-gradient(180deg, rgba(2,10,24,.98), rgba(1,7,18,.99));
+  padding: 0 2px 20px;
+}
+.world-map-premium-top-v32{
+  min-height:118px;
+  padding:26px 30px 22px;
+  border-color:rgba(221,168,62,.22);
+  background:
+    radial-gradient(circle at 58% 42%, rgba(46,94,154,.18), transparent 42%),
+    linear-gradient(135deg, rgba(3,13,31,.98), rgba(5,20,43,.96));
+}
+.world-map-premium-top-v32 h1{
+  font-size:clamp(31px,3.5vw,48px);
+  letter-spacing:-.045em;
+}
+.world-map-premium-top-v32 p{
+  margin-top:9px;
+  max-width:620px;
+  color:rgba(235,241,250,.70);
+  font-weight:760;
+}
+.world-map-premium-actions-v32 select,
+.world-map-premium-actions-v32 button{
+  border-color:rgba(238,181,65,.23);
+  background:rgba(5,16,34,.76);
+}
+.world-map-premium-actions-v32 button{
+  color:#07111d;
+  background:linear-gradient(135deg,#f4c862,#b77c26);
+  box-shadow:0 10px 32px rgba(214,155,45,.18), inset 0 1px 0 rgba(255,255,255,.38);
+}
+.world-map-premium-stage-v32{
+  min-height:790px;
+  padding:18px;
+  border-color:rgba(221,168,62,.20);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(28,70,120,.24), transparent 39%),
+    radial-gradient(circle at 48% 48%, rgba(222,170,61,.08), transparent 48%),
+    linear-gradient(180deg, rgba(4,17,39,.96), rgba(2,9,23,.98));
+}
+.world-map-premium-orbit-v32{
+  height:min(70vh,720px);
+  min-height:660px;
+  background:
+    radial-gradient(circle at center, rgba(18,38,75,.34), transparent 18%),
+    radial-gradient(circle at 50% 50%, rgba(220,167,58,.12), transparent 36%),
+    radial-gradient(circle at 52% 43%, rgba(52,116,193,.16), transparent 42%),
+    linear-gradient(135deg, rgba(2,11,27,.94), rgba(4,17,38,.96));
+}
+.world-map-premium-orbit-v32:before{
+  inset:8%;
+  background:
+    repeating-radial-gradient(circle at center, transparent 0 80px, rgba(236,181,65,.22) 81px 83px),
+    conic-gradient(from 2deg, rgba(237,183,68,.04), rgba(237,183,68,.26), rgba(49,153,255,.09), rgba(237,183,68,.04));
+}
+.world-map-premium-lines-v32 circle{stroke:rgba(234,181,65,.40);stroke-width:.22;}
+.world-map-premium-lines-v32 circle:nth-child(2){stroke:rgba(234,181,65,.34);}
+.world-map-premium-lines-v32 line{stroke:rgba(235,181,65,.54);stroke-width:.22;}
+.world-map-globe-v32{
+  width:260px;
+  height:260px;
+  background:
+    radial-gradient(circle at 32% 25%, rgba(144,196,255,.38), transparent 23%),
+    radial-gradient(circle at 55% 55%, rgba(22,54,96,.82), rgba(4,14,32,.96) 62%, rgba(1,5,14,.99));
+  box-shadow:inset -30px -24px 52px rgba(0,0,0,.62), inset 14px 8px 34px rgba(117,190,255,.15), 0 0 0 12px rgba(225,172,60,.12), 0 0 0 2px rgba(238,181,65,.26), 0 30px 92px rgba(0,0,0,.64);
+}
+.world-map-center-premium-v32{
+  width:182px;
+  min-height:140px;
+  border-radius:999px;
+  border-color:rgba(242,197,83,.52);
+  background:rgba(5,15,33,.68);
+}
+.world-map-center-premium-v32 strong{font-size:42px;color:#f3bd4f;}
+.world-map-center-premium-v32 span{font-size:16px;}
+.world-map-country-node-v32{
+  min-width:168px;
+  grid-template-columns:58px minmax(0,1fr);
+  background:transparent;
+  border-color:transparent;
+  box-shadow:none;
+  padding:0;
+  overflow:visible;
+}
+.world-map-country-node-v32:hover,.world-map-country-node-v32.active{
+  background:transparent;
+  transform:translate(-50%,-50%) scale(1.035);
+}
+.world-map-country-flag-v32{
+  width:58px;
+  height:58px;
+  font-size:34px;
+  border:2px solid rgba(255,236,174,.38);
+  box-shadow:0 0 0 3px rgba(238,181,65,.20), 0 12px 28px rgba(0,0,0,.42), 0 0 28px rgba(226,169,54,.16);
+}
+.world-map-country-text-v32{
+  padding:4px 0 0 2px;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));
+}
+.world-map-country-text-v32 b{font-size:13px;color:rgba(246,248,255,.88);}
+.world-map-country-text-v32 small{font-size:14px;color:rgba(238,241,248,.70);font-weight:850;}
+.world-map-other-node-v32{
+  right:9%;
+  bottom:15%;
+  width:92px;
+  height:92px;
+  border:2px solid rgba(225,167,55,.54);
+  color:#f0bc4e;
+  background:rgba(5,18,38,.68);
+}
+.world-map-other-node-v32 span{font-size:32px;}
+.world-map-premium-bottom-stats-v32{
+  margin-top:18px;
+  border-color:rgba(221,168,62,.22);
+  border-radius:20px;
+  background:rgba(6,18,38,.70);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 16px 50px rgba(0,0,0,.22);
+}
+.world-map-premium-bottom-stats-v32 .world-map-premium-stat-card-v33{
+  display:grid;
+  grid-template-columns:54px minmax(0,1fr);
+  gap:14px;
+  align-items:center;
+  min-height:116px;
+  padding:20px 24px;
+  border-right:1px solid rgba(255,255,255,.08);
+}
+.world-map-premium-bottom-stats-v32 .world-map-premium-stat-card-v33:last-child{border-right:0;}
+.world-map-premium-stat-icon-v33{
+  display:grid;
+  place-items:center;
+  width:48px;
+  height:48px;
+  border-radius:16px;
+  color:#e9b74d;
+  background:linear-gradient(135deg, rgba(238,181,65,.12), rgba(238,181,65,.03));
+  box-shadow:inset 0 0 0 1px rgba(238,181,65,.28), 0 14px 30px rgba(0,0,0,.24);
+}
+.world-map-premium-stat-icon-v33 svg{
+  width:29px;
+  height:29px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.world-map-premium-stat-body-v33{display:block;min-width:0;}
+.world-map-premium-stat-body-v33 strong{
+  display:block;
+  color:#e8b84e;
+  font-size:12px;
+  line-height:1.1;
+  font-weight:1000;
+  letter-spacing:.02em;
+  text-transform:none;
+}
+.world-map-premium-stat-body-v33 b{
+  display:block;
+  margin-top:6px;
+  color:#e9f3ff;
+  font-size:29px;
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:-.035em;
+}
+.world-map-premium-stat-body-v33 small{
+  display:block;
+  margin-top:4px;
+  color:rgba(226,238,250,.66);
+  font-size:12px;
+  font-weight:850;
+}
+.world-map-premium-stat-body-v33 em{
+  display:block;
+  margin-top:9px;
+  color:#29d06f;
+  font-size:11px;
+  font-style:normal;
+  font-weight:950;
+}
+.world-map-panel-premium-v32{
+  padding:20px;
+  border-radius:18px;
+  border-color:rgba(221,168,62,.18);
+  background:linear-gradient(180deg, rgba(6,21,45,.92), rgba(4,14,31,.97));
+  box-shadow:0 20px 70px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.world-map-panel-premium-v32 .world-map-panel-head-v30{
+  display:block;
+  margin-bottom:16px;
+}
+.world-map-panel-premium-v32 .world-map-panel-head-v30 strong{
+  display:block;
+  font-size:18px;
+  line-height:1.15;
+}
+.world-map-panel-premium-v32 .world-map-panel-head-v30 span{
+  display:inline-block;
+  min-width:0;
+  margin-top:5px;
+  padding:0;
+  border-radius:0;
+  color:rgba(225,235,249,.62);
+  background:transparent;
+  font-size:12px;
+  text-align:left;
+}
+.world-map-top-countries-v32 button{
+  grid-template-columns:20px 36px minmax(0,1fr) auto 46px;
+  min-height:50px;
+  padding:6px 8px 14px;
+  border:0;
+  background:transparent;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  border-radius:0;
+}
+.world-map-top-countries-v32 button:hover,.world-map-top-countries-v32 button.active{
+  border-color:rgba(238,181,65,.16);
+  background:rgba(255,255,255,.03);
+}
+.world-map-side-flag-v32{font-size:26px;}
+.world-map-top-countries-v32 i{
+  left:66px;
+  bottom:6px;
+  height:4px;
+  background:rgba(255,255,255,.08);
+}
+.world-map-top-countries-v32 i:before{background:linear-gradient(90deg,#f4bf55,#f0d78b);}
+.world-map-latest-premium-v32 .world-map-latest-row-v30{
+  min-height:55px;
+  border:0;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  border-radius:0;
+  background:transparent;
+}
+.world-map-latest-premium-v32 .world-map-latest-row-v30:hover{
+  border-color:rgba(238,181,65,.16);
+  background:rgba(255,255,255,.03);
+}
+.world-map-note-v30{
+  border-color:rgba(221,168,62,.18);
+  color:rgba(226,238,250,.66);
+  background:rgba(6,18,38,.58);
+}
+@media (max-width:760px){
+  .world-map-premium-bottom-stats-v32 .world-map-premium-stat-card-v33{grid-template-columns:44px 1fr;padding:16px;min-height:104px;}
+  .world-map-premium-stat-icon-v33{width:40px;height:40px;border-radius:13px;}
+  .world-map-premium-stat-icon-v33 svg{width:24px;height:24px;}
+  .world-map-globe-v32{width:170px;height:170px;}
+}

@@ -5380,6 +5380,15 @@ function getBetaiWorldProfileNameV30(row = {}) {
   return clean
 }
 
+
+function formatBetaiWorldCompactNumberV33(value) {
+  const parsed = Number(value)
+  const safe = Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0
+  if (safe >= 1000000) return `${(safe / 1000000).toFixed(safe >= 10000000 ? 0 : 1)} mln`
+  if (safe >= 1000) return safe.toLocaleString('pl-PL')
+  return String(safe)
+}
+
 function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = null }) {
   const lang = useBetaiLanguageState()
   const t = (value) => translateBetaiTextValue(value, lang)
@@ -5489,8 +5498,16 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
   const registeredWeek = rows.filter(row => Date.parse(row.created_at || row.createdAt || '') >= nowMs - (7 * oneDayMs)).length
   const registeredMonth = rows.filter(row => Date.parse(row.created_at || row.createdAt || '') >= startOfMonth.getTime()).length
   const totalCountries = countryRows.filter(row => row.code !== 'ZZ').length
+  const unknownCountryCount = countryRows.find(row => row.code === 'ZZ')?.count || 0
+  const knownUsersCount = Math.max(0, rows.length - unknownCountryCount)
   const topCountryCount = Math.max(1, countryRows[0]?.count || 1)
   const latestUsers = rows.slice(0, 7)
+  const premiumStatsV33 = [
+    { icon: 'userPlus', label: t('Dzisiaj'), value: registeredToday, text: t('nowych użytkowników'), trend: t('na podstawie rejestracji dziś') },
+    { icon: 'calendar', label: t('W tym tygodniu'), value: registeredWeek, text: t('nowych użytkowników'), trend: t('ostatnie 7 dni') },
+    { icon: 'chart', label: t('Ten miesiąc'), value: registeredMonth || rows.length, text: t('nowych użytkowników'), trend: t('bieżący miesiąc') },
+    { icon: 'globe', label: t('Kraje'), value: totalCountries, text: t('kraje z rejestracjami'), trend: `${knownUsersCount} ${t('użytkowników z flagą')}` }
+  ]
 
   const premiumCountryNodes = (filteredCountryRows.length ? filteredCountryRows : countryRows).slice(0, 16).map((country, index, arr) => {
     const total = Math.max(arr.length, 1)
@@ -5511,7 +5528,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
         <div>
           <span className="world-map-kicker-v30">🌍 {t('Mapa świata')}</span>
           <h1>{t('Mapa świata rejestrujących')}</h1>
-          <p>{t('Zobacz, skąd pochodzą użytkownicy Bet+AI. Flagi, kraje i statystyki aktualizują się automatycznie z profili Supabase.')}</p>
+          <p>{t('Zobacz, skąd pochodzą Twoi nowi użytkownicy. Flagi, kraje i statystyki aktualizują się automatycznie z profili Supabase.')}</p>
         </div>
         <div className="world-map-premium-actions-v32">
           <select value={selectedCountry} onChange={event => setSelectedCountry(event.target.value)}>
@@ -5545,7 +5562,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
             </div>
             <div className="world-map-center-premium-v32">
               <strong>{rows.length}</strong>
-              <span>{t('użytkowników')}</span>
+              <span>{t('Nowi użytkownicy')}</span>
               <small>{t('łącznie')}</small>
             </div>
 
@@ -5582,22 +5599,39 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
             ) : null}
           </div>
 
-          <div className="world-map-premium-bottom-stats-v32">
-            <div><b>{registeredToday}</b><span>{t('dzisiaj')}</span></div>
-            <div><b>{registeredWeek}</b><span>{t('w tym tygodniu')}</span></div>
-            <div><b>{registeredMonth || rows.length}</b><span>{t('ten miesiąc')}</span></div>
-            <div><b>{totalCountries}</b><span>{t('kraje')}</span></div>
+          <div className="world-map-premium-bottom-stats-v32" aria-label={t('Statystyki rejestracji')}>
+            {premiumStatsV33.map(item => (
+              <div key={item.icon} className="world-map-premium-stat-card-v33">
+                <span className={`world-map-premium-stat-icon-v33 ${item.icon}`} aria-hidden="true">
+                  {item.icon === 'userPlus' ? (
+                    <svg viewBox="0 0 24 24"><path d="M15 19.5c0-3.1-2.7-5.6-6-5.6s-6 2.5-6 5.6"/><path d="M9 11.2A3.35 3.35 0 1 0 9 4.5a3.35 3.35 0 0 0 0 6.7Z"/><path d="M18 8v6"/><path d="M15 11h6"/></svg>
+                  ) : item.icon === 'calendar' ? (
+                    <svg viewBox="0 0 24 24"><path d="M6.5 3.5v4"/><path d="M17.5 3.5v4"/><path d="M4.5 6h15a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-11A1.5 1.5 0 0 1 4.5 6Z"/><path d="M3 10h18"/><path d="M7.5 14h3"/><path d="M13.5 14h3"/></svg>
+                  ) : item.icon === 'chart' ? (
+                    <svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6.2 20V12"/><path d="M12 20V7"/><path d="M17.8 20V4"/><path d="M6 9.5l5.3-4.1 3.7 3.1 4-5"/></svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.2 2.2 3.3 5 3.3 8.5S14.2 18.3 12 20.5"/><path d="M12 3.5C9.8 5.7 8.7 8.5 8.7 12s1.1 6.3 3.3 8.5"/></svg>
+                  )}
+                </span>
+                <span className="world-map-premium-stat-body-v33">
+                  <strong>{item.label}</strong>
+                  <b>{formatBetaiWorldCompactNumberV33(item.value)}</b>
+                  <small>{item.text}</small>
+                  <em>↗ {item.trend}</em>
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
         <aside className="world-map-premium-side-v32">
           <div className="world-map-panel-v30 world-map-panel-premium-v32">
             <div className="world-map-panel-head-v30">
-              <strong>{t('Użytkownicy według kraju')}</strong>
-              <span>{countryRows.length}</span>
+              <strong>{t('Nowi użytkownicy według kraju')}</strong>
+              <span>{t('Top 5 krajów')}</span>
             </div>
             <div className="world-map-top-countries-v32">
-              {countryRows.slice(0, 8).map((country, index) => {
+              {countryRows.slice(0, 5).map((country, index) => {
                 const percent = rows.length ? Math.round((country.count / rows.length) * 1000) / 10 : 0
                 const width = Math.max(8, Math.round((country.count / topCountryCount) * 100))
                 return (
