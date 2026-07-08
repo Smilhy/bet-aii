@@ -5515,6 +5515,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [selectedCountry, setSelectedCountry] = useState('all')
+  const [mapFilter, setMapFilter] = useState('all')
   const [status, setStatus] = useState('')
 
   const syncCountryHint = useCallback(async () => {
@@ -5589,11 +5590,23 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
 
   const visibleUsers = useMemo(() => {
     const q = normalizeEmail(query)
+    const topCodes = new Set(countryRows.filter(row => row.code !== 'ZZ').slice(0, 10).map(row => row.code))
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+    const monthStart = new Date()
+    monthStart.setDate(1)
+    monthStart.setHours(0, 0, 0, 0)
     return rows
+      .filter(row => {
+        if (mapFilter === 'top10') return topCodes.has(row._worldCountryCode)
+        if (mapFilter === 'today') return Date.parse(row.created_at || row.createdAt || '') >= todayStart.getTime()
+        if (mapFilter === 'month') return Date.parse(row.created_at || row.createdAt || '') >= monthStart.getTime()
+        return true
+      })
       .filter(row => selectedCountry === 'all' || row._worldCountryCode === selectedCountry)
       .filter(row => !q || `${row._worldName} ${row.email || ''} ${row._worldCountryName}`.toLowerCase().includes(q))
       .slice(0, 400)
-  }, [rows, query, selectedCountry])
+  }, [rows, query, selectedCountry, mapFilter, countryRows])
 
   const filteredCountryRows = useMemo(() => {
     const map = new Map()
@@ -5637,6 +5650,40 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
     { icon: 'shield', label: t('Wykryte flagi'), value: formatBetaiWorldCompactNumberV33(knownUsersCount), text: `${unknownCountryCount} ${t('bez kraju')}` },
     { icon: 'continent', label: t('Kontynenty'), value: totalContinents || '—', text: t('aktywne regiony świata') }
   ]
+
+  const worldMapFilterOptionsV38 = [
+    { id: 'all', label: t('Wszystkie kraje'), value: totalCountries || countryRows.length },
+    { id: 'top10', label: t('Top 10'), value: Math.min(10, totalCountries || countryRows.length) },
+    { id: 'today', label: t('Dzisiaj'), value: registeredToday },
+    { id: 'month', label: t('Ten miesiąc'), value: registeredMonth || rows.length }
+  ]
+
+  const continentRowsV38 = useMemo(() => {
+    const map = new Map()
+    countryRows.filter(country => country.code !== 'ZZ').forEach(country => {
+      const key = country.continent || getBetaiWorldContinentV34(country.code) || t('Inne')
+      const prev = map.get(key) || { name: key, count: 0, countries: 0 }
+      prev.count += country.count
+      prev.countries += 1
+      map.set(key, prev)
+    })
+    return [...map.values()].sort((a, b) => (b.count - a.count) || String(a.name).localeCompare(String(b.name), 'pl')).slice(0, 6)
+  }, [countryRows, lang])
+
+  const activityTimelineV38 = rows
+    .filter(row => Date.parse(row.created_at || row.createdAt || '') >= startOfToday.getTime())
+    .slice(0, 6)
+  const timelineRowsV38 = activityTimelineV38.length ? activityTimelineV38 : rows.slice(0, 6)
+
+  const selectedCountryLastUserV38 = selectedCountryRow?.users?.[0] || (selectedCountryRow ? rows.find(row => row._worldCountryCode === selectedCountryRow.code) : null)
+  const selectedCountryTodayCountV38 = selectedCountryRow ? rows.filter(row => row._worldCountryCode === selectedCountryRow.code && Date.parse(row.created_at || row.createdAt || '') >= startOfToday.getTime()).length : 0
+  const selectedCountryPercentV38 = selectedCountryRow && rows.length ? Math.round((selectedCountryRow.count / rows.length) * 1000) / 10 : 0
+  const selectedCountryStatusV38 = selectedCountryRow
+    ? (selectedCountryRow.count === 1 && selectedCountryRow.code !== 'ZZ' ? t('Nowy kraj') : selectedCountryTodayCountV38 > 0 ? t('Rośnie') : t('Stabilnie'))
+    : ''
+  const selectedCountryStatusTextV38 = selectedCountryRow
+    ? (selectedCountryRow.count === 1 && selectedCountryRow.code !== 'ZZ' ? t('pierwszy użytkownik z tego kraju') : selectedCountryTodayCountV38 > 0 ? `${selectedCountryTodayCountV38} ${t('dzisiaj')}` : t('brak nowych rejestracji dzisiaj'))
+    : ''
 
   const premiumCountryNodes = (filteredCountryRows.length ? filteredCountryRows : countryRows).slice(0, 20).map((country, index, arr) => {
     const total = Math.max(arr.length, 1)
@@ -5687,6 +5734,20 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
         ) : null}
       </div>
 
+      <div className="world-map-view-filters-v38" aria-label={t('Filtry widoku mapy')}>
+        {worldMapFilterOptionsV38.map(item => (
+          <button
+            key={item.id}
+            type="button"
+            className={mapFilter === item.id ? 'active' : ''}
+            onClick={() => setMapFilter(item.id)}
+          >
+            <span>{item.label}</span>
+            <b>{formatBetaiWorldCompactNumberV33(item.value)}</b>
+          </button>
+        ))}
+      </div>
+
       <div className="world-map-premium-overview-v34" aria-label={t('Dane mapy świata')}>
         {worldMapInsightCardsV34.map(item => (
           <div key={item.icon} className="world-map-premium-overview-card-v34">
@@ -5724,7 +5785,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
               <button
                 type="button"
                 key={country.code}
-                className={`world-map-country-node-v32 ${selectedCountry === country.code ? 'active' : ''}`}
+                className={`world-map-country-node-v32 ${selectedCountry === country.code ? 'active' : ''} ${topCountry?.code === country.code ? 'top-country-v38' : ''} ${country.count === 1 && country.code !== 'ZZ' ? 'new-country-v38' : ''} ${country.users?.some(row => Date.parse(row.created_at || row.createdAt || '') >= startOfToday.getTime()) ? 'live-country-v38' : ''}`}
                 style={{ '--x': `${country._x}%`, '--y': `${country._y}%`, '--tx': country._tx, '--ty': country._ty, '--delay': `${index * 45}ms` }}
                 title={`${country.name}: ${country.count}`}
                 onClick={() => setSelectedCountry(country.code)}
@@ -5733,6 +5794,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
                 <span className="world-map-country-text-v32">
                   <b>{country.name}</b>
                   <small>{country.count} {country.count === 1 ? t('użytkownik') : t('użytkowników')}</small>
+                  {country.count === 1 && country.code !== 'ZZ' ? <span className="world-map-country-badge-v38">NEW</span> : null}
                 </span>
               </button>
             ))}
@@ -5746,9 +5808,9 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
             ) : null}
 
             {!premiumCountryNodes.length && !loading ? (
-              <div className="world-map-empty-v30">
-                <strong>{t('Brak danych krajów')}</strong>
-                <span>{t('Nowi użytkownicy pojawią się tutaj po rejestracji i zapisaniu kraju.')}</span>
+              <div className="world-map-empty-v30 world-map-empty-premium-v38">
+                <strong>{t('Mapa będzie się automatycznie uzupełniać')}</strong>
+                <span>{t('Gdy pojawią się nowe rejestracje, zobaczysz tutaj kraje, flagi i aktywność live.')}</span>
               </div>
             ) : null}
           </div>
@@ -5806,6 +5868,70 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
                 {t('Zobacz wszystkie kraje')}
               </button>
             ) : null}
+          </div>
+
+          <div className={`world-map-country-detail-v38 ${selectedCountryRow ? 'active' : 'idle'}`}>
+            {selectedCountryRow ? (
+              <>
+                <div className="world-map-country-detail-head-v38">
+                  <span className="world-map-country-detail-flag-v38">{renderBetaiWorldFlagV35(selectedCountryRow.code, selectedCountryRow.name)}</span>
+                  <div>
+                    <strong>{selectedCountryRow.name}</strong>
+                    <small>{selectedCountryRow.continent || getBetaiWorldContinentV34(selectedCountryRow.code) || t('Region świata')}</small>
+                  </div>
+                  <em>{selectedCountryStatusV38}</em>
+                </div>
+                <div className="world-map-country-detail-grid-v38">
+                  <span><b>{selectedCountryRow.count}</b><small>{t('użytkowników')}</small></span>
+                  <span><b>{selectedCountryPercentV38}%</b><small>{t('udziału')}</small></span>
+                  <span><b>{formatBetaiWorldRelativeTimeV34(selectedCountryLastUserV38?.created_at || selectedCountryLastUserV38?.createdAt, lang)}</b><small>{t('ostatnia rejestracja')}</small></span>
+                  <span><b>{selectedCountryStatusTextV38}</b><small>{t('status')}</small></span>
+                </div>
+              </>
+            ) : (
+              <>
+                <strong>{t('Panel kraju')}</strong>
+                <span>{t('Kliknij flagę na mapie, aby zobaczyć szczegóły kraju, procent udziału i ostatnią rejestrację.')}</span>
+              </>
+            )}
+          </div>
+
+          <div className="world-map-panel-v30 world-map-panel-premium-v32 world-map-continent-panel-v38">
+            <div className="world-map-panel-head-v30">
+              <strong>{t('Ranking kontynentów')}</strong>
+              <span>{t('aktywni użytkownicy')}</span>
+            </div>
+            <div className="world-map-continent-list-v38">
+              {continentRowsV38.map(continent => {
+                const width = Math.max(8, Math.round((continent.count / Math.max(1, continentRowsV38[0]?.count || 1)) * 100))
+                return (
+                  <button key={continent.name} type="button" onClick={() => setSelectedCountry('all')}>
+                    <span>{continent.name}</span>
+                    <b>{continent.count}</b>
+                    <small>{continent.countries} {continent.countries === 1 ? t('kraj') : t('kraje')}</small>
+                    <i style={{ '--w': `${width}%` }} />
+                  </button>
+                )
+              })}
+              {!continentRowsV38.length ? <div className="world-map-mini-empty-v30">{loading ? t('Ładowanie...') : t('Brak kontynentów.')}</div> : null}
+            </div>
+          </div>
+
+          <div className="world-map-panel-v30 world-map-panel-premium-v32 world-map-timeline-panel-v38">
+            <div className="world-map-panel-head-v30">
+              <strong>{t('Aktywność dzisiaj')}</strong>
+              <span>{activityTimelineV38.length ? t('dzisiaj') : t('ostatnie')}</span>
+            </div>
+            <div className="world-map-timeline-list-v38">
+              {timelineRowsV38.map((row, index) => (
+                <button key={row.id || row.email || index} type="button" onClick={() => setSelectedCountry(row._worldCountryCode || 'all')}>
+                  <span className="world-map-timeline-dot-v38" />
+                  <b>{formatBetaiWorldRelativeTimeV34(row.created_at || row.createdAt, lang)}</b>
+                  <small>{row._worldCountryName}</small>
+                </button>
+              ))}
+              {!timelineRowsV38.length ? <div className="world-map-mini-empty-v30">{loading ? t('Ładowanie...') : t('Brak aktywności.')}</div> : null}
+            </div>
           </div>
 
           <div className="world-map-panel-v30 world-map-panel-premium-v32">
