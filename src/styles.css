@@ -78873,3 +78873,93 @@ html.betai-opera-stability-v29 .app-shell *::after{
   .world-map-country-flag-v32{width:35px;height:35px;font-size:22px;}
   .world-map-country-text-v32 small{font-size:9px;}
 }
+
+/* =========================================================
+   WERSJA 35 — Mapa świata: prawdziwe flagi + wyrównane pinezki
+   Tylko UI zakładki Mapa świata. Logika strony bez zmian.
+   ========================================================= */
+.world-map-country-node-v32{
+  transform:translate(var(--tx,-50%), var(--ty,-50%));
+  will-change:transform;
+}
+.world-map-country-node-v32:hover,
+.world-map-country-node-v32.active{
+  transform:translate(var(--tx,-50%), var(--ty,-50%)) scale(1.035);
+}
+.world-map-country-flag-v32,
+.world-map-side-flag-v32,
+.world-map-selected-chip-flag-v35,
+.world-map-latest-flag-v35{
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  flex:0 0 auto;
+}
+.world-map-country-flag-v32{
+  font-size:0;
+  line-height:0;
+}
+.world-map-flag-img-v35{
+  display:block;
+  width:100%;
+  height:100%;
+  border-radius:inherit;
+  object-fit:cover;
+  object-position:center;
+  background:rgba(235,242,250,.92);
+}
+.world-map-flag-fallback-v35{
+  display:grid;
+  place-items:center;
+  width:100%;
+  height:100%;
+  font-size:22px;
+  line-height:1;
+}
+.world-map-selected-chip-flag-v35{
+  width:29px;
+  height:29px;
+  border-radius:999px;
+  box-shadow:0 0 0 2px rgba(238,181,65,.24), 0 8px 16px rgba(0,0,0,.30);
+}
+.world-map-side-flag-v32{
+  width:31px;
+  height:31px;
+  border-radius:999px;
+  font-size:0;
+  line-height:0;
+  box-shadow:0 0 0 2px rgba(238,181,65,.18), 0 8px 16px rgba(0,0,0,.28);
+}
+.world-map-latest-row-v30 > .world-map-latest-flag-v35{
+  width:33px;
+  height:33px;
+  border-radius:999px;
+  font-size:0;
+  line-height:0;
+  box-shadow:0 0 0 2px rgba(238,181,65,.16), 0 8px 16px rgba(0,0,0,.26);
+}
+.world-map-country-node-v32[style*="--tx: 0%"] .world-map-country-text-v32{
+  padding-left:6px;
+}
+.world-map-country-node-v32[style*="--tx: -100%"] .world-map-country-text-v32{
+  padding-right:4px;
+}
+.world-map-top-countries-v32 button{
+  grid-template-columns:20px 34px minmax(0,1fr) auto 46px;
+}
+.world-map-premium-lines-v32 line{
+  stroke-linecap:round;
+}
+@media (max-width:760px){
+  .world-map-country-node-v32{
+    min-width:136px;
+    max-width:158px;
+    grid-template-columns:38px minmax(0,1fr);
+  }
+  .world-map-country-flag-v32{
+    width:38px;
+    height:38px;
+  }
+  .world-map-side-flag-v32{width:28px;height:28px;}
+  .world-map-latest-row-v30 > .world-map-latest-flag-v35{width:30px;height:30px;}
+}

@@ -5375,6 +5375,28 @@ function getBetaiFlagEmojiV30(code = 'ZZ') {
   return clean.split('').map(char => String.fromCodePoint(127397 + char.charCodeAt(0))).join('')
 }
 
+function getBetaiFlagImageCodeV35(code = 'ZZ') {
+  const clean = String(code || '').trim().toUpperCase()
+  if (!/^[A-Z]{2}$/.test(clean) || clean === 'ZZ') return ''
+  return (clean === 'UK' ? 'GB' : clean).toLowerCase()
+}
+
+function renderBetaiWorldFlagV35(code = 'ZZ', name = '') {
+  const imgCode = getBetaiFlagImageCodeV35(code)
+  if (!imgCode) return <span className="world-map-flag-fallback-v35" aria-hidden="true">🌍</span>
+  const label = name || getBetaiWorldCountryNameV30(code) || 'Kraj'
+  return (
+    <img
+      className="world-map-flag-img-v35"
+      src={`https://flagcdn.com/w80/${imgCode}.png`}
+      srcSet={`https://flagcdn.com/w80/${imgCode}.png 1x, https://flagcdn.com/w160/${imgCode}.png 2x`}
+      alt={`${label} flaga`}
+      loading="lazy"
+      draggable="false"
+    />
+  )
+}
+
 function getBetaiBrowserCountryHintV30() {
   if (typeof navigator === 'undefined') return { code: '', name: '', locale: '', timezone: '' }
   const locale = navigator.language || (Array.isArray(navigator.languages) ? navigator.languages[0] : '') || ''
@@ -5611,7 +5633,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
   ]
   const worldMapInsightCardsV34 = [
     { icon: 'pulse', label: t('Live status'), value: loading ? t('SYNC') : t('ONLINE'), text: loading ? t('Pobieram Supabase') : t('Auto-odświeżanie aktywne') },
-    { icon: 'crown', label: t('Top kraj'), value: topCountry ? `${topCountry.flag} ${topCountry.name}` : '—', text: topCountry ? `${topCountry.count} ${topCountry.count === 1 ? t('użytkownik') : t('użytkowników')}` : t('Brak danych') },
+    { icon: 'crown', label: t('Top kraj'), value: topCountry ? topCountry.name : '—', text: topCountry ? `${topCountry.count} ${topCountry.count === 1 ? t('użytkownik') : t('użytkowników')}` : t('Brak danych') },
     { icon: 'shield', label: t('Wykryte flagi'), value: formatBetaiWorldCompactNumberV33(knownUsersCount), text: `${unknownCountryCount} ${t('bez kraju')}` },
     { icon: 'continent', label: t('Kontynenty'), value: totalContinents || '—', text: t('aktywne regiony świata') }
   ]
@@ -5619,11 +5641,15 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
   const premiumCountryNodes = (filteredCountryRows.length ? filteredCountryRows : countryRows).slice(0, 20).map((country, index, arr) => {
     const total = Math.max(arr.length, 1)
     const ring = index % 3
-    const radius = ring === 0 ? 36 : ring === 1 ? 44 : 49
+    const radius = ring === 0 ? 34 : ring === 1 ? 42 : 46
     const angle = (-90 + (index * 360 / total) + (ring === 1 ? 8 : ring === 2 ? -8 : 0)) * Math.PI / 180
-    const x = 50 + Math.cos(angle) * radius
-    const y = 50 + Math.sin(angle) * radius
-    return { ...country, _x: Math.max(7, Math.min(93, x)), _y: Math.max(8, Math.min(92, y)) }
+    const rawX = 50 + Math.cos(angle) * radius
+    const rawY = 50 + Math.sin(angle) * radius
+    const x = Math.max(9, Math.min(91, rawX))
+    const y = Math.max(10, Math.min(90, rawY))
+    const tx = x < 24 ? '0%' : x > 76 ? '-100%' : '-50%'
+    const ty = y < 17 ? '0%' : y > 83 ? '-100%' : '-50%'
+    return { ...country, _x: x, _y: y, _tx: tx, _ty: ty }
   })
 
   const remainingCountriesCount = Math.max(0, filteredCountryRows.length - premiumCountryNodes.length)
@@ -5640,7 +5666,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
         <div className="world-map-premium-actions-v32">
           <select value={selectedCountry} onChange={event => setSelectedCountry(event.target.value)}>
             <option value="all">🌐 {t('Wszystkie kraje')}</option>
-            {countryRows.map(country => <option key={country.code} value={country.code}>{country.flag} {country.name} ({country.count})</option>)}
+            {countryRows.map(country => <option key={country.code} value={country.code}>{country.name} ({country.count})</option>)}
           </select>
           <button type="button" onClick={loadProfiles} disabled={loading}>{loading ? t('Odświeżam...') : t('Odśwież')}</button>
         </div>
@@ -5653,7 +5679,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
         </label>
         {selectedCountryRow ? (
           <button type="button" className="world-map-selected-chip-v34" onClick={() => setSelectedCountry('all')}>
-            <span>{selectedCountryRow.flag}</span>
+            <span className="world-map-selected-chip-flag-v35">{renderBetaiWorldFlagV35(selectedCountryRow.code, selectedCountryRow.name)}</span>
             <b>{selectedCountryRow.name}</b>
             <small>{selectedCountryRow.count}</small>
             <em>×</em>
@@ -5699,11 +5725,11 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
                 type="button"
                 key={country.code}
                 className={`world-map-country-node-v32 ${selectedCountry === country.code ? 'active' : ''}`}
-                style={{ '--x': `${country._x}%`, '--y': `${country._y}%`, '--delay': `${index * 45}ms` }}
+                style={{ '--x': `${country._x}%`, '--y': `${country._y}%`, '--tx': country._tx, '--ty': country._ty, '--delay': `${index * 45}ms` }}
                 title={`${country.name}: ${country.count}`}
                 onClick={() => setSelectedCountry(country.code)}
               >
-                <span className="world-map-country-flag-v32">{country.flag}</span>
+                <span className="world-map-country-flag-v32">{renderBetaiWorldFlagV35(country.code, country.name)}</span>
                 <span className="world-map-country-text-v32">
                   <b>{country.name}</b>
                   <small>{country.count} {country.count === 1 ? t('użytkownik') : t('użytkowników')}</small>
@@ -5765,7 +5791,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
                 return (
                   <button key={country.code} type="button" className={selectedCountry === country.code ? 'active' : ''} onClick={() => setSelectedCountry(country.code)}>
                     <em>{index + 1}</em>
-                    <span className="world-map-side-flag-v32">{country.flag}</span>
+                    <span className="world-map-side-flag-v32">{renderBetaiWorldFlagV35(country.code, country.name)}</span>
                     <b>{country.name}</b>
                     <strong>{country.count}</strong>
                     <small>{percent}%</small>
@@ -5798,7 +5824,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
                     else onToast?.({ type: 'info', title: row._worldName, message: row._worldCountryName })
                   }}
                 >
-                  <span>{row._worldFlag}</span>
+                  <span className="world-map-latest-flag-v35">{renderBetaiWorldFlagV35(row._worldCountryCode, row._worldCountryName)}</span>
                   <div>
                     <b data-no-translate="true">{row._worldName}</b>
                     <small>{row._worldCountryName}</small>
