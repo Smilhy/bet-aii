@@ -1,12 +1,12 @@
 const { createClient } = require('@supabase/supabase-js')
 
 const AUTHORS = {
-  betai: { name: 'BetAI MultiSport AI', username: 'betai-multisport-ai', source: 'betai_independent_value_v1867_9', mirrorAiBets: true },
+  betai: { name: 'BetAI MultiSport AI', username: 'betai-multisport-ai', source: 'betai_independent_value_v1867_9', mirrorAiBets: true, tipsTable: false },
   typer: { name: 'Typer Expert', username: 'typer-expert', source: 'typer_expert_progression_v1867_9', mirrorAiBets: false },
   ograc: { name: 'Ograć Buka', username: 'ograc-buka', source: 'ograc_buka_independent_v1867_9', mirrorAiBets: false }
 }
 
-const VERSION = '1884.0-typer-expert-strict-progression-v24'
+const VERSION = '1888.0-betai-multisport-ai-bets-only-v28'
 const DEFAULT_BOTS = ['betai', 'typer', 'ograc']
 
 // Każdy bot działa niezależnie. Nie ma wspólnej rotacji.
@@ -820,11 +820,38 @@ function buildAiBetRow(tip) {
 }
 
 async function loadRecentBotTips(supabase, bots) {
-  const names = bots.map(bot => AUTHORS[bot].name)
+  const names = bots.filter(bot => bot !== 'betai').map(bot => AUTHORS[bot].name).filter(Boolean)
   const since = new Date(Date.now() - 7 * 24 * 3_600_000).toISOString()
-  const { data, error } = await supabase.from('tips').select('*').in('author_name', names).gte('created_at', since).order('created_at', { ascending: false }).limit(150)
-  if (error) throw error
-  return data || []
+  const rows = []
+  if (names.length) {
+    const { data, error } = await supabase.from('tips').select('*').in('author_name', names).gte('created_at', since).order('created_at', { ascending: false }).limit(150)
+    if (error) throw error
+    rows.push(...(data || []))
+  }
+  if (bots.includes('betai')) {
+    const { data: aiRows, error: aiError } = await supabase
+      .from('ai_bets')
+      .select('*')
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(150)
+    if (aiError) throw aiError
+    rows.push(...(aiRows || []).map(row => ({
+      ...row,
+      author_name: AUTHORS.betai.name,
+      username: AUTHORS.betai.username,
+      public_slug: AUTHORS.betai.username,
+      external_fixture_id: row.external_fixture_id || row.fixture_id,
+      fixture_id: row.external_fixture_id || row.fixture_id,
+      event_time: row.match_date && row.match_time ? `${row.match_date}T${row.match_time}` : row.match_date,
+      team_home: row.home_team,
+      team_away: row.away_team,
+      prediction: row.prediction,
+      market: row.market,
+      source: row.source || AUTHORS.betai.source,
+    })))
+  }
+  return rows
 }
 function isActiveFutureTip(row) {
   const status = String(row?.status || row?.result || row?.settlement_status || '').toLowerCase()
@@ -1322,10 +1349,25 @@ async function runAiBotCycle(event = {}, options = {}) {
     const candidate = selected[bot]
     if (!candidate) return { bot, author: AUTHORS[bot].name, inserted: 0, reason: 'no_real_odds_candidate' }
     const tip = buildTipRow(candidate, bot, typerProgressionState, botPolicies[bot])
+    const config = AUTHORS[bot] || {}
     try {
+      // WERSJA 28: BetAI MultiSport AI jest wyłącznie źródłem zakładki Typy AI.
+      // Nie zapisujemy go już do public.tips, bo wtedy ten sam typ pojawiał się jako
+      // zwykły typer w feedzie/profilu oraz drugi raz w Typy AI / AI Typy dnia.
+      if (config.tipsTable === false) {
+        const outcome = { bot, author: config.name, inserted: 0, tips_skipped: true, reason: 'ai_bets_only_no_public_tip_duplicate', pick: tip }
+        try {
+          outcome.ai_bets = await mirrorAiBet(supabase, tip)
+        } catch (error) {
+          outcome.ai_bets_error = error.message || String(error)
+          context.errors.push(`ai_bets only ${bot}: ${error.message || error}`)
+        }
+        return outcome
+      }
+
       const saved = await insertSafe(supabase, 'tips', tip)
-      const outcome = { bot, author: AUTHORS[bot].name, inserted: 1, id: saved.data?.id, removed_columns: saved.removed, pick: tip }
-      if (AUTHORS[bot].mirrorAiBets) {
+      const outcome = { bot, author: config.name, inserted: 1, id: saved.data?.id, removed_columns: saved.removed, pick: tip }
+      if (config.mirrorAiBets) {
         try {
           outcome.ai_bets = await mirrorAiBet(supabase, tip)
         } catch (error) {
@@ -1336,16 +1378,17 @@ async function runAiBotCycle(event = {}, options = {}) {
       return outcome
     } catch (error) {
       context.errors.push(`insert ${bot}: ${error.message || error}`)
-      return { bot, author: AUTHORS[bot].name, inserted: 0, error: error.message || String(error), candidate: tip }
+      return { bot, author: config.name, inserted: 0, error: error.message || String(error), candidate: tip }
     }
   }))
   const inserted = outcomes.reduce((sum, outcome) => sum + Number(outcome.inserted || 0), 0)
   const aiBetsInserted = outcomes.reduce((sum, outcome) => sum + (outcome.ai_bets ? 1 : 0), 0)
 
   const result = {
-    ok: inserted > 0 || Object.keys(blocked).length > 0,
+    ok: inserted > 0 || aiBetsInserted > 0 || Object.keys(blocked).length > 0,
     version: VERSION,
-    inserted,
+    inserted: inserted + aiBetsInserted,
+    public_tips_inserted: inserted,
     ai_bets_inserted: aiBetsInserted,
     bots_requested: bots,
     bots_run: botsToRun,
@@ -1370,8 +1413,8 @@ async function runAiBotCycle(event = {}, options = {}) {
           total_net: typerProgressionState.totalNet
         }
       : null,
-    message: inserted > 0
-      ? `Zapisano ${inserted} niezależny typ${dailyForce ? ' w trybie minimum dziennego' : ''}. Typer Expert zawsze liczy progresję i nie omija nierozliczonego poprzedniego typu.`
+    message: (inserted + aiBetsInserted) > 0
+      ? `Zapisano ${inserted + aiBetsInserted} typ${dailyForce ? ' w trybie minimum dziennego' : ''}. BetAI MultiSport AI zapisuje tylko do Typy AI, bez duplikatu w feedzie. Typer Expert zawsze liczy progresję.`
       : 'Nie zapisano typu. Odpowiedź zawiera liczbę meczów, kursów, kandydatów i błędy API.'
   }
   await recordRun(supabase, result)

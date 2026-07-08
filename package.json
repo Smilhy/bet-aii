@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-27-fix-tipster-plans-uuid-errors",
-  "version": "27.0.0",
+  "name": "betai-wersja-29-opera-tab-freeze-fix",
+  "version": "29.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",

@@ -4,179 +4,115 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script>
-    // WERSJA 19 — stabilny powrót z ukrytej, zamrożonej lub odrzuconej karty.
-    // Naprawia dwa przypadki: brak startu aplikacji oraz pusty obraz przy istniejącym DOM-ie
-    // (problem warstwy renderującej Chromium/Opera po wznowieniu karty).
+    // WERSJA 29 — stabilny powrót z karty bez twardego przeładowywania.
+    // Opera/Chromium potrafi zamrozić kartę w tle. Poprzedni hard-reload po powrocie
+    // robił czarny ekran podczas ponownego startu. Teraz normalny powrót tylko pauzuje
+    // ciężkie odświeżenia i odblokowuje UI po krótkim oddechu renderera.
     (function () {
-      var RECOVERY_KEY = 'betai_runtime_recovery_v19';
-      var RECOVERY_WINDOW_MS = 30000;
+      var html = document.documentElement;
       var hiddenAt = document.visibilityState === 'hidden' ? Date.now() : 0;
-      var recovering = false;
+      var resumeTimer = 0;
+      var paintTimer = 0;
+      var discardReloadKey = 'betai_discard_reload_v29';
 
-      function getRoot() {
-        return document.getElementById('root');
-      }
+      function now() { return Date.now ? Date.now() : new Date().getTime(); }
 
-      function rootIsEmpty() {
-        var root = getRoot();
-        return !!root && root.childElementCount === 0 && !String(root.textContent || '').trim();
-      }
-
-      function appSurfaceIsHealthy() {
-        var root = getRoot();
-        if (!root || rootIsEmpty()) return false;
-        var surface = root.querySelector('.app-shell, .auth-screen, .auth609-screen');
-        if (!surface) return false;
+      function detectOpera() {
         try {
-          var style = window.getComputedStyle(surface);
-          var rect = surface.getBoundingClientRect();
-          if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity || 1) <= 0.01) return false;
-          if (rect.width < 8 || rect.height < 8) return false;
-        } catch (_) {}
-        return true;
-      }
-
-      function mayRecover() {
-        try {
-          var now = Date.now();
-          var last = Number(sessionStorage.getItem(RECOVERY_KEY) || 0);
-          if (last && now - last < RECOVERY_WINDOW_MS) return false;
-          sessionStorage.setItem(RECOVERY_KEY, String(now));
-          return true;
+          var ua = navigator.userAgent || '';
+          var brands = (navigator.userAgentData && navigator.userAgentData.brands) || [];
+          return /OPR\/|Opera/i.test(ua) || brands.some(function (brand) { return /Opera/i.test(brand.brand || ''); });
         } catch (_) {
-          return true;
+          return false;
         }
       }
 
-      function recover(reason) {
-        if (recovering || !mayRecover()) return;
-        recovering = true;
-        try { console.warn('[BetAI v19] odzyskiwanie aplikacji:', reason); } catch (_) {}
-        try {
-          var url = new URL(window.location.href);
-          url.searchParams.set('__betai_recover', String(Date.now()));
-          window.location.replace(url.toString());
-        } catch (_) {
-          window.location.reload();
-        }
+      if (detectOpera()) {
+        html.classList.add('betai-opera-stability-v29');
+        window.__BETAI_OPERA_STABILITY_V29__ = true;
       }
 
-      function forceRepaint(reason) {
-        var root = getRoot();
-        if (!root) return;
-        try {
-          var x = window.scrollX || 0;
-          var y = window.scrollY || 0;
-          document.documentElement.classList.remove('betai-resume-repaint-v19');
-          root.classList.remove('betai-resume-repaint-v19');
-          void root.offsetHeight;
-          document.documentElement.classList.add('betai-resume-repaint-v19');
-          root.classList.add('betai-resume-repaint-v19');
-          window.dispatchEvent(new Event('resize'));
-          window.requestAnimationFrame(function () {
-            try { window.scrollTo(x, y + 1); } catch (_) {}
-            window.requestAnimationFrame(function () {
-              try { window.scrollTo(x, y); } catch (_) {}
-              document.documentElement.classList.remove('betai-resume-repaint-v19');
-              root.classList.remove('betai-resume-repaint-v19');
-              try { window.dispatchEvent(new CustomEvent('betai:resume-v19', { detail: { reason: reason || 'resume' } })); } catch (_) {}
-            });
-          });
-        } catch (_) {}
+      function markHidden() {
+        hiddenAt = now();
+        html.classList.add('betai-tab-hidden-v29');
+        window.__BETAI_PAGE_VISIBLE_V29__ = false;
       }
 
-      function checkAfterResume(reason) {
-        forceRepaint(reason);
-        window.setTimeout(function () {
+      function markVisible(reason) {
+        var awayMs = hiddenAt ? now() - hiddenAt : 0;
+        hiddenAt = 0;
+        window.__BETAI_PAGE_VISIBLE_V29__ = true;
+        window.__BETAI_LAST_TAB_AWAY_MS_V29__ = awayMs;
+        window.__BETAI_TAB_RESUME_UNTIL_V29__ = now() + (awayMs > 5000 ? 4500 : 1800);
+
+        html.classList.remove('betai-tab-hidden-v29');
+        html.classList.add('betai-tab-resuming-v29');
+
+        window.clearTimeout(resumeTimer);
+        resumeTimer = window.setTimeout(function () {
+          html.classList.remove('betai-tab-resuming-v29');
+          try { window.dispatchEvent(new CustomEvent('betai:tab-resume-v29', { detail: { reason: reason || 'visible', awayMs: awayMs } })); } catch (_) {}
+        }, awayMs > 5000 ? 1400 : 700);
+
+        window.clearTimeout(paintTimer);
+        paintTimer = window.setTimeout(function () {
+          try { window.dispatchEvent(new Event('resize')); } catch (_) {}
+        }, 120);
+      }
+
+      window.__BETAI_CAN_RUN_HEAVY_V29__ = function () {
+        return document.visibilityState === 'visible' && now() >= Number(window.__BETAI_TAB_RESUME_UNTIL_V29__ || 0);
+      };
+
+      window.__BETAI_SCHEDULE_LIGHT_RESUME_V29__ = function (name, fn, delay) {
+        if (typeof fn !== 'function') return 0;
+        window.__BETAI_RESUME_TASKS_V29__ = window.__BETAI_RESUME_TASKS_V29__ || {};
+        var key = String(name || 'task');
+        var tasks = window.__BETAI_RESUME_TASKS_V29__;
+        if (tasks[key]) window.clearTimeout(tasks[key]);
+        var ms = Math.max(250, Number(delay || 1200));
+        tasks[key] = window.setTimeout(function () {
+          delete tasks[key];
           if (document.visibilityState !== 'visible') return;
-          var bundleNeverStarted = document.readyState === 'complete' && window.__BETAI_APP_BOOT_STARTED_V19__ !== true;
-          var appNotReady = window.__BETAI_APP_READY_V19__ !== true;
-          if (rootIsEmpty() || bundleNeverStarted || (appNotReady && !appSurfaceIsHealthy()) || !appSurfaceIsHealthy()) {
-            recover(reason + '-unhealthy');
-          }
-        }, 1800);
-      }
+          try { fn(); } catch (error) { try { console.warn('[BetAI v29] resume task skipped', key, error); } catch (_) {} }
+        }, ms);
+        return tasks[key];
+      };
 
-      window.__BETAI_RECOVER_APP_V19__ = recover;
-      window.__BETAI_FORCE_REPAINT_V19__ = forceRepaint;
-
-      // Odrzucona karta musi dostać świeży dokument i świeży bundle.
+      // Tylko prawdziwie odrzucona karta może dostać świeży reload.
+      // Zwykłe przejście na Facebooka/inne zakładki NIE przeładowuje strony.
       if (document.wasDiscarded === true) {
-        window.setTimeout(function () { recover('document-was-discarded'); }, 0);
+        try {
+          var last = Number(sessionStorage.getItem(discardReloadKey) || 0) || 0;
+          if (!last || now() - last > 15000) {
+            sessionStorage.setItem(discardReloadKey, String(now()));
+            window.setTimeout(function () { window.location.reload(); }, 0);
+          }
+        } catch (_) {}
       }
+
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') markHidden();
+        else markVisible('visibility');
+      });
+      window.addEventListener('pagehide', markHidden);
+      window.addEventListener('blur', function () { if (document.visibilityState === 'hidden') markHidden(); });
+      window.addEventListener('focus', function () { if (document.visibilityState === 'visible') markVisible('focus'); });
+      window.addEventListener('pageshow', function (event) { markVisible(event && event.persisted ? 'pageshow-bfcache' : 'pageshow'); });
+      document.addEventListener('resume', function () { markVisible('document-resume'); });
 
       window.addEventListener('error', function (event) {
         var target = event && event.target;
         var tag = target && target.tagName ? String(target.tagName).toUpperCase() : '';
         var assetUrl = String((target && (target.src || target.href)) || '');
-        var sameOriginAsset = false;
-        var assetPath = '';
+        if (tag !== 'SCRIPT' && tag !== 'LINK') return;
         try {
-          var parsedAssetUrl = new URL(assetUrl, window.location.href);
-          sameOriginAsset = parsedAssetUrl.origin === window.location.origin;
-          assetPath = parsedAssetUrl.pathname || '';
-        } catch (_) {}
-        var assetError = sameOriginAsset && (tag === 'SCRIPT' || (tag === 'LINK' && assetPath.indexOf('/assets/') === 0));
-        var message = String((event && event.message) || (event && event.error && event.error.message) || '');
-        var moduleError = /failed to fetch dynamically imported module|importing a module script failed|loading chunk|mime type|unexpected token\s*[<]/i.test(message);
-        if (assetError || moduleError) recover('module-or-asset-error');
-      }, true);
-
-      window.addEventListener('unhandledrejection', function (event) {
-        var reason = event && event.reason;
-        var message = String((reason && reason.message) || reason || '');
-        if (/failed to fetch dynamically imported module|importing a module script failed|loading chunk|networkerror|mime type/i.test(message)) {
-          recover('module-promise-error');
-        }
-      });
-
-      document.addEventListener('freeze', function () {
-        hiddenAt = hiddenAt || Date.now();
-      });
-      document.addEventListener('resume', function () {
-        checkAfterResume('document-resume');
-      });
-      window.addEventListener('pageshow', function (event) {
-        checkAfterResume(event && event.persisted ? 'pageshow-bfcache' : 'pageshow');
-      });
-      window.addEventListener('focus', function () {
-        if (document.visibilityState === 'visible') checkAfterResume('window-focus');
-      });
-      window.addEventListener('online', function () {
-        checkAfterResume('online');
-      });
-      document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'hidden') {
-          hiddenAt = Date.now();
-          return;
-        }
-        var awayMs = hiddenAt ? Date.now() - hiddenAt : 0;
-        hiddenAt = 0;
-        checkAfterResume(awayMs > 15000 ? 'tab-resume-long' : 'tab-resume');
-      });
-
-      window.addEventListener('load', function () {
-        window.setTimeout(function () {
-          if (rootIsEmpty() || !appSurfaceIsHealthy()) checkAfterResume('load-healthcheck');
-        }, 6000);
-      });
-
-      window.addEventListener('betai:app-ready-v19', function () {
-        try {
-          var root = getRoot();
-          if (root) root.setAttribute('data-betai-app-ready-v19', '1');
-        } catch (_) {}
-        window.setTimeout(function () {
-          try { sessionStorage.removeItem(RECOVERY_KEY); } catch (_) {}
-        }, 5000);
-        try {
-          var url = new URL(window.location.href);
-          if (url.searchParams.has('__betai_recover')) {
-            url.searchParams.delete('__betai_recover');
-            window.history.replaceState(window.history.state, document.title, url.pathname + url.search + url.hash);
+          var parsed = new URL(assetUrl, window.location.href);
+          if (parsed.origin === window.location.origin && parsed.pathname.indexOf('/assets/') === 0) {
+            window.location.reload();
           }
         } catch (_) {}
-      });
+      }, true);
     })();
   </script>
 <script>
@@ -250,100 +186,7 @@
     })();
   </script>
 
-  <script>
-    // WERSJA 20 — Opera/Chromium: twarde odzyskanie po powrocie z innej karty.
-    // Wersje 18/19 próbowały tylko odmalować istniejący DOM. U użytkownika DOM zostawał,
-    // ale warstwa renderująca karty w Operze robiła czarny ekran. Dlatego po dłuższym
-    // pobycie w tle wykonujemy jedno świeże uruchomienie aplikacji po powrocie.
-    (function () {
-      var KEY_HIDDEN_AT = 'betai_hidden_at_v20';
-      var KEY_RELOAD_AT = 'betai_resume_reload_at_v20';
-      var MIN_AWAY_MS = 8000;
-      var RELOAD_LOCK_MS = 7000;
-      var hiddenAt = document.visibilityState === 'hidden' ? Date.now() : 0;
-      var scheduled = false;
 
-      function now() { return Date.now ? Date.now() : new Date().getTime(); }
-
-      function saveHiddenAt(ts) {
-        hiddenAt = ts || now();
-        try { sessionStorage.setItem(KEY_HIDDEN_AT, String(hiddenAt)); } catch (_) {}
-      }
-
-      function readHiddenAt() {
-        if (hiddenAt) return hiddenAt;
-        try { return Number(sessionStorage.getItem(KEY_HIDDEN_AT) || 0) || 0; } catch (_) { return 0; }
-      }
-
-      function clearHiddenAt() {
-        hiddenAt = 0;
-        try { sessionStorage.removeItem(KEY_HIDDEN_AT); } catch (_) {}
-      }
-
-      function canReload() {
-        try {
-          var t = now();
-          var last = Number(sessionStorage.getItem(KEY_RELOAD_AT) || 0) || 0;
-          if (last && t - last < RELOAD_LOCK_MS) return false;
-          sessionStorage.setItem(KEY_RELOAD_AT, String(t));
-        } catch (_) {}
-        return true;
-      }
-
-      function cleanUrlFlag() {
-        try {
-          var url = new URL(window.location.href);
-          if (url.searchParams.has('__betai_resume_v20')) {
-            url.searchParams.delete('__betai_resume_v20');
-            window.history.replaceState(window.history.state, document.title, url.pathname + url.search + url.hash);
-          }
-        } catch (_) {}
-      }
-
-      function hardResumeReload(reason) {
-        if (scheduled || !canReload()) return;
-        scheduled = true;
-        try { console.warn('[BetAI v20] świeże uruchomienie po powrocie z karty:', reason); } catch (_) {}
-        try {
-          var url = new URL(window.location.href);
-          url.searchParams.set('__betai_resume_v20', String(now()));
-          window.location.replace(url.toString());
-        } catch (_) {
-          window.location.reload();
-        }
-      }
-
-      function checkReturn(reason) {
-        if (document.visibilityState === 'hidden') return;
-        var awayMs = readHiddenAt() ? now() - readHiddenAt() : 0;
-        clearHiddenAt();
-        if (document.wasDiscarded === true || awayMs >= MIN_AWAY_MS) {
-          window.setTimeout(function () { hardResumeReload(reason + '-' + awayMs + 'ms'); }, 120);
-        }
-      }
-
-      window.__BETAI_HARD_RESUME_RELOAD_V20__ = hardResumeReload;
-
-      document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'hidden') saveHiddenAt(now());
-        else checkReturn('visibility');
-      });
-      window.addEventListener('blur', function () {
-        if (document.visibilityState === 'hidden') saveHiddenAt(now());
-      });
-      window.addEventListener('focus', function () { checkReturn('focus'); });
-      window.addEventListener('pageshow', function (event) {
-        if (event && event.persisted) hardResumeReload('pageshow-bfcache');
-        else if (document.wasDiscarded === true) hardResumeReload('document-was-discarded');
-        else cleanUrlFlag();
-      });
-      document.addEventListener('resume', function () { checkReturn('document-resume'); });
-      window.addEventListener('load', function () {
-        cleanUrlFlag();
-        window.setTimeout(function () { try { sessionStorage.removeItem(KEY_RELOAD_AT); } catch (_) {} }, 5000);
-      });
-    })();
-  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -353,8 +196,8 @@
   <link rel="preload" as="image" href="/auth-right-484.png" fetchpriority="high">
 
 
-    <script type="module" crossorigin src="/assets/index-BV0S9S1i.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BBItGX4s.css">
+    <script type="module" crossorigin src="/assets/index-CqmklEPl.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DLbbf-fl.css">
   </head>
 <body>
   <div id="root"></div>

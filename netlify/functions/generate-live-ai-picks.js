@@ -923,17 +923,19 @@ exports.handler = async function (event) {
 
     const { aiBetsSaved, ids: aiBetIds } = await saveRowsToAiBets(supabase, strongestRows, errors)
 
-    // Zachowujemy stary zapis do tips dla kompatybilności innych ekranów, ale Typy AI czytają z ai_bets.
-    // V1673: tabela tips ma część pól integer, więc zaokrąglamy procenty, żeby nie było błędów typu "77.1".
-    const tipsRows = strongestRows.map(row => ({
+    // WERSJA 28: Typy AI zapisujemy tylko w ai_bets. Nie tworzymy już kopii w tips,
+    // bo powodowała duplikaty: ten sam typ był widoczny jako BetAI MultiSport AI w feedzie
+    // oraz drugi raz w zakładce Typy AI / AI Typy dnia.
+    const tipsRows = []
+    /* const tipsRows = strongestRows.map(row => ({
       ...row,
       probability: Math.round(Number(row.probability || row.model_probability || 0)),
       model_probability: Math.round(Number(row.model_probability || row.probability || 0)),
       ai_score: Math.round(Number(row.ai_score || row.ai_confidence || row.model_probability || 0)),
       ai_confidence: Math.round(Number(row.ai_confidence || row.ai_score || row.model_probability || 0))
-    }))
+    })) */
     let tipsSaved = 0
-    try {
+    if (tipsRows.length) try {
       const { data, error } = await supabase.from('tips').upsert(tipsRows, { onConflict: 'ai_external_key' }).select('id,status')
       if (error) throw error
       tipsSaved = data?.length || strongestRows.length

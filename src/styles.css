@@ -77463,3 +77463,46 @@ html.betai-resume-repaint-v19 body #root,
   transform-origin:0 0!important;
   will-change:transform!important;
 }
+
+/* =========================================================
+   WERSJA 29 — OPERA / POWRÓT Z KARTY BEZ FREEZE
+   Stabilizacja renderera: brak twardego reloadu, pauza animacji
+   w tle i odchudzenie efektów kompozytora w Operze.
+   ========================================================= */
+html.betai-tab-hidden-v29 *,
+html.betai-tab-hidden-v29 *::before,
+html.betai-tab-hidden-v29 *::after{
+  animation-play-state:paused!important;
+  transition-duration:0s!important;
+}
+
+html.betai-tab-resuming-v29 *,
+html.betai-tab-resuming-v29 *::before,
+html.betai-tab-resuming-v29 *::after{
+  animation-play-state:paused!important;
+  transition-duration:0s!important;
+  scroll-behavior:auto!important;
+}
+
+html.betai-tab-resuming-v29 body,
+html.betai-tab-resuming-v29 #root{
+  pointer-events:auto!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+
+/* Opera ma największy problem z dużą liczbą backdrop-filter + zoom na root.
+   Wyłączamy tylko filtr tła, bez ruszania układu i bez zmiany logiki. */
+html.betai-opera-stability-v29 *,
+html.betai-opera-stability-v29 *::before,
+html.betai-opera-stability-v29 *::after{
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+
+html.betai-opera-stability-v29 .app-shell *,
+html.betai-opera-stability-v29 .app-shell *::before,
+html.betai-opera-stability-v29 .app-shell *::after{
+  animation-duration:0.001ms!important;
+  animation-iteration-count:1!important;
+}

@@ -65,6 +65,44 @@ const BETAI_REFRESH_INTERVALS = Object.freeze({
   profileMs: 120000,
 });
 
+// WERSJA 29 — Opera/tab freeze guard.
+// Po powrocie z innej karty nie uruchamiamy naraz ciężkich pobrań, settlementów i watchdogów.
+// Dajemy rendererowi 1-4 s na odmalowanie UI, a zadania odpalamy kolejką z debounce.
+function isBetaiDocumentVisibleV29() {
+  try { return typeof document === 'undefined' || document.visibilityState === 'visible' } catch (_) { return true }
+}
+
+function isBetaiResumeCoolingDownV29() {
+  try {
+    if (typeof window === 'undefined') return false
+    return Date.now() < Number(window.__BETAI_TAB_RESUME_UNTIL_V29__ || 0)
+  } catch (_) { return false }
+}
+
+function canRunBetaiHeavyTaskV29() {
+  if (!isBetaiDocumentVisibleV29()) return false
+  if (isBetaiResumeCoolingDownV29()) return false
+  return true
+}
+
+function scheduleBetaiLightTaskV29(name, fn, delay = 1200) {
+  if (typeof window === 'undefined' || typeof fn !== 'function') return 0
+  try {
+    if (typeof window.__BETAI_SCHEDULE_LIGHT_RESUME_V29__ === 'function') {
+      return window.__BETAI_SCHEDULE_LIGHT_RESUME_V29__(name, fn, delay)
+    }
+    window.__BETAI_RESUME_TASKS_V29__ = window.__BETAI_RESUME_TASKS_V29__ || {}
+    const key = String(name || 'task')
+    if (window.__BETAI_RESUME_TASKS_V29__[key]) window.clearTimeout(window.__BETAI_RESUME_TASKS_V29__[key])
+    window.__BETAI_RESUME_TASKS_V29__[key] = window.setTimeout(() => {
+      delete window.__BETAI_RESUME_TASKS_V29__[key]
+      if (!isBetaiDocumentVisibleV29()) return
+      fn()
+    }, Math.max(250, Number(delay || 1200)))
+    return window.__BETAI_RESUME_TASKS_V29__[key]
+  } catch (_) { return 0 }
+}
+
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://buy.stripe.com/3cI9ASgu7gQo8JndJ04AU00';
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];
@@ -2935,6 +2973,13 @@ function isBetaiMultisportRecordV1794(row = {}) {
   return identity.includes('betaimultisportai') || identity.includes('betaimultisport')
 }
 
+function isBetaiMultisportPublicTipHiddenV28(row = {}) {
+  // BetAI MultiSport AI ma być widoczny tylko w zakładce Typy AI / AI Typy dnia.
+  // Ukrywamy jego stare i nowe kopie z tabeli tips, żeby ten sam typ nie dublował się
+  // jako zwykły typer w feedzie, profilu i rankingu.
+  return isBetaiMultisportRecordV1794(row)
+}
+
 function readStoredBotDashboardStatsV1794() {
   if (typeof window === 'undefined') return null
   try {
@@ -4972,7 +5017,7 @@ async function loadSafeTipsForProfile(profile = {}, limit = 200) {
     [],
     5000
   )
-  return rows.filter(row => doesTipBelongToProfile(row, profile))
+  return rows.filter(row => !isBetaiMultisportPublicTipHiddenV28(row)).filter(row => doesTipBelongToProfile(row, profile))
 }
 
 
@@ -5614,7 +5659,9 @@ function LiveChatPanel({ user }) {
         if (nextStatus === 'SUBSCRIBED') setStatus('Live chat połączony — wiadomości odświeżają się automatycznie.')
         if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(nextStatus)) setStatus('Realtime chwilowo niedostępny — włączone odświeżanie.')
       })
-    const timer = setInterval(loadMessages, BETAI_REFRESH_INTERVALS.liveChatFallbackMs)
+    const timer = setInterval(() => {
+      if (canRunBetaiHeavyTaskV29()) loadMessages()
+    }, BETAI_REFRESH_INTERVALS.liveChatFallbackMs)
     return () => {
       clearInterval(timer)
       supabase.removeChannel(channel)
@@ -5628,11 +5675,14 @@ function LiveChatPanel({ user }) {
 
   useEffect(() => {
     loadOnlineCount()
-    const timer = setInterval(loadOnlineCount, BETAI_REFRESH_INTERVALS.onlineCountMs)
-    window.addEventListener('focus', loadOnlineCount)
+    const timer = setInterval(() => {
+      if (canRunBetaiHeavyTaskV29()) loadOnlineCount()
+    }, BETAI_REFRESH_INTERVALS.onlineCountMs)
+    const onFocusOnlineV29 = () => scheduleBetaiLightTaskV29('online-count-v29', loadOnlineCount, 1800)
+    window.addEventListener('focus', onFocusOnlineV29)
     return () => {
       clearInterval(timer)
-      window.removeEventListener('focus', loadOnlineCount)
+      window.removeEventListener('focus', onFocusOnlineV29)
     }
   }, [email, user?.id])
 
@@ -6317,7 +6367,7 @@ async function triggerBetAiRightDailyGeneratorV1157(dayKey = getBetAiWarsawDayKe
       signal: controller.signal
     })
     const json = await res.json().catch(() => ({}))
-    if (res.ok && (json?.queued || Number(json.inserted || 0) > 0)) {
+    if (res.ok && (json?.queued || Number(json.inserted || 0) > 0 || Number(json.ai_bets_inserted || 0) > 0)) {
       try { localStorage.setItem(attemptKey, JSON.stringify({ at: new Date().toISOString(), queued: Boolean(json?.queued), inserted: Number(json.inserted || 0) })) } catch (_) {}
     }
     return { ok: res.ok, json }
@@ -6448,6 +6498,7 @@ function DailyAiPicksRightPanelV1156() {
 
     loadDailyPicks()
     const interval = setInterval(() => {
+      if (!canRunBetaiHeavyTaskV29()) return
       const nowKey = getBetAiWarsawDayKeyV1156()
       if (nowKey !== dayKey) {
         loadDailyPicks()
@@ -6456,7 +6507,7 @@ function DailyAiPicksRightPanelV1156() {
       }
     }, 2 * 60 * 1000)
 
-    const onFocus = () => loadDailyPicks()
+    const onFocus = () => scheduleBetaiLightTaskV29('daily-ai-picks-v29', loadDailyPicks, 2200)
     window.addEventListener('focus', onFocus)
     return () => {
       alive = false
@@ -32179,6 +32230,9 @@ function App() {
   const aiAutoSettleLastRunRef = useRef(0)
   const aiBotMaintenanceRunningRef = useRef(false)
   const aiBotMaintenanceLastRunRef = useRef(0)
+  const fetchTipsRunningRef = useRef(false)
+  const fetchTipsQueuedUserRef = useRef(null)
+  const fetchTipsLastStartRef = useRef(0)
   const [selectedTipsterId, setSelectedTipsterId] = useState(null)
   const [pendingPublicSlug, setPendingPublicSlug] = useState(() => {
     if (typeof window === 'undefined') return null
@@ -32456,13 +32510,13 @@ function App() {
         fetchBetaiPublicProfiles().catch(() => [])
       ])
 
-      const cleanTipRows = (tipRows || []).filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row))
+      const cleanTipRows = (tipRows || []).filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row) && !isBetaiMultisportPublicTipHiddenV28(row))
       const profileRowsWithSystemV1837 = mergeProfilesPreferStats([
         ...(profileRows || []),
         ...BETAI_SYSTEM_TIPSTER_PROFILES_V1837,
       ])
       const profileRankingRows = profileRowsWithSystemV1837
-        .filter(profile => !isBlockedTestProfile(profile) && !isHiddenDemoProfileV1712(profile))
+        .filter(profile => !isBlockedTestProfile(profile) && !isHiddenDemoProfileV1712(profile) && !isBetaiMultisportPublicTipHiddenV28(profile))
         .map(profile => {
         const canonical = buildCanonicalProfileStatsV1817(profile, cleanTipRows)
         const profit = Number(canonical?.profit ?? profile.profit ?? profile.earnings ?? profile.imported_profit ?? 0) || 0
@@ -32508,13 +32562,13 @@ function App() {
         }
       })
 
-      const cleanRankingRows = (rankingRows || []).filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(formatRankingName(row)))
+      const cleanRankingRows = (rankingRows || []).filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(formatRankingName(row)) && !isBetaiMultisportPublicTipHiddenV28(row))
       const finalRows = buildLiveLeaderboardRows(
         mergeRankingRows(profileRankingRows, cleanRankingRows, buildRankingFromTips(cleanTipRows)),
         cleanTipRows.length ? cleanTipRows : (tips || []).filter(row => !isBlockedTestProfile(row))
       )
 
-      setRealRanking((finalRows || []).filter(row => !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(formatRankingName(row))))
+      setRealRanking((finalRows || []).filter(row => !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(formatRankingName(row)) && !isBetaiMultisportPublicTipHiddenV28(row)))
     } catch (error) {
       console.error('fetchRealRanking exception', error)
       setRealRanking(buildLiveLeaderboardRows([], tips))
@@ -32754,25 +32808,17 @@ function App() {
       runAiBotMaintenanceFallback().catch(() => {})
     }, 3500)
 
-    const onReturnToTab = () => {
-      if (document.visibilityState === 'visible') {
-        runAiBotMaintenanceFallback().catch(() => {})
-      }
-    }
-
-    document.addEventListener('visibilitychange', onReturnToTab)
-    window.addEventListener('focus', onReturnToTab)
-
+    // WERSJA 29: watchdog bota nie odpala już przy każdym powrocie z karty.
+    // Cron Netlify pilnuje botów, a frontend robi tylko spokojny start po wejściu admina.
     return () => {
       window.clearTimeout(timer)
-      document.removeEventListener('visibilitychange', onReturnToTab)
-      window.removeEventListener('focus', onReturnToTab)
     }
   }, [sessionUser?.id, sessionUser?.email, accountProfile?.id, accountProfile?.email, accountProfile?.username])
 
 
   async function runUserTipsAutoSettlement({ force = false } = {}) {
     if (!sessionUser?.id) return null
+    if (!force && !canRunBetaiHeavyTaskV29()) return null
     if (autoSettleRunningRef.current) return null
 
     const now = Date.now()
@@ -32802,9 +32848,35 @@ function App() {
     }
   }
 
-  async function fetchTips(userId = sessionUser?.id) {
+  async function fetchTips(userId = sessionUser?.id, options = {}) {
+    const requestedUserId = userId || sessionUser?.id || null
+    const force = Boolean(options?.force)
+
+    if (!force && !isBetaiDocumentVisibleV29()) return
+    if (!force && isBetaiResumeCoolingDownV29()) {
+      fetchTipsQueuedUserRef.current = requestedUserId
+      scheduleBetaiLightTaskV29('fetch-tips-after-resume-v29', () => fetchTips(fetchTipsQueuedUserRef.current || requestedUserId, { force: true }), 2400)
+      return
+    }
+
+    if (fetchTipsRunningRef.current) {
+      fetchTipsQueuedUserRef.current = requestedUserId
+      return
+    }
+
+    const startedAt = Date.now()
+    if (!force && startedAt - Number(fetchTipsLastStartRef.current || 0) < 1200) {
+      fetchTipsQueuedUserRef.current = requestedUserId
+      scheduleBetaiLightTaskV29('fetch-tips-dedupe-v29', () => fetchTips(fetchTipsQueuedUserRef.current || requestedUserId, { force: true }), 1300)
+      return
+    }
+
+    fetchTipsRunningRef.current = true
+    fetchTipsLastStartRef.current = startedAt
+
     if (!isSupabaseConfigured || !supabase) {
       setTips([])
+      fetchTipsRunningRef.current = false
       return
     }
 
@@ -32831,6 +32903,7 @@ function App() {
       console.error('FETCH TIPS ERROR:', tipsError)
       showToast({ type: 'error', title: 'Nie pobrano typów', message: formatAppErrorMessage(tipsError.message || String(tipsError)) })
       setTips([])
+      fetchTipsRunningRef.current = false
       return
     }
 
@@ -32838,7 +32911,7 @@ function App() {
     setUnlockedTips(unlockedSet)
 
     const publicTipsData = Array.isArray(publicTipsPayload?.tips) ? publicTipsPayload.tips : []
-    let sourceTips = [...publicTipsData, ...(tipsData || [])].map(normalizeTipRow)
+    let sourceTips = [...publicTipsData, ...(tipsData || [])].map(normalizeTipRow).filter(tip => !isBetaiMultisportPublicTipHiddenV28(tip))
     if (sourceTips.length) {
       const byId = new Map()
       sourceTips.forEach(tip => {
@@ -32918,7 +32991,7 @@ function App() {
         })
         if (ownRows.length) {
           const byId = new Map()
-          ;[...ownRows.map(normalizeTipRow), ...sourceTips].forEach(tip => {
+          ;[...ownRows.map(normalizeTipRow).filter(tip => !isBetaiMultisportPublicTipHiddenV28(tip)), ...sourceTips].forEach(tip => {
             const key = String(tip.id || `${tip.author_id || tip.user_id || ''}-${tip.created_at || ''}-${tip.team_home || tip.home_team || ''}-${tip.team_away || tip.away_team || ''}-${tip.pick || tip.prediction || ''}`)
             if (key) byId.set(key, tip)
           })
@@ -33042,9 +33115,15 @@ function App() {
       }
       setTipsterSubscriptions(activeSubs)
     }
-    setTips(dedupeBetAiTipsByUserMatchV1746(sourceTips))
+    setTips(dedupeBetAiTipsByUserMatchV1746(sourceTips.filter(tip => !isBetaiMultisportPublicTipHiddenV28(tip))))
     setLastTipSaveStatus(readTipDebug())
     fetchRealRanking()
+    fetchTipsRunningRef.current = false
+    const queuedUserIdV29 = fetchTipsQueuedUserRef.current
+    fetchTipsQueuedUserRef.current = null
+    if (queuedUserIdV29 && queuedUserIdV29 !== requestedUserId && isBetaiDocumentVisibleV29()) {
+      scheduleBetaiLightTaskV29('fetch-tips-queued-v29', () => fetchTips(queuedUserIdV29, { force: true }), 350)
+    }
   }
 
   useEffect(() => {
@@ -33062,6 +33141,7 @@ function App() {
     const hydrateIncomingTip = (rawTip = {}) => {
       let incomingTip = normalizeTipRow(rawTip || {})
       if (!incomingTip?.id) return null
+      if (isBetaiMultisportPublicTipHiddenV28(incomingTip)) return null
       if (isSameProfileIdentity(effectiveAccountProfile || sessionUser, incomingTip)) {
         incomingTip = normalizeTipRow({
           ...incomingTip,
@@ -33148,22 +33228,26 @@ function App() {
       .subscribe()
 
     const softPoll = window.setInterval(() => {
-      if (document.visibilityState === 'visible') {
+      if (canRunBetaiHeavyTaskV29()) {
         fetchTips(sessionUser?.id)
       }
-    }, 15000)
+    }, 30000)
 
     const onFocusRefresh = () => {
-      fetchTips(sessionUser?.id)
-      fetchRealRanking()
-      fetchReferralData(sessionUser?.id)
+      scheduleBetaiLightTaskV29('focus-refresh-main-v29', () => {
+        fetchTips(sessionUser?.id)
+        fetchRealRanking()
+        fetchReferralData(sessionUser?.id)
+      }, 2600)
     }
     window.addEventListener('focus', onFocusRefresh)
+    window.addEventListener('betai:tab-resume-v29', onFocusRefresh)
 
     return () => {
       window.clearTimeout(refreshTimer)
       window.clearInterval(softPoll)
       window.removeEventListener('focus', onFocusRefresh)
+      window.removeEventListener('betai:tab-resume-v29', onFocusRefresh)
       try { supabase.removeChannel(channel) } catch (_) {}
     }
   }, [sessionUser?.id, effectiveAccountProfile?.id, effectiveAccountProfile?.email])
@@ -33180,13 +33264,15 @@ function App() {
 
     const first = window.setTimeout(run, 1800)
     const interval = window.setInterval(run, 4 * 60 * 1000)
-    const onFocus = () => run()
+    const onFocus = () => scheduleBetaiLightTaskV29('user-tips-settlement-v29', run, 4200)
     window.addEventListener('focus', onFocus)
+    window.addEventListener('betai:tab-resume-v29', onFocus)
 
     return () => {
       window.clearTimeout(first)
       window.clearInterval(interval)
       window.removeEventListener('focus', onFocus)
+      window.removeEventListener('betai:tab-resume-v29', onFocus)
     }
   }, [sessionUser?.id, view])
 
@@ -34811,12 +34897,18 @@ function App() {
           const nextUser = session?.user || null
           const eventName = String(_event || '')
           const recoveryEvent = eventName === 'PASSWORD_RECOVERY' || isPasswordRecoveryUrl()
+          const tokenOnlyRefresh = eventName === 'TOKEN_REFRESHED'
 
           if (recoveryEvent && nextUser?.id) {
             setPasswordRecoveryMode(true)
             setPasswordRecoveryUser(nextUser)
             setSessionUser(nextUser)
             try { localStorage.setItem('betai_password_recovery_active', '1') } catch (_) {}
+            return
+          }
+
+          if (tokenOnlyRefresh && nextUser?.id) {
+            setSessionUser(nextUser)
             return
           }
 
@@ -35095,13 +35187,13 @@ function App() {
     lastReceivedTipNotificationKeyRef.current = ''
 
     const refreshTokens = async () => {
-      if (stopped) return
+      if (stopped || !canRunBetaiHeavyTaskV29()) return
       await fetchCurrentTokenBalance()
       await fetchNotifications(sessionUser?.id, { skipBalanceRefresh: true })
     }
 
     const pollTipNotifications = async () => {
-      if (stopped || !isSupabaseConfigured || !supabase || !currentEmail) return
+      if (stopped || !canRunBetaiHeavyTaskV29() || !isSupabaseConfigured || !supabase || !currentEmail) return
       try {
         const { data, error } = await supabase
           .from('betai_system_notifications')
@@ -35954,6 +36046,7 @@ function BetaiExactScaleProvider({ children }) {
     window.addEventListener('orientationchange', apply)
     window.addEventListener('load', apply)
     window.addEventListener('betai:resume-v19', applyAfterResume)
+    window.addEventListener('betai:tab-resume-v29', applyAfterResume)
     document.addEventListener('visibilitychange', onVisibility)
     const timers = [60, 250, 800, 1600].map(ms => window.setTimeout(apply, ms))
 
@@ -35962,6 +36055,7 @@ function BetaiExactScaleProvider({ children }) {
       window.removeEventListener('orientationchange', apply)
       window.removeEventListener('load', apply)
       window.removeEventListener('betai:resume-v19', applyAfterResume)
+      window.removeEventListener('betai:tab-resume-v29', applyAfterResume)
       document.removeEventListener('visibilitychange', onVisibility)
       timers.forEach(timer => window.clearTimeout(timer))
       clearLegacyBodyScale()

@@ -3,7 +3,7 @@ const { AUTHORS, VERSION, runAiBotCycle, repairTyperPendingProgression, BOT_POLI
 const settleTyper = require('../settle-typer-expert')
 const settleOgrac = require('../settle-ograc-buka')
 
-const MAINTENANCE_VERSION = `${VERSION}-maintenance-v24-strict-typer-progression`
+const MAINTENANCE_VERSION = `${VERSION}-maintenance-v28-betai-ai-bets-only`
 
 function env(name) { return process.env[name] || '' }
 function num(value, fallback = 0) {
@@ -28,20 +28,34 @@ function parseBots(value) {
   return [...new Set(allowed.length ? allowed : ['typer', 'ograc'])]
 }
 async function latestByBot(supabase, bots) {
-  const names = bots.map(bot => AUTHORS[bot]?.name).filter(Boolean)
-  if (!names.length) return {}
-  const { data, error } = await supabase
-    .from('tips')
-    .select('id,author_name,created_at,status,result,settlement_status,result_status,match_time,event_time,kickoff_time,fixture_id,external_fixture_id,api_fixture_id')
-    .in('author_name', names)
-    .order('created_at', { ascending: false })
-    .limit(80)
-  if (error) throw error
   const latest = {}
-  ;(data || []).forEach(row => {
-    const bot = bots.find(key => AUTHORS[key]?.name === row.author_name)
-    if (bot && !latest[bot]) latest[bot] = row
-  })
+  const tipBots = bots.filter(bot => bot !== 'betai')
+  const names = tipBots.map(bot => AUTHORS[bot]?.name).filter(Boolean)
+  if (names.length) {
+    const { data, error } = await supabase
+      .from('tips')
+      .select('id,author_name,created_at,status,result,settlement_status,result_status,match_time,event_time,kickoff_time,fixture_id,external_fixture_id,api_fixture_id')
+      .in('author_name', names)
+      .order('created_at', { ascending: false })
+      .limit(80)
+    if (error) throw error
+    ;(data || []).forEach(row => {
+      const bot = tipBots.find(key => AUTHORS[key]?.name === row.author_name)
+      if (bot && !latest[bot]) latest[bot] = row
+    })
+  }
+
+  // WERSJA 28: BetAI MultiSport AI nie zapisuje już do tips, tylko do ai_bets.
+  // Watchdog minimum dziennego musi więc sprawdzać ostatni rekord w ai_bets.
+  if (bots.includes('betai')) {
+    const { data: aiRows, error: aiError } = await supabase
+      .from('ai_bets')
+      .select('id,created_at,status,result,match_date,match_time,external_fixture_id')
+      .order('created_at', { ascending: false })
+      .limit(1)
+    if (aiError) throw aiError
+    if (aiRows?.[0]) latest.betai = { ...aiRows[0], author_name: AUTHORS.betai.name }
+  }
   return latest
 }
 function ageMinutes(row) {

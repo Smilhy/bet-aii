@@ -257,6 +257,27 @@ function attachAuthorStatsV1759(rows = []) {
   })
 }
 
+
+function isBetaiMultisportAiTipV28(row = {}) {
+  const identity = String([
+    row.author_name,
+    row.username,
+    row.user_name,
+    row.display_name,
+    row.public_slug,
+    row.email,
+    row.author_email,
+    row.ai_source,
+    row.source,
+    row.publisher,
+  ].filter(Boolean).join(' '))
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '')
+  return identity.includes('betaimultisportai') || identity.includes('betaimultisport')
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders, body: '' }
   if (event.httpMethod !== 'GET') return json(405, { error: 'Method not allowed' })
@@ -275,7 +296,7 @@ exports.handler = async (event) => {
 
     const rows = Array.isArray(data) ? data : []
     const rowsWithStats = attachAuthorStatsV1759(rows)
-    const activeRows = rowsWithStats.filter(isActivePublicTipV1751)
+    const activeRows = rowsWithStats.filter(row => !isBetaiMultisportAiTipV28(row)).filter(isActivePublicTipV1751)
 
     return json(200, {
       tips: activeRows,
