@@ -423,7 +423,7 @@ function settleByKeys(tip, homeGoals, awayGoals, fixtureStats, periodScores = {}
     if (!['1x','x2','12'].includes(selection)) return { status: 'pending_admin_review', reason: 'Podwojna szansa: zly selection_key=' + selection }
     return { status: won ? 'won' : 'lost', reason: 'DC ' + selection + ' wynik=' + result }
   }
-  if (market === 'goals_over_under' || market === 'goals_total') return overUnder(selection, total, 'Gole')
+  if (['goals_over_under', 'goals_total', 'goals_2_5', 'total_goals', 'over_under_goals'].includes(market)) return overUnder(selection, total, 'Gole')
   if (market === 'btts') {
     if (!['yes','no'].includes(selection)) return { status: 'pending_admin_review', reason: 'BTTS: zly selection_key=' + selection }
     const yes = homeGoals > 0 && awayGoals > 0

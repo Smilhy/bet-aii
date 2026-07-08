@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-25-remove-ai-prediction-tab",
-  "version": "25.0.0",
+  "name": "betai-wersja-26-fix-bot-settlement-goals-2-5",
+  "version": "26.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
