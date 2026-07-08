@@ -5380,15 +5380,6 @@ function getBetaiWorldProfileNameV30(row = {}) {
   return clean
 }
 
-
-function formatBetaiWorldCompactNumberV33(value) {
-  const parsed = Number(value)
-  const safe = Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0
-  if (safe >= 1000000) return `${(safe / 1000000).toFixed(safe >= 10000000 ? 0 : 1)} mln`
-  if (safe >= 1000) return safe.toLocaleString('pl-PL')
-  return String(safe)
-}
-
 function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = null }) {
   const lang = useBetaiLanguageState()
   const t = (value) => translateBetaiTextValue(value, lang)
@@ -5498,25 +5489,39 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
   const registeredWeek = rows.filter(row => Date.parse(row.created_at || row.createdAt || '') >= nowMs - (7 * oneDayMs)).length
   const registeredMonth = rows.filter(row => Date.parse(row.created_at || row.createdAt || '') >= startOfMonth.getTime()).length
   const totalCountries = countryRows.filter(row => row.code !== 'ZZ').length
-  const unknownCountryCount = countryRows.find(row => row.code === 'ZZ')?.count || 0
-  const knownUsersCount = Math.max(0, rows.length - unknownCountryCount)
   const topCountryCount = Math.max(1, countryRows[0]?.count || 1)
   const latestUsers = rows.slice(0, 7)
-  const premiumStatsV33 = [
-    { icon: 'userPlus', label: t('Dzisiaj'), value: registeredToday, text: t('nowych użytkowników'), trend: t('na podstawie rejestracji dziś') },
-    { icon: 'calendar', label: t('W tym tygodniu'), value: registeredWeek, text: t('nowych użytkowników'), trend: t('ostatnie 7 dni') },
-    { icon: 'chart', label: t('Ten miesiąc'), value: registeredMonth || rows.length, text: t('nowych użytkowników'), trend: t('bieżący miesiąc') },
-    { icon: 'globe', label: t('Kraje'), value: totalCountries, text: t('kraje z rejestracjami'), trend: `${knownUsersCount} ${t('użytkowników z flagą')}` }
+  const weekTrend = rows.length ? Math.max(1, Math.round((registeredWeek / Math.max(1, rows.length)) * 1000) / 10) : 0
+  const monthTrend = rows.length ? Math.max(1, Math.round(((registeredMonth || rows.length) / Math.max(1, rows.length)) * 1000) / 10) : 0
+  const newCountriesTrend = Math.max(0, totalCountries)
+  const statCardsV37 = [
+    { key: 'today', icon: 'users', label: t('Dzisiaj'), value: registeredToday, sub: t('nowych użytkowników'), trend: registeredToday ? `↑ ${registeredToday} ${t('dzisiaj')}` : `↗ ${t('na podstawie rejestracji dziś')}` },
+    { key: 'week', icon: 'calendar', label: t('W tym tygodniu'), value: registeredWeek, sub: t('nowych użytkowników'), trend: `↑ ${weekTrend}% ${t('ostatnie 7 dni')}` },
+    { key: 'month', icon: 'bars', label: t('Ten miesiąc'), value: registeredMonth || rows.length, sub: t('nowych użytkowników'), trend: `↑ ${monthTrend}% ${t('bieżący miesiąc')}` },
+    { key: 'countries', icon: 'globe', label: t('Kraje'), value: totalCountries, sub: t('kraje z rejestracjami'), trend: `↑ ${newCountriesTrend} ${t('aktywnych krajów')}` }
   ]
-
-  const premiumCountryNodes = (filteredCountryRows.length ? filteredCountryRows : countryRows).slice(0, 16).map((country, index, arr) => {
+  const orbitPinsV37 = Array.from({ length: 18 }, (_, index) => {
+    const angle = (-90 + (index * 360 / 18)) * Math.PI / 180
+    const radius = index % 3 === 0 ? 35 : 46
+    return {
+      x: Math.round((50 + Math.cos(angle) * radius) * 100) / 100,
+      y: Math.round((50 + Math.sin(angle) * radius) * 100) / 100
+    }
+  })
+  const countryPresetPositionsV37 = {
+    PL: [50, 8], GB: [61.5, 14], US: [17, 33], DE: [23, 25], FR: [19, 57], ES: [16, 46], IT: [72, 40], NL: [62, 82], BE: [39, 82], CH: [50, 83],
+    BR: [33, 14], JP: [73, 23], CA: [78, 50], AU: [74, 65], IN: [24, 72], PT: [31, 78], SE: [16, 18], NO: [78, 23], IE: [80, 30], ZZ: [86, 78]
+  }
+  const premiumSourceCountriesV37 = (filteredCountryRows.length ? filteredCountryRows : countryRows).slice(0, 16)
+  const premiumCountryNodes = premiumSourceCountriesV37.map((country, index, arr) => {
+    const preset = countryPresetPositionsV37[country.code]
+    if (preset) return { ...country, _x: preset[0], _y: preset[1] }
     const total = Math.max(arr.length, 1)
-    const ring = index % 2
-    const radius = ring === 0 ? 39 : 48
-    const angle = (-90 + (index * 360 / total) + (ring ? 10 : 0)) * Math.PI / 180
+    const angle = (-90 + (index * 360 / total)) * Math.PI / 180
+    const radius = 43
     const x = 50 + Math.cos(angle) * radius
     const y = 50 + Math.sin(angle) * radius
-    return { ...country, _x: Math.max(6, Math.min(94, x)), _y: Math.max(8, Math.min(92, y)) }
+    return { ...country, _x: Math.max(9, Math.min(91, x)), _y: Math.max(9, Math.min(91, y)) }
   })
 
   const remainingCountriesCount = Math.max(0, filteredCountryRows.length - premiumCountryNodes.length)
@@ -5528,7 +5533,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
         <div>
           <span className="world-map-kicker-v30">🌍 {t('Mapa świata')}</span>
           <h1>{t('Mapa świata rejestrujących')}</h1>
-          <p>{t('Zobacz, skąd pochodzą Twoi nowi użytkownicy. Flagi, kraje i statystyki aktualizują się automatycznie z profili Supabase.')}</p>
+          <p>{t('Zobacz, skąd pochodzą użytkownicy Bet+AI. Flagi, kraje i statystyki aktualizują się automatycznie z profili Supabase.')}</p>
         </div>
         <div className="world-map-premium-actions-v32">
           <select value={selectedCountry} onChange={event => setSelectedCountry(event.target.value)}>
@@ -5549,7 +5554,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
       <div className="world-map-premium-grid-v32">
         <div className="world-map-premium-stage-v32">
           <div className="world-map-premium-orbit-v32">
-            <svg className="world-map-premium-lines-v32" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <svg className="world-map-premium-lines-v32" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
               <circle cx="50" cy="50" r="22" />
               <circle cx="50" cy="50" r="34" />
               <circle cx="50" cy="50" r="46" />
@@ -5557,12 +5562,18 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
                 <line key={`${country.code}-${index}-line`} x1="50" y1="50" x2={country._x} y2={country._y} />
               ))}
             </svg>
+            {orbitPinsV37.map((pin, index) => (
+              <span key={`orbit-pin-${index}`} className="world-map-orbit-pin-v37" style={{ '--x': `${pin.x}%`, '--y': `${pin.y}%` }} />
+            ))}
             <div className="world-map-globe-v32" aria-hidden="true">
               <span className="world-map-globe-grid-v32" />
+              <span className="world-map-globe-land-v37 land-a" />
+              <span className="world-map-globe-land-v37 land-b" />
+              <span className="world-map-globe-land-v37 land-c" />
             </div>
             <div className="world-map-center-premium-v32">
               <strong>{rows.length}</strong>
-              <span>{t('Nowi użytkownicy')}</span>
+              <span>{t('użytkowników')}</span>
               <small>{t('łącznie')}</small>
             </div>
 
@@ -5599,25 +5610,25 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
             ) : null}
           </div>
 
-          <div className="world-map-premium-bottom-stats-v32" aria-label={t('Statystyki rejestracji')}>
-            {premiumStatsV33.map(item => (
-              <div key={item.icon} className="world-map-premium-stat-card-v33">
-                <span className={`world-map-premium-stat-icon-v33 ${item.icon}`} aria-hidden="true">
-                  {item.icon === 'userPlus' ? (
-                    <svg viewBox="0 0 24 24"><path d="M15 19.5c0-3.1-2.7-5.6-6-5.6s-6 2.5-6 5.6"/><path d="M9 11.2A3.35 3.35 0 1 0 9 4.5a3.35 3.35 0 0 0 0 6.7Z"/><path d="M18 8v6"/><path d="M15 11h6"/></svg>
-                  ) : item.icon === 'calendar' ? (
-                    <svg viewBox="0 0 24 24"><path d="M6.5 3.5v4"/><path d="M17.5 3.5v4"/><path d="M4.5 6h15a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-11A1.5 1.5 0 0 1 4.5 6Z"/><path d="M3 10h18"/><path d="M7.5 14h3"/><path d="M13.5 14h3"/></svg>
-                  ) : item.icon === 'chart' ? (
-                    <svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6.2 20V12"/><path d="M12 20V7"/><path d="M17.8 20V4"/><path d="M6 9.5l5.3-4.1 3.7 3.1 4-5"/></svg>
+          <div className="world-map-premium-bottom-stats-v32">
+            {statCardsV37.map(card => (
+              <div key={card.key} className="world-map-stat-card-v37">
+                <span className={`world-map-stat-icon-v37 ${card.icon}`} aria-hidden="true">
+                  {card.icon === 'users' ? (
+                    <svg viewBox="0 0 24 24"><path d="M8.5 11.5a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm7.5-1a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4ZM2.7 20.5c.5-4.2 2.7-6.3 6.4-6.3 3.8 0 5.9 2.1 6.4 6.3H2.7Zm11.8-6.4c3.2.3 5 2.1 5.4 5.7h-3.2c-.3-2.3-1-4.1-2.2-5.7Z" /></svg>
+                  ) : card.icon === 'calendar' ? (
+                    <svg viewBox="0 0 24 24"><path d="M7 2h2v3h6V2h2v3h3a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3V2Zm13 8H4v10h16V10ZM4 8h16V7H4v1Zm3 5h3v3H7v-3Zm5 0h3v3h-3v-3Z" /></svg>
+                  ) : card.icon === 'bars' ? (
+                    <svg viewBox="0 0 24 24"><path d="M3 20h18v2H3v-2Zm2-8h3v7H5v-7Zm5-5h3v12h-3V7Zm5 3h3v9h-3v-9Zm5-7h3v16h-3V3Z" /></svg>
                   ) : (
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.2 2.2 3.3 5 3.3 8.5S14.2 18.3 12 20.5"/><path d="M12 3.5C9.8 5.7 8.7 8.5 8.7 12s1.1 6.3 3.3 8.5"/></svg>
+                    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm7.7 9h-3.1a15.3 15.3 0 0 0-1.2-5 8.1 8.1 0 0 1 4.3 5ZM12 4.1c.9 1.3 1.6 3.7 1.8 6.9h-3.6c.2-3.2.9-5.6 1.8-6.9ZM4.3 13h3.1c.1 1.8.5 3.5 1.2 5a8.1 8.1 0 0 1-4.3-5Zm3.1-2H4.3a8.1 8.1 0 0 1 4.3-5 15.3 15.3 0 0 0-1.2 5ZM12 19.9c-.9-1.3-1.6-3.7-1.8-6.9h3.6c-.2 3.2-.9 5.6-1.8 6.9Zm3.4-1.9c.7-1.5 1.1-3.2 1.2-5h3.1a8.1 8.1 0 0 1-4.3 5Z" /></svg>
                   )}
                 </span>
-                <span className="world-map-premium-stat-body-v33">
-                  <strong>{item.label}</strong>
-                  <b>{formatBetaiWorldCompactNumberV33(item.value)}</b>
-                  <small>{item.text}</small>
-                  <em>↗ {item.trend}</em>
+                <span className="world-map-stat-copy-v37">
+                  <small>{card.label}</small>
+                  <b>{card.value.toLocaleString(lang === 'en' ? 'en-GB' : 'pl-PL')}</b>
+                  <em>{card.sub}</em>
+                  <i>{card.trend}</i>
                 </span>
               </div>
             ))}
@@ -5646,6 +5657,9 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
                 )
               })}
               {!countryRows.length ? <div className="world-map-mini-empty-v30">{loading ? t('Ładowanie...') : t('Brak krajów.')}</div> : null}
+              {countryRows.length > 5 ? (
+                <button type="button" className="world-map-see-all-v37" onClick={() => setSelectedCountry('all')}>{t('Zobacz wszystkie kraje')}</button>
+              ) : null}
             </div>
           </div>
 
@@ -5674,6 +5688,7 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
                 </button>
               ))}
               {!latestUsers.length ? <div className="world-map-mini-empty-v30">{loading ? t('Ładowanie...') : t('Brak rejestracji do pokazania.')}</div> : null}
+              {latestUsers.length ? <button type="button" className="world-map-see-all-v37" onClick={() => setSelectedCountry('all')}>{t('Zobacz wszystkie')}</button> : null}
             </div>
           </div>
         </aside>
