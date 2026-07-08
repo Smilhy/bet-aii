@@ -4813,6 +4813,7 @@ const staticTips = []
 // nie rozjechały lewego panelu ani aktywnej zakładki.
 const LOCKED_SIDEBAR_ITEMS_V1130 = Object.freeze([
   Object.freeze({ id: 'dashboard', label: '⌂ Dashboard', activeViews: Object.freeze(['dashboard']), clearTipster: true }),
+  Object.freeze({ id: 'worldMap', label: '🗺️ Mapa świata', activeViews: Object.freeze(['worldMap']), clearTipster: true }),
   Object.freeze({ id: 'add', label: '＋ Dodaj typ', activeViews: Object.freeze(['add']) }),
   Object.freeze({ id: 'wallet', label: '💼 Portfel', activeViews: Object.freeze(['wallet', 'deposits', 'payouts', 'payments', 'subscriptions', 'earnings']) }),
   Object.freeze({ id: 'profile', label: '👤 Mój profil', activeViews: Object.freeze(['profile']) }),
@@ -5109,6 +5110,432 @@ function getTipErrorToast(cleanMessage) {
   }
 
   return { type: 'error', title: 'Nie dodano typu', message: cleanMessage }
+}
+
+
+// WERSJA 30 — Dashboard: Mapa świata zarejestrowanych użytkowników.
+// Czyta tylko tabelę profiles i pokazuje kraje/nicki. Bez zmiany logiki typów, płatności ani botów.
+const BETAI_WORLD_MAP_COUNTRIES_V30 = Object.freeze({
+  PL: 'Polska', GB: 'Wielka Brytania', UK: 'Wielka Brytania', DE: 'Niemcy', FR: 'Francja', ES: 'Hiszpania', IT: 'Włochy', NL: 'Holandia', BE: 'Belgia', PT: 'Portugalia',
+  IE: 'Irlandia', NO: 'Norwegia', SE: 'Szwecja', FI: 'Finlandia', DK: 'Dania', IS: 'Islandia', CH: 'Szwajcaria', AT: 'Austria', CZ: 'Czechy', SK: 'Słowacja',
+  UA: 'Ukraina', LT: 'Litwa', LV: 'Łotwa', EE: 'Estonia', RO: 'Rumunia', BG: 'Bułgaria', HR: 'Chorwacja', RS: 'Serbia', GR: 'Grecja', TR: 'Turcja',
+  US: 'USA', CA: 'Kanada', MX: 'Meksyk', BR: 'Brazylia', AR: 'Argentyna', CO: 'Kolumbia', CL: 'Chile', PE: 'Peru', EC: 'Ekwador', UY: 'Urugwaj',
+  MA: 'Maroko', DZ: 'Algieria', EG: 'Egipt', ZA: 'RPA', NG: 'Nigeria', KE: 'Kenia', JP: 'Japonia', KR: 'Korea Południowa', CN: 'Chiny', IN: 'Indie',
+  ID: 'Indonezja', TH: 'Tajlandia', VN: 'Wietnam', AU: 'Australia', NZ: 'Nowa Zelandia', SA: 'Arabia Saudyjska', AE: 'ZEA', IL: 'Izrael'
+})
+
+const BETAI_WORLD_MAP_NAME_TO_CODE_V30 = Object.freeze({
+  'polska': 'PL', 'poland': 'PL',
+  'wielka brytania': 'GB', 'uk': 'GB', 'united kingdom': 'GB', 'great britain': 'GB', 'anglia': 'GB', 'england': 'GB',
+  'niemcy': 'DE', 'germany': 'DE', 'deutschland': 'DE',
+  'francja': 'FR', 'france': 'FR',
+  'hiszpania': 'ES', 'spain': 'ES',
+  'wlochy': 'IT', 'włochy': 'IT', 'italy': 'IT',
+  'holandia': 'NL', 'netherlands': 'NL', 'nederland': 'NL',
+  'belgia': 'BE', 'belgium': 'BE',
+  'portugalia': 'PT', 'portugal': 'PT',
+  'irlandia': 'IE', 'ireland': 'IE',
+  'norwegia': 'NO', 'norway': 'NO',
+  'szwecja': 'SE', 'sweden': 'SE',
+  'finlandia': 'FI', 'finland': 'FI',
+  'dania': 'DK', 'denmark': 'DK',
+  'islandia': 'IS', 'iceland': 'IS',
+  'szwajcaria': 'CH', 'switzerland': 'CH',
+  'austria': 'AT',
+  'czechy': 'CZ', 'czech republic': 'CZ', 'czechia': 'CZ',
+  'slowacja': 'SK', 'słowacja': 'SK', 'slovakia': 'SK',
+  'ukraina': 'UA', 'ukraine': 'UA',
+  'litwa': 'LT', 'lithuania': 'LT',
+  'lotwa': 'LV', 'łotwa': 'LV', 'latvia': 'LV',
+  'estonia': 'EE',
+  'rumunia': 'RO', 'romania': 'RO',
+  'bulgaria': 'BG', 'bułgaria': 'BG',
+  'chorwacja': 'HR', 'croatia': 'HR',
+  'serbia': 'RS',
+  'grecja': 'GR', 'greece': 'GR',
+  'turcja': 'TR', 'turkey': 'TR',
+  'usa': 'US', 'stany zjednoczone': 'US', 'united states': 'US', 'america': 'US',
+  'kanada': 'CA', 'canada': 'CA',
+  'meksyk': 'MX', 'mexico': 'MX',
+  'brazylia': 'BR', 'brazil': 'BR',
+  'argentyna': 'AR', 'argentina': 'AR',
+  'kolumbia': 'CO', 'colombia': 'CO',
+  'chile': 'CL',
+  'peru': 'PE',
+  'ekwador': 'EC', 'ecuador': 'EC',
+  'urugwaj': 'UY', 'uruguay': 'UY',
+  'maroko': 'MA', 'morocco': 'MA',
+  'algieria': 'DZ', 'algeria': 'DZ',
+  'egipt': 'EG', 'egypt': 'EG',
+  'rpa': 'ZA', 'republika poludniowej afryki': 'ZA', 'republika południowej afryki': 'ZA', 'south africa': 'ZA',
+  'nigeria': 'NG',
+  'kenia': 'KE', 'kenya': 'KE',
+  'japonia': 'JP', 'japan': 'JP',
+  'korea poludniowa': 'KR', 'korea południowa': 'KR', 'south korea': 'KR',
+  'chiny': 'CN', 'china': 'CN',
+  'indie': 'IN', 'india': 'IN',
+  'indonezja': 'ID', 'indonesia': 'ID',
+  'tajlandia': 'TH', 'thailand': 'TH',
+  'wietnam': 'VN', 'vietnam': 'VN',
+  'australia': 'AU',
+  'nowa zelandia': 'NZ', 'new zealand': 'NZ',
+  'arabia saudyjska': 'SA', 'saudi arabia': 'SA',
+  'zea': 'AE', 'uae': 'AE', 'united arab emirates': 'AE',
+  'izrael': 'IL', 'israel': 'IL'
+})
+
+const BETAI_WORLD_MAP_TZ_TO_CODE_V30 = Object.freeze({
+  'Europe/Warsaw': 'PL', 'Europe/London': 'GB', 'Europe/Berlin': 'DE', 'Europe/Paris': 'FR', 'Europe/Madrid': 'ES', 'Europe/Rome': 'IT', 'Europe/Amsterdam': 'NL',
+  'Europe/Brussels': 'BE', 'Europe/Lisbon': 'PT', 'Europe/Dublin': 'IE', 'Europe/Oslo': 'NO', 'Europe/Stockholm': 'SE', 'Europe/Helsinki': 'FI',
+  'Europe/Copenhagen': 'DK', 'Europe/Vienna': 'AT', 'Europe/Prague': 'CZ', 'Europe/Bratislava': 'SK', 'Europe/Kyiv': 'UA', 'Europe/Vilnius': 'LT',
+  'Europe/Riga': 'LV', 'Europe/Tallinn': 'EE', 'Europe/Bucharest': 'RO', 'Europe/Sofia': 'BG', 'Europe/Zagreb': 'HR', 'Europe/Belgrade': 'RS',
+  'Europe/Athens': 'GR', 'Europe/Istanbul': 'TR', 'America/New_York': 'US', 'America/Chicago': 'US', 'America/Denver': 'US', 'America/Los_Angeles': 'US',
+  'America/Toronto': 'CA', 'America/Vancouver': 'CA', 'America/Mexico_City': 'MX', 'America/Sao_Paulo': 'BR', 'America/Argentina/Buenos_Aires': 'AR',
+  'America/Bogota': 'CO', 'America/Santiago': 'CL', 'America/Lima': 'PE', 'America/Guayaquil': 'EC', 'Africa/Casablanca': 'MA', 'Africa/Algiers': 'DZ',
+  'Africa/Cairo': 'EG', 'Africa/Johannesburg': 'ZA', 'Africa/Lagos': 'NG', 'Africa/Nairobi': 'KE', 'Asia/Tokyo': 'JP', 'Asia/Seoul': 'KR',
+  'Asia/Shanghai': 'CN', 'Asia/Kolkata': 'IN', 'Asia/Jakarta': 'ID', 'Asia/Bangkok': 'TH', 'Asia/Ho_Chi_Minh': 'VN', 'Australia/Sydney': 'AU', 'Pacific/Auckland': 'NZ'
+})
+
+function normalizeBetaiWorldCountryKeyV30(value = '') {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function getBetaiWorldCountryCodeV30(row = {}) {
+  const codeCandidates = [
+    row.country_code,
+    row.countryCode,
+    row.registered_country_code,
+    row.registration_country_code,
+    row.geo_country_code,
+    row.ip_country_code,
+    row.locale_country_code,
+    row.country_iso,
+    row.country_iso2,
+    row.iso_country
+  ]
+  for (const value of codeCandidates) {
+    const clean = String(value || '').trim().toUpperCase()
+    if (/^[A-Z]{2}$/.test(clean)) return clean === 'UK' ? 'GB' : clean
+  }
+
+  const nameCandidates = [
+    row.country,
+    row.country_name,
+    row.registered_country_name,
+    row.registration_country_name,
+    row.geo_country_name,
+    row.location_country,
+    row.location,
+    row.address_country
+  ]
+  for (const value of nameCandidates) {
+    const key = normalizeBetaiWorldCountryKeyV30(value)
+    if (BETAI_WORLD_MAP_NAME_TO_CODE_V30[key]) return BETAI_WORLD_MAP_NAME_TO_CODE_V30[key]
+    const upper = String(value || '').trim().toUpperCase()
+    if (/^[A-Z]{2}$/.test(upper)) return upper === 'UK' ? 'GB' : upper
+  }
+
+  const localeRaw = String(row.locale || row.language || row.lang || row.browser_language || row.preferred_language || '').trim()
+  const localeMatch = localeRaw.match(/[-_]([A-Za-z]{2})\b/)
+  if (localeMatch) {
+    const region = localeMatch[1].toUpperCase()
+    if (BETAI_WORLD_MAP_COUNTRIES_V30[region]) return region === 'UK' ? 'GB' : region
+  }
+
+  const tz = String(row.timezone || row.time_zone || row.registered_timezone || row.tz || '').trim()
+  if (BETAI_WORLD_MAP_TZ_TO_CODE_V30[tz]) return BETAI_WORLD_MAP_TZ_TO_CODE_V30[tz]
+
+  return 'ZZ'
+}
+
+function getBetaiWorldCountryNameV30(code = 'ZZ') {
+  const clean = String(code || '').toUpperCase()
+  if (clean === 'ZZ') return 'Nieznany kraj'
+  return BETAI_WORLD_MAP_COUNTRIES_V30[clean] || clean
+}
+
+function getBetaiFlagEmojiV30(code = 'ZZ') {
+  const clean = String(code || '').toUpperCase()
+  if (!/^[A-Z]{2}$/.test(clean) || clean === 'ZZ') return '🌍'
+  return clean.split('').map(char => String.fromCodePoint(127397 + char.charCodeAt(0))).join('')
+}
+
+function getBetaiBrowserCountryHintV30() {
+  if (typeof navigator === 'undefined') return { code: '', name: '', locale: '', timezone: '' }
+  const locale = navigator.language || (Array.isArray(navigator.languages) ? navigator.languages[0] : '') || ''
+  let code = ''
+  try {
+    const parsed = new Intl.Locale(locale)
+    code = String(parsed.region || '').toUpperCase()
+  } catch (_) {
+    const match = String(locale || '').match(/[-_]([A-Za-z]{2})\b/)
+    code = match ? match[1].toUpperCase() : ''
+  }
+  let timezone = ''
+  try { timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '' } catch (_) {}
+  if (!code && BETAI_WORLD_MAP_TZ_TO_CODE_V30[timezone]) code = BETAI_WORLD_MAP_TZ_TO_CODE_V30[timezone]
+  if (code === 'UK') code = 'GB'
+  return {
+    code: /^[A-Z]{2}$/.test(code) ? code : '',
+    name: getBetaiWorldCountryNameV30(code || 'ZZ'),
+    locale,
+    timezone
+  }
+}
+
+function getBetaiWorldProfileNameV30(row = {}) {
+  const resolved = typeof resolveRealProfileUsername === 'function' ? resolveRealProfileUsername(row) : ''
+  const fallback = row.username || row.display_name || row.full_name || row.profile_name || row.name || row.email || 'Użytkownik'
+  const clean = String(resolved || fallback || 'Użytkownik').trim()
+  if (!clean) return 'Użytkownik'
+  if (clean.includes('@')) return clean.split('@')[0]
+  return clean
+}
+
+function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = null }) {
+  const lang = useBetaiLanguageState()
+  const t = (value) => translateBetaiTextValue(value, lang)
+  const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState('')
+  const [selectedCountry, setSelectedCountry] = useState('all')
+  const [status, setStatus] = useState('')
+
+  const syncCountryHint = useCallback(async () => {
+    if (!user?.id) return
+    try {
+      const hint = getBetaiBrowserCountryHintV30()
+      if (!hint.code) return
+      const storageKey = `betai_country_hint_synced_v30_${user.id}_${hint.code}`
+      try {
+        if (localStorage.getItem(storageKey) === '1') return
+      } catch (_) {}
+      let accessToken = ''
+      try {
+        const sessionResult = await supabase?.auth?.getSession?.()
+        accessToken = sessionResult?.data?.session?.access_token || ''
+      } catch (_) {}
+      await fetch('/.netlify/functions/record-profile-country', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          email: user.email || '',
+          country_code: hint.code,
+          country_name: hint.name,
+          locale: hint.locale,
+          timezone: hint.timezone
+        })
+      }).catch(() => null)
+      try { localStorage.setItem(storageKey, '1') } catch (_) {}
+    } catch (_) {}
+  }, [user?.id, user?.email])
+
+  const loadProfiles = useCallback(async () => {
+    setLoading(true)
+    setStatus('')
+    try {
+      await syncCountryHint()
+      if (!isSupabaseConfigured || !supabase) {
+        setRows([])
+        setStatus('Supabase nie jest skonfigurowane.')
+        return
+      }
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(500)
+      if (error) throw error
+      const normalized = (Array.isArray(data) ? data : [])
+        .filter(row => row && !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(getBetaiWorldProfileNameV30(row)))
+        .map((row, index) => {
+          const code = getBetaiWorldCountryCodeV30(row)
+          return {
+            ...row,
+            _worldIndex: index,
+            _worldName: getBetaiWorldProfileNameV30(row),
+            _worldCountryCode: code,
+            _worldCountryName: getBetaiWorldCountryNameV30(code),
+            _worldFlag: getBetaiFlagEmojiV30(code),
+            _worldAvatar: typeof getProfileAvatarUrl === 'function' ? getProfileAvatarUrl(row) : ''
+          }
+        })
+      setRows(normalized)
+    } catch (error) {
+      console.warn('world registered map load skipped', error)
+      setRows([])
+      setStatus(error?.message || 'Nie udało się pobrać mapy użytkowników.')
+    } finally {
+      setLoading(false)
+    }
+  }, [syncCountryHint])
+
+  useEffect(() => {
+    loadProfiles()
+    const timer = window.setInterval(() => {
+      if (isBetaiDocumentVisibleV29()) loadProfiles()
+    }, 5 * 60 * 1000)
+    const handleProfilesUpdate = () => loadProfiles()
+    window.addEventListener('betai:profiles-updated', handleProfilesUpdate)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('betai:profiles-updated', handleProfilesUpdate)
+    }
+  }, [loadProfiles])
+
+  const countryRows = useMemo(() => {
+    const map = new Map()
+    rows.forEach(row => {
+      const key = row._worldCountryCode || 'ZZ'
+      const prev = map.get(key) || { code: key, name: row._worldCountryName || getBetaiWorldCountryNameV30(key), flag: row._worldFlag || getBetaiFlagEmojiV30(key), count: 0, users: [] }
+      prev.count += 1
+      if (prev.users.length < 8) prev.users.push(row)
+      map.set(key, prev)
+    })
+    return [...map.values()].sort((a, b) => (b.count - a.count) || String(a.name).localeCompare(String(b.name), 'pl'))
+  }, [rows])
+
+  const visibleUsers = useMemo(() => {
+    const q = normalizeEmail(query)
+    return rows
+      .filter(row => selectedCountry === 'all' || row._worldCountryCode === selectedCountry)
+      .filter(row => !q || `${row._worldName} ${row.email || ''} ${row._worldCountryName}`.toLowerCase().includes(q))
+      .slice(0, 96)
+  }, [rows, query, selectedCountry])
+
+  const mapUsers = visibleUsers.slice(0, 48).map((row, index, arr) => {
+    const total = Math.max(arr.length, 1)
+    const ring = index % 3
+    const radius = ring === 0 ? 34 : ring === 1 ? 43 : 51
+    const angle = (-90 + (index * 360 / total) + (ring * 7)) * Math.PI / 180
+    const x = 50 + Math.cos(angle) * radius
+    const y = 50 + Math.sin(angle) * radius
+    return { ...row, _x: Math.max(4, Math.min(96, x)), _y: Math.max(6, Math.min(94, y)) }
+  })
+
+  const centerPoint = { x: 50, y: 50 }
+  const totalCountries = countryRows.filter(row => row.code !== 'ZZ').length
+  const latestUsers = rows.slice(0, 6)
+
+  return (
+    <section className="world-map-page-v30">
+      <div className="world-map-hero-v30">
+        <div>
+          <span className="world-map-kicker-v30">🌍 {t('Mapa świata')}</span>
+          <h1>{t('Mapa świata zarejestrowanych')}</h1>
+          <p>{t('Każda flaga oznacza kraj użytkownika. Obok flagi pokazuję nick, a lista krajów aktualizuje się z profili Supabase.')}</p>
+        </div>
+        <div className="world-map-stats-v30">
+          <div><strong>{rows.length}</strong><span>{t('użytkowników')}</span></div>
+          <div><strong>{totalCountries}</strong><span>{t('krajów')}</span></div>
+          <button type="button" onClick={loadProfiles} disabled={loading}>{loading ? t('Odświeżam...') : t('Odśwież')}</button>
+        </div>
+      </div>
+
+      <div className="world-map-toolbar-v30">
+        <label>
+          <span>⌕</span>
+          <input value={query} onChange={event => setQuery(event.target.value)} placeholder={t('Szukaj nicku albo kraju...')} />
+        </label>
+        <select value={selectedCountry} onChange={event => setSelectedCountry(event.target.value)}>
+          <option value="all">{t('Wszystkie kraje')}</option>
+          {countryRows.map(country => <option key={country.code} value={country.code}>{country.flag} {country.name} ({country.count})</option>)}
+        </select>
+      </div>
+
+      <div className="world-map-layout-v30">
+        <div className="world-map-orbit-card-v30">
+          <div className="world-map-orbit-v30">
+            <svg className="world-map-lines-v30" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              {mapUsers.map((row, index) => (
+                <line key={`${row.id || row.email || index}-line`} x1={centerPoint.x} y1={centerPoint.y} x2={row._x} y2={row._y} />
+              ))}
+            </svg>
+            <div className="world-map-center-v30">
+              <b>Bet+AI</b>
+              <span>{rows.length}</span>
+              <small>{t('users')}</small>
+            </div>
+            {mapUsers.map((row, index) => (
+              <button
+                type="button"
+                key={row.id || row.email || `${row._worldCountryCode}-${index}`}
+                className="world-map-node-v30"
+                style={{ '--x': `${row._x}%`, '--y': `${row._y}%`, '--delay': `${index * 35}ms` }}
+                title={`${row._worldName} • ${row._worldCountryName}`}
+                onClick={() => {
+                  if (onOpenTipster && row.id) onOpenTipster(row.id)
+                  else onToast?.({ type: 'info', title: row._worldName, message: row._worldCountryName })
+                }}
+              >
+                <span className="world-map-flag-v30">{row._worldFlag}</span>
+                <span className="world-map-nick-v30" data-no-translate="true">{row._worldName}</span>
+              </button>
+            ))}
+            {!mapUsers.length && !loading ? (
+              <div className="world-map-empty-v30">
+                <strong>{t('Brak danych krajów')}</strong>
+                <span>{t('Nowi użytkownicy pojawią się tutaj po rejestracji i uzupełnieniu kraju.')}</span>
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <aside className="world-map-side-v30">
+          <div className="world-map-panel-v30">
+            <div className="world-map-panel-head-v30">
+              <strong>{t('Kraje')}</strong>
+              <span>{countryRows.length}</span>
+            </div>
+            <div className="world-map-country-list-v30">
+              {countryRows.slice(0, 16).map(country => (
+                <button key={country.code} type="button" className={selectedCountry === country.code ? 'active' : ''} onClick={() => setSelectedCountry(country.code)}>
+                  <span>{country.flag}</span>
+                  <b>{country.name}</b>
+                  <em>{country.count}</em>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="world-map-panel-v30">
+            <div className="world-map-panel-head-v30">
+              <strong>{t('Ostatnie rejestracje')}</strong>
+              <span>LIVE</span>
+            </div>
+            <div className="world-map-latest-v30">
+              {latestUsers.map((row, index) => (
+                <div key={row.id || row.email || index} className="world-map-latest-row-v30">
+                  <span>{row._worldFlag}</span>
+                  <div>
+                    <b data-no-translate="true">{row._worldName}</b>
+                    <small>{row._worldCountryName}</small>
+                  </div>
+                  <em>{row.created_at ? new Date(row.created_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL') : '—'}</em>
+                </div>
+              ))}
+              {!latestUsers.length ? <div className="world-map-mini-empty-v30">{loading ? t('Ładowanie...') : t('Brak rejestracji do pokazania.')}</div> : null}
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      {status ? <div className="world-map-status-v30">{status}</div> : null}
+      <div className="world-map-note-v30">
+        {t('Jeśli przy profilu nie ma jeszcze kraju, system pokazuje go jako Nieznany kraj. Nowe konta mogą zapisywać kraj po uruchomieniu migracji WERSJA 30.')}
+      </div>
+    </section>
+  )
 }
 
 function AnimatedDashboardHero() {
@@ -35828,6 +36255,15 @@ function App() {
             }}
           />
         )}
+
+        {view === 'worldMap' && (
+          <WorldRegisteredMapView
+            user={effectiveAccountProfile || sessionUser}
+            onOpenTipster={openTipsterProfile}
+            onToast={showToast}
+          />
+        )}
+
 
         {view === 'adminPayouts' && (
           <AdminPayoutsView
