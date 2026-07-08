@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-36-netlify-install-bez-cache",
-  "version": "36.0.0",
+  "name": "betai-wersja-32-mapa-premium-automat-flagi",
+  "version": "32.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
@@ -21,7 +21,8 @@
   },
   "devDependencies": {},
   "engines": {
-    "node": "20.x",
+    "node": "22.x",
     "npm": "10.x"
-  }
+  },
+  "packageManager": "npm@10.9.8"
 }
