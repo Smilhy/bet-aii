@@ -5508,6 +5508,60 @@ function renderBetaiWorldMapIconV34(icon = 'spark') {
   return <svg viewBox="0 0 24 24"><path d="M12 3.5v17"/><path d="M3.5 12h17"/><path d="m6.4 6.4 11.2 11.2"/><path d="m17.6 6.4-11.2 11.2"/></svg>
 }
 
+
+// WERSJA 39 — stabilne pozycje pinezek mapy: kliknięcie nie przelicza układu i nie przesuwa flag.
+const BETAI_WORLD_NODE_POSITIONS_V39 = Object.freeze({
+  PL: { x: 47, y: 18, tx: '-50%', ty: '0%' },
+  GB: { x: 33, y: 82, tx: '-50%', ty: '-100%' },
+  UK: { x: 33, y: 82, tx: '-50%', ty: '-100%' },
+  US: { x: 13, y: 50, tx: '0%', ty: '-50%' },
+  DE: { x: 20, y: 32, tx: '0%', ty: '-50%' },
+  BR: { x: 25, y: 22, tx: '0%', ty: '0%' },
+  JP: { x: 86, y: 30, tx: '-100%', ty: '-50%' },
+  IT: { x: 82, y: 46, tx: '-100%', ty: '-50%' },
+  CA: { x: 86, y: 57, tx: '-100%', ty: '-50%' },
+  AU: { x: 82, y: 74, tx: '-100%', ty: '-100%' },
+  NL: { x: 64, y: 84, tx: '-50%', ty: '-100%' },
+  CH: { x: 50, y: 88, tx: '-50%', ty: '-100%' },
+  BE: { x: 41, y: 86, tx: '-50%', ty: '-100%' },
+  PT: { x: 28, y: 82, tx: '-50%', ty: '-100%' },
+  IN: { x: 20, y: 72, tx: '0%', ty: '-50%' },
+  FR: { x: 18, y: 64, tx: '0%', ty: '-50%' },
+  ES: { x: 16, y: 52, tx: '0%', ty: '-50%' },
+  SE: { x: 58, y: 16, tx: '-50%', ty: '0%' },
+  NO: { x: 40, y: 14, tx: '-50%', ty: '0%' },
+  DK: { x: 30, y: 22, tx: '0%', ty: '0%' },
+  IE: { x: 24, y: 40, tx: '0%', ty: '-50%' },
+  AT: { x: 57, y: 78, tx: '-50%', ty: '-100%' },
+  CZ: { x: 51, y: 26, tx: '-50%', ty: '0%' },
+  SK: { x: 60, y: 28, tx: '-50%', ty: '0%' },
+  UA: { x: 70, y: 26, tx: '-100%', ty: '0%' },
+  RO: { x: 76, y: 39, tx: '-100%', ty: '-50%' },
+  GR: { x: 74, y: 66, tx: '-100%', ty: '-50%' },
+  TR: { x: 80, y: 36, tx: '-100%', ty: '-50%' },
+  CN: { x: 86, y: 42, tx: '-100%', ty: '-50%' },
+  KR: { x: 88, y: 36, tx: '-100%', ty: '-50%' },
+  MX: { x: 15, y: 58, tx: '0%', ty: '-50%' },
+  AR: { x: 35, y: 86, tx: '-50%', ty: '-100%' },
+  ZZ: { x: 84, y: 84, tx: '-100%', ty: '-100%' }
+})
+
+function getBetaiWorldNodeStablePositionV39(code = 'ZZ') {
+  const clean = String(code || 'ZZ').toUpperCase() || 'ZZ'
+  if (BETAI_WORLD_NODE_POSITIONS_V39[clean]) return BETAI_WORLD_NODE_POSITIONS_V39[clean]
+
+  let hash = 0
+  for (let i = 0; i < clean.length; i += 1) hash = ((hash * 31) + clean.charCodeAt(i)) >>> 0
+  const ring = hash % 3
+  const radius = ring === 0 ? 34 : ring === 1 ? 41 : 46
+  const angle = (-90 + (hash % 360)) * Math.PI / 180
+  const x = Math.max(9, Math.min(91, 50 + Math.cos(angle) * radius))
+  const y = Math.max(10, Math.min(90, 50 + Math.sin(angle) * radius))
+  const tx = x < 24 ? '0%' : x > 76 ? '-100%' : '-50%'
+  const ty = y < 17 ? '0%' : y > 83 ? '-100%' : '-50%'
+  return { x, y, tx, ty }
+}
+
 function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = null }) {
   const lang = useBetaiLanguageState()
   const t = (value) => translateBetaiTextValue(value, lang)
@@ -5685,18 +5739,9 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
     ? (selectedCountryRow.count === 1 && selectedCountryRow.code !== 'ZZ' ? t('pierwszy użytkownik z tego kraju') : selectedCountryTodayCountV38 > 0 ? `${selectedCountryTodayCountV38} ${t('dzisiaj')}` : t('brak nowych rejestracji dzisiaj'))
     : ''
 
-  const premiumCountryNodes = (filteredCountryRows.length ? filteredCountryRows : countryRows).slice(0, 20).map((country, index, arr) => {
-    const total = Math.max(arr.length, 1)
-    const ring = index % 3
-    const radius = ring === 0 ? 34 : ring === 1 ? 42 : 46
-    const angle = (-90 + (index * 360 / total) + (ring === 1 ? 8 : ring === 2 ? -8 : 0)) * Math.PI / 180
-    const rawX = 50 + Math.cos(angle) * radius
-    const rawY = 50 + Math.sin(angle) * radius
-    const x = Math.max(9, Math.min(91, rawX))
-    const y = Math.max(10, Math.min(90, rawY))
-    const tx = x < 24 ? '0%' : x > 76 ? '-100%' : '-50%'
-    const ty = y < 17 ? '0%' : y > 83 ? '-100%' : '-50%'
-    return { ...country, _x: x, _y: y, _tx: tx, _ty: ty }
+  const premiumCountryNodes = (filteredCountryRows.length ? filteredCountryRows : countryRows).slice(0, 20).map((country, index) => {
+    const stablePosition = getBetaiWorldNodeStablePositionV39(country.code)
+    return { ...country, _x: stablePosition.x, _y: stablePosition.y, _tx: stablePosition.tx, _ty: stablePosition.ty, _stableOrder: index }
   })
 
   const remainingCountriesCount = Math.max(0, filteredCountryRows.length - premiumCountryNodes.length)
