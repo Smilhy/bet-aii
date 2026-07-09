@@ -79619,3 +79619,27 @@ html.betai-opera-stability-v29 .app-shell *::after{
   background:none!important;
   box-shadow:none!important;
 }
+
+/* WERSJA 44 — dashboard hero: przesunięcie badge i treści newsów w prawo,
+   żeby nie nachodziły na lewą strzałkę slidera */
+.betai-dashboard-news-badge-v40{
+  left:86px!important;
+  max-width:calc(100% - 156px)!important;
+}
+.betai-dashboard-news-copy-v40{
+  left:86px!important;
+  right:118px!important;
+  max-width:700px!important;
+}
+@media(max-width:1200px){
+  .betai-dashboard-news-badge-v40{left:78px!important;max-width:calc(100% - 146px)!important;}
+  .betai-dashboard-news-copy-v40{left:78px!important;right:98px!important;max-width:650px!important;}
+}
+@media(max-width:900px){
+  .betai-dashboard-news-badge-v40{left:66px!important;max-width:calc(100% - 124px)!important;}
+  .betai-dashboard-news-copy-v40{left:66px!important;right:76px!important;max-width:560px!important;}
+}
+@media(max-width:640px){
+  .betai-dashboard-news-badge-v40{left:58px!important;max-width:calc(100% - 72px)!important;}
+  .betai-dashboard-news-copy-v40{left:58px!important;right:54px!important;max-width:none!important;}
+}
