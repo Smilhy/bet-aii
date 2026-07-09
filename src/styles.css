@@ -79360,36 +79360,202 @@ html.betai-opera-stability-v29 .app-shell *::after{
   .world-map-country-node-v32.live-country-v38:before{width:54px;height:54px;}
 }
 
-
-/* =========================================================
-   WERSJA 39 — Mapa świata: stabilne pinezki po kliknięciu
-   Tylko UI/animacje. Logika strony bez zmian.
-   ========================================================= */
-.world-map-country-node-v32{
-  transform:translate(var(--tx,-50%), var(--ty,-50%)) translateZ(0) !important;
-  animation:worldMapNodeFadeV39 .22s ease both !important;
-  will-change:auto !important;
-  backface-visibility:hidden;
-  transform-origin:center center;
-  transition:border-color .16s ease, background .16s ease, box-shadow .16s ease, filter .16s ease;
+/* WERSJA 40 — pilne komunikaty sportowe w hero dashboardu: PL Sport.pl, EN BBC Sport */
+.betai-dashboard-slide-v551.news-slide-v40{padding:8px!important;}
+.betai-dashboard-news-v40{
+  position:relative!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:100%!important;
+  display:block!important;
+  text-align:left!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:0!important;
+  border-radius:20px!important;
+  cursor:pointer!important;
+  color:#f4fbff!important;
+  background:
+    radial-gradient(circle at 17% 20%, rgba(43,237,232,.24), transparent 28%),
+    radial-gradient(circle at 92% 18%, rgba(255,204,73,.18), transparent 24%),
+    linear-gradient(105deg, rgba(3,11,18,.98) 0%, rgba(5,20,30,.94) 48%, rgba(8,19,29,.98) 100%)!important;
+  box-shadow:inset 0 0 0 1px rgba(50,233,236,.12), inset 0 1px 0 rgba(255,255,255,.06), 0 14px 36px rgba(0,0,0,.22)!important;
 }
-.world-map-country-node-v32:hover,
-.world-map-country-node-v32.active{
-  transform:translate(var(--tx,-50%), var(--ty,-50%)) translateZ(0) !important;
-  border-color:rgba(255,213,102,.88) !important;
-  background:rgba(24,37,56,.94) !important;
-  box-shadow:0 18px 52px rgba(0,0,0,.48), 0 0 0 1px rgba(255,213,102,.20), inset 0 1px 0 rgba(255,255,255,.08) !important;
-  filter:brightness(1.05);
-  z-index:8;
+.betai-dashboard-news-v40::before{
+  content:''!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(90deg, rgba(3,9,15,.96) 0%, rgba(3,9,15,.88) 34%, rgba(3,9,15,.40) 62%, rgba(3,9,15,.68) 100%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 92px)!important;
+  z-index:1!important;
 }
-.world-map-country-node-v32:active{
-  transform:translate(var(--tx,-50%), var(--ty,-50%)) translateZ(0) !important;
+.betai-dashboard-news-v40::after{
+  content:''!important;
+  position:absolute!important;
+  inset:auto 28px 22px 28px!important;
+  height:1px!important;
+  background:linear-gradient(90deg, rgba(37,236,232,.75), transparent 68%)!important;
+  z-index:3!important;
+  box-shadow:0 0 18px rgba(37,236,232,.28)!important;
 }
-.world-map-country-node-v32.live-country-v38:before{
-  transform-origin:center center;
-  will-change:transform, opacity;
+.betai-dashboard-news-v40 > img{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+  border-radius:20px!important;
+  opacity:.56!important;
+  filter:saturate(1.1) contrast(1.05) brightness(.86)!important;
+  background:transparent!important;
+  z-index:0!important;
 }
-@keyframes worldMapNodeFadeV39{
-  from{opacity:0;}
-  to{opacity:1;}
+.betai-dashboard-news-v40.has-image-v40::before{
+  background:
+    linear-gradient(90deg, rgba(3,9,15,.98) 0%, rgba(3,9,15,.90) 36%, rgba(3,9,15,.42) 66%, rgba(3,9,15,.70) 100%),
+    linear-gradient(0deg, rgba(3,9,15,.78), rgba(3,9,15,.08) 42%, rgba(3,9,15,.50) 100%)!important;
+}
+.betai-dashboard-news-overlay-v40{
+  position:absolute!important;
+  inset:0!important;
+  z-index:2!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(circle at 16% 50%, rgba(37,236,232,.20), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,.045), transparent 32%, rgba(0,0,0,.20))!important;
+}
+.betai-dashboard-news-badge-v40{
+  position:absolute!important;
+  top:28px!important;
+  left:42px!important;
+  z-index:3!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:12px!important;
+  max-width:calc(100% - 84px)!important;
+  padding:9px 13px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(255,211,87,.28)!important;
+  background:linear-gradient(180deg, rgba(11,28,41,.82), rgba(4,14,23,.72))!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.24), 0 0 22px rgba(255,205,65,.08), inset 0 1px 0 rgba(255,255,255,.06)!important;
+  backdrop-filter:blur(10px)!important;
+}
+.betai-dashboard-news-badge-v40 b{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  color:#ffd966!important;
+  font-size:12px!important;
+  font-weight:950!important;
+  letter-spacing:.11em!important;
+  text-transform:uppercase!important;
+  line-height:1!important;
+}
+.betai-dashboard-news-badge-v40 b::before{
+  content:''!important;
+  width:8px!important;
+  height:8px!important;
+  border-radius:999px!important;
+  background:#25ece8!important;
+  box-shadow:0 0 16px rgba(37,236,232,.85)!important;
+}
+.betai-dashboard-news-badge-v40 em{
+  color:#b9c9d6!important;
+  font-style:normal!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+.betai-dashboard-news-copy-v40{
+  position:absolute!important;
+  left:42px!important;
+  right:118px!important;
+  top:78px!important;
+  bottom:40px!important;
+  z-index:3!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-items:flex-start!important;
+  gap:10px!important;
+  max-width:860px!important;
+}
+.betai-dashboard-news-copy-v40 small{
+  color:#8edbe2!important;
+  font-size:13px!important;
+  font-weight:900!important;
+  letter-spacing:.06em!important;
+  text-transform:uppercase!important;
+  line-height:1.1!important;
+  text-shadow:0 2px 12px rgba(0,0,0,.35)!important;
+}
+.betai-dashboard-news-copy-v40 strong{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+  color:#ffffff!important;
+  font-size:clamp(32px, 3.35vw, 58px)!important;
+  line-height:.98!important;
+  font-weight:1000!important;
+  letter-spacing:-.045em!important;
+  text-shadow:0 4px 22px rgba(0,0,0,.45)!important;
+}
+.betai-dashboard-news-copy-v40 span{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+  max-width:780px!important;
+  color:#c6d5df!important;
+  font-size:clamp(14px, 1.05vw, 18px)!important;
+  line-height:1.35!important;
+  font-weight:700!important;
+  text-shadow:0 2px 14px rgba(0,0,0,.42)!important;
+}
+.betai-dashboard-news-copy-v40 i{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  margin-top:2px!important;
+  padding:10px 16px!important;
+  border-radius:999px!important;
+  color:#061018!important;
+  background:linear-gradient(90deg,#26ece7,#70fff3)!important;
+  box-shadow:0 12px 30px rgba(37,236,232,.18)!important;
+  font-style:normal!important;
+  font-size:13px!important;
+  font-weight:1000!important;
+  letter-spacing:.02em!important;
+}
+.betai-dashboard-news-v40:hover .betai-dashboard-news-copy-v40 i{transform:translateY(-1px)!important;box-shadow:0 14px 34px rgba(37,236,232,.28)!important;}
+@media(max-width:1200px){
+  .betai-dashboard-news-badge-v40{top:24px!important;left:34px!important;}
+  .betai-dashboard-news-copy-v40{left:34px!important;right:96px!important;top:68px!important;bottom:34px!important;}
+  .betai-dashboard-news-copy-v40 strong{font-size:clamp(30px, 3.5vw, 48px)!important;}
+}
+@media(max-width:900px){
+  .betai-dashboard-news-badge-v40{top:18px!important;left:24px!important;gap:8px!important;padding:8px 11px!important;}
+  .betai-dashboard-news-copy-v40{left:24px!important;right:74px!important;top:58px!important;bottom:24px!important;gap:8px!important;}
+  .betai-dashboard-news-copy-v40 strong{font-size:clamp(25px, 5.2vw, 40px)!important;}
+  .betai-dashboard-news-copy-v40 span{-webkit-line-clamp:2!important;font-size:14px!important;}
+  .betai-dashboard-news-copy-v40 i{padding:8px 13px!important;font-size:12px!important;}
+}
+@media(max-width:640px){
+  .betai-dashboard-slide-v551.news-slide-v40{padding:4px!important;}
+  .betai-dashboard-news-v40{border-radius:14px!important;}
+  .betai-dashboard-news-v40 > img{border-radius:14px!important;}
+  .betai-dashboard-news-badge-v40{top:12px!important;left:14px!important;max-width:calc(100% - 28px)!important;}
+  .betai-dashboard-news-badge-v40 b{font-size:10px!important;}
+  .betai-dashboard-news-badge-v40 em{font-size:10px!important;}
+  .betai-dashboard-news-copy-v40{left:14px!important;right:56px!important;top:48px!important;bottom:16px!important;gap:6px!important;}
+  .betai-dashboard-news-copy-v40 small{font-size:10px!important;}
+  .betai-dashboard-news-copy-v40 strong{-webkit-line-clamp:2!important;font-size:clamp(20px, 6vw, 28px)!important;}
+  .betai-dashboard-news-copy-v40 span{display:none!important;}
+  .betai-dashboard-news-copy-v40 i{padding:7px 10px!important;font-size:11px!important;}
 }

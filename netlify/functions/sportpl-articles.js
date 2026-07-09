@@ -11,6 +11,13 @@ const SPORTPL_RSS_URLS = [
   'https://www.sport.pl/rss/0,0.xml'
 ]
 
+const BBC_RSS_URLS = [
+  'https://feeds.bbci.co.uk/sport/rss.xml',
+  'https://feeds.bbci.co.uk/sport/football/rss.xml',
+  'https://feeds.bbci.co.uk/sport/tennis/rss.xml',
+  'https://feeds.bbci.co.uk/sport/formula1/rss.xml'
+]
+
 const fallbackArticles = [{
   id: 'fallback-1',
   title: 'Sport.pl — najnowsze wiadomości sportowe',
@@ -22,6 +29,19 @@ const fallbackArticles = [{
   publishedAt: new Date().toISOString(),
   author: 'Sport.pl',
   source: 'Sport.pl'
+}]
+
+const bbcFallbackArticles = [{
+  id: 'fallback-bbc-1',
+  title: 'BBC Sport — latest sports headlines',
+  excerpt: 'Fresh BBC Sport headlines could not be loaded right now. Open BBC Sport to check the latest updates.',
+  url: 'https://www.bbc.co.uk/sport',
+  image: '',
+  imageProxy: '',
+  category: 'Sport',
+  publishedAt: new Date().toISOString(),
+  author: 'BBC Sport',
+  source: 'BBC Sport'
 }]
 
 function decodeHtml(value = '') {
@@ -223,20 +243,21 @@ function decodeBufferText(buffer, charset = 'utf-8') {
   return Buffer.from(buffer).toString('utf8')
 }
 
-async function fetchText(url, accept = 'text/html,application/xhtml+xml') {
+async function fetchText(url, accept = 'text/html,application/xhtml+xml', source = 'sportpl') {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 9000)
+  const isBbc = source === 'bbc' || String(url || '').includes('bbc')
   try {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 BetAI-Live/1138',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 BetAI-Live/1142',
         'Accept': accept,
-        'Accept-Language': 'pl-PL,pl;q=0.9,en;q=0.8',
-        'Referer': 'https://www.sport.pl/'
+        'Accept-Language': isBbc ? 'en-GB,en;q=0.9,pl;q=0.6' : 'pl-PL,pl;q=0.9,en;q=0.8',
+        'Referer': isBbc ? 'https://www.bbc.co.uk/sport' : 'https://www.sport.pl/'
       }
     })
-    if (!response.ok) throw new Error(`Sport.pl HTTP ${response.status}`)
+    if (!response.ok) throw new Error(`${isBbc ? 'BBC Sport' : 'Sport.pl'} HTTP ${response.status}`)
     const buffer = await response.arrayBuffer()
     const charset = sniffHtmlCharset(buffer, getResponseCharset(response, 'utf-8'))
     return decodeBufferText(buffer, charset)
@@ -314,11 +335,66 @@ exports.handler = async (event) => {
   if (event.queryStringParameters?.image) return proxyImage(event.queryStringParameters.image)
 
   const limit = Math.min(60, Math.max(6, Number(event.queryStringParameters?.limit || 30)))
+  const sourceParam = String(event.queryStringParameters?.source || event.queryStringParameters?.lang || 'sportpl').toLowerCase()
+  const source = sourceParam === 'bbc' || sourceParam === 'en' || sourceParam === 'uk' ? 'bbc' : 'sportpl'
+
   try {
+    if (source === 'bbc') {
+      const results = []
+      for (const url of BBC_RSS_URLS) {
+        try {
+          results.push(...parseRss(await fetchText(url, 'application/rss+xml,application/xml,text/xml,*/*', 'bbc')))
+        } catch (error) {
+          console.warn('bbc rss skipped:', url, error.message)
+        }
+      }
+
+      const seen = new Set()
+      const articles = results
+        .filter(item => item.title && item.url)
+        .map(item => ({
+          ...item,
+          title: cleanText(item.title).slice(0, 170),
+          excerpt: cleanText(item.excerpt || '').slice(0, 260),
+          url: absoluteUrl(item.url),
+          image: normalizeImage(item.image || ''),
+          category: inferCategory(item.url, item.title),
+          publishedAt: item.publishedAt || new Date().toISOString(),
+          author: 'BBC Sport',
+          source: 'BBC Sport'
+        }))
+        .filter(item => {
+          const key = item.url.replace(/[?#].*$/, '')
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+        .slice(0, limit)
+        .map(item => {
+          const image = normalizeImage(item.image || '')
+          return {
+            ...item,
+            id: Buffer.from(item.url).toString('base64').slice(0, 24),
+            image,
+            imageProxy: image ? `/.netlify/functions/sportpl-articles?image=${encodeURIComponent(image)}` : ''
+          }
+        })
+
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Cache-Control': 'public, max-age=600, s-maxage=600',
+          'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({ updatedAt: new Date().toISOString(), count: articles.length, source: 'BBC Sport', articles: articles.length ? articles : bbcFallbackArticles })
+      }
+    }
+
     const results = []
     for (const url of SPORTPL_RSS_URLS) {
       try {
-        results.push(...parseRss(await fetchText(url, 'application/rss+xml,application/xml,text/xml,*/*')))
+        results.push(...parseRss(await fetchText(url, 'application/rss+xml,application/xml,text/xml,*/*', 'sportpl')))
       } catch (error) {
         console.warn('sportpl rss skipped:', url, error.message)
       }
@@ -326,7 +402,7 @@ exports.handler = async (event) => {
 
     for (const url of SPORTPL_URLS) {
       try {
-        const html = await fetchText(url)
+        const html = await fetchText(url, 'text/html,application/xhtml+xml', 'sportpl')
         results.push(...parseJsonLd(html), ...parseLinks(html))
       } catch (error) {
         console.warn('sportpl source skipped:', url, error.message)
@@ -372,13 +448,14 @@ exports.handler = async (event) => {
         'Cache-Control': 'public, max-age=600, s-maxage=600',
         'Access-Control-Allow-Origin': '*'
       },
-      body: JSON.stringify({ updatedAt: new Date().toISOString(), count: articles.length, articles: articles.length ? articles : fallbackArticles })
+      body: JSON.stringify({ updatedAt: new Date().toISOString(), count: articles.length, source: 'Sport.pl', articles: articles.length ? articles : fallbackArticles })
     }
   } catch (error) {
+    const fallback = source === 'bbc' ? bbcFallbackArticles : fallbackArticles
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ updatedAt: new Date().toISOString(), count: fallbackArticles.length, articles: fallbackArticles, error: error.message })
+      body: JSON.stringify({ updatedAt: new Date().toISOString(), count: fallback.length, source: source === 'bbc' ? 'BBC Sport' : 'Sport.pl', articles: fallback, error: error.message })
     }
   }
 }

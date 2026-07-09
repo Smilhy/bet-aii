@@ -5508,60 +5508,6 @@ function renderBetaiWorldMapIconV34(icon = 'spark') {
   return <svg viewBox="0 0 24 24"><path d="M12 3.5v17"/><path d="M3.5 12h17"/><path d="m6.4 6.4 11.2 11.2"/><path d="m17.6 6.4-11.2 11.2"/></svg>
 }
 
-
-// WERSJA 39 — stabilne pozycje pinezek mapy: kliknięcie nie przelicza układu i nie przesuwa flag.
-const BETAI_WORLD_NODE_POSITIONS_V39 = Object.freeze({
-  PL: { x: 47, y: 18, tx: '-50%', ty: '0%' },
-  GB: { x: 33, y: 82, tx: '-50%', ty: '-100%' },
-  UK: { x: 33, y: 82, tx: '-50%', ty: '-100%' },
-  US: { x: 13, y: 50, tx: '0%', ty: '-50%' },
-  DE: { x: 20, y: 32, tx: '0%', ty: '-50%' },
-  BR: { x: 25, y: 22, tx: '0%', ty: '0%' },
-  JP: { x: 86, y: 30, tx: '-100%', ty: '-50%' },
-  IT: { x: 82, y: 46, tx: '-100%', ty: '-50%' },
-  CA: { x: 86, y: 57, tx: '-100%', ty: '-50%' },
-  AU: { x: 82, y: 74, tx: '-100%', ty: '-100%' },
-  NL: { x: 64, y: 84, tx: '-50%', ty: '-100%' },
-  CH: { x: 50, y: 88, tx: '-50%', ty: '-100%' },
-  BE: { x: 41, y: 86, tx: '-50%', ty: '-100%' },
-  PT: { x: 28, y: 82, tx: '-50%', ty: '-100%' },
-  IN: { x: 20, y: 72, tx: '0%', ty: '-50%' },
-  FR: { x: 18, y: 64, tx: '0%', ty: '-50%' },
-  ES: { x: 16, y: 52, tx: '0%', ty: '-50%' },
-  SE: { x: 58, y: 16, tx: '-50%', ty: '0%' },
-  NO: { x: 40, y: 14, tx: '-50%', ty: '0%' },
-  DK: { x: 30, y: 22, tx: '0%', ty: '0%' },
-  IE: { x: 24, y: 40, tx: '0%', ty: '-50%' },
-  AT: { x: 57, y: 78, tx: '-50%', ty: '-100%' },
-  CZ: { x: 51, y: 26, tx: '-50%', ty: '0%' },
-  SK: { x: 60, y: 28, tx: '-50%', ty: '0%' },
-  UA: { x: 70, y: 26, tx: '-100%', ty: '0%' },
-  RO: { x: 76, y: 39, tx: '-100%', ty: '-50%' },
-  GR: { x: 74, y: 66, tx: '-100%', ty: '-50%' },
-  TR: { x: 80, y: 36, tx: '-100%', ty: '-50%' },
-  CN: { x: 86, y: 42, tx: '-100%', ty: '-50%' },
-  KR: { x: 88, y: 36, tx: '-100%', ty: '-50%' },
-  MX: { x: 15, y: 58, tx: '0%', ty: '-50%' },
-  AR: { x: 35, y: 86, tx: '-50%', ty: '-100%' },
-  ZZ: { x: 84, y: 84, tx: '-100%', ty: '-100%' }
-})
-
-function getBetaiWorldNodeStablePositionV39(code = 'ZZ') {
-  const clean = String(code || 'ZZ').toUpperCase() || 'ZZ'
-  if (BETAI_WORLD_NODE_POSITIONS_V39[clean]) return BETAI_WORLD_NODE_POSITIONS_V39[clean]
-
-  let hash = 0
-  for (let i = 0; i < clean.length; i += 1) hash = ((hash * 31) + clean.charCodeAt(i)) >>> 0
-  const ring = hash % 3
-  const radius = ring === 0 ? 34 : ring === 1 ? 41 : 46
-  const angle = (-90 + (hash % 360)) * Math.PI / 180
-  const x = Math.max(9, Math.min(91, 50 + Math.cos(angle) * radius))
-  const y = Math.max(10, Math.min(90, 50 + Math.sin(angle) * radius))
-  const tx = x < 24 ? '0%' : x > 76 ? '-100%' : '-50%'
-  const ty = y < 17 ? '0%' : y > 83 ? '-100%' : '-50%'
-  return { x, y, tx, ty }
-}
-
 function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = null }) {
   const lang = useBetaiLanguageState()
   const t = (value) => translateBetaiTextValue(value, lang)
@@ -5739,9 +5685,18 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
     ? (selectedCountryRow.count === 1 && selectedCountryRow.code !== 'ZZ' ? t('pierwszy użytkownik z tego kraju') : selectedCountryTodayCountV38 > 0 ? `${selectedCountryTodayCountV38} ${t('dzisiaj')}` : t('brak nowych rejestracji dzisiaj'))
     : ''
 
-  const premiumCountryNodes = (filteredCountryRows.length ? filteredCountryRows : countryRows).slice(0, 20).map((country, index) => {
-    const stablePosition = getBetaiWorldNodeStablePositionV39(country.code)
-    return { ...country, _x: stablePosition.x, _y: stablePosition.y, _tx: stablePosition.tx, _ty: stablePosition.ty, _stableOrder: index }
+  const premiumCountryNodes = (filteredCountryRows.length ? filteredCountryRows : countryRows).slice(0, 20).map((country, index, arr) => {
+    const total = Math.max(arr.length, 1)
+    const ring = index % 3
+    const radius = ring === 0 ? 34 : ring === 1 ? 42 : 46
+    const angle = (-90 + (index * 360 / total) + (ring === 1 ? 8 : ring === 2 ? -8 : 0)) * Math.PI / 180
+    const rawX = 50 + Math.cos(angle) * radius
+    const rawY = 50 + Math.sin(angle) * radius
+    const x = Math.max(9, Math.min(91, rawX))
+    const y = Math.max(10, Math.min(90, rawY))
+    const tx = x < 24 ? '0%' : x > 76 ? '-100%' : '-50%'
+    const ty = y < 17 ? '0%' : y > 83 ? '-100%' : '-50%'
+    return { ...country, _x: x, _y: y, _tx: tx, _ty: ty }
   })
 
   const remainingCountriesCount = Math.max(0, filteredCountryRows.length - premiumCountryNodes.length)
@@ -6022,20 +5977,83 @@ function WorldRegisteredMapView({ user = null, onOpenTipster = null, onToast = n
 
 function AnimatedDashboardHero() {
   const lang = useBetaiLanguageState()
-  const heroSlides = [
-    { src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/worldcup-2026-hero.jpg', lang), alt: 'Zaczynamy Mistrzostwa Świata 2026 — typy AI, emocje na żywo i mundialowe analizy' },
-    { src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-1.png', lang), alt: 'Bet+AI platforma — typy, analiza i społeczność' },
-    { src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-2.png', lang), alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
-    { src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-3.png', lang), alt: 'Bet+AI rewards — coiny, dropy, typy i nagrody' },
-    { src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-4.png', lang), alt: 'Bet+AI community — społeczność typerów i live chat' },
-    { src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-5.png', lang), alt: 'Bet+AI platform — AI analizuje mecze za Ciebie' },
-    { src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-6.png', lang), alt: 'Bet+AI media — artykuły, newsy, PPV i wyniki live' }
-  ]
+  const [dashboardNews, setDashboardNews] = useState([])
+  const [dashboardNewsUpdatedAt, setDashboardNewsUpdatedAt] = useState(null)
   const [panel, setPanel] = useState(0)
   const [isHeroPaused, setIsHeroPaused] = useState(false)
   const heroSwipeStart = useRef(null)
+  const dashboardNewsSource = lang === 'en' ? 'bbc' : 'sportpl'
+
+  useEffect(() => {
+    let isMounted = true
+    let intervalId = null
+
+    const loadDashboardSportsNews = async () => {
+      try {
+        const params = new URLSearchParams({
+          limit: '16',
+          source: dashboardNewsSource,
+          mode: 'hero',
+          t: String(Date.now()),
+        })
+        const response = await fetch(`/.netlify/functions/sportpl-articles?${params.toString()}`, { cache: 'no-store' })
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        const payload = await response.json()
+        const articles = Array.isArray(payload?.articles) ? payload.articles : []
+        const important = articles.filter(isImportantSportPlNews)
+        const selected = (important.length ? important : articles)
+          .filter(item => item?.title && item?.url)
+          .slice(0, 4)
+        if (!isMounted) return
+        setDashboardNews(selected)
+        setDashboardNewsUpdatedAt(payload?.updatedAt || new Date().toISOString())
+      } catch (_) {
+        if (!isMounted) return
+        setDashboardNews([])
+        setDashboardNewsUpdatedAt(null)
+      }
+    }
+
+    loadDashboardSportsNews()
+    intervalId = window.setInterval(loadDashboardSportsNews, 10 * 60 * 1000)
+    return () => {
+      isMounted = false
+      if (intervalId) window.clearInterval(intervalId)
+    }
+  }, [dashboardNewsSource])
+
+  const staticHeroSlides = [
+    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/worldcup-2026-hero.jpg', lang), alt: 'Zaczynamy Mistrzostwa Świata 2026 — typy AI, emocje na żywo i mundialowe analizy' },
+    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-1.png', lang), alt: 'Bet+AI platforma — typy, analiza i społeczność' },
+    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-2.png', lang), alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
+    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-3.png', lang), alt: 'Bet+AI rewards — coiny, dropy, typy i nagrody' },
+    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-4.png', lang), alt: 'Bet+AI community — społeczność typerów i live chat' },
+    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-5.png', lang), alt: 'Bet+AI platform — AI analizuje mecze za Ciebie' },
+    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-6.png', lang), alt: 'Bet+AI media — artykuły, newsy, PPV i wyniki live' }
+  ]
+
+  const newsHeroSlides = dashboardNews.map((item, index) => ({
+    type: 'news',
+    key: `news-${dashboardNewsSource}-${item.id || item.url || index}`,
+    tag: lang === 'en' ? 'BREAKING SPORT' : 'PILNY KOMUNIKAT',
+    source: lang === 'en' ? 'BBC SPORT' : 'SPORT.PL',
+    title: item.title || (lang === 'en' ? 'Important sports update' : 'Ważny komunikat sportowy'),
+    excerpt: item.excerpt || (lang === 'en' ? 'Open the full story for more details.' : 'Kliknij, aby przeczytać pełny komunikat.'),
+    meta: getBetaiDashboardNewsRelativeTime(item.publishedAt, lang),
+    updated: getBetaiDashboardNewsRelativeTime(dashboardNewsUpdatedAt, lang),
+    url: item.url,
+    image: getSportPlImageSrc(item),
+    rawImage: getSportPlRawImage(item),
+    index
+  }))
+
+  const heroSlides = [...newsHeroSlides, ...staticHeroSlides]
 
   useEffect(() => { setPanel(0) }, [lang])
+
+  useEffect(() => {
+    if (panel >= heroSlides.length) setPanel(0)
+  }, [heroSlides.length, panel])
 
   useEffect(() => {
     if (isHeroPaused || heroSlides.length <= 1) return undefined
@@ -6052,6 +6070,15 @@ function AnimatedDashboardHero() {
     if (Math.abs(diff) > 40) moveHeroSlide(diff < 0 ? 1 : -1)
   }
 
+  const openDashboardNews = (slide) => {
+    if (!slide?.url) return
+    try {
+      window.open(slide.url, '_blank', 'noopener,noreferrer')
+    } catch (_) {
+      window.location.href = slide.url
+    }
+  }
+
   return (
     <section
       className="betai-dashboard-hero-v551"
@@ -6061,14 +6088,29 @@ function AnimatedDashboardHero() {
       onPointerDown={(event) => { heroSwipeStart.current = event.clientX }}
       onPointerUp={handleHeroPointerUp}
     >
-      <div className="betai-dashboard-stage-v551" aria-hidden="true">
+      <div className="betai-dashboard-stage-v551">
         {heroSlides.map((slide, index) => {
           const previous = (panel - 1 + heroSlides.length) % heroSlides.length
           const next = (panel + 1) % heroSlides.length
           const shouldLoad = index === panel || index === previous || index === next
+          const slideKey = slide.key || slide.src || `${slide.type}-${index}`
           return (
-            <div key={slide.src} className={`betai-dashboard-slide-v551 ${panel === index ? 'active' : ''}`}>
-              {shouldLoad ? (
+            <div key={slideKey} className={`betai-dashboard-slide-v551 ${panel === index ? 'active' : ''} ${slide.type === 'news' ? 'news-slide-v40' : ''}`}>
+              {shouldLoad && slide.type === 'news' ? (
+                <button type="button" className={`betai-dashboard-news-v40 ${slide.image ? 'has-image-v40' : ''}`} onClick={() => openDashboardNews(slide)}>
+                  {slide.image ? (
+                    <img src={slide.image} data-original-src={slide.rawImage || ''} alt="" draggable="false" decoding="async" loading={index === panel ? 'eager' : 'lazy'} referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.remove() }} />
+                  ) : null}
+                  <span className="betai-dashboard-news-overlay-v40" aria-hidden="true"></span>
+                  <span className="betai-dashboard-news-badge-v40"><b>{slide.tag}</b><em>{slide.source}</em></span>
+                  <span className="betai-dashboard-news-copy-v40">
+                    <small>{slide.meta} · {lang === 'en' ? 'updated' : 'aktualizacja'} {slide.updated}</small>
+                    <strong>{slide.title}</strong>
+                    <span>{slide.excerpt}</span>
+                    <i>{lang === 'en' ? 'Open full story' : 'Otwórz pełny artykuł'} →</i>
+                  </span>
+                </button>
+              ) : shouldLoad ? (
                 <img
                   src={slide.src}
                   alt=""
@@ -16927,6 +16969,19 @@ function getSportPlRelativeTime(value) {
   return new Date(time).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
+function getBetaiDashboardNewsRelativeTime(value, lang = 'pl') {
+  const time = value ? new Date(value).getTime() : Date.now()
+  if (!Number.isFinite(time)) return lang === 'en' ? 'Now' : 'Teraz'
+  const diff = Math.max(0, Date.now() - time)
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return lang === 'en' ? 'Now' : 'Teraz'
+  if (minutes < 60) return lang === 'en' ? `${minutes} min ago` : `${minutes} min temu`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return lang === 'en' ? `${hours}h ago` : `${hours}h temu`
+  const locale = lang === 'en' ? 'en-GB' : 'pl-PL'
+  return new Date(time).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+
 function getSportPlInitials(title = '') {
   const words = String(title).replace(/[^a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ0-9 ]/g, ' ').split(/\s+/).filter(Boolean)
   return (words[0]?.[0] || 'S').toUpperCase() + (words[1]?.[0] || 'P').toUpperCase()
@@ -16957,7 +17012,10 @@ function getSportPlRawImage(item = {}) {
 
 function isImportantSportPlNews(item = {}) {
   const text = `${item.title || ''} ${item.excerpt || ''} ${item.category || ''}`.toLowerCase()
-  return ['pilne', 'oficjalnie', 'kontuzja', 'transfer', 'zwolniony', 'zmarł', 'afera', 'sensacja', 'skandal', 'polska', 'reprezentacja', 'świątek', 'lewandowski', 'liga mistrzów', 'finał'].some(word => text.includes(word))
+  return [
+    'pilne', 'oficjalnie', 'kontuzja', 'transfer', 'zwolniony', 'zmarł', 'afera', 'sensacja', 'skandal', 'polska', 'reprezentacja', 'świątek', 'lewandowski', 'liga mistrzów', 'finał',
+    'breaking', 'official', 'injury', 'injured', 'transfer', 'sacked', 'dies', 'died', 'scandal', 'shock', 'final', 'champions league', 'world cup', 'premier league', 'england', 'wales', 'scotland'
+  ].some(word => text.includes(word))
 }
 
 function BetaiLiveScoresProV1790({ liveArticles = [] }) {
