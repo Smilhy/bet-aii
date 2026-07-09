@@ -6104,7 +6104,6 @@ function AnimatedDashboardHero() {
                   <span className="betai-dashboard-news-overlay-v40" aria-hidden="true"></span>
                   <span className="betai-dashboard-news-badge-v40"><b>{slide.tag}</b><em>{slide.source}</em></span>
                   <span className="betai-dashboard-news-copy-v40">
-                    <small>{slide.meta} · {lang === 'en' ? 'updated' : 'aktualizacja'} {slide.updated}</small>
                     <strong>{slide.title}</strong>
                     <span>{slide.excerpt}</span>
                     <i>{lang === 'en' ? 'Open full story' : 'Otwórz pełny artykuł'} →</i>
