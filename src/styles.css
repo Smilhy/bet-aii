@@ -79609,3 +79609,13 @@ html.betai-opera-stability-v29 .app-shell *::after{
   .betai-dashboard-news-copy-v40 strong{font-size:clamp(18px, 5.2vw, 24px)!important;line-height:1.08!important;}
   .betai-dashboard-news-copy-v40 i{padding:7px 10px!important;font-size:10px!important;}
 }
+
+/* WERSJA 43 — dashboard hero: usunięta dolna kreska z pilnego komunikatu, bez zmiany logiki */
+.betai-dashboard-news-v40::after{
+  content:none!important;
+  display:none!important;
+  opacity:0!important;
+  height:0!important;
+  background:none!important;
+  box-shadow:none!important;
+}
