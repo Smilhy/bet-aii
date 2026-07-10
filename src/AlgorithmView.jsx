@@ -75,7 +75,22 @@ const TEXT = {
     league: 'Liga',
     market: 'Rodzaj typu',
     range: 'Zakres',
-    noStats: 'Statystyki pojawią się po rozliczeniu pierwszych zakładów.'
+    noStats: 'Statystyki pojawią się po rozliczeniu pierwszych zakładów.',
+    yieldCard: 'Yield',
+    yieldCardSub: 'Zwrot z rozliczonych typów',
+    profitCardSub: 'Bilans algorytmu',
+    algorithmTypes: 'Typy algorytmu',
+    algorithmTypesSub: 'Wszystkie zapisane',
+    wonCard: 'Wygrane',
+    wonCardSub: 'Rozliczone na plus',
+    lostCard: 'Przegrane',
+    lostCardSub: 'Rozliczone na minus',
+    pendingCardSub: 'Czekają na wynik',
+    stakesCard: 'Stawki algorytmu',
+    stakesCardSub: 'Łącznie zapisane',
+    avgOddsCardSub: 'Średnia kursów',
+    maxOdds: 'Max kurs',
+    maxOddsSub: 'Najwyższy kurs'
   },
   en: {
     title: 'Over / Under 2.5 Algorithm',
@@ -114,6 +129,19 @@ function statusMeta(row, t) {
 
 function Metric({ label, value, tone = '' }) {
   return <article className={`algorithm-metric-v1880 ${tone}`}><span>{label}</span><strong>{value}</strong></article>
+}
+
+function AlgorithmSummaryCard({ label, value, subtitle, icon, tone = '' }) {
+  return (
+    <article className={`algorithm-summary-card-v1883 ${tone}`}>
+      <div className="algorithm-summary-copy-v1883">
+        <span>{label}</span>
+        <strong>{value}</strong>
+        <small>{subtitle}</small>
+      </div>
+      <i aria-hidden="true">{icon}</i>
+    </article>
+  )
 }
 
 function TeamFormula({ side, row, t }) {
@@ -400,6 +428,17 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
     })
   }
 
+  const summaryCards = useMemo(() => {
+    const savedBets = rows.filter(row => row.selected_market !== 'no_bet' && Number(row.stake || 0) > 0)
+    const totalStake = savedBets.reduce((sum, row) => sum + Number(row.stake || 0), 0)
+    const odds = savedBets.map(row => Number(row.selected_odds || 0)).filter(value => Number.isFinite(value) && value > 0)
+    const averageOdds = odds.length ? odds.reduce((sum, value) => sum + value, 0) / odds.length : 0
+    const maxOdds = odds.length ? Math.max(...odds) : 0
+    const profitValue = Number(summary.profit || 0)
+    const roiValue = Number(summary.roi || 0)
+    return { totalStake, averageOdds, maxOdds, profitValue, roiValue }
+  }, [rows, summary.profit, summary.roi])
+
   return (
     <div className="algorithm-page-v1880">
       <section className="algorithm-hero-v1880">
@@ -411,16 +450,17 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
         </div>
       </section>
 
-      <section className="algorithm-metrics-v1880">
-        <Metric label={t.profit} value={signed(summary.profit || 0, 2, ' j.')} tone={Number(summary.profit || 0) >= 0 ? 'positive' : 'negative'} />
-        <Metric label={t.roi} value={signed(summary.roi || 0, 2, '%')} tone={Number(summary.roi || 0) >= 0 ? 'positive' : 'negative'} />
-        <Metric label={t.hitRate} value={`${number(summary.hit_rate || 0, 1)}%`} />
-        <Metric label={t.bets} value={String(summary.bets || 0)} />
-        <Metric label={t.pending} value={String(summary.pending || 0)} />
-        <Metric label={t.analyzed} value={String(summary.analyzed || 0)} />
+      <section className="algorithm-summary-grid-v1883">
+        <AlgorithmSummaryCard label={t.yieldCard} value={signed(summaryCards.roiValue, 2, '%')} subtitle={t.yieldCardSub} icon="◔" tone={summaryCards.roiValue >= 0 ? 'is-success' : 'is-danger'} />
+        <AlgorithmSummaryCard label={t.profit} value={signed(summaryCards.profitValue, 2, ' j.')} subtitle={t.profitCardSub} icon="₿" tone={summaryCards.profitValue >= 0 ? 'is-success' : 'is-danger'} />
+        <AlgorithmSummaryCard label={t.algorithmTypes} value={String(summary.bets || 0)} subtitle={t.algorithmTypesSub} icon="↗" />
+        <AlgorithmSummaryCard label={t.wonCard} value={String(summary.won || 0)} subtitle={t.wonCardSub} icon="♛" tone="is-success" />
+        <AlgorithmSummaryCard label={t.lostCard} value={String(summary.lost || 0)} subtitle={t.lostCardSub} icon="☹" tone="is-danger" />
+        <AlgorithmSummaryCard label={t.pending} value={String(summary.pending || 0)} subtitle={t.pendingCardSub} icon="◷" tone="is-warning" />
+        <AlgorithmSummaryCard label={t.stakesCard} value={`${number(summaryCards.totalStake, 2)} j.`} subtitle={t.stakesCardSub} icon="◎" />
+        <AlgorithmSummaryCard label={t.avgOdds} value={number(summaryCards.averageOdds, 2)} subtitle={t.avgOddsCardSub} icon="⌁" />
+        <AlgorithmSummaryCard label={t.maxOdds} value={number(summaryCards.maxOdds, 2)} subtitle={t.maxOddsSub} icon="↗" />
       </section>
-
-      <section className="algorithm-formula-note-v1880"><div><span>∑</span><div><h2>{t.formula}</h2><p>{t.formulaCopy}</p></div></div><code>Stawka = 1 j. · wybór = wyższa szansa · próg ≥ 51%</code></section>
 
       {(error || notice) && <div className={`algorithm-message-v1880 ${error ? 'is-error' : 'is-success'}`}>{error ? `${t.errorPrefix} ${error}` : notice}</div>}
 
