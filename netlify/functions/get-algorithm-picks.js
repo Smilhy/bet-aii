@@ -26,7 +26,8 @@ exports.handler = async function(event) {
     const { data, error } = await query
     if (error) throw error
     const rows = Array.isArray(data) ? data : []
-    const bets = rows.filter(row => row.selected_market !== 'no_bet' && Number(row.stake || 0) > 0)
+    const waiting = rows.filter(row => String(row.analysis_state || 'ready') !== 'ready')
+    const bets = rows.filter(row => String(row.analysis_state || 'ready') === 'ready' && row.selected_market !== 'no_bet' && Number(row.stake || 0) > 0)
     const settled = bets.filter(row => ['won', 'lost'].includes(String(row.status || '')))
     const won = settled.filter(row => row.status === 'won').length
     const lost = settled.filter(row => row.status === 'lost').length
@@ -53,6 +54,8 @@ exports.handler = async function(event) {
       latest_settlement: latestRuns.find(row => row.run_type === 'settle') || null,
       summary: {
         analyzed: rows.length,
+        waiting: waiting.length,
+        ready: rows.length - waiting.length,
         bets: bets.length,
         settled: settled.length,
         financially_settled: financiallySettled.length,
@@ -62,7 +65,7 @@ exports.handler = async function(event) {
         lost,
         pending,
         voided,
-        skipped: rows.filter(row => row.selected_market === 'no_bet').length,
+        skipped: rows.filter(row => String(row.analysis_state || 'ready') === 'ready' && row.selected_market === 'no_bet').length,
         over_bets: bets.filter(row => row.selected_market === 'over_2_5').length,
         under_bets: bets.filter(row => row.selected_market === 'under_2_5').length,
         profit: round(profit, 2),
@@ -76,7 +79,7 @@ exports.handler = async function(event) {
         version: MODEL_VERSION,
         stake: 1,
         min_probability: 51,
-        rule: 'Wybór strony z wyższym prawdopodobieństwem modelu. Zakład przy minimum 51%. Brak kursu nie blokuje typu; ROI liczy się tylko dla rekordów z realnym kursem.'
+        rule: 'Wszystkie przyszłe mecze są zapisywane od razu. Następnie automat kolejkuje statystyki, wybiera wyższe prawdopodobieństwo i zapisuje 1 jednostkę przy minimum 51%. Brak kursu nie blokuje typu.'
       },
       automation: {
         scan_every_minutes: 15,

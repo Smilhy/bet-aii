@@ -21,6 +21,7 @@ exports.handler = async function(event = {}) {
       sampleSize: query.sampleSize,
       minFormMatches: query.minFormMatches,
       maxFixtures: query.maxFixtures,
+      processBatch: query.processBatch,
       minProbability: query.minProbability,
       concurrency: query.concurrency,
       oddsMaxPages: query.oddsMaxPages,

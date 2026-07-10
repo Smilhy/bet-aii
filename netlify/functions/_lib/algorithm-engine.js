@@ -10,7 +10,7 @@ const API_BASE = 'https://v3.football.api-sports.io'
 const FINISHED_STATUSES = new Set(['FT', 'AET', 'PEN'])
 const UPCOMING_STATUSES = new Set(['NS', 'TBD'])
 const SETTLED_STATUSES = new Set(['won', 'lost', 'void'])
-const MODEL_VERSION = 'pressure-ou25-v3-all-fixtures-probability-51'
+const MODEL_VERSION = 'pressure-ou25-v4-queue-cache-all-fixtures'
 
 function getApiKey() {
   return process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || ''
@@ -76,7 +76,11 @@ async function apiFetch(path, timeoutMs = 14000) {
     try { payload = JSON.parse(text) } catch (_) { payload = null }
     const errors = payload?.errors && typeof payload.errors === 'object' ? payload.errors : null
     if (!response.ok || (errors && Object.keys(errors).length)) {
-      throw new Error(`API-Football ${response.status}: ${errors ? JSON.stringify(errors) : text.slice(0, 240)}`)
+      const error = new Error(`API-Football ${response.status}: ${errors ? JSON.stringify(errors) : text.slice(0, 240)}`)
+      error.status = response.status
+      error.apiErrors = errors
+      error.isRateLimit = response.status === 429 || /rate|limit|quota|requests/i.test(error.message)
+      throw error
     }
     return payload || {}
   } finally {
@@ -90,7 +94,7 @@ async function fetchFixturesForDate(date, timezone) {
 }
 
 async function fetchOddsForDate(date, maxPagesInput) {
-  const maxPages = Math.max(1, Math.min(100, Number(maxPagesInput || process.env.ALGORITHM_ODDS_MAX_PAGES || 50) || 50))
+  const maxPages = Math.max(1, Math.min(100, Number(maxPagesInput || process.env.ALGORITHM_ODDS_MAX_PAGES || 3) || 3))
   const rows = []
   let page = 1
   while (page <= maxPages) {
@@ -110,6 +114,18 @@ async function fetchOddsForDate(date, maxPagesInput) {
     page += 1
   }
   return rows
+}
+
+async function fetchOddsForFixture(fixtureId) {
+  if (!fixtureId) return null
+  try {
+    const payload = await apiFetch(`/odds?fixture=${encodeURIComponent(fixtureId)}`, 12000)
+    const map = buildOverUnderOddsMap(Array.isArray(payload.response) ? payload.response : [])
+    return map.get(String(fixtureId)) || null
+  } catch (error) {
+    console.warn(`algorithm fixture odds ${fixtureId} skipped`, error?.message || error)
+    return null
+  }
 }
 
 function normalizeOddLabel(value) {
@@ -227,13 +243,51 @@ async function mapConcurrent(items, limit, mapper) {
 
 const fixtureStatsMemory = new Map()
 
-async function fetchFixtureStatistics(fixtureId) {
+async function readFixtureStatsCache(supabase, fixtureId) {
+  try {
+    const { data, error } = await supabase
+      .from('algorithm_fixture_stats_cache')
+      .select('statistics')
+      .eq('fixture_id', Number(fixtureId))
+      .maybeSingle()
+    if (error) {
+      if (/algorithm_fixture_stats_cache/i.test(String(error.message || ''))) return null
+      throw error
+    }
+    const rows = Array.isArray(data?.statistics) ? data.statistics : null
+    return rows && rows.length ? rows : null
+  } catch (error) {
+    console.warn('algorithm fixture stats cache read skipped', error?.message || error)
+    return null
+  }
+}
+
+async function writeFixtureStatsCache(supabase, fixtureId, rows) {
+  if (!Array.isArray(rows) || !rows.length) return
+  try {
+    await supabase.from('algorithm_fixture_stats_cache').upsert({
+      fixture_id: Number(fixtureId),
+      statistics: rows,
+      fetched_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'fixture_id' })
+  } catch (error) {
+    console.warn('algorithm fixture stats cache write skipped', error?.message || error)
+  }
+}
+
+async function fetchFixtureStatistics(supabase, fixtureId) {
   const key = String(fixtureId || '')
   if (!key) return []
   if (!fixtureStatsMemory.has(key)) {
-    fixtureStatsMemory.set(key, apiFetch(`/fixtures/statistics?fixture=${encodeURIComponent(key)}`, 12000)
-      .then(payload => Array.isArray(payload.response) ? payload.response : [])
-      .catch(() => []))
+    fixtureStatsMemory.set(key, (async () => {
+      const cached = await readFixtureStatsCache(supabase, key)
+      if (cached) return cached
+      const payload = await apiFetch(`/fixtures/statistics?fixture=${encodeURIComponent(key)}`, 12000)
+      const rows = Array.isArray(payload.response) ? payload.response : []
+      if (rows.length) await writeFixtureStatsCache(supabase, key, rows)
+      return rows
+    })())
   }
   return fixtureStatsMemory.get(key)
 }
@@ -321,7 +375,7 @@ async function fetchTeamForm({ supabase, teamId, teamName, asOfKickoff, sampleSi
   const valid = []
   for (const fixture of fixtures) {
     const fixtureId = fixture?.fixture?.id
-    const statistics = await fetchFixtureStatistics(fixtureId)
+    const statistics = await fetchFixtureStatistics(supabase, fixtureId)
     const parsed = parseTeamFixtureStats(statistics, teamId)
     if (parsed) valid.push({ ...parsed, fixtureId: Number(fixtureId) })
     if (valid.length >= sampleSize) break
@@ -414,6 +468,10 @@ function buildAlgorithmRow(fixture, odds, homeForm, awayForm, sampleSize, minPro
     settlement_source: null,
     settled_at: null,
     model_version: MODEL_VERSION,
+    analysis_state: 'ready',
+    analysis_error: '',
+    analysis_attempts: 0,
+    analysis_updated_at: now,
     formula_snapshot: {
       pressure_probability_points: [
         [24, 42.2], [28, 42.9], [32, 43.6], [36, 44.2],
@@ -431,6 +489,67 @@ function buildAlgorithmRow(fixture, odds, homeForm, awayForm, sampleSize, minPro
     },
     updated_at: now
   }
+}
+
+function fixturePriority(fixture = {}, oddsMap = new Map(), existingMap = new Map()) {
+  const fixtureId = String(fixture?.fixture?.id || '')
+  const league = `${fixture?.league?.name || ''} ${fixture?.league?.country || ''}`.toLowerCase()
+  const existing = existingMap.get(fixtureId) || {}
+  let score = 0
+  if (oddsMap.has(fixtureId)) score += 10000
+  if (/world cup|mistrzostw|champions league|europa league|conference league|premier league|la liga|serie a|bundesliga|ligue 1|ekstraklasa/.test(league)) score += 5000
+  if (String(existing.analysis_state || '') === 'waiting_stats') score += 1000
+  score -= Math.min(100, Number(existing.analysis_attempts || 0)) * 25
+  const kickoff = fixtureKickoffMs(fixture)
+  if (kickoff) score += Math.max(0, 2000 - Math.floor((kickoff - Date.now()) / 60000))
+  return score
+}
+
+function buildWaitingRow(fixture, odds, previous = {}, sampleSize = 5) {
+  const now = new Date().toISOString()
+  const attempts = Math.max(0, Number(previous.analysis_attempts || 0))
+  return {
+    fixture_id: Number(fixture?.fixture?.id),
+    sport: 'football',
+    league_id: Number(fixture?.league?.id || 0) || null,
+    league_name: String(fixture?.league?.name || ''),
+    country: String(fixture?.league?.country || ''),
+    home_team_id: Number(fixture?.teams?.home?.id || 0) || null,
+    away_team_id: Number(fixture?.teams?.away?.id || 0) || null,
+    home_team: String(fixture?.teams?.home?.name || 'Gospodarze'),
+    away_team: String(fixture?.teams?.away?.name || 'Goście'),
+    home_logo: String(fixture?.teams?.home?.logo || ''),
+    away_logo: String(fixture?.teams?.away?.logo || ''),
+    kickoff: fixture?.fixture?.date || null,
+    sample_size: sampleSize,
+    over_odds: odds?.over?.best || previous.over_odds || null,
+    under_odds: odds?.under?.best || previous.under_odds || null,
+    over_bookmaker: odds?.over?.bestBookmaker || previous.over_bookmaker || '',
+    under_bookmaker: odds?.under?.bestBookmaker || previous.under_bookmaker || '',
+    over_market_books: odds?.over?.books || previous.over_market_books || 0,
+    under_market_books: odds?.under?.books || previous.under_market_books || 0,
+    selected_market: 'no_bet',
+    selected_label: 'Trwa pobieranie statystyk',
+    selected_probability: 0,
+    selected_odds: 0,
+    stake: 0,
+    status: 'no_bet',
+    model_version: MODEL_VERSION,
+    analysis_state: 'waiting_stats',
+    analysis_error: String(previous.analysis_error || ''),
+    analysis_attempts: attempts,
+    analysis_updated_at: now,
+    formula_snapshot: {
+      analysis_state: 'waiting_stats',
+      selection_reason: 'awaiting_team_form',
+      odds_available: Boolean((odds?.over?.best || 0) > 1 || (odds?.under?.best || 0) > 1)
+    },
+    updated_at: now
+  }
+}
+
+function isRateLimitError(error) {
+  return Boolean(error?.isRateLimit || /429|rate|limit|quota|requests/i.test(String(error?.message || error || '')))
 }
 
 async function recordAlgorithmRun(supabase, runType, status, startedAt, details = {}) {
@@ -457,14 +576,13 @@ async function generateAlgorithmPicks(options = {}) {
   const supabase = getSupabaseAdmin()
   const timezone = String(options.timezone || process.env.APP_TIMEZONE || 'Europe/Warsaw')
   const sampleSize = Math.max(3, Math.min(10, Number(options.sampleSize || process.env.ALGORITHM_FORM_MATCHES || 5) || 5))
-  const minFormMatches = Math.max(1, Math.min(sampleSize, Number(options.minFormMatches || process.env.ALGORITHM_MIN_FORM_MATCHES || 1) || 1))
-  const maxFixtures = Math.max(1, Math.min(500, Number(options.maxFixtures || process.env.ALGORITHM_MAX_FIXTURES || 250) || 250))
+  const minFormMatches = Math.max(1, Math.min(sampleSize, Number(options.minFormMatches || process.env.ALGORITHM_MIN_FORM_MATCHES || 3) || 3))
+  const discoveryLimit = Math.max(1, Math.min(2000, Number(options.maxFixtures || process.env.ALGORITHM_MAX_FIXTURES || 1000) || 1000))
+  const processBatch = Math.max(1, Math.min(50, Number(options.processBatch || process.env.ALGORITHM_PROCESS_BATCH || 10) || 10))
   const days = Math.max(1, Math.min(3, Number(options.days || process.env.ALGORITHM_DAYS || 1) || 1))
   const minProbability = Math.max(50, Math.min(99, Number(options.minProbability ?? process.env.ALGORITHM_MIN_PROBABILITY ?? 51) || 51))
-  const concurrency = Math.max(1, Math.min(8, Number(options.concurrency || process.env.ALGORITHM_CONCURRENCY || 4) || 4))
-  const includeAll = options.includeAll == null
-    ? boolEnv(process.env.ALGORITHM_INCLUDE_ALL, true)
-    : Boolean(options.includeAll)
+  const concurrency = Math.max(1, Math.min(4, Number(options.concurrency || process.env.ALGORITHM_CONCURRENCY || 2) || 2))
+  const includeAll = options.includeAll == null ? boolEnv(process.env.ALGORITHM_INCLUDE_ALL, true) : Boolean(options.includeAll)
   const startDate = String(options.date || dateKeyInTimezone(new Date(), timezone)).slice(0, 10)
   const nowMs = Date.now()
 
@@ -480,48 +598,87 @@ async function generateAlgorithmPicks(options = {}) {
       ])
       if (fixturesResult.status === 'rejected') throw fixturesResult.reason
       fixtures.push(...(fixturesResult.value || []))
-      if (oddsResult.status === 'fulfilled') {
-        oddsRows.push(...(oddsResult.value || []))
-      } else {
-        scanWarnings.push(`Kursy ${date}: ${String(oddsResult.reason?.message || oddsResult.reason)}`)
-      }
+      if (oddsResult.status === 'fulfilled') oddsRows.push(...(oddsResult.value || []))
+      else scanWarnings.push(`Kursy ${date}: ${String(oddsResult.reason?.message || oddsResult.reason)}`)
     }
 
     const oddsMap = buildOverUnderOddsMap(oddsRows)
-    let candidates = fixtures
+    let allCandidates = fixtures
       .filter(fixture => UPCOMING_STATUSES.has(String(fixture?.fixture?.status?.short || '').toUpperCase()))
       .filter(fixture => fixtureKickoffMs(fixture) > nowMs - 15 * 60 * 1000)
       .filter(fixture => includeAll || !isExcludedFixture(fixture))
-      // V1884: kurs O/U 2.5 nie jest już warunkiem wejścia do skanu.
-      // Każdy nierozpoczęty mecz może zostać policzony, a kurs jest dopisywany,
-      // gdy API go udostępni w którymkolwiek kolejnym skanie.
       .sort((a, b) => fixtureKickoffMs(a) - fixtureKickoffMs(b))
+      .slice(0, discoveryLimit)
 
-    const candidateIds = candidates.map(item => Number(item?.fixture?.id)).filter(Boolean)
+    const candidateIds = allCandidates.map(item => Number(item?.fixture?.id)).filter(Boolean)
     const existingMap = new Map()
     if (candidateIds.length) {
       for (const idBatch of chunk(candidateIds, 100)) {
         const { data, error } = await supabase
           .from('algorithm_bets')
-          .select('fixture_id,status,updated_at,over_odds,under_odds,over_bookmaker,under_bookmaker,selected_odds')
+          .select('fixture_id,status,updated_at,over_odds,under_odds,over_bookmaker,under_bookmaker,over_market_books,under_market_books,selected_odds,selected_market,analysis_state,analysis_error,analysis_attempts')
           .in('fixture_id', idBatch)
         if (error) throw error
         ;(data || []).forEach(row => existingMap.set(String(row.fixture_id), row))
       }
     }
 
-    candidates = candidates
-      .filter(fixture => {
-        const existing = existingMap.get(String(fixture?.fixture?.id || ''))
-        if (!existing) return true
-        if (SETTLED_STATUSES.has(String(existing.status || ''))) return false
-        // WERSJA 1882: pending/no_bet są ponownie przeliczane, aby naprawić stare typy
-        // wybrane wcześniej po EV i odświeżyć kurs przed startem.
-        return true
+    // Najpierw zapisujemy KAŻDY znaleziony przyszły mecz jako oczekujący na statystyki.
+    // Dzięki temu mecz nie znika z zakładki tylko dlatego, że API nie zdążyło policzyć formy.
+    const waitingRows = allCandidates
+      .filter(fixture => !existingMap.has(String(fixture?.fixture?.id || '')))
+      .map(fixture => buildWaitingRow(fixture, oddsMap.get(String(fixture?.fixture?.id || '')) || {}, {}, sampleSize))
+    if (waitingRows.length) {
+      for (const rowBatch of chunk(waitingRows, 100)) {
+        const { error } = await supabase.from('algorithm_bets').upsert(rowBatch, {
+          onConflict: 'fixture_id',
+          ignoreDuplicates: true
+        })
+        if (error) throw error
+      }
+      waitingRows.forEach(row => existingMap.set(String(row.fixture_id), row))
+    }
+
+    // Gotowe typy odświeżają kurs bez ponownego zużywania zapytań o historyczne statystyki.
+    const oddsRefreshes = []
+    allCandidates.forEach(fixture => {
+      const fixtureId = String(fixture?.fixture?.id || '')
+      const existing = existingMap.get(fixtureId)
+      const fresh = oddsMap.get(fixtureId)
+      if (!existing || !fresh || String(existing.analysis_state || 'ready') !== 'ready') return
+      const effective = mergeOddsSnapshot(fresh, oddsFromExistingBet(existing))
+      const selectedMarket = String(existing.selected_market || '')
+      const selectedOdds = selectedMarket === 'over_2_5' ? effective.over.best : selectedMarket === 'under_2_5' ? effective.under.best : 0
+      oddsRefreshes.push({
+        fixture_id: Number(fixtureId),
+        over_odds: effective.over.best || null,
+        under_odds: effective.under.best || null,
+        over_bookmaker: effective.over.bestBookmaker || '',
+        under_bookmaker: effective.under.bestBookmaker || '',
+        over_market_books: effective.over.books || 0,
+        under_market_books: effective.under.books || 0,
+        selected_odds: selectedOdds || 0,
+        updated_at: new Date().toISOString()
       })
-      .slice(0, maxFixtures)
+    })
+    if (oddsRefreshes.length) {
+      for (const row of oddsRefreshes) {
+        const { fixture_id, ...patch } = row
+        await supabase.from('algorithm_bets').update(patch).eq('fixture_id', fixture_id)
+      }
+    }
+
+    const processCandidates = allCandidates
+      .filter(fixture => {
+        const existing = existingMap.get(String(fixture?.fixture?.id || '')) || {}
+        if (SETTLED_STATUSES.has(String(existing.status || ''))) return false
+        return String(existing.analysis_state || 'waiting_stats') !== 'ready'
+      })
+      .sort((a, b) => fixturePriority(b, oddsMap, existingMap) - fixturePriority(a, oddsMap, existingMap))
+      .slice(0, processBatch)
 
     const errors = []
+    const failurePatches = []
     const teamFormPromises = new Map()
     const getTeamForm = params => {
       const asOfDate = dateKeyInTimezone(new Date(params.asOfKickoff), timezone)
@@ -538,25 +695,46 @@ async function generateAlgorithmPicks(options = {}) {
       return teamFormPromises.get(key)
     }
 
-    const generated = await mapConcurrent(candidates, concurrency, async fixture => {
+    let stopForRateLimit = false
+    const generated = await mapConcurrent(processCandidates, concurrency, async fixture => {
       const fixtureId = String(fixture?.fixture?.id || '')
       const kickoff = fixture?.fixture?.date
       const homeId = fixture?.teams?.home?.id
       const awayId = fixture?.teams?.away?.id
-      if (!fixtureId || !kickoff || !homeId || !awayId) return null
+      if (!fixtureId || !kickoff || !homeId || !awayId || stopForRateLimit) return null
+      const previous = existingMap.get(fixtureId) || {}
       try {
         const [homeForm, awayForm] = await Promise.all([
           getTeamForm({ teamId: homeId, teamName: fixture?.teams?.home?.name, asOfKickoff: kickoff }),
           getTeamForm({ teamId: awayId, teamName: fixture?.teams?.away?.name, asOfKickoff: kickoff })
         ])
-        const previousOdds = oddsFromExistingBet(existingMap.get(fixtureId) || {})
-        const effectiveOdds = mergeOddsSnapshot(oddsMap.get(fixtureId) || {}, previousOdds)
+        const previousOdds = oddsFromExistingBet(previous)
+        let freshOdds = oddsMap.get(fixtureId) || null
+        if (!freshOdds) freshOdds = await fetchOddsForFixture(fixtureId)
+        const effectiveOdds = mergeOddsSnapshot(freshOdds || {}, previousOdds)
         return buildAlgorithmRow(fixture, effectiveOdds, homeForm, awayForm, sampleSize, minProbability)
       } catch (error) {
+        if (isRateLimitError(error)) stopForRateLimit = true
+        const message = String(error?.message || error)
+        const attempts = Number(previous.analysis_attempts || 0) + 1
         errors.push({
           fixture_id: Number(fixtureId),
           match: `${fixture?.teams?.home?.name || ''} - ${fixture?.teams?.away?.name || ''}`,
-          error: String(error?.message || error)
+          error: message
+        })
+        failurePatches.push({
+          fixture_id: Number(fixtureId),
+          analysis_state: 'waiting_stats',
+          analysis_error: message.slice(0, 1000),
+          analysis_attempts: attempts,
+          analysis_updated_at: new Date().toISOString(),
+          formula_snapshot: {
+            analysis_state: 'waiting_stats',
+            selection_reason: isRateLimitError(error) ? 'api_rate_limit_retry' : 'missing_team_form_retry',
+            last_error: message.slice(0, 1000),
+            attempts
+          },
+          updated_at: new Date().toISOString()
         })
         return null
       }
@@ -568,6 +746,10 @@ async function generateAlgorithmPicks(options = {}) {
         const { error } = await supabase.from('algorithm_bets').upsert(rowBatch, { onConflict: 'fixture_id' })
         if (error) throw error
       }
+    }
+    for (const failure of failurePatches) {
+      const { fixture_id, ...patch } = failure
+      await supabase.from('algorithm_bets').update(patch).eq('fixture_id', fixture_id)
     }
 
     const result = {
@@ -581,16 +763,19 @@ async function generateAlgorithmPicks(options = {}) {
       min_probability: minProbability,
       include_all_competitions: includeAll,
       fixtures_loaded: fixtures.length,
+      fixtures_discovered: allCandidates.length,
       fixtures_with_ou25_odds: oddsMap.size,
-      fixtures_without_ou25_odds: Math.max(0, candidates.length - candidates.filter(item => oddsMap.has(String(item?.fixture?.id || ''))).length),
-      candidates_found: candidateIds.length,
-      candidates_considered: candidates.length,
+      waiting_rows_inserted: waitingRows.length,
+      candidates_considered: processCandidates.length,
+      process_batch: processBatch,
       rows_saved: rows.length,
       bets_saved: rows.filter(row => row.selected_market !== 'no_bet').length,
       bets_without_selected_odds: rows.filter(row => row.selected_market !== 'no_bet' && Number(row.selected_odds || 0) <= 1).length,
       no_bet_saved: rows.filter(row => row.selected_market === 'no_bet').length,
       over_saved: rows.filter(row => row.selected_market === 'over_2_5').length,
       under_saved: rows.filter(row => row.selected_market === 'under_2_5').length,
+      waiting_after_scan: Math.max(0, allCandidates.length - rows.length),
+      stopped_for_rate_limit: stopForRateLimit,
       skipped_errors: errors.length,
       warnings: scanWarnings.slice(0, 50),
       errors: errors.slice(0, 50)

@@ -30,7 +30,7 @@ exports.handler = async function() {
   // Fallback, gdy URL nie jest dostępny w środowisku.
   try {
     const settlement = await settleAlgorithmPicks({ limit: 30 })
-    const scan = await generateAlgorithmPicks({ maxFixtures: 8, concurrency: 2, force: true })
+    const scan = await generateAlgorithmPicks({ maxFixtures: 1000, processBatch: 4, concurrency: 1, force: true })
     return { statusCode: 200, body: JSON.stringify({ ok: true, fallback: true, settlement, scan }) }
   } catch (error) {
     console.error('scheduled-generate-algorithm-picks failed', error)
