@@ -11,6 +11,21 @@ function isHiddenTechnicalRow(row = {}) {
   return false
 }
 
+
+function nextScheduledScanIso(intervalMinutes = 15, now = new Date()) {
+  const interval = Math.max(1, Number(intervalMinutes || 15))
+  const next = new Date(now)
+  next.setUTCSeconds(0, 0)
+  const minute = next.getUTCMinutes()
+  const nextMinute = (Math.floor(minute / interval) + 1) * interval
+  if (nextMinute >= 60) {
+    next.setUTCHours(next.getUTCHours() + 1, 0, 0, 0)
+  } else {
+    next.setUTCMinutes(nextMinute, 0, 0)
+  }
+  return next.toISOString()
+}
+
 function average(rows, getter) {
   if (!rows.length) return 0
   return rows.reduce((sum, row) => sum + Number(getter(row) || 0), 0) / rows.length
@@ -60,10 +75,37 @@ exports.handler = async function(event) {
       if (!runError) latestRuns = Array.isArray(runData) ? runData : []
     } catch (_) {}
 
+    let workerLock = null
+    try {
+      const { data: lockData, error: lockError } = await supabase
+        .from('algorithm_worker_locks')
+        .select('lock_name,locked_by,locked_until,updated_at')
+        .eq('lock_name', 'algorithm-main-worker')
+        .maybeSingle()
+      if (!lockError) workerLock = lockData || null
+    } catch (_) {}
+
+    const currentTime = Date.now()
+    const activeAllRows = allRows.filter(row => {
+      const kickoff = Date.parse(row.kickoff || '')
+      return Number.isFinite(kickoff) && kickoff > currentTime
+    })
+    const activeHiddenRows = activeAllRows.filter(isHiddenTechnicalRow)
+    const activeVisibleRows = activeAllRows.filter(row => !isHiddenTechnicalRow(row))
+    const activeWaitingRows = activeVisibleRows.filter(row => String(row.analysis_state || 'ready') !== 'ready')
+    const activeReadyRows = activeVisibleRows.filter(row => String(row.analysis_state || 'ready') === 'ready')
+    const activePickRows = activeReadyRows.filter(row => row.selected_market !== 'no_bet' && Number(row.stake || 0) > 0)
+    const processedCount = activeReadyRows.length + activeHiddenRows.length
+    const totalCount = activeAllRows.length
+    const progressPercent = totalCount > 0 ? round(processedCount / totalCount * 100, 1) : 0
+    const workerLockedUntil = workerLock?.locked_until || null
+    const workerRunning = Number.isFinite(Date.parse(workerLockedUntil || '')) && Date.parse(workerLockedUntil) > currentTime
+    const latestScan = latestRuns.find(row => row.run_type === 'scan') || null
+
     return json(200, {
       rows,
       latest_runs: latestRuns,
-      latest_scan: latestRuns.find(row => row.run_type === 'scan') || null,
+      latest_scan: latestScan,
       latest_settlement: latestRuns.find(row => row.run_type === 'settle') || null,
       summary: {
         analyzed: rows.length,
@@ -100,7 +142,22 @@ exports.handler = async function(event) {
         settles_before_each_scan: true,
         mode: 'single-locked-throttled-prematch-worker',
         api_min_interval_ms: Number(process.env.ALGORITHM_API_MIN_INTERVAL_MS || 350),
-        prematch_min_lead_minutes: Number(process.env.ALGORITHM_PREMATCH_MIN_LEAD_MINUTES || 10)
+        prematch_min_lead_minutes: Number(process.env.ALGORITHM_PREMATCH_MIN_LEAD_MINUTES || 10),
+        worker_running: workerRunning,
+        worker_locked_until: workerLockedUntil,
+        worker_updated_at: workerLock?.updated_at || null,
+        next_scan_at: nextScheduledScanIso(15),
+        progress: {
+          total: totalCount,
+          processed: processedCount,
+          percent: progressPercent,
+          ready: activeReadyRows.length,
+          picks: activePickRows.length,
+          waiting: activeWaitingRows.length,
+          no_data: activeHiddenRows.length,
+          last_scan_status: latestScan?.status || null,
+          last_scan_finished_at: latestScan?.finished_at || null
+        }
       }
     })
   } catch (error) {

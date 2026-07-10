@@ -79740,3 +79740,59 @@ html.betai-opera-stability-v29 .app-shell *::after{
 @media(max-width:1450px){.algorithm-top-grid-v1887{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:900px){.algorithm-top-grid-v1887{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){.algorithm-top-five-v1887>header{align-items:flex-start}.algorithm-top-grid-v1887{grid-template-columns:1fr}.algorithm-top-five-v1887>header p{max-width:260px}}
+
+/* WERSJA 1888 — pasek postępu automatu algorytmu */
+.algorithm-progress-v1888{overflow:hidden;border:1px solid rgba(72,224,216,.24);border-radius:20px;background:linear-gradient(145deg,rgba(7,28,42,.98),rgba(4,16,27,.98));box-shadow:0 18px 46px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.025)}
+.algorithm-progress-v1888>header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:17px 20px;border-bottom:1px solid rgba(111,172,188,.12);background:radial-gradient(circle at 88% 0,rgba(54,223,214,.13),transparent 40%)}
+.algorithm-progress-title-v1888{display:flex;align-items:center;gap:13px;min-width:0}.algorithm-progress-title-v1888>span{display:grid;place-items:center;flex:0 0 auto;width:42px;height:42px;border:1px solid rgba(91,243,234,.26);border-radius:13px;color:#67fff4;background:linear-gradient(145deg,rgba(30,169,166,.30),rgba(12,75,86,.34));font-size:22px;font-weight:900;box-shadow:0 0 24px rgba(58,234,224,.10)}
+.algorithm-progress-title-v1888 small{display:block;color:#59eee5;font-size:9px;font-weight:950;letter-spacing:.14em}.algorithm-progress-title-v1888 h2{margin:3px 0 3px;color:#edf9fc;font-size:17px}.algorithm-progress-title-v1888 p{margin:0;color:#839eae;font-size:10px;line-height:1.45}
+.algorithm-progress-v1888>header>b{display:flex;align-items:center;gap:8px;flex:0 0 auto;padding:9px 12px;border:1px solid rgba(102,174,191,.20);border-radius:999px;color:#9ab2c0;background:rgba(9,31,44,.72);font-size:9px;font-weight:950;letter-spacing:.08em}.algorithm-progress-v1888>header>b>i{width:8px;height:8px;border-radius:50%;background:#8298a4}
+.algorithm-progress-v1888>header>b.is-working{color:#86fff5;border-color:rgba(74,239,228,.32);background:rgba(20,106,108,.32)}.algorithm-progress-v1888>header>b.is-working>i{background:#56f4e9;box-shadow:0 0 0 0 rgba(86,244,233,.45);animation:algorithmProgressPulse1888 1.6s infinite}
+.algorithm-progress-v1888>header>b.is-waiting{color:#ffd98b;border-color:rgba(224,173,66,.30);background:rgba(91,65,20,.27)}.algorithm-progress-v1888>header>b.is-waiting>i{background:#efbc55}.algorithm-progress-v1888>header>b.is-done{color:#72efbc;border-color:rgba(56,222,157,.30);background:rgba(19,87,66,.28)}.algorithm-progress-v1888>header>b.is-done>i{background:#47e5a5}
+.algorithm-progress-main-v1888{padding:17px 20px 14px}.algorithm-progress-label-v1888{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:9px}.algorithm-progress-label-v1888 strong{color:#c5dce6;font-size:11px}.algorithm-progress-label-v1888 span{color:#64fff3;font-size:12px;font-weight:950}
+.algorithm-progress-track-v1888{position:relative;height:12px;overflow:hidden;border:1px solid rgba(78,157,178,.18);border-radius:999px;background:rgba(4,16,27,.88);box-shadow:inset 0 2px 5px rgba(0,0,0,.30)}.algorithm-progress-track-v1888:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.045),transparent);background-size:160px 100%;animation:algorithmProgressShine1888 2.5s linear infinite;pointer-events:none}.algorithm-progress-track-v1888>i{display:block;height:100%;min-width:0;border-radius:inherit;background:linear-gradient(90deg,#27cfc8,#67f4e7,#45d8ff);box-shadow:0 0 18px rgba(73,235,224,.40);transition:width .55s ease}
+.algorithm-progress-stats-v1888{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid rgba(111,172,188,.10)}.algorithm-progress-stats-v1888>div{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;gap:5px 12px;min-height:62px;padding:12px 18px;border-right:1px solid rgba(111,172,188,.10)}.algorithm-progress-stats-v1888>div:last-child{border-right:0}.algorithm-progress-stats-v1888 span{color:#7895a6;font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.algorithm-progress-stats-v1888 strong{color:#f3fbfd;font-size:20px;line-height:1}.algorithm-progress-stats-v1888 small{grid-column:1/-1;color:#5f7d8e;font-size:9px}.algorithm-progress-stats-v1888>div:nth-child(1) strong{color:#61f2b3}.algorithm-progress-stats-v1888>div:nth-child(2) strong{color:#ffd06a}.algorithm-progress-stats-v1888>div:nth-child(3) strong{color:#8ba6b5}.algorithm-progress-stats-v1888>div:nth-child(4) strong{color:#62f3e9;font-variant-numeric:tabular-nums}
+@keyframes algorithmProgressPulse1888{0%{box-shadow:0 0 0 0 rgba(86,244,233,.45)}70%{box-shadow:0 0 0 7px rgba(86,244,233,0)}100%{box-shadow:0 0 0 0 rgba(86,244,233,0)}}
+@keyframes algorithmProgressShine1888{from{background-position:-180px 0}to{background-position:calc(100% + 180px) 0}}
+@media(max-width:900px){.algorithm-progress-v1888>header{align-items:flex-start;flex-direction:column}.algorithm-progress-stats-v1888{grid-template-columns:repeat(2,minmax(0,1fr))}.algorithm-progress-stats-v1888>div:nth-child(2){border-right:0}.algorithm-progress-stats-v1888>div:nth-child(-n+2){border-bottom:1px solid rgba(111,172,188,.10)}}
+@media(max-width:560px){.algorithm-progress-v1888>header,.algorithm-progress-main-v1888{padding-left:14px;padding-right:14px}.algorithm-progress-title-v1888{align-items:flex-start}.algorithm-progress-title-v1888>span{width:38px;height:38px}.algorithm-progress-title-v1888 p{font-size:9px}.algorithm-progress-stats-v1888>div{padding:12px 13px}.algorithm-progress-stats-v1888 strong{font-size:18px}}
+
+/* =========================================================
+   WERSJA 1889 — przywrócenie ciemnych pól logowania
+   Opera/Chrome potrafią nadpisać tło pól zapisanym autofillem.
+   Logika strony i algorytmu pozostaje bez zmian.
+   ========================================================= */
+html body #root:not(:has(.app-shell)) .auth609-screen,
+html body #root:not(:has(.app-shell)) .auth609-screen input{
+  color-scheme:dark;
+}
+
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth481-input{
+  background:#04101d !important;
+  background-image:linear-gradient(180deg,#051426 0%,#030d19 100%) !important;
+  color:#eff7ff !important;
+  caret-color:#65f5ee !important;
+}
+
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth481-input:-webkit-autofill,
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth481-input:-webkit-autofill:hover,
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth481-input:-webkit-autofill:focus,
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth481-input:-webkit-autofill:active,
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth481-input:autofill{
+  -webkit-text-fill-color:#eff7ff !important;
+  caret-color:#65f5ee !important;
+  background-color:#04101d !important;
+  background-image:none !important;
+  -webkit-box-shadow:0 0 0 1000px #04101d inset !important;
+  box-shadow:0 0 0 1000px #04101d inset !important;
+  border-color:rgba(28,145,204,.38) !important;
+  transition:background-color 999999s ease-out 0s,color 999999s ease-out 0s !important;
+}
+
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth481-input:-moz-autofill{
+  color:#eff7ff !important;
+  caret-color:#65f5ee !important;
+  background:#04101d !important;
+  box-shadow:0 0 0 1000px #04101d inset !important;
+  border-color:rgba(28,145,204,.38) !important;
+}
