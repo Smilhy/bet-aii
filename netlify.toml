@@ -96,10 +96,10 @@
 [functions."ai-bot-maintenance-background"]
   background = true
 
-# WERSJA 1882 — pełny automat algorytmu co 15 minut.
-# Scheduled Function tylko uruchamia Background Function; cykl najpierw rozlicza
-# zakończone mecze, a następnie skanuje wszystkie dzisiejsze mecze. Brak kursu O/U 2.5 nie blokuje typu.
-# Kierunek typu wybiera wyższe prawdopodobieństwo modelu (minimum 51%), nie EV.
+# WERSJA 1886 — pełny automat PRE-MATCH co 15 minut.
+# Jeden zablokowany worker pobiera dane sekwencyjnie z limiterem API, nie analizuje
+# spotkań rozpoczętych/live, wybiera wyższe prawdopodobieństwo (minimum 51%) i stawia 1 j.
+# Rozliczenie odbywa się osobno dopiero po przewidywanym końcu meczu.
 [functions."scheduled-generate-algorithm-picks"]
   schedule = "*/15 * * * *"
 

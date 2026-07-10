@@ -11,7 +11,7 @@ const FILTERS = [
 const TEXT = {
   pl: {
     title: 'Algorytm Powyżej / Poniżej 2.5',
-    subtitle: 'Pełny automat testowy: co 15 minut skanuje mecze, wybiera stronę z większą szansą modelu i stawia płasko 1 jednostkę przy minimum 51%.',
+    subtitle: 'Pełny automat pre-match: co 15 minut skanuje wyłącznie nierozpoczęte mecze, wybiera stronę z większą szansą modelu i stawia płasko 1 jednostkę przy minimum 51%.',
     refresh: 'Odśwież dane',
     scan: 'Uruchom pełny skan',
     settle: 'Rozlicz mecze',
@@ -98,7 +98,7 @@ const TEXT = {
   },
   en: {
     title: 'Over / Under 2.5 Algorithm',
-    subtitle: 'Fully automated test: scans every 15 minutes, selects the side with the higher model probability and stakes a flat 1 unit when it reaches at least 51%.',
+    subtitle: 'Fully automated pre-match test: every 15 minutes it scans only matches that have not started, selects the higher model probability and stakes a flat 1 unit at 51% or more.',
     refresh: 'Refresh data', scan: 'Run full scan', settle: 'Settle matches', loading: 'Loading algorithm data…', empty: 'No matches in this view.', setupEmpty: 'No saved analyses. Run the SQL migration, check Netlify keys and start the first scan.', formula: 'How the pick is selected', formulaCopy: 'The formula calculates Over and Under 2.5 probabilities. The system always selects the side with the HIGHER probability. If that probability is at least 51%, it saves a 1-unit bet. Odds do not change the direction; they are used only to calculate profit or loss.', profit: 'Profit', roi: 'ROI', hitRate: 'Hit rate', bets: 'Bets', pending: 'Pending', analyzed: 'Analysed', stake: 'Stake', edge: 'Odds EV', pressure: 'Total pressure', model: 'Model pick', odds: 'Odds', noOdds: 'no odds', probability: 'Probability', noBet: 'NO BET', details: 'Show calculation', hide: 'Hide calculation', home: 'Home', away: 'Away', shots: 'Shots', corners: 'Corners', allowedShots: 'Shots allowed', allowedCorners: 'Corners allowed', attack: 'Attacking pressure', defence: 'Defensive pressure', expected: 'Expected pressure', over: 'Over 2.5', under: 'Under 2.5', result: 'Result', statusPending: 'PENDING', statusWon: 'WON', statusLost: 'LOST', statusVoid: 'VOID', statusNoBet: 'SKIPPED', statusAnalyzing: 'CALCULATING', waitingPick: 'Waiting for statistics', waitingText: 'The match has already been added. The automation is fetching historical shots and corners and will save the pick automatically once calculated.', errorPrefix: 'Error:', saved: 'Background scan started. Data will appear automatically', settled: 'Settlement completed', automation: 'AUTO EVERY 15 MIN', lastScan: 'Last scan', statsTitle: 'Algorithm statistics', balanceChart: 'Algorithm balance chart', cumulative: 'Cumulative balance', settledPicks: 'settled picks', avgOdds: 'Avg. odds', avgProbability: 'Avg. probability', record: 'W/L record', maxDrawdown: 'Max drawdown', byLeague: 'Statistics by league', byMarket: 'Statistics by pick type', byOdds: 'Statistics by odds range', byProbability: 'Statistics by probability range', count: 'Count', balance: 'Profit', yield: 'Yield', league: 'League', market: 'Pick type', range: 'Range', noStats: 'Statistics will appear after the first bets are settled.'
   }
 }
@@ -195,7 +195,7 @@ function AlgorithmCard({ row, lang, t, expanded, onToggle }) {
   const waiting = String(row.analysis_state || 'ready') !== 'ready'
   const status = statusMeta(row, t)
   const isNoBet = !waiting && row.selected_market === 'no_bet'
-  const pick = waiting ? t.waitingPick : row.selected_market === 'over_2_5' ? t.over : row.selected_market === 'under_2_5' ? t.under : t.noBet
+  const pick = waiting ? t.waitingPick : row.selected_market === 'over_2_5' ? t.over : row.selected_market === 'under_2_5' ? t.under : (row.selected_label || t.noBet)
   const result = row.home_goals == null || row.away_goals == null ? '—' : `${row.home_goals}:${row.away_goals}`
   return (
     <article className={`algorithm-card-v1880 ${status.className} ${isNoBet ? 'is-no-bet' : ''}`}>
@@ -440,7 +440,11 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
   }
 
   const visibleRows = useMemo(() => rows.filter(row => {
-    if (filter === 'active') return row.status === 'pending' || String(row.analysis_state || 'ready') !== 'ready'
+    if (filter === 'active') {
+      const kickoff = Date.parse(row.kickoff || '')
+      const isPrematch = Number.isFinite(kickoff) && kickoff > Date.now()
+      return isPrematch && (row.status === 'pending' || String(row.analysis_state || 'ready') !== 'ready')
+    }
     if (filter === 'results') return ['won', 'lost', 'void'].includes(row.status)
     if (filter === 'stats') return false
     return true
@@ -469,7 +473,7 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
   return (
     <div className="algorithm-page-v1880">
       <section className="algorithm-hero-v1880">
-        <div className="algorithm-hero-copy-v1880"><span>PRESSURE O/U 2.5 · V4</span><h1>{t.title}</h1><p>{t.subtitle}</p><div className="algorithm-auto-meta-v1882"><b>{t.automation}</b><span>{t.lastScan}: {latestScan?.started_at ? dateTime(latestScan.started_at, lang) : '—'}</span></div></div>
+        <div className="algorithm-hero-copy-v1880"><span>PRESSURE O/U 2.5 · V5 PRE-MATCH</span><h1>{t.title}</h1><p>{t.subtitle}</p><div className="algorithm-auto-meta-v1882"><b>{t.automation}</b><span>{t.lastScan}: {latestScan?.started_at ? dateTime(latestScan.started_at, lang) : '—'}</span></div></div>
         <div className="algorithm-hero-actions-v1880">
           <button type="button" onClick={() => load()} disabled={loading}>{loading ? '…' : '↻'} {t.refresh}</button>
           {isAdmin && <button type="button" className="is-primary" onClick={() => runAdminAction('scan')} disabled={Boolean(action)}>{action === 'scan' ? '…' : '▶'} {t.scan}</button>}

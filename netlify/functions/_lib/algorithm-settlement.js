@@ -25,13 +25,16 @@ async function settleAlgorithmPicks(options = {}) {
   const startedAt = new Date().toISOString()
   const supabase = getSupabaseAdmin()
   const limit = Math.max(1, Math.min(500, Number(options.limit || 250) || 250))
-  const beforeIso = new Date(Date.now() - 95 * 60 * 1000).toISOString()
+  // Nie sprawdzamy meczów dopiero co rozpoczętych ani live.
+  // Pierwsza próba rozliczenia następuje dopiero 125 minut po kickoffie.
+  const beforeIso = new Date(Date.now() - 125 * 60 * 1000).toISOString()
   const afterIso = new Date(Date.now() - 14 * 86400000).toISOString()
 
   const { data, error } = await supabase
     .from('algorithm_bets')
     .select('*')
     .eq('status', 'pending')
+    .in('selected_market', ['over_2_5', 'under_2_5'])
     .gt('kickoff', afterIso)
     .lt('kickoff', beforeIso)
     .order('kickoff', { ascending: true })

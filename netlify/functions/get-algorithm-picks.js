@@ -79,12 +79,14 @@ exports.handler = async function(event) {
         version: MODEL_VERSION,
         stake: 1,
         min_probability: 51,
-        rule: 'Wszystkie przyszłe mecze są zapisywane od razu. Następnie automat kolejkuje statystyki, wybiera wyższe prawdopodobieństwo i zapisuje 1 jednostkę przy minimum 51%. Brak kursu nie blokuje typu.'
+        rule: 'Wyłącznie pre-match: nierozpoczęte mecze są zapisywane do kolejki, jeden worker pobiera dane z kontrolą tempa, wybiera wyższe prawdopodobieństwo i zapisuje 1 jednostkę przy minimum 51%. Brak kursu nie blokuje typu.'
       },
       automation: {
         scan_every_minutes: 15,
         settles_before_each_scan: true,
-        mode: 'scheduled-background-cycle'
+        mode: 'single-locked-throttled-prematch-worker',
+        api_min_interval_ms: Number(process.env.ALGORITHM_API_MIN_INTERVAL_MS || 350),
+        prematch_min_lead_minutes: Number(process.env.ALGORITHM_PREMATCH_MIN_LEAD_MINUTES || 10)
       }
     })
   } catch (error) {

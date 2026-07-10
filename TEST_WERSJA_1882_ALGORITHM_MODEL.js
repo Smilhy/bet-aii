@@ -50,4 +50,4 @@ assert.equal(missingSelectedOdds.probability, 55.2)
 assert.equal(missingSelectedOdds.odds, 0)
 assert.equal(missingSelectedOdds.reason, 'higher_probability_missing_odds')
 
-console.log('OK: WERSJA 1884 all-fixtures probability-first algorithm model')
+console.log('OK: WERSJA 1886 pre-match probability-first algorithm model')
