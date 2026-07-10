@@ -2,6 +2,15 @@ const { getSupabaseAdmin, MODEL_VERSION } = require('./_lib/algorithm-engine')
 const { json } = require('./_lib/algorithm-auth')
 const { round } = require('./_lib/algorithm-model')
 
+
+function isHiddenTechnicalRow(row = {}) {
+  const reason = String(row?.formula_snapshot?.selection_reason || '')
+  const error = String(row?.analysis_error || '')
+  if (reason === 'missing_team_form_final' || reason === 'started_before_analysis') return true
+  if (String(row.analysis_state || '') === 'ready' && String(row.selected_market || '') === 'no_bet' && /brak wystarczających kompletnych statystyk/i.test(error)) return true
+  return false
+}
+
 function average(rows, getter) {
   if (!rows.length) return 0
   return rows.reduce((sum, row) => sum + Number(getter(row) || 0), 0) / rows.length
@@ -25,7 +34,11 @@ exports.handler = async function(event) {
     if (status) query = query.eq('status', status)
     const { data, error } = await query
     if (error) throw error
-    const rows = Array.isArray(data) ? data : []
+    const allRows = Array.isArray(data) ? data : []
+    // Techniczne rekordy bez danych pozostają w bazie dla diagnostyki, ale nie
+    // zaśmiecają dashboardu ani statystyk użytkownika.
+    const hiddenTechnicalRows = allRows.filter(isHiddenTechnicalRow)
+    const rows = allRows.filter(row => !isHiddenTechnicalRow(row))
     const waiting = rows.filter(row => String(row.analysis_state || 'ready') !== 'ready')
     const bets = rows.filter(row => String(row.analysis_state || 'ready') === 'ready' && row.selected_market !== 'no_bet' && Number(row.stake || 0) > 0)
     const settled = bets.filter(row => ['won', 'lost'].includes(String(row.status || '')))
@@ -54,6 +67,7 @@ exports.handler = async function(event) {
       latest_settlement: latestRuns.find(row => row.run_type === 'settle') || null,
       summary: {
         analyzed: rows.length,
+        hidden_technical: hiddenTechnicalRows.length,
         waiting: waiting.length,
         ready: rows.length - waiting.length,
         bets: bets.length,
@@ -79,7 +93,7 @@ exports.handler = async function(event) {
         version: MODEL_VERSION,
         stake: 1,
         min_probability: 51,
-        rule: 'Wyłącznie pre-match: nierozpoczęte mecze są zapisywane do kolejki, jeden worker pobiera dane z kontrolą tempa, wybiera wyższe prawdopodobieństwo i zapisuje 1 jednostkę przy minimum 51%. Brak kursu nie blokuje typu.'
+        rule: 'Wyłącznie pre-match: jeden worker pobiera dane z kontrolą tempa, wybiera wyższe prawdopodobieństwo i zapisuje 1 jednostkę przy minimum 51%. Po pełnym sprawdzeniu brak kompletu statystyk kończy analizę i rekord znika z dashboardu.'
       },
       automation: {
         scan_every_minutes: 15,

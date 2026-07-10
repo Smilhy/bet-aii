@@ -94,12 +94,17 @@ const TEXT = {
     stakesCardSub: 'Łącznie zapisane',
     avgOddsCardSub: 'Średnia kursów',
     maxOdds: 'Max kurs',
-    maxOddsSub: 'Najwyższy kurs'
+    maxOddsSub: 'Najwyższy kurs',
+    topToday: 'TOP 5 NA DZIŚ',
+    topTodayTitle: 'Najwyższe prawdopodobieństwa',
+    topTodaySubtitle: 'Gotowe typy pre-match na dzisiaj, posortowane wyłącznie według szansy modelu.',
+    topTodayEmpty: 'Brak gotowych typów na dzisiaj.',
+    startsAt: 'Start'
   },
   en: {
     title: 'Over / Under 2.5 Algorithm',
     subtitle: 'Fully automated pre-match test: every 15 minutes it scans only matches that have not started, selects the higher model probability and stakes a flat 1 unit at 51% or more.',
-    refresh: 'Refresh data', scan: 'Run full scan', settle: 'Settle matches', loading: 'Loading algorithm data…', empty: 'No matches in this view.', setupEmpty: 'No saved analyses. Run the SQL migration, check Netlify keys and start the first scan.', formula: 'How the pick is selected', formulaCopy: 'The formula calculates Over and Under 2.5 probabilities. The system always selects the side with the HIGHER probability. If that probability is at least 51%, it saves a 1-unit bet. Odds do not change the direction; they are used only to calculate profit or loss.', profit: 'Profit', roi: 'ROI', hitRate: 'Hit rate', bets: 'Bets', pending: 'Pending', analyzed: 'Analysed', stake: 'Stake', edge: 'Odds EV', pressure: 'Total pressure', model: 'Model pick', odds: 'Odds', noOdds: 'no odds', probability: 'Probability', noBet: 'NO BET', details: 'Show calculation', hide: 'Hide calculation', home: 'Home', away: 'Away', shots: 'Shots', corners: 'Corners', allowedShots: 'Shots allowed', allowedCorners: 'Corners allowed', attack: 'Attacking pressure', defence: 'Defensive pressure', expected: 'Expected pressure', over: 'Over 2.5', under: 'Under 2.5', result: 'Result', statusPending: 'PENDING', statusWon: 'WON', statusLost: 'LOST', statusVoid: 'VOID', statusNoBet: 'SKIPPED', statusAnalyzing: 'CALCULATING', waitingPick: 'Waiting for statistics', waitingText: 'The match has already been added. The automation is fetching historical shots and corners and will save the pick automatically once calculated.', errorPrefix: 'Error:', saved: 'Background scan started. Data will appear automatically', settled: 'Settlement completed', automation: 'AUTO EVERY 15 MIN', lastScan: 'Last scan', statsTitle: 'Algorithm statistics', balanceChart: 'Algorithm balance chart', cumulative: 'Cumulative balance', settledPicks: 'settled picks', avgOdds: 'Avg. odds', avgProbability: 'Avg. probability', record: 'W/L record', maxDrawdown: 'Max drawdown', byLeague: 'Statistics by league', byMarket: 'Statistics by pick type', byOdds: 'Statistics by odds range', byProbability: 'Statistics by probability range', count: 'Count', balance: 'Profit', yield: 'Yield', league: 'League', market: 'Pick type', range: 'Range', noStats: 'Statistics will appear after the first bets are settled.'
+    refresh: 'Refresh data', scan: 'Run full scan', settle: 'Settle matches', loading: 'Loading algorithm data…', empty: 'No matches in this view.', setupEmpty: 'No saved analyses. Run the SQL migration, check Netlify keys and start the first scan.', formula: 'How the pick is selected', formulaCopy: 'The formula calculates Over and Under 2.5 probabilities. The system always selects the side with the HIGHER probability. If that probability is at least 51%, it saves a 1-unit bet. Odds do not change the direction; they are used only to calculate profit or loss.', profit: 'Profit', roi: 'ROI', hitRate: 'Hit rate', bets: 'Bets', pending: 'Pending', analyzed: 'Analysed', stake: 'Stake', edge: 'Odds EV', pressure: 'Total pressure', model: 'Model pick', odds: 'Odds', noOdds: 'no odds', probability: 'Probability', noBet: 'NO BET', details: 'Show calculation', hide: 'Hide calculation', home: 'Home', away: 'Away', shots: 'Shots', corners: 'Corners', allowedShots: 'Shots allowed', allowedCorners: 'Corners allowed', attack: 'Attacking pressure', defence: 'Defensive pressure', expected: 'Expected pressure', over: 'Over 2.5', under: 'Under 2.5', result: 'Result', statusPending: 'PENDING', statusWon: 'WON', statusLost: 'LOST', statusVoid: 'VOID', statusNoBet: 'SKIPPED', statusAnalyzing: 'CALCULATING', waitingPick: 'Waiting for statistics', waitingText: 'The match has already been added. The automation is fetching historical shots and corners and will save the pick automatically once calculated.', errorPrefix: 'Error:', saved: 'Background scan started. Data will appear automatically', settled: 'Settlement completed', automation: 'AUTO EVERY 15 MIN', lastScan: 'Last scan', statsTitle: 'Algorithm statistics', balanceChart: 'Algorithm balance chart', cumulative: 'Cumulative balance', settledPicks: 'settled picks', avgOdds: 'Avg. odds', avgProbability: 'Avg. probability', record: 'W/L record', maxDrawdown: 'Max drawdown', byLeague: 'Statistics by league', byMarket: 'Statistics by pick type', byOdds: 'Statistics by odds range', byProbability: 'Statistics by probability range', count: 'Count', balance: 'Profit', yield: 'Yield', league: 'League', market: 'Pick type', range: 'Range', noStats: 'Statistics will appear after the first bets are settled.', topToday: 'TOP 5 TODAY', topTodayTitle: 'Highest probabilities', topTodaySubtitle: 'Today’s ready pre-match picks, sorted only by model probability.', topTodayEmpty: 'No ready picks for today.', startsAt: 'Kick-off'
   }
 }
 
@@ -119,6 +124,23 @@ function dateTime(value, lang) {
   if (Number.isNaN(date.getTime())) return '—'
   return new Intl.DateTimeFormat(lang === 'en' ? 'en-GB' : 'pl-PL', {
     day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  }).format(date)
+}
+
+
+function isSameLocalDay(value, reference = new Date()) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return false
+  return date.getFullYear() === reference.getFullYear()
+    && date.getMonth() === reference.getMonth()
+    && date.getDate() === reference.getDate()
+}
+
+function shortTime(value, lang) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return new Intl.DateTimeFormat(lang === 'en' ? 'en-GB' : 'pl-PL', {
+    hour: '2-digit', minute: '2-digit'
   }).format(date)
 }
 
@@ -188,6 +210,29 @@ function TeamFormula({ side, row, t }) {
         <div className="is-highlight"><dt>{t.expected}</dt><dd>{number(values.expected, 2)}</dd></div>
       </dl>
     </div>
+  )
+}
+
+
+function TopPickCard({ row, index, lang, t }) {
+  const pick = row.selected_market === 'over_2_5' ? t.over : t.under
+  return (
+    <article className="algorithm-top-pick-v1887">
+      <span className="algorithm-top-rank-v1887">#{index + 1}</span>
+      <div className="algorithm-top-match-v1887">
+        <strong>{row.home_team}</strong>
+        <small>vs</small>
+        <strong>{row.away_team}</strong>
+      </div>
+      <div className="algorithm-top-pick-info-v1887">
+        <b>{pick}</b>
+        <span>{number(row.selected_probability, 1)}%</span>
+      </div>
+      <div className="algorithm-top-meta-v1887">
+        <span>{t.odds}: {Number(row.selected_odds || 0) > 1 ? number(row.selected_odds, 2) : t.noOdds}</span>
+        <span>{t.startsAt}: {shortTime(row.kickoff, lang)}</span>
+      </div>
+    </article>
   )
 }
 
@@ -450,6 +495,18 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
     return true
   }), [rows, filter])
 
+
+  const topTodayRows = useMemo(() => {
+    const now = new Date()
+    return rows
+      .filter(row => String(row.analysis_state || 'ready') === 'ready')
+      .filter(row => ['over_2_5', 'under_2_5'].includes(String(row.selected_market || '')))
+      .filter(row => Number(row.stake || 0) > 0 && String(row.status || '') === 'pending')
+      .filter(row => Date.parse(row.kickoff || '') > now.getTime() && isSameLocalDay(row.kickoff, now))
+      .sort((a, b) => Number(b.selected_probability || 0) - Number(a.selected_probability || 0) || Date.parse(a.kickoff || '') - Date.parse(b.kickoff || ''))
+      .slice(0, 5)
+  }, [rows])
+
   const toggleExpanded = id => {
     setExpanded(previous => {
       const next = new Set(previous)
@@ -473,7 +530,7 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
   return (
     <div className="algorithm-page-v1880">
       <section className="algorithm-hero-v1880">
-        <div className="algorithm-hero-copy-v1880"><span>PRESSURE O/U 2.5 · V5 PRE-MATCH</span><h1>{t.title}</h1><p>{t.subtitle}</p><div className="algorithm-auto-meta-v1882"><b>{t.automation}</b><span>{t.lastScan}: {latestScan?.started_at ? dateTime(latestScan.started_at, lang) : '—'}</span></div></div>
+        <div className="algorithm-hero-copy-v1880"><span>PRESSURE O/U 2.5 · V6 TOP 5</span><h1>{t.title}</h1><p>{t.subtitle}</p><div className="algorithm-auto-meta-v1882"><b>{t.automation}</b><span>{t.lastScan}: {latestScan?.started_at ? dateTime(latestScan.started_at, lang) : '—'}</span></div></div>
         <div className="algorithm-hero-actions-v1880">
           <button type="button" onClick={() => load()} disabled={loading}>{loading ? '…' : '↻'} {t.refresh}</button>
           {isAdmin && <button type="button" className="is-primary" onClick={() => runAdminAction('scan')} disabled={Boolean(action)}>{action === 'scan' ? '…' : '▶'} {t.scan}</button>}
@@ -491,6 +548,14 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
         <AlgorithmSummaryCard label={t.stakesCard} value={`${number(summaryCards.totalStake, 2)} j.`} subtitle={t.stakesCardSub} icon="◎" />
         <AlgorithmSummaryCard label={t.avgOdds} value={number(summaryCards.averageOdds, 2)} subtitle={t.avgOddsCardSub} icon="⌁" />
         <AlgorithmSummaryCard label={t.maxOdds} value={number(summaryCards.maxOdds, 2)} subtitle={t.maxOddsSub} icon="↗" />
+      </section>
+
+      <section className="algorithm-top-five-v1887">
+        <header>
+          <div><span>{t.topToday}</span><h2>{t.topTodayTitle}</h2><p>{t.topTodaySubtitle}</p></div>
+          <b>{topTodayRows.length}/5</b>
+        </header>
+        {topTodayRows.length ? <div className="algorithm-top-grid-v1887">{topTodayRows.map((row, index) => <TopPickCard key={`top-${row.id || row.fixture_id}`} row={row} index={index} lang={lang} t={t} />)}</div> : <div className="algorithm-top-empty-v1887">{t.topTodayEmpty}</div>}
       </section>
 
       {(error || notice) && <div className={`algorithm-message-v1880 ${error ? 'is-error' : 'is-success'}`}>{error ? `${t.errorPrefix} ${error}` : notice}</div>}

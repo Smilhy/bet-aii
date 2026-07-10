@@ -10,12 +10,12 @@ const API_BASE = 'https://v3.football.api-sports.io'
 const FINISHED_STATUSES = new Set(['FT', 'AET', 'PEN'])
 const UPCOMING_STATUSES = new Set(['NS', 'TBD'])
 const SETTLED_STATUSES = new Set(['won', 'lost', 'void'])
-const MODEL_VERSION = 'pressure-ou25-v5-prematch-throttled-worker'
+const MODEL_VERSION = 'pressure-ou25-v6-top5-clean-no-data'
 const PREMATCH_MIN_LEAD_MINUTES = Math.max(1, Number(process.env.ALGORITHM_PREMATCH_MIN_LEAD_MINUTES || 10) || 10)
 const API_MIN_INTERVAL_MS = Math.max(250, Number(process.env.ALGORITHM_API_MIN_INTERVAL_MS || 350) || 350)
 const API_RATE_LIMIT_RETRY_MS = Math.max(15_000, Number(process.env.ALGORITHM_API_RATE_LIMIT_RETRY_MS || 65_000) || 65_000)
 const API_MAX_RATE_RETRIES = Math.max(0, Math.min(3, Number(process.env.ALGORITHM_API_MAX_RATE_RETRIES || 2) || 2))
-const MAX_MISSING_DATA_ATTEMPTS = Math.max(1, Math.min(6, Number(process.env.ALGORITHM_MAX_MISSING_DATA_ATTEMPTS || 2) || 2))
+const MAX_MISSING_DATA_ATTEMPTS = 1
 const MAX_HISTORY_STATS_CHECKS = Math.max(3, Math.min(15, Number(process.env.ALGORITHM_MAX_HISTORY_STATS_CHECKS || 8) || 8))
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, Math.max(0, Number(ms || 0))))
@@ -699,6 +699,18 @@ async function generateAlgorithmPicks(options = {}) {
       .select('fixture_id')
     if (expiredError) throw expiredError
 
+    // V1887: stare pozycje, dla których pełne sprawdzenie historii już wykazało
+    // brak kompletnych strzałów i rożnych, kończymy od razu. Nie mają wisieć
+    // jako „Liczenie danych” i nie są ponawiane w nieskończoność.
+    const missingStatsPatch = terminalNoDataPatch({}, 'Brak wystarczających kompletnych statystyk strzałów i rożnych.', 'missing_team_form_final')
+    const { data: finalizedMissingRows, error: finalizedMissingError } = await supabase
+      .from('algorithm_bets')
+      .update(missingStatsPatch)
+      .eq('analysis_state', 'waiting_stats')
+      .ilike('analysis_error', '%brak wystarczających kompletnych statystyk%')
+      .select('fixture_id')
+    if (finalizedMissingError) throw finalizedMissingError
+
     const fixtures = []
     const oddsRows = []
     const scanWarnings = []
@@ -867,6 +879,9 @@ async function generateAlgorithmPicks(options = {}) {
           error: message
         })
 
+        // Pełne sprawdzenie historii (do MAX_HISTORY_STATS_CHECKS spotkań) już się
+        // odbyło. Jeżeli nadal nie ma minimalnego kompletu danych, dalsze próby nic
+        // nie wniosą — oznaczamy techniczny brak danych i usuwamy pozycję z widoku.
         if (isMissingStats && attempts >= MAX_MISSING_DATA_ATTEMPTS) {
           const patch = terminalNoDataPatch(previous, message, 'missing_team_form_final')
           patch.analysis_attempts = attempts
@@ -919,6 +934,7 @@ async function generateAlgorithmPicks(options = {}) {
       fixtures_with_ou25_odds: oddsMap.size,
       waiting_rows_inserted: waitingRows.length,
       expired_before_analysis: Array.isArray(expiredRows) ? expiredRows.length : 0,
+      no_data_rows_finalized: Array.isArray(finalizedMissingRows) ? finalizedMissingRows.length : 0,
       odds_refreshed: oddsRefreshed,
       candidates_considered: processCandidates.length,
       process_batch: processBatch,
