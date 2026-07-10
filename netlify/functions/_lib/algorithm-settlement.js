@@ -1,4 +1,4 @@
-const { getSupabaseAdmin, apiFetch } = require('./algorithm-engine')
+const { getSupabaseAdmin, apiFetch, recordAlgorithmRun } = require('./algorithm-engine')
 const { round } = require('./algorithm-model')
 
 const FINISHED = new Set(['FT', 'AET', 'PEN'])
@@ -22,8 +22,9 @@ function settleMarket(row, totalGoals) {
 }
 
 async function settleAlgorithmPicks(options = {}) {
+  const startedAt = new Date().toISOString()
   const supabase = getSupabaseAdmin()
-  const limit = Math.max(1, Math.min(250, Number(options.limit || 100) || 100))
+  const limit = Math.max(1, Math.min(500, Number(options.limit || 250) || 250))
   const beforeIso = new Date(Date.now() - 95 * 60 * 1000).toISOString()
   const afterIso = new Date(Date.now() - 14 * 86400000).toISOString()
 
@@ -105,7 +106,7 @@ async function settleAlgorithmPicks(options = {}) {
     }
   }
 
-  return {
+  const summary = {
     ok: true,
     checked: rows.length,
     settled: results.filter(item => ['won', 'lost', 'void'].includes(item.status)).length,
@@ -113,6 +114,13 @@ async function settleAlgorithmPicks(options = {}) {
     errors: results.filter(item => item.status === 'error').length,
     results
   }
+  await recordAlgorithmRun(supabase, 'settle', summary.errors ? 'partial' : 'success', startedAt, {
+    ...summary,
+    results: summary.results.slice(0, 50),
+    rows_saved: summary.settled,
+    skipped_errors: summary.errors
+  })
+  return summary
 }
 
 module.exports = { settleAlgorithmPicks, scoreFromFixture, settleMarket }

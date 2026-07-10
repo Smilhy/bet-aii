@@ -1,13 +1,18 @@
-const { getSupabaseAdmin } = require('./_lib/algorithm-engine')
+const { getSupabaseAdmin, MODEL_VERSION } = require('./_lib/algorithm-engine')
 const { json } = require('./_lib/algorithm-auth')
 const { round } = require('./_lib/algorithm-model')
+
+function average(rows, getter) {
+  if (!rows.length) return 0
+  return rows.reduce((sum, row) => sum + Number(getter(row) || 0), 0) / rows.length
+}
 
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
   if (event.httpMethod !== 'GET') return json(405, { error: 'Method not allowed' })
 
   const qs = event.queryStringParameters || {}
-  const limit = Math.max(1, Math.min(1000, Number(qs.limit || 300) || 300))
+  const limit = Math.max(1, Math.min(2000, Number(qs.limit || 1000) || 1000))
   const status = String(qs.status || '').trim().toLowerCase()
 
   try {
@@ -30,8 +35,21 @@ exports.handler = async function(event) {
     const stake = settled.reduce((sum, row) => sum + Number(row.stake || 0), 0)
     const profit = settled.reduce((sum, row) => sum + Number(row.profit || 0), 0)
 
+    let latestRuns = []
+    try {
+      const { data: runData, error: runError } = await supabase
+        .from('algorithm_runs')
+        .select('*')
+        .order('started_at', { ascending: false })
+        .limit(12)
+      if (!runError) latestRuns = Array.isArray(runData) ? runData : []
+    } catch (_) {}
+
     return json(200, {
       rows,
+      latest_runs: latestRuns,
+      latest_scan: latestRuns.find(row => row.run_type === 'scan') || null,
+      latest_settlement: latestRuns.find(row => row.run_type === 'settle') || null,
       summary: {
         analyzed: rows.length,
         bets: bets.length,
@@ -41,15 +59,25 @@ exports.handler = async function(event) {
         pending,
         voided,
         skipped: rows.filter(row => row.selected_market === 'no_bet').length,
+        over_bets: bets.filter(row => row.selected_market === 'over_2_5').length,
+        under_bets: bets.filter(row => row.selected_market === 'under_2_5').length,
         profit: round(profit, 2),
         stake: round(stake, 2),
         roi: stake > 0 ? round(profit / stake * 100, 2) : 0,
-        hit_rate: settled.length > 0 ? round(won / settled.length * 100, 2) : 0
+        hit_rate: settled.length > 0 ? round(won / settled.length * 100, 2) : 0,
+        avg_odds: round(average(settled, row => row.selected_odds), 2),
+        avg_probability: round(average(bets, row => row.selected_probability), 2)
       },
       model: {
-        version: 'pressure-ou25-v1',
+        version: MODEL_VERSION,
         stake: 1,
-        rule: 'Wybór strony z najwyższym dodatnim EV; bez dodatniego EV brak zakładu.'
+        min_probability: 51,
+        rule: 'Wybór strony z wyższym prawdopodobieństwem modelu. Zakład przy minimum 51%. Kurs nie wybiera kierunku; służy do rozliczenia wyniku.'
+      },
+      automation: {
+        scan_every_minutes: 15,
+        settles_before_each_scan: true,
+        mode: 'scheduled-background-cycle'
       }
     })
   } catch (error) {

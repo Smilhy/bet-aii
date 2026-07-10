@@ -96,11 +96,12 @@
 [functions."ai-bot-maintenance-background"]
   background = true
 
-# WERSJA 1880 — automatyczny test wzoru presji Over/Under 2.5.
-# Skan zapisuje nowe mecze i stawia płaską stawkę 1 j. wyłącznie przy dodatnim EV.
+# WERSJA 1882 — pełny automat algorytmu co 15 minut.
+# Scheduled Function tylko uruchamia Background Function; cykl najpierw rozlicza
+# zakończone mecze, a następnie skanuje wszystkie dzisiejsze mecze z kursem O/U 2.5.
+# Kierunek typu wybiera wyższe prawdopodobieństwo modelu (minimum 51%), nie EV.
 [functions."scheduled-generate-algorithm-picks"]
-  schedule = "33 */3 * * *"
+  schedule = "*/15 * * * *"
 
-# Rozliczenie standardowego rynku po 90 minutach, bez dogrywki i karnych.
-[functions."scheduled-settle-algorithm-picks"]
-  schedule = "23 * * * *"
+[functions."algorithm-cycle-background"]
+  background = true

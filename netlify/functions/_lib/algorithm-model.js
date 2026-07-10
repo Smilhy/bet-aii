@@ -103,49 +103,65 @@ function expectedValue(probabilityPercent, decimalOdds) {
   return probability * odds - 1
 }
 
-function chooseValueBet(model = {}, odds = {}, options = {}) {
-  const minEdge = toFiniteNumber(options.minEdge ?? options.min_edge, 0)
+/**
+ * WERSJA 1882
+ * Kierunek zakładu wybiera WYŁĄCZNIE wyższe prawdopodobieństwo modelu.
+ * Kurs służy tylko do zapisania ceny i późniejszego liczenia zysku/straty.
+ * Zakład powstaje, gdy większa z dwóch szans ma co najmniej minProbability (domyślnie 51%).
+ */
+function chooseProbabilityBet(model = {}, odds = {}, options = {}) {
+  const minProbability = clamp(options.minProbability ?? options.min_probability ?? 51, 50, 100)
   const overOdds = toFiniteNumber(odds.over ?? odds.overOdds ?? odds.over_odds, 0)
   const underOdds = toFiniteNumber(odds.under ?? odds.underOdds ?? odds.under_odds, 0)
-  const overEv = expectedValue(model.overProbability, overOdds)
-  const underEv = expectedValue(model.underProbability, underOdds)
+  const overProbability = clamp(model.overProbability, 0, 100)
+  const underProbability = clamp(model.underProbability, 0, 100)
+  const overEv = expectedValue(overProbability, overOdds)
+  const underEv = expectedValue(underProbability, underOdds)
 
-  const candidates = [
-    {
-      market: 'over_2_5',
-      label: 'Powyżej 2.5 gola',
-      probability: toFiniteNumber(model.overProbability, 0),
-      odds: overOdds,
-      ev: overEv
-    },
-    {
-      market: 'under_2_5',
-      label: 'Poniżej 2.5 gola',
-      probability: toFiniteNumber(model.underProbability, 0),
-      odds: underOdds,
-      ev: underEv
-    }
-  ].filter(item => Number.isFinite(item.ev))
+  const selected = underProbability > overProbability
+    ? {
+        market: 'under_2_5',
+        label: 'Poniżej 2.5 gola',
+        probability: underProbability,
+        odds: underOdds,
+        ev: underEv
+      }
+    : {
+        market: 'over_2_5',
+        label: 'Powyżej 2.5 gola',
+        probability: overProbability,
+        odds: overOdds,
+        ev: overEv
+      }
 
-  const best = candidates.sort((a, b) => b.ev - a.ev)[0] || null
-  if (!best || best.ev < minEdge) {
+  const hasPrice = Number.isFinite(selected.odds) && selected.odds > 1
+  if (selected.probability < minProbability || !hasPrice) {
     return {
       market: 'no_bet',
       label: 'Brak zakładu',
-      probability: best?.probability || 0,
-      odds: best?.odds || 0,
-      edge: best?.ev ?? null,
+      probability: selected.probability,
+      odds: selected.odds,
+      edge: selected.ev,
       overEv,
-      underEv
+      underEv,
+      minProbability,
+      reason: selected.probability < minProbability ? 'probability_below_threshold' : 'missing_selected_odds'
     }
   }
 
   return {
-    ...best,
-    edge: best.ev,
+    ...selected,
+    edge: selected.ev,
     overEv,
-    underEv
+    underEv,
+    minProbability,
+    reason: 'higher_probability'
   }
+}
+
+// Zachowany alias, żeby starsze importy nie wywróciły buildu.
+function chooseValueBet(model = {}, odds = {}, options = {}) {
+  return chooseProbabilityBet(model, odds, options)
 }
 
 module.exports = {
@@ -156,5 +172,6 @@ module.exports = {
   interpolatePressureProbability,
   calculatePressureModel,
   expectedValue,
+  chooseProbabilityBet,
   chooseValueBet
 }

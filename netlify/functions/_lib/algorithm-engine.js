@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 const {
   calculatePressureModel,
-  chooseValueBet,
+  chooseProbabilityBet,
   round,
   toFiniteNumber
 } = require('./algorithm-model')
@@ -9,6 +9,8 @@ const {
 const API_BASE = 'https://v3.football.api-sports.io'
 const FINISHED_STATUSES = new Set(['FT', 'AET', 'PEN'])
 const UPCOMING_STATUSES = new Set(['NS', 'TBD'])
+const SETTLED_STATUSES = new Set(['won', 'lost', 'void'])
+const MODEL_VERSION = 'pressure-ou25-v2-probability-51'
 
 function getApiKey() {
   return process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || ''
@@ -39,6 +41,17 @@ function shiftDateKey(dateKey, days) {
   if (!year || !month || !day) return ''
   const date = new Date(Date.UTC(year, month - 1, day + days, 12, 0, 0))
   return date.toISOString().slice(0, 10)
+}
+
+function boolEnv(value, fallback = false) {
+  if (value == null || value === '') return fallback
+  return ['1', 'true', 'yes', 'tak', 'on'].includes(String(value).trim().toLowerCase())
+}
+
+function chunk(items = [], size = 100) {
+  const output = []
+  for (let index = 0; index < items.length; index += size) output.push(items.slice(index, index + size))
+  return output
 }
 
 function median(values = []) {
@@ -76,11 +89,19 @@ async function fetchFixturesForDate(date, timezone) {
   return Array.isArray(payload.response) ? payload.response : []
 }
 
-async function fetchOddsForDate(date, maxPages = 5) {
+async function fetchOddsForDate(date, maxPagesInput) {
+  const maxPages = Math.max(1, Math.min(100, Number(maxPagesInput || process.env.ALGORITHM_ODDS_MAX_PAGES || 50) || 50))
   const rows = []
   let page = 1
   while (page <= maxPages) {
-    const payload = await apiFetch(`/odds?date=${encodeURIComponent(date)}&page=${page}`)
+    let payload
+    try {
+      payload = await apiFetch(`/odds?date=${encodeURIComponent(date)}&page=${page}`)
+    } catch (error) {
+      if (page === 1) throw error
+      console.warn(`algorithm odds page ${page} skipped`, error?.message || error)
+      break
+    }
     const response = Array.isArray(payload.response) ? payload.response : []
     rows.push(...response)
     const current = Number(payload?.paging?.current || page)
@@ -125,8 +146,9 @@ function buildOverUnderOddsMap(rows = []) {
         })
       })
     })
-    if (!prices.over.length || !prices.under.length) return
+    if (!prices.over.length && !prices.under.length) return
     const summarize = list => {
+      if (!list.length) return { best: 0, bestBookmaker: '', consensus: 0, books: 0 }
       const best = list.reduce((winner, current) => current.odd > winner.odd ? current : winner, list[0])
       return {
         best: round(best.odd, 2),
@@ -218,7 +240,7 @@ function parseTeamFixtureStats(rows = [], teamId) {
   return { shotsFor, cornersFor, shotsAllowed, cornersAllowed }
 }
 
-async function readCachedTeamForm(supabase, teamId, asOfDate, sampleSize) {
+async function readCachedTeamForm(supabase, teamId, asOfDate, sampleSize, minMatches = 1) {
   const { data, error } = await supabase
     .from('algorithm_team_form_cache')
     .select('*')
@@ -230,7 +252,7 @@ async function readCachedTeamForm(supabase, teamId, asOfDate, sampleSize) {
     if (String(error.message || '').toLowerCase().includes('algorithm_team_form_cache')) return null
     throw error
   }
-  if (!data || Number(data.matches_count || 0) < Math.min(3, sampleSize)) return null
+  if (!data || Number(data.matches_count || 0) < minMatches) return null
   return {
     teamId: Number(teamId),
     teamName: data.team_name,
@@ -263,29 +285,29 @@ async function writeCachedTeamForm(supabase, teamForm, asOfDate, sampleSize) {
   if (error) throw error
 }
 
-async function fetchTeamForm({ supabase, teamId, teamName, asOfKickoff, sampleSize, timezone }) {
+async function fetchTeamForm({ supabase, teamId, teamName, asOfKickoff, sampleSize, minMatches = 1, timezone }) {
   const asOfDate = dateKeyInTimezone(new Date(asOfKickoff), timezone)
-  const cached = await readCachedTeamForm(supabase, teamId, asOfDate, sampleSize)
+  const cached = await readCachedTeamForm(supabase, teamId, asOfDate, sampleSize, minMatches)
   if (cached) return cached
 
-  const lookback = Math.max(sampleSize + 8, 15)
+  const lookback = Math.max(sampleSize + 12, 18)
   const payload = await apiFetch(`/fixtures?team=${encodeURIComponent(teamId)}&last=${lookback}&timezone=${encodeURIComponent(timezone)}`)
   const fixtures = (Array.isArray(payload.response) ? payload.response : [])
     .filter(item => FINISHED_STATUSES.has(String(item?.fixture?.status?.short || '').toUpperCase()))
     .filter(item => fixtureKickoffMs(item) > 0 && fixtureKickoffMs(item) < Date.parse(asOfKickoff))
     .sort((a, b) => fixtureKickoffMs(b) - fixtureKickoffMs(a))
-    .slice(0, sampleSize)
 
-  const perMatch = await mapConcurrent(fixtures, 2, async fixture => {
+  const valid = []
+  for (const fixture of fixtures) {
     const fixtureId = fixture?.fixture?.id
     const statistics = await fetchFixtureStatistics(fixtureId)
     const parsed = parseTeamFixtureStats(statistics, teamId)
-    return parsed ? { ...parsed, fixtureId: Number(fixtureId) } : null
-  })
+    if (parsed) valid.push({ ...parsed, fixtureId: Number(fixtureId) })
+    if (valid.length >= sampleSize) break
+  }
 
-  const valid = perMatch.filter(Boolean)
-  if (valid.length < Math.min(3, sampleSize)) {
-    throw new Error(`${teamName}: za mało kompletnych meczów ze strzałami i rożnymi (${valid.length}/${sampleSize}).`)
+  if (valid.length < minMatches) {
+    throw new Error(`${teamName}: brak wystarczających kompletnych statystyk strzałów i rożnych (${valid.length}/${sampleSize}).`)
   }
 
   const average = key => valid.reduce((sum, row) => sum + Number(row[key] || 0), 0) / valid.length
@@ -304,12 +326,12 @@ async function fetchTeamForm({ supabase, teamId, teamName, asOfKickoff, sampleSi
   return teamForm
 }
 
-function buildAlgorithmRow(fixture, odds, homeForm, awayForm, sampleSize, minEdge) {
+function buildAlgorithmRow(fixture, odds, homeForm, awayForm, sampleSize, minProbability) {
   const model = calculatePressureModel(homeForm, awayForm)
-  const selection = chooseValueBet(model, {
-    over: odds.over.best,
-    under: odds.under.best
-  }, { minEdge })
+  const selection = chooseProbabilityBet(model, {
+    over: odds?.over?.best,
+    under: odds?.under?.best
+  }, { minProbability })
   const isBet = selection.market !== 'no_bet'
   const now = new Date().toISOString()
 
@@ -348,12 +370,12 @@ function buildAlgorithmRow(fixture, odds, homeForm, awayForm, sampleSize, minEdg
     under_probability: model.underProbability,
     fair_over_odds: model.fairOverOdds,
     fair_under_odds: model.fairUnderOdds,
-    over_odds: odds.over.best,
-    under_odds: odds.under.best,
-    over_bookmaker: odds.over.bestBookmaker,
-    under_bookmaker: odds.under.bestBookmaker,
-    over_market_books: odds.over.books,
-    under_market_books: odds.under.books,
+    over_odds: odds?.over?.best || null,
+    under_odds: odds?.under?.best || null,
+    over_bookmaker: odds?.over?.bestBookmaker || '',
+    under_bookmaker: odds?.under?.bestBookmaker || '',
+    over_market_books: odds?.over?.books || 0,
+    under_market_books: odds?.under?.books || 0,
     over_ev_pct: selection.overEv == null ? null : round(selection.overEv * 100, 2),
     under_ev_pct: selection.underEv == null ? null : round(selection.underEv * 100, 2),
     selected_market: selection.market,
@@ -363,14 +385,25 @@ function buildAlgorithmRow(fixture, odds, homeForm, awayForm, sampleSize, minEdg
     edge_pct: selection.edge == null ? null : round(selection.edge * 100, 2),
     stake: isBet ? 1 : 0,
     status: isBet ? 'pending' : 'no_bet',
+    result: null,
+    home_goals: null,
+    away_goals: null,
+    total_goals: null,
     profit: 0,
-    model_version: 'pressure-ou25-v1',
+    settlement_source: null,
+    settled_at: null,
+    model_version: MODEL_VERSION,
     formula_snapshot: {
       pressure_probability_points: [
         [24, 42.2], [28, 42.9], [32, 43.6], [36, 44.2],
         [40, 44.9], [44, 45.6], [48, 46.3]
       ],
-      min_edge: minEdge,
+      selection_rule: 'higher_probability_min_51',
+      min_probability: minProbability,
+      selection_reason: selection.reason,
+      odds_are_informational_for_selection: true,
+      over_consensus_odds: odds?.over?.consensus || 0,
+      under_consensus_odds: odds?.under?.consensus || 0,
       home_source_fixture_ids: homeForm.sourceFixtureIds,
       away_source_fixture_ids: awayForm.sourceFixtureIds
     },
@@ -378,120 +411,168 @@ function buildAlgorithmRow(fixture, odds, homeForm, awayForm, sampleSize, minEdg
   }
 }
 
+async function recordAlgorithmRun(supabase, runType, status, startedAt, details = {}) {
+  try {
+    await supabase.from('algorithm_runs').insert({
+      run_type: String(runType || 'scan'),
+      status: String(status || 'success'),
+      started_at: startedAt || new Date().toISOString(),
+      finished_at: new Date().toISOString(),
+      fixtures_loaded: Number(details.fixtures_loaded || 0),
+      candidates_considered: Number(details.candidates_considered || 0),
+      rows_saved: Number(details.rows_saved || 0),
+      bets_saved: Number(details.bets_saved || 0),
+      skipped_errors: Number(details.skipped_errors || details.errors || 0),
+      details
+    })
+  } catch (error) {
+    console.warn('algorithm_runs write skipped:', error?.message || error)
+  }
+}
+
 async function generateAlgorithmPicks(options = {}) {
+  const startedAt = new Date().toISOString()
   const supabase = getSupabaseAdmin()
   const timezone = String(options.timezone || process.env.APP_TIMEZONE || 'Europe/Warsaw')
   const sampleSize = Math.max(3, Math.min(10, Number(options.sampleSize || process.env.ALGORITHM_FORM_MATCHES || 5) || 5))
-  const maxFixtures = Math.max(1, Math.min(40, Number(options.maxFixtures || process.env.ALGORITHM_MAX_FIXTURES || 12) || 12))
-  const days = Math.max(1, Math.min(3, Number(options.days || 2) || 2))
-  const minEdge = Math.max(-0.5, Math.min(1, Number(options.minEdge ?? process.env.ALGORITHM_MIN_EDGE ?? 0) || 0))
-  const force = Boolean(options.force)
+  const minFormMatches = Math.max(1, Math.min(sampleSize, Number(options.minFormMatches || process.env.ALGORITHM_MIN_FORM_MATCHES || 1) || 1))
+  const maxFixtures = Math.max(1, Math.min(500, Number(options.maxFixtures || process.env.ALGORITHM_MAX_FIXTURES || 250) || 250))
+  const days = Math.max(1, Math.min(3, Number(options.days || process.env.ALGORITHM_DAYS || 1) || 1))
+  const minProbability = Math.max(50, Math.min(99, Number(options.minProbability ?? process.env.ALGORITHM_MIN_PROBABILITY ?? 51) || 51))
+  const concurrency = Math.max(1, Math.min(8, Number(options.concurrency || process.env.ALGORITHM_CONCURRENCY || 4) || 4))
+  const includeAll = options.includeAll == null
+    ? boolEnv(process.env.ALGORITHM_INCLUDE_ALL, true)
+    : Boolean(options.includeAll)
   const startDate = String(options.date || dateKeyInTimezone(new Date(), timezone)).slice(0, 10)
   const nowMs = Date.now()
 
-  const fixtures = []
-  const oddsRows = []
-  for (let offset = 0; offset < days; offset += 1) {
-    const date = shiftDateKey(startDate, offset)
-    const [dateFixtures, dateOdds] = await Promise.all([
-      fetchFixturesForDate(date, timezone),
-      fetchOddsForDate(date)
-    ])
-    fixtures.push(...dateFixtures)
-    oddsRows.push(...dateOdds)
-  }
-
-  const oddsMap = buildOverUnderOddsMap(oddsRows)
-  let candidates = fixtures
-    .filter(fixture => UPCOMING_STATUSES.has(String(fixture?.fixture?.status?.short || '').toUpperCase()))
-    .filter(fixture => fixtureKickoffMs(fixture) > nowMs - 15 * 60 * 1000)
-    .filter(fixture => !isExcludedFixture(fixture))
-    .filter(fixture => oddsMap.has(String(fixture?.fixture?.id || '')))
-    .sort((a, b) => fixtureKickoffMs(a) - fixtureKickoffMs(b))
-
-  const candidateIds = candidates.map(item => Number(item?.fixture?.id)).filter(Boolean)
-  const existingMap = new Map()
-  if (candidateIds.length) {
-    const { data, error } = await supabase
-      .from('algorithm_bets')
-      .select('fixture_id,status')
-      .in('fixture_id', candidateIds)
-    if (error) throw error
-    ;(data || []).forEach(row => existingMap.set(String(row.fixture_id), String(row.status || '')))
-  }
-
-  candidates = candidates
-    .filter(fixture => {
-      const status = existingMap.get(String(fixture?.fixture?.id || ''))
-      if (!status) return true
-      if (['won', 'lost', 'void'].includes(status)) return false
-      return force
-    })
-    .slice(0, maxFixtures)
-
-  const errors = []
-  const generated = await mapConcurrent(candidates, 2, async fixture => {
-    const fixtureId = String(fixture?.fixture?.id || '')
-    const kickoff = fixture?.fixture?.date
-    const homeId = fixture?.teams?.home?.id
-    const awayId = fixture?.teams?.away?.id
-    if (!fixtureId || !kickoff || !homeId || !awayId) return null
-    try {
-      const [homeForm, awayForm] = await Promise.all([
-        fetchTeamForm({
-          supabase,
-          teamId: homeId,
-          teamName: fixture?.teams?.home?.name,
-          asOfKickoff: kickoff,
-          sampleSize,
-          timezone
-        }),
-        fetchTeamForm({
-          supabase,
-          teamId: awayId,
-          teamName: fixture?.teams?.away?.name,
-          asOfKickoff: kickoff,
-          sampleSize,
-          timezone
-        })
+  try {
+    const fixtures = []
+    const oddsRows = []
+    for (let offset = 0; offset < days; offset += 1) {
+      const date = shiftDateKey(startDate, offset)
+      const [dateFixtures, dateOdds] = await Promise.all([
+        fetchFixturesForDate(date, timezone),
+        fetchOddsForDate(date, options.oddsMaxPages)
       ])
-      return buildAlgorithmRow(fixture, oddsMap.get(fixtureId), homeForm, awayForm, sampleSize, minEdge)
-    } catch (error) {
-      errors.push({
-        fixture_id: Number(fixtureId),
-        match: `${fixture?.teams?.home?.name || ''} - ${fixture?.teams?.away?.name || ''}`,
-        error: String(error?.message || error)
-      })
-      return null
+      fixtures.push(...dateFixtures)
+      oddsRows.push(...dateOdds)
     }
-  })
 
-  const rows = generated.filter(Boolean)
-  if (rows.length) {
-    const { error } = await supabase.from('algorithm_bets').upsert(rows, { onConflict: 'fixture_id' })
-    if (error) throw error
-  }
+    const oddsMap = buildOverUnderOddsMap(oddsRows)
+    let candidates = fixtures
+      .filter(fixture => UPCOMING_STATUSES.has(String(fixture?.fixture?.status?.short || '').toUpperCase()))
+      .filter(fixture => fixtureKickoffMs(fixture) > nowMs - 15 * 60 * 1000)
+      .filter(fixture => includeAll || !isExcludedFixture(fixture))
+      .filter(fixture => oddsMap.has(String(fixture?.fixture?.id || '')))
+      .sort((a, b) => fixtureKickoffMs(a) - fixtureKickoffMs(b))
 
-  return {
-    ok: true,
-    model_version: 'pressure-ou25-v1',
-    date_from: startDate,
-    days,
-    sample_size: sampleSize,
-    min_edge_pct: round(minEdge * 100, 2),
-    fixtures_loaded: fixtures.length,
-    fixtures_with_ou25_odds: oddsMap.size,
-    candidates_considered: candidates.length,
-    rows_saved: rows.length,
-    bets_saved: rows.filter(row => row.selected_market !== 'no_bet').length,
-    no_bet_saved: rows.filter(row => row.selected_market === 'no_bet').length,
-    skipped_errors: errors.length,
-    errors: errors.slice(0, 20)
+    const candidateIds = candidates.map(item => Number(item?.fixture?.id)).filter(Boolean)
+    const existingMap = new Map()
+    if (candidateIds.length) {
+      for (const idBatch of chunk(candidateIds, 100)) {
+        const { data, error } = await supabase
+          .from('algorithm_bets')
+          .select('fixture_id,status,updated_at')
+          .in('fixture_id', idBatch)
+        if (error) throw error
+        ;(data || []).forEach(row => existingMap.set(String(row.fixture_id), row))
+      }
+    }
+
+    candidates = candidates
+      .filter(fixture => {
+        const existing = existingMap.get(String(fixture?.fixture?.id || ''))
+        if (!existing) return true
+        if (SETTLED_STATUSES.has(String(existing.status || ''))) return false
+        // WERSJA 1882: pending/no_bet są ponownie przeliczane, aby naprawić stare typy
+        // wybrane wcześniej po EV i odświeżyć kurs przed startem.
+        return true
+      })
+      .slice(0, maxFixtures)
+
+    const errors = []
+    const teamFormPromises = new Map()
+    const getTeamForm = params => {
+      const asOfDate = dateKeyInTimezone(new Date(params.asOfKickoff), timezone)
+      const key = `${params.teamId}:${asOfDate}:${sampleSize}:${minFormMatches}`
+      if (!teamFormPromises.has(key)) {
+        teamFormPromises.set(key, fetchTeamForm({
+          ...params,
+          supabase,
+          sampleSize,
+          minMatches: minFormMatches,
+          timezone
+        }))
+      }
+      return teamFormPromises.get(key)
+    }
+
+    const generated = await mapConcurrent(candidates, concurrency, async fixture => {
+      const fixtureId = String(fixture?.fixture?.id || '')
+      const kickoff = fixture?.fixture?.date
+      const homeId = fixture?.teams?.home?.id
+      const awayId = fixture?.teams?.away?.id
+      if (!fixtureId || !kickoff || !homeId || !awayId) return null
+      try {
+        const [homeForm, awayForm] = await Promise.all([
+          getTeamForm({ teamId: homeId, teamName: fixture?.teams?.home?.name, asOfKickoff: kickoff }),
+          getTeamForm({ teamId: awayId, teamName: fixture?.teams?.away?.name, asOfKickoff: kickoff })
+        ])
+        return buildAlgorithmRow(fixture, oddsMap.get(fixtureId), homeForm, awayForm, sampleSize, minProbability)
+      } catch (error) {
+        errors.push({
+          fixture_id: Number(fixtureId),
+          match: `${fixture?.teams?.home?.name || ''} - ${fixture?.teams?.away?.name || ''}`,
+          error: String(error?.message || error)
+        })
+        return null
+      }
+    })
+
+    const rows = generated.filter(Boolean)
+    if (rows.length) {
+      for (const rowBatch of chunk(rows, 100)) {
+        const { error } = await supabase.from('algorithm_bets').upsert(rowBatch, { onConflict: 'fixture_id' })
+        if (error) throw error
+      }
+    }
+
+    const result = {
+      ok: true,
+      model_version: MODEL_VERSION,
+      selection_rule: 'higher_probability_min_51',
+      date_from: startDate,
+      days,
+      sample_size: sampleSize,
+      min_form_matches: minFormMatches,
+      min_probability: minProbability,
+      include_all_competitions: includeAll,
+      fixtures_loaded: fixtures.length,
+      fixtures_with_ou25_odds: oddsMap.size,
+      candidates_found: candidateIds.length,
+      candidates_considered: candidates.length,
+      rows_saved: rows.length,
+      bets_saved: rows.filter(row => row.selected_market !== 'no_bet').length,
+      no_bet_saved: rows.filter(row => row.selected_market === 'no_bet').length,
+      over_saved: rows.filter(row => row.selected_market === 'over_2_5').length,
+      under_saved: rows.filter(row => row.selected_market === 'under_2_5').length,
+      skipped_errors: errors.length,
+      errors: errors.slice(0, 50)
+    }
+    await recordAlgorithmRun(supabase, 'scan', errors.length ? 'partial' : 'success', startedAt, result)
+    return result
+  } catch (error) {
+    const details = { ok: false, error: String(error?.message || error) }
+    await recordAlgorithmRun(supabase, 'scan', 'error', startedAt, details)
+    throw error
   }
 }
 
 module.exports = {
+  MODEL_VERSION,
   generateAlgorithmPicks,
+  recordAlgorithmRun,
   getSupabaseAdmin,
   getApiKey,
   apiFetch,
