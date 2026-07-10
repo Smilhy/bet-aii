@@ -42,13 +42,13 @@ exports.handler = async function(event = {}) {
       days: query.days,
       sampleSize: query.sampleSize,
       minFormMatches: query.minFormMatches,
-      maxFixtures: query.maxFixtures || 1000,
+      maxFixtures: query.maxFixtures || 250,
       processBatch: query.processBatch || 20,
       minProbability: query.minProbability,
       minLeadMinutes: query.minLeadMinutes,
       maxRuntimeMs: query.maxRuntimeMs,
       oddsMaxPages: query.oddsMaxPages,
-      includeAll: query.includeAll == null ? undefined : !['0', 'false', 'no'].includes(String(query.includeAll).toLowerCase()),
+      topCompetitionsOnly: query.topCompetitionsOnly == null ? true : !['0', 'false', 'no'].includes(String(query.topCompetitionsOnly).toLowerCase()),
       force: true
     })
     console.log('algorithm-cycle-background completed', JSON.stringify({ settlement, scan }))

@@ -11,7 +11,7 @@ const FILTERS = [
 const TEXT = {
   pl: {
     title: 'Algorytm Powyżej / Poniżej 2.5',
-    subtitle: 'Pełny automat pre-match: co 15 minut skanuje nierozpoczęte mecze, wybiera stronę z większą szansą modelu i stawia 1 jednostkę tylko przy minimum 51% oraz kursie co najmniej 2.00.',
+    subtitle: 'Pełny automat pre-match: co 15 minut skanuje wyłącznie główne ligi i najważniejsze turnieje, wybiera stronę z większą szansą modelu i stawia 1 jednostkę przy minimum 51% oraz kursie co najmniej 2.00.',
     refresh: 'Odśwież dane',
     scan: 'Uruchom pełny skan',
     settle: 'Rozlicz mecze',
@@ -102,7 +102,7 @@ const TEXT = {
     startsAt: 'Start',
     progressEyebrow: 'POSTĘP AUTOMATU',
     progressTitle: 'Skanowanie meczów pre-match',
-    progressSubtitle: 'System sprawdza kolejkę, pobiera statystyki i zapisuje tylko typy z minimum 51% oraz kursem co najmniej 2.00.',
+    progressSubtitle: 'System sprawdza tylko topowe ligi i główne turnieje, pobiera statystyki i zapisuje typy z minimum 51% oraz kursem co najmniej 2.00.',
     checked: 'Sprawdzono',
     readyPicks: 'Gotowe typy',
     inQueue: 'W kolejce',
@@ -115,8 +115,8 @@ const TEXT = {
   },
   en: {
     title: 'Over / Under 2.5 Algorithm',
-    subtitle: 'Fully automated pre-match test: every 15 minutes it scans matches that have not started, selects the higher model probability and stakes 1 unit only at 51% or more with odds of at least 2.00.',
-    refresh: 'Refresh data', scan: 'Run full scan', settle: 'Settle matches', loading: 'Loading algorithm data…', empty: 'No matches in this view.', setupEmpty: 'No saved analyses. Run the SQL migration, check Netlify keys and start the first scan.', formula: 'How the pick is selected', formulaCopy: 'The formula calculates Over and Under 2.5 probabilities. The system always selects the side with the HIGHER probability. It saves a 1-unit bet only when probability is at least 51% and the selected market odds are at least 2.00. Odds do not change the direction.', profit: 'Profit', roi: 'ROI', hitRate: 'Hit rate', bets: 'Bets', pending: 'Pending', analyzed: 'Analysed', stake: 'Stake', edge: 'Odds EV', pressure: 'Total pressure', model: 'Model pick', odds: 'Odds', noOdds: 'no odds', probability: 'Probability', noBet: 'NO BET', details: 'Show calculation', hide: 'Hide calculation', home: 'Home', away: 'Away', shots: 'Shots', corners: 'Corners', allowedShots: 'Shots allowed', allowedCorners: 'Corners allowed', attack: 'Attacking pressure', defence: 'Defensive pressure', expected: 'Expected pressure', over: 'Over 2.5', under: 'Under 2.5', result: 'Result', statusPending: 'PENDING', statusWon: 'WON', statusLost: 'LOST', statusVoid: 'VOID', statusNoBet: 'SKIPPED', statusAnalyzing: 'CALCULATING', waitingPick: 'Waiting for statistics', waitingText: 'The match has already been added. The automation is fetching historical shots and corners and will save a pick only at 51% or more and odds of at least 2.00.', errorPrefix: 'Error:', saved: 'Background scan started. Data will appear automatically', settled: 'Settlement completed', automation: 'AUTO EVERY 15 MIN', lastScan: 'Last scan', statsTitle: 'Algorithm statistics', balanceChart: 'Algorithm balance chart', cumulative: 'Cumulative balance', settledPicks: 'settled picks', avgOdds: 'Avg. odds', avgProbability: 'Avg. probability', record: 'W/L record', maxDrawdown: 'Max drawdown', byLeague: 'Statistics by league', byMarket: 'Statistics by pick type', byOdds: 'Statistics by odds range', byProbability: 'Statistics by probability range', count: 'Count', balance: 'Profit', yield: 'Yield', league: 'League', market: 'Pick type', range: 'Range', noStats: 'Statistics will appear after the first bets are settled.', topToday: 'TOP 5 TODAY', topTodayTitle: 'Highest probabilities', topTodaySubtitle: 'Today’s ready pre-match picks with at least 51% probability and odds of 2.00 or higher, ranked by model probability.', topTodayEmpty: 'No ready picks for today.', startsAt: 'Kick-off', progressEyebrow: 'AUTOMATION PROGRESS', progressTitle: 'Scanning pre-match fixtures', progressSubtitle: 'The system checks the queue, downloads statistics and saves only picks at 51% or more with odds of at least 2.00.', checked: 'Checked', readyPicks: 'Ready picks', inQueue: 'In queue', noData: 'No data', nextScan: 'Next scan', workerWorking: 'WORKING', workerWaiting: 'WAITING FOR CYCLE', queueDone: 'QUEUE CHECKED', anyMoment: 'any moment'
+    subtitle: 'Fully automated pre-match test: every 15 minutes it scans only major leagues and top tournaments, selects the higher model probability and stakes 1 unit at 51% or more with odds of at least 2.00.',
+    refresh: 'Refresh data', scan: 'Run full scan', settle: 'Settle matches', loading: 'Loading algorithm data…', empty: 'No matches in this view.', setupEmpty: 'No saved analyses. Run the SQL migration, check Netlify keys and start the first scan.', formula: 'How the pick is selected', formulaCopy: 'The formula calculates Over and Under 2.5 probabilities. The system always selects the side with the HIGHER probability. It saves a 1-unit bet only when probability is at least 51% and the selected market odds are at least 2.00. Odds do not change the direction.', profit: 'Profit', roi: 'ROI', hitRate: 'Hit rate', bets: 'Bets', pending: 'Pending', analyzed: 'Analysed', stake: 'Stake', edge: 'Odds EV', pressure: 'Total pressure', model: 'Model pick', odds: 'Odds', noOdds: 'no odds', probability: 'Probability', noBet: 'NO BET', details: 'Show calculation', hide: 'Hide calculation', home: 'Home', away: 'Away', shots: 'Shots', corners: 'Corners', allowedShots: 'Shots allowed', allowedCorners: 'Corners allowed', attack: 'Attacking pressure', defence: 'Defensive pressure', expected: 'Expected pressure', over: 'Over 2.5', under: 'Under 2.5', result: 'Result', statusPending: 'PENDING', statusWon: 'WON', statusLost: 'LOST', statusVoid: 'VOID', statusNoBet: 'SKIPPED', statusAnalyzing: 'CALCULATING', waitingPick: 'Waiting for statistics', waitingText: 'The match has already been added. The automation is fetching historical shots and corners and will save a pick only at 51% or more and odds of at least 2.00.', errorPrefix: 'Error:', saved: 'Background scan started. Data will appear automatically', settled: 'Settlement completed', automation: 'AUTO EVERY 15 MIN', lastScan: 'Last scan', statsTitle: 'Algorithm statistics', balanceChart: 'Algorithm balance chart', cumulative: 'Cumulative balance', settledPicks: 'settled picks', avgOdds: 'Avg. odds', avgProbability: 'Avg. probability', record: 'W/L record', maxDrawdown: 'Max drawdown', byLeague: 'Statistics by league', byMarket: 'Statistics by pick type', byOdds: 'Statistics by odds range', byProbability: 'Statistics by probability range', count: 'Count', balance: 'Profit', yield: 'Yield', league: 'League', market: 'Pick type', range: 'Range', noStats: 'Statistics will appear after the first bets are settled.', topToday: 'TOP 5 TODAY', topTodayTitle: 'Highest probabilities', topTodaySubtitle: 'Today’s ready pre-match picks with at least 51% probability and odds of 2.00 or higher, ranked by model probability.', topTodayEmpty: 'No ready picks for today.', startsAt: 'Kick-off', progressEyebrow: 'AUTOMATION PROGRESS', progressTitle: 'Scanning pre-match fixtures', progressSubtitle: 'The system checks only major leagues and top tournaments, downloads statistics and saves picks at 51% or more with odds of at least 2.00.', checked: 'Checked', readyPicks: 'Ready picks', inQueue: 'In queue', noData: 'No data', nextScan: 'Next scan', workerWorking: 'WORKING', workerWaiting: 'WAITING FOR CYCLE', queueDone: 'QUEUE CHECKED', anyMoment: 'any moment'
   }
 }
 
@@ -423,23 +423,14 @@ function AutomationProgress({ automation, clock, t, lang }) {
 function AlgorithmStats({ rows, summary, t }) {
   const bets = useMemo(() => rows.filter(row => row.selected_market !== 'no_bet' && Number(row.stake || 0) > 0), [rows])
   const settled = useMemo(() => bets.filter(row => ['won', 'lost'].includes(row.status)).sort((a, b) => new Date(a.settled_at || a.kickoff) - new Date(b.settled_at || b.kickoff)), [bets])
-  const cumulative = []
   let running = 0
-  settled.forEach(row => { running += Number(row.profit || 0); cumulative.push(running) })
-  const values = cumulative.length ? cumulative : [0]
-  const min = Math.min(0, ...values)
-  const max = Math.max(0, ...values)
-  const range = Math.max(1, max - min)
-  const points = values.map((value, index) => ({
-    x: values.length === 1 ? 0 : index / (values.length - 1) * 100,
-    y: 94 - ((value - min) / range) * 84,
-    value
-  }))
-  const path = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
-  const area = points.length ? `${path} L ${points[points.length - 1].x} 100 L ${points[0].x} 100 Z` : ''
   let peak = 0
   let maxDrawdown = 0
-  values.forEach(value => { peak = Math.max(peak, value); maxDrawdown = Math.max(maxDrawdown, peak - value) })
+  settled.forEach(row => {
+    running += Number(row.profit || 0)
+    peak = Math.max(peak, running)
+    maxDrawdown = Math.max(maxDrawdown, peak - running)
+  })
 
   const leagueRows = groupStats(bets, row => `${row.league_name || 'Inne'}${row.country ? ` · ${row.country}` : ''}`)
   const marketRows = groupStats(bets, row => row.selected_market === 'over_2_5' ? t.over : t.under)
@@ -470,19 +461,6 @@ function AlgorithmStats({ rows, summary, t }) {
         <Metric label={t.record} value={`${summary.won || 0}/${summary.lost || 0}`} />
         <Metric label={t.maxDrawdown} value={`${number(maxDrawdown, 2)} j.`} tone={maxDrawdown > 0 ? 'negative' : ''} />
       </div>
-      <section className="algorithm-balance-chart-v1882">
-        <header><div><h3>{t.balanceChart}</h3><span>{t.cumulative}</span></div><strong className={Number(summary.profit || 0) >= 0 ? 'pos' : 'neg'}>{signed(summary.profit || 0, 2, ' j.')}</strong></header>
-        <div className="algorithm-chart-wrap-v1882">
-          <div className="algorithm-chart-labels-v1882"><span>{number(max, 2)}</span><span>{number((max + min) / 2, 2)}</span><span>{number(min, 2)}</span></div>
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label={t.balanceChart}>
-            <defs><linearGradient id="algorithmArea1882" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="rgba(64,242,231,.30)" /><stop offset="100%" stopColor="rgba(64,242,231,0)" /></linearGradient></defs>
-            <line x1="0" y1="10" x2="100" y2="10" className="grid" /><line x1="0" y1="52" x2="100" y2="52" className="grid" /><line x1="0" y1="94" x2="100" y2="94" className="grid" />
-            {area ? <path d={area} className="area" /> : null}
-            {path ? <path d={path} className="line" /> : null}
-            {points.map((point, index) => <circle key={index} cx={point.x} cy={point.y} r="1.15" />)}
-          </svg>
-        </div>
-      </section>
       <div className="algorithm-stats-grid-v1882"><StatsTable title={t.byLeague} firstLabel={t.league} rows={leagueRows} t={t} /><StatsTable title={t.byMarket} firstLabel={t.market} rows={marketRows} t={t} /></div>
       <div className="algorithm-stats-grid-v1882"><StatsTable title={t.byOdds} firstLabel={t.range} rows={oddsRows} t={t} /><StatsTable title={t.byProbability} firstLabel={t.range} rows={probabilityRows} t={t} /></div>
     </section>
@@ -609,7 +587,7 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
   return (
     <div className="algorithm-page-v1880">
       <section className="algorithm-hero-v1880">
-        <div className="algorithm-hero-copy-v1880"><span>PRESSURE O/U 2.5 · V10 STATS</span><h1>{t.title}</h1><p>{t.subtitle}</p><div className="algorithm-auto-meta-v1882"><b>{t.automation}</b><span>{t.lastScan}: {latestScan?.started_at ? dateTime(latestScan.started_at, lang) : '—'}</span></div></div>
+        <div className="algorithm-hero-copy-v1880"><h1>{t.title}</h1><p>{t.subtitle}</p><div className="algorithm-auto-meta-v1882"><b>{t.automation}</b><span>{t.lastScan}: {latestScan?.started_at ? dateTime(latestScan.started_at, lang) : '—'}</span></div></div>
         <div className="algorithm-hero-actions-v1880">
           <button type="button" onClick={() => load()} disabled={loading}>{loading ? '…' : '↻'} {t.refresh}</button>
           {isAdmin && <button type="button" className="is-primary" onClick={() => runAdminAction('scan')} disabled={Boolean(action)}>{action === 'scan' ? '…' : '▶'} {t.scan}</button>}

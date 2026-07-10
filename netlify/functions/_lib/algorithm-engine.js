@@ -10,7 +10,7 @@ const API_BASE = 'https://v3.football.api-sports.io'
 const FINISHED_STATUSES = new Set(['FT', 'AET', 'PEN'])
 const UPCOMING_STATUSES = new Set(['NS', 'TBD'])
 const SETTLED_STATUSES = new Set(['won', 'lost', 'void'])
-const MODEL_VERSION = 'pressure-ou25-v8-min-odds-2'
+const MODEL_VERSION = 'pressure-ou25-v9-top-competitions-min-odds-2'
 const PREMATCH_MIN_LEAD_MINUTES = Math.max(1, Number(process.env.ALGORITHM_PREMATCH_MIN_LEAD_MINUTES || 10) || 10)
 const API_MIN_INTERVAL_MS = Math.max(250, Number(process.env.ALGORITHM_API_MIN_INTERVAL_MS || 350) || 350)
 const API_RATE_LIMIT_RETRY_MS = Math.max(15_000, Number(process.env.ALGORITHM_API_RATE_LIMIT_RETRY_MS || 65_000) || 65_000)
@@ -259,6 +259,90 @@ function isExcludedFixture(fixture = {}) {
     /\brezerwy\b/,
     /\byouth\b/
   ].some(pattern => pattern.test(text))
+}
+
+
+function normalizeCompetitionValue(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+const MAJOR_INTERNATIONAL_COMPETITIONS = [
+  /(?:^| )world cup(?: |$)/,
+  /fifa club world cup/,
+  /uefa champions league/,
+  /uefa europa league/,
+  /uefa conference league/,
+  /euro championship/,
+  /uefa nations league/,
+  /copa america/,
+  /africa cup of nations/,
+  /african nations championship/,
+  /asian cup/,
+  /concacaf gold cup/,
+  /copa libertadores/,
+  /copa sudamericana/,
+  /afc champions league/,
+  /caf champions league/,
+  /concacaf champions (?:cup|league)/,
+  /uefa super cup/,
+  /intercontinental cup/
+]
+
+const TOP_DOMESTIC_COMPETITIONS = [
+  { countries: ['england'], leagues: [/^premier league$/, /^fa cup$/, /^(efl |carabao )?league cup$/] },
+  { countries: ['spain'], leagues: [/^la liga$/, /^primera division$/, /^copa del rey$/] },
+  { countries: ['italy'], leagues: [/^serie a$/, /^coppa italia$/] },
+  { countries: ['germany'], leagues: [/^bundesliga$/, /^dfb pokal$/] },
+  { countries: ['france'], leagues: [/^ligue 1$/, /^coupe de france$/] },
+  { countries: ['netherlands'], leagues: [/^eredivisie$/, /^knvb beker$/] },
+  { countries: ['portugal'], leagues: [/^primeira liga$/, /^taca de portugal$/] },
+  { countries: ['belgium'], leagues: [/jupiler pro league/, /^first division a$/, /^cup$/] },
+  { countries: ['scotland'], leagues: [/^premiership$/, /^fa cup$/, /^league cup$/] },
+  { countries: ['turkey', 'turkiye'], leagues: [/^super lig$/, /^cup$/] },
+  { countries: ['poland'], leagues: [/^ekstraklasa$/, /^cup$/] },
+  { countries: ['brazil'], leagues: [/^serie a$/, /^copa do brasil$/] },
+  { countries: ['argentina'], leagues: [/liga profesional/, /^primera division$/, /^copa argentina$/] },
+  { countries: ['usa', 'united states'], leagues: [/^major league soccer$/, /^mls$/, /^us open cup$/] },
+  { countries: ['mexico'], leagues: [/^liga mx$/] },
+  { countries: ['japan'], leagues: [/^j1 league$/, /^emperor cup$/] },
+  { countries: ['south korea', 'korea republic'], leagues: [/^k league 1$/, /^fa cup$/] },
+  { countries: ['saudi arabia'], leagues: [/^pro league$/, /^saudi pro league$/, /^king s cup$/] },
+  { countries: ['australia'], leagues: [/^a league$/, /^a league men$/, /^australia cup$/] },
+  { countries: ['colombia'], leagues: [/^primera a$/, /^copa colombia$/] },
+  { countries: ['chile'], leagues: [/^primera division$/, /^copa chile$/] },
+  { countries: ['uruguay'], leagues: [/^primera division$/] },
+  { countries: ['switzerland'], leagues: [/^super league$/, /^schweizer cup$/] },
+  { countries: ['austria'], leagues: [/^bundesliga$/, /^cup$/] },
+  { countries: ['greece'], leagues: [/^super league 1$/, /^cup$/] },
+  { countries: ['czech republic', 'czechia'], leagues: [/^czech liga$/, /^1 liga$/, /^cup$/] },
+  { countries: ['denmark'], leagues: [/^superliga$/, /^dbu pokalen$/] },
+  { countries: ['norway'], leagues: [/^eliteserien$/, /^nm cupen$/] },
+  { countries: ['sweden'], leagues: [/^allsvenskan$/, /^svenska cupen$/] },
+  { countries: ['finland'], leagues: [/^veikkausliiga$/, /^suomen cup$/] }
+]
+
+function isTopCompetitionRecord(row = {}) {
+  const league = normalizeCompetitionValue(row?.league_name ?? row?.league?.name)
+  const country = normalizeCompetitionValue(row?.country ?? row?.league?.country)
+  if (!league) return false
+  if (MAJOR_INTERNATIONAL_COMPETITIONS.some(pattern => pattern.test(league))) return true
+  return TOP_DOMESTIC_COMPETITIONS.some(rule =>
+    rule.countries.includes(country) && rule.leagues.some(pattern => pattern.test(league))
+  )
+}
+
+function isTopCompetitionFixture(fixture = {}) {
+  return isTopCompetitionRecord({
+    league_name: fixture?.league?.name,
+    country: fixture?.league?.country
+  })
 }
 
 function fixtureKickoffMs(fixture = {}) {
@@ -615,7 +699,11 @@ function terminalNoDataPatch(previous, message, reason = 'missing_team_form') {
     analysis_next_retry_at: null,
     analysis_updated_at: now,
     selected_market: 'no_bet',
-    selected_label: reason === 'started_before_analysis' ? 'Mecz rozpoczęty — pominięty' : 'Brak wystarczających statystyk',
+    selected_label: reason === 'started_before_analysis'
+      ? 'Mecz rozpoczęty — pominięty'
+      : reason === 'competition_not_allowed'
+        ? 'Poza listą top rozgrywek'
+        : 'Brak wystarczających statystyk',
     selected_probability: 0,
     selected_odds: 0,
     stake: 0,
@@ -677,12 +765,14 @@ async function generateAlgorithmPicks(options = {}) {
   const timezone = String(options.timezone || process.env.APP_TIMEZONE || 'Europe/Warsaw')
   const sampleSize = Math.max(3, Math.min(10, Number(options.sampleSize || process.env.ALGORITHM_FORM_MATCHES || 5) || 5))
   const minFormMatches = Math.max(1, Math.min(sampleSize, Number(options.minFormMatches || process.env.ALGORITHM_MIN_FORM_MATCHES || 3) || 3))
-  const discoveryLimit = Math.max(1, Math.min(2000, Number(options.maxFixtures || process.env.ALGORITHM_MAX_FIXTURES || 1000) || 1000))
+  const discoveryLimit = Math.max(1, Math.min(500, Number(options.maxFixtures || process.env.ALGORITHM_MAX_FIXTURES || 250) || 250))
   const processBatch = Math.max(1, Math.min(40, Number(options.processBatch || process.env.ALGORITHM_PROCESS_BATCH || 20) || 20))
   const days = Math.max(1, Math.min(3, Number(options.days || process.env.ALGORITHM_DAYS || 1) || 1))
   const minProbability = Math.max(50, Math.min(99, Number(options.minProbability ?? process.env.ALGORITHM_MIN_PROBABILITY ?? 51) || 51))
   const minOdds = Math.max(1.01, Math.min(10, Number(options.minOdds ?? process.env.ALGORITHM_MIN_ODDS ?? 2) || 2))
-  const includeAll = options.includeAll == null ? boolEnv(process.env.ALGORITHM_INCLUDE_ALL, true) : Boolean(options.includeAll)
+  const topCompetitionsOnly = options.topCompetitionsOnly == null
+    ? boolEnv(process.env.ALGORITHM_TOP_COMPETITIONS_ONLY, true)
+    : Boolean(options.topCompetitionsOnly)
   const startDate = String(options.date || dateKeyInTimezone(new Date(), timezone)).slice(0, 10)
   const minLeadMinutes = Math.max(1, Number(options.minLeadMinutes || PREMATCH_MIN_LEAD_MINUTES) || PREMATCH_MIN_LEAD_MINUTES)
   const maxRuntimeMs = Math.max(60_000, Math.min(13 * 60_000, Number(options.maxRuntimeMs || process.env.ALGORITHM_MAX_RUNTIME_MS || 11 * 60_000) || 11 * 60_000))
@@ -714,6 +804,31 @@ async function generateAlgorithmPicks(options = {}) {
       .select('fixture_id')
     if (finalizedMissingError) throw finalizedMissingError
 
+    // V1896: poprzednie wersje mogły zapisać setki meczów z małych lig.
+    // Po wdrożeniu trybu TOP zamykamy przyszłe rekordy spoza listy głównych
+    // lig i turniejów. Nie są kasowane z bazy, ale znikają z aktywnego widoku
+    // i nie zużywają kolejnych zapytań API.
+    let filteredExistingNonTop = 0
+    if (topCompetitionsOnly) {
+      const { data: futureExistingRows, error: futureExistingError } = await supabase
+        .from('algorithm_bets')
+        .select('fixture_id,league_name,country,kickoff,status,analysis_state,analysis_attempts')
+        .gt('kickoff', prematchCutoffIso)
+        .in('status', ['pending', 'no_bet'])
+        .limit(2000)
+      if (futureExistingError) throw futureExistingError
+      const nonTopRows = (futureExistingRows || []).filter(row => !isTopCompetitionRecord(row))
+      for (const rowBatch of chunk(nonTopRows, 100)) {
+        const ids = rowBatch.map(row => Number(row.fixture_id)).filter(Boolean)
+        if (!ids.length) continue
+        const patch = terminalNoDataPatch({}, 'Rozgrywki spoza listy top lig i głównych turniejów.', 'competition_not_allowed')
+        patch.analysis_attempts = 0
+        const { error } = await supabase.from('algorithm_bets').update(patch).in('fixture_id', ids)
+        if (error) throw error
+        filteredExistingNonTop += ids.length
+      }
+    }
+
     const fixtures = []
     const oddsRows = []
     const scanWarnings = []
@@ -733,7 +848,8 @@ async function generateAlgorithmPicks(options = {}) {
     const allCandidates = fixtures
       .filter(fixture => UPCOMING_STATUSES.has(String(fixture?.fixture?.status?.short || '').toUpperCase()))
       .filter(fixture => fixtureKickoffMs(fixture) > prematchCutoffMs)
-      .filter(fixture => includeAll || !isExcludedFixture(fixture))
+      .filter(fixture => !isExcludedFixture(fixture))
+      .filter(fixture => !topCompetitionsOnly || isTopCompetitionFixture(fixture))
       .sort((a, b) => fixtureKickoffMs(a) - fixtureKickoffMs(b))
       .slice(0, discoveryLimit)
 
@@ -965,7 +1081,8 @@ async function generateAlgorithmPicks(options = {}) {
       min_form_matches: minFormMatches,
       min_probability: minProbability,
       min_odds: minOdds,
-      include_all_competitions: includeAll,
+      top_competitions_only: topCompetitionsOnly,
+      filtered_existing_non_top: filteredExistingNonTop,
       fixtures_loaded: fixtures.length,
       fixtures_discovered: allCandidates.length,
       fixtures_with_ou25_odds: oddsMap.size,
@@ -1014,5 +1131,7 @@ module.exports = {
   parseTeamFixtureStats,
   tryAcquireAlgorithmWorker,
   releaseAlgorithmWorker,
+  isTopCompetitionRecord,
+  isTopCompetitionFixture,
   PREMATCH_MIN_LEAD_MINUTES
 }

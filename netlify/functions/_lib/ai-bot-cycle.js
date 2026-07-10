@@ -6,7 +6,7 @@ const AUTHORS = {
   ograc: { name: 'Ograć Buka', username: 'ograc-buka', source: 'ograc_buka_independent_v1867_9', mirrorAiBets: false }
 }
 
-const VERSION = '1888.0-betai-multisport-ai-bets-only-v28'
+const VERSION = '1895.0-typer-progression-zero-profit-fix'
 const DEFAULT_BOTS = ['betai', 'typer', 'ograc']
 
 // Każdy bot działa niezależnie. Nie ma wspólnej rotacji.
@@ -884,11 +884,27 @@ function rowTipStatus(row = {}) {
 function profitFromTip(row = {}) {
   const status = rowTipStatus(row)
   if (status === 'pending' || status === 'void') return 0
-  const explicit = Number(row.profit)
-  if (Number.isFinite(explicit)) return round(explicit, 2)
+
   const stake = Math.max(0, number(row.stake ?? row.amount ?? row.bet_amount, 1))
-  const odds = Math.max(1, number(row.odds, 1))
-  return status === 'won' ? round((odds - 1) * stake, 2) : round(-stake, 2)
+  const odds = Math.max(1, number(row.odds ?? row.course, 1))
+  const explicit = Number(row.profit)
+
+  // WERSJA 1895 — status rozliczenia jest źródłem prawdy dla progresji.
+  // Część starszych/awaryjnie rozliczonych rekordów miała status won/lost,
+  // ale profit pozostawał równy 0. Poprzednia logika uznawała takie 0 za
+  // prawidłowy wynik, przez co po przegranej kolejna stawka wracała do 1.00.
+  // Jawny profit wykorzystujemy tylko wtedy, gdy ma znak zgodny ze statusem.
+  if (status === 'lost') {
+    if (Number.isFinite(explicit) && explicit < -0.005) return round(explicit, 2)
+    return round(-stake, 2)
+  }
+
+  if (status === 'won') {
+    if (Number.isFinite(explicit) && explicit > 0.005) return round(explicit, 2)
+    return round((odds - 1) * stake, 2)
+  }
+
+  return 0
 }
 
 

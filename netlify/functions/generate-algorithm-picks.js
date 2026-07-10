@@ -29,13 +29,13 @@ exports.handler = async function(event) {
       days: qs.days,
       sampleSize: qs.sampleSize,
       minFormMatches: qs.minFormMatches,
-      maxFixtures: qs.maxFixtures || 1000,
+      maxFixtures: qs.maxFixtures || 250,
       processBatch: qs.processBatch || 20,
       minProbability: qs.minProbability,
       minLeadMinutes: qs.minLeadMinutes,
       maxRuntimeMs: qs.maxRuntimeMs,
       oddsMaxPages: qs.oddsMaxPages,
-      includeAll: qs.includeAll == null ? undefined : !['0', 'false', 'no'].includes(String(qs.includeAll).toLowerCase()),
+      topCompetitionsOnly: qs.topCompetitionsOnly == null ? true : !['0', 'false', 'no'].includes(String(qs.topCompetitionsOnly).toLowerCase()),
       force: true
     })
     return json(200, result)

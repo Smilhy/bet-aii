@@ -1,4 +1,4 @@
-const { getSupabaseAdmin, MODEL_VERSION } = require('./_lib/algorithm-engine')
+const { getSupabaseAdmin, MODEL_VERSION, isTopCompetitionRecord } = require('./_lib/algorithm-engine')
 const { json } = require('./_lib/algorithm-auth')
 const { round } = require('./_lib/algorithm-model')
 
@@ -6,7 +6,7 @@ const { round } = require('./_lib/algorithm-model')
 function isHiddenTechnicalRow(row = {}) {
   const reason = String(row?.formula_snapshot?.selection_reason || '')
   const error = String(row?.analysis_error || '')
-  if (reason === 'missing_team_form_final' || reason === 'started_before_analysis') return true
+  if (reason === 'missing_team_form_final' || reason === 'started_before_analysis' || reason === 'competition_not_allowed') return true
   if (String(row.analysis_state || '') === 'ready' && String(row.selected_market || '') === 'no_bet' && /brak wystarczających kompletnych statystyk/i.test(error)) return true
   return false
 }
@@ -50,10 +50,15 @@ exports.handler = async function(event) {
     const { data, error } = await query
     if (error) throw error
     const allRows = Array.isArray(data) ? data : []
-    // Techniczne rekordy bez danych pozostają w bazie dla diagnostyki, ale nie
-    // zaśmiecają dashboardu ani statystyk użytkownika.
-    const hiddenTechnicalRows = allRows.filter(isHiddenTechnicalRow)
-    const rows = allRows.filter(row => !isHiddenTechnicalRow(row))
+    const currentTime = Date.now()
+    const isLegacyFutureNonTop = row => {
+      const kickoff = Date.parse(row?.kickoff || '')
+      return Number.isFinite(kickoff) && kickoff > currentTime && !isTopCompetitionRecord(row)
+    }
+    // Techniczne rekordy bez danych oraz stare przyszłe rekordy spoza listy TOP
+    // pozostają w bazie dla diagnostyki, ale nie zaśmiecają dashboardu.
+    const hiddenTechnicalRows = allRows.filter(row => isHiddenTechnicalRow(row) || isLegacyFutureNonTop(row))
+    const rows = allRows.filter(row => !isHiddenTechnicalRow(row) && !isLegacyFutureNonTop(row))
     const waiting = rows.filter(row => String(row.analysis_state || 'ready') !== 'ready')
     const bets = rows.filter(row => String(row.analysis_state || 'ready') === 'ready' && row.selected_market !== 'no_bet' && Number(row.stake || 0) > 0)
     const settled = bets.filter(row => ['won', 'lost'].includes(String(row.status || '')))
@@ -85,10 +90,9 @@ exports.handler = async function(event) {
       if (!lockError) workerLock = lockData || null
     } catch (_) {}
 
-    const currentTime = Date.now()
     const activeAllRows = allRows.filter(row => {
       const kickoff = Date.parse(row.kickoff || '')
-      return Number.isFinite(kickoff) && kickoff > currentTime
+      return Number.isFinite(kickoff) && kickoff > currentTime && isTopCompetitionRecord(row)
     })
     const activeHiddenRows = activeAllRows.filter(isHiddenTechnicalRow)
     const activeVisibleRows = activeAllRows.filter(row => !isHiddenTechnicalRow(row))
@@ -136,12 +140,13 @@ exports.handler = async function(event) {
         stake: 1,
         min_probability: 51,
         min_odds: 2,
-        rule: 'Wyłącznie pre-match: kierunek wybiera wyższe prawdopodobieństwo modelu. Zakład 1 jednostka powstaje tylko przy minimum 51% oraz kursie wybranego rynku co najmniej 2.00. Kurs nie wybiera kierunku. Po pełnym sprawdzeniu brak kompletu statystyk kończy analizę i rekord znika z dashboardu.'
+        rule: 'Wyłącznie pre-match i tylko główne ligi oraz turnieje. Kierunek wybiera wyższe prawdopodobieństwo modelu. Zakład 1 jednostka powstaje tylko przy minimum 51% oraz kursie wybranego rynku co najmniej 2.00. Kurs nie wybiera kierunku.'
       },
       automation: {
         scan_every_minutes: 15,
+        top_competitions_only: true,
         settles_before_each_scan: true,
-        mode: 'single-locked-throttled-prematch-worker',
+        mode: 'single-locked-throttled-prematch-top-competitions-worker',
         api_min_interval_ms: Number(process.env.ALGORITHM_API_MIN_INTERVAL_MS || 350),
         prematch_min_lead_minutes: Number(process.env.ALGORITHM_PREMATCH_MIN_LEAD_MINUTES || 10),
         worker_running: workerRunning,

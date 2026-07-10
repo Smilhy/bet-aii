@@ -42,7 +42,7 @@ exports.handler = async function() {
       return { statusCode: 200, body: JSON.stringify({ ok: true, skipped: true, reason: 'worker_already_running' }) }
     }
     const settlement = await settleAlgorithmPicks({ limit: 30 })
-    const scan = await generateAlgorithmPicks({ maxFixtures: 1000, processBatch: 3, maxRuntimeMs: 22_000, force: true })
+    const scan = await generateAlgorithmPicks({ maxFixtures: 250, processBatch: 3, topCompetitionsOnly: true, maxRuntimeMs: 22_000, force: true })
     return { statusCode: 200, body: JSON.stringify({ ok: true, fallback: true, settlement, scan }) }
   } catch (error) {
     console.error('scheduled-generate-algorithm-picks failed', error)
