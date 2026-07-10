@@ -107,6 +107,7 @@ function expectedValue(probabilityPercent, decimalOdds) {
  * WERSJA 1882
  * Kierunek zakładu wybiera WYŁĄCZNIE wyższe prawdopodobieństwo modelu.
  * Kurs służy tylko do zapisania ceny i późniejszego liczenia zysku/straty.
+ * NIE MA minimalnego kursu: każdy poprawny kurs dziesiętny > 1.00 jest akceptowany.
  * Brak kursu NIE blokuje typu. Zakład powstaje, gdy większa z dwóch szans ma co najmniej minProbability (domyślnie 51%).
  */
 function chooseProbabilityBet(model = {}, odds = {}, options = {}) {

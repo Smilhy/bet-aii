@@ -4,8 +4,7 @@ import { supabase } from './supabaseClient'
 const FILTERS = [
   ['active', 'Aktywne'],
   ['results', 'Wyniki'],
-  ['all', 'Wszystkie'],
-  ['stats', 'Statystyki']
+  ['all', 'Wszystkie']
 ]
 
 const TEXT = {
@@ -185,10 +184,6 @@ function statusMeta(row, t) {
   return { label: t.statusPending, className: 'is-pending' }
 }
 
-function Metric({ label, value, tone = '' }) {
-  return <article className={`algorithm-metric-v1880 ${tone}`}><span>{label}</span><strong>{value}</strong></article>
-}
-
 function AlgorithmSummaryCard({ label, value, subtitle, icon, tone = '' }) {
   return (
     <article className={`algorithm-summary-card-v1883 ${tone}`}>
@@ -338,48 +333,6 @@ function AlgorithmCard({ row, lang, t, expanded, onToggle }) {
   )
 }
 
-function groupStats(rows, keyGetter) {
-  const map = new Map()
-  rows.forEach(row => {
-    const key = String(keyGetter(row) || 'Inne')
-    const current = map.get(key) || { key, bets: 0, settled: 0, stake: 0, profit: 0, odds: 0, oddsCount: 0, probability: 0, won: 0, lost: 0 }
-    current.bets += 1
-    const hasOdds = Number(row.selected_odds || 0) > 1
-    if (hasOdds) { current.odds += Number(row.selected_odds || 0); current.oddsCount += 1 }
-    current.probability += Number(row.selected_probability || 0)
-    if (['won', 'lost'].includes(row.status)) {
-      current.settled += 1
-      if (hasOdds) {
-        current.stake += Number(row.stake || 0)
-        current.profit += Number(row.profit || 0)
-      }
-      if (row.status === 'won') current.won += 1
-      if (row.status === 'lost') current.lost += 1
-    }
-    map.set(key, current)
-  })
-  return [...map.values()].map(row => ({
-    ...row,
-    avgOdds: row.oddsCount ? row.odds / row.oddsCount : 0,
-    avgProbability: row.bets ? row.probability / row.bets : 0,
-    yieldValue: row.stake ? row.profit / row.stake * 100 : 0
-  })).sort((a, b) => b.bets - a.bets || b.profit - a.profit)
-}
-
-function StatsTable({ title, firstLabel, rows, t }) {
-  return (
-    <section className="algorithm-stats-table-v1882">
-      <h3>{title}</h3>
-      <div className="algorithm-stats-head-v1882"><b>{firstLabel}</b><b>{t.count}</b><b>{t.balance}</b><b>{t.yield}</b><b>{t.avgOdds}</b><b>W/L</b></div>
-      {rows.length ? rows.map(row => (
-        <div className="algorithm-stats-row-v1882" key={row.key}>
-          <span>{row.key}</span><span>{row.bets}</span><span className={row.profit >= 0 ? 'pos' : 'neg'}>{signed(row.profit, 2, ' j.')}</span><span className={row.yieldValue >= 0 ? 'pos' : 'neg'}>{signed(row.yieldValue, 2, '%')}</span><span>{number(row.avgOdds, 2)}</span><span>{row.won}/{row.lost}</span>
-        </div>
-      )) : <div className="algorithm-stats-empty-v1882">{t.noStats}</div>}
-    </section>
-  )
-}
-
 function AutomationProgress({ automation, clock, t, lang }) {
   const progress = automation?.progress || {}
   const total = Math.max(0, Number(progress.total || 0))
@@ -416,75 +369,6 @@ function AutomationProgress({ automation, clock, t, lang }) {
         <div><span>{t.noData}</span><strong>{noData}</strong></div>
         <div><span>{t.nextScan}</span><strong>{nextScan}</strong><small>{automation?.next_scan_at ? shortTime(automation.next_scan_at, lang) : '—'}</small></div>
       </div>
-    </section>
-  )
-}
-
-function AlgorithmStats({ rows, summary, t }) {
-  const bets = useMemo(() => rows.filter(row => row.selected_market !== 'no_bet' && Number(row.stake || 0) > 0), [rows])
-  const settled = useMemo(() => bets.filter(row => ['won', 'lost'].includes(row.status)).sort((a, b) => new Date(a.settled_at || a.kickoff) - new Date(b.settled_at || b.kickoff)), [bets])
-  const cumulative = []
-  let running = 0
-  settled.forEach(row => { running += Number(row.profit || 0); cumulative.push(running) })
-  const values = cumulative.length ? cumulative : [0]
-  const min = Math.min(0, ...values)
-  const max = Math.max(0, ...values)
-  const range = Math.max(1, max - min)
-  const points = values.map((value, index) => ({
-    x: values.length === 1 ? 0 : index / (values.length - 1) * 100,
-    y: 94 - ((value - min) / range) * 84,
-    value
-  }))
-  const path = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
-  const area = points.length ? `${path} L ${points[points.length - 1].x} 100 L ${points[0].x} 100 Z` : ''
-  let peak = 0
-  let maxDrawdown = 0
-  values.forEach(value => { peak = Math.max(peak, value); maxDrawdown = Math.max(maxDrawdown, peak - value) })
-
-  const leagueRows = groupStats(bets, row => `${row.league_name || 'Inne'}${row.country ? ` · ${row.country}` : ''}`)
-  const marketRows = groupStats(bets, row => row.selected_market === 'over_2_5' ? t.over : t.under)
-  const oddsRows = groupStats(bets, row => {
-    const odd = Number(row.selected_odds || 0)
-    if (odd <= 1) return t.noOdds
-    if (odd < 1.5) return '1.00–1.49'
-    if (odd < 2) return '1.50–1.99'
-    if (odd < 2.5) return '2.00–2.49'
-    if (odd < 3) return '2.50–2.99'
-    return '3.00+'
-  })
-  const probabilityRows = groupStats(bets, row => {
-    const probability = Number(row.selected_probability || 0)
-    if (probability < 52) return '51.0–51.9%'
-    if (probability < 54) return '52.0–53.9%'
-    if (probability < 56) return '54.0–55.9%'
-    if (probability < 58) return '56.0–57.9%'
-    return '58.0%+'
-  })
-
-  return (
-    <section className="algorithm-stats-v1882">
-      <div className="algorithm-stats-title-v1882"><div><span>Σ</span><div><small>PRESSURE O/U 2.5</small><h2>{t.statsTitle}</h2></div></div><b>{settled.length} {t.settledPicks}</b></div>
-      <div className="algorithm-stats-kpis-v1882">
-        <Metric label={t.avgOdds} value={number(summary.avg_odds || 0, 2)} />
-        <Metric label={t.avgProbability} value={`${number(summary.avg_probability || 0, 1)}%`} />
-        <Metric label={t.record} value={`${summary.won || 0}/${summary.lost || 0}`} />
-        <Metric label={t.maxDrawdown} value={`${number(maxDrawdown, 2)} j.`} tone={maxDrawdown > 0 ? 'negative' : ''} />
-      </div>
-      <section className="algorithm-balance-chart-v1882">
-        <header><div><h3>{t.balanceChart}</h3><span>{t.cumulative}</span></div><strong className={Number(summary.profit || 0) >= 0 ? 'pos' : 'neg'}>{signed(summary.profit || 0, 2, ' j.')}</strong></header>
-        <div className="algorithm-chart-wrap-v1882">
-          <div className="algorithm-chart-labels-v1882"><span>{number(max, 2)}</span><span>{number((max + min) / 2, 2)}</span><span>{number(min, 2)}</span></div>
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label={t.balanceChart}>
-            <defs><linearGradient id="algorithmArea1882" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="rgba(64,242,231,.30)" /><stop offset="100%" stopColor="rgba(64,242,231,0)" /></linearGradient></defs>
-            <line x1="0" y1="10" x2="100" y2="10" className="grid" /><line x1="0" y1="52" x2="100" y2="52" className="grid" /><line x1="0" y1="94" x2="100" y2="94" className="grid" />
-            {area ? <path d={area} className="area" /> : null}
-            {path ? <path d={path} className="line" /> : null}
-            {points.map((point, index) => <circle key={index} cx={point.x} cy={point.y} r="1.15" />)}
-          </svg>
-        </div>
-      </section>
-      <div className="algorithm-stats-grid-v1882"><StatsTable title={t.byLeague} firstLabel={t.league} rows={leagueRows} t={t} /><StatsTable title={t.byMarket} firstLabel={t.market} rows={marketRows} t={t} /></div>
-      <div className="algorithm-stats-grid-v1882"><StatsTable title={t.byOdds} firstLabel={t.range} rows={oddsRows} t={t} /><StatsTable title={t.byProbability} firstLabel={t.range} rows={probabilityRows} t={t} /></div>
     </section>
   )
 }
@@ -570,7 +454,6 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
       return isPrematch && (row.status === 'pending' || String(row.analysis_state || 'ready') !== 'ready')
     }
     if (filter === 'results') return ['won', 'lost', 'void'].includes(row.status)
-    if (filter === 'stats') return false
     return true
   }), [rows, filter])
 
@@ -609,7 +492,7 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
   return (
     <div className="algorithm-page-v1880">
       <section className="algorithm-hero-v1880">
-        <div className="algorithm-hero-copy-v1880"><span>PRESSURE O/U 2.5 · V7 PROGRESS</span><h1>{t.title}</h1><p>{t.subtitle}</p><div className="algorithm-auto-meta-v1882"><b>{t.automation}</b><span>{t.lastScan}: {latestScan?.started_at ? dateTime(latestScan.started_at, lang) : '—'}</span></div></div>
+        <div className="algorithm-hero-copy-v1880"><span>PRESSURE O/U 2.5 · V8</span><h1>{t.title}</h1><p>{t.subtitle}</p><div className="algorithm-auto-meta-v1882"><b>{t.automation}</b><span>{t.lastScan}: {latestScan?.started_at ? dateTime(latestScan.started_at, lang) : '—'}</span></div></div>
         <div className="algorithm-hero-actions-v1880">
           <button type="button" onClick={() => load()} disabled={loading}>{loading ? '…' : '↻'} {t.refresh}</button>
           {isAdmin && <button type="button" className="is-primary" onClick={() => runAdminAction('scan')} disabled={Boolean(action)}>{action === 'scan' ? '…' : '▶'} {t.scan}</button>}
@@ -642,11 +525,11 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
       {(error || notice) && <div className={`algorithm-message-v1880 ${error ? 'is-error' : 'is-success'}`}>{error ? `${t.errorPrefix} ${error}` : notice}</div>}
 
       <div className="algorithm-toolbar-v1880">
-        <div>{FILTERS.map(([key, label]) => <button type="button" key={key} className={filter === key ? 'active' : ''} onClick={() => setFilter(key)}>{lang === 'en' ? ({ active: 'Active', results: 'Results', all: 'All', stats: 'Statistics' }[key]) : label}</button>)}</div>
-        <span>{filter === 'stats' ? `${summary.settled || 0} rozliczonych` : `${visibleRows.length} / ${rows.length}`}</span>
+        <div>{FILTERS.map(([key, label]) => <button type="button" key={key} className={filter === key ? 'active' : ''} onClick={() => setFilter(key)}>{lang === 'en' ? ({ active: 'Active', results: 'Results', all: 'All' }[key]) : label}</button>)}</div>
+        <span>{visibleRows.length} / {rows.length}</span>
       </div>
 
-      {filter === 'stats' ? <AlgorithmStats rows={rows} summary={summary} t={t} /> : loading && !rows.length ? <div className="algorithm-empty-v1880">{t.loading}</div> : !visibleRows.length ? <div className="algorithm-empty-v1880">{rows.length ? t.empty : t.setupEmpty}</div> : (
+      {loading && !rows.length ? <div className="algorithm-empty-v1880">{t.loading}</div> : !visibleRows.length ? <div className="algorithm-empty-v1880">{rows.length ? t.empty : t.setupEmpty}</div> : (
         <div className="algorithm-list-v1880">
           {visibleRows.map(row => <AlgorithmCard key={row.id || row.fixture_id} row={row} lang={lang} t={t} expanded={expanded.has(row.id || row.fixture_id)} onToggle={() => toggleExpanded(row.id || row.fixture_id)} />)}
         </div>

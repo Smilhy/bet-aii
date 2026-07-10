@@ -50,4 +50,15 @@ assert.equal(missingSelectedOdds.probability, 55.2)
 assert.equal(missingSelectedOdds.odds, 0)
 assert.equal(missingSelectedOdds.reason, 'higher_probability_missing_odds')
 
-console.log('OK: WERSJA 1886 pre-match probability-first algorithm model')
+
+// V1891: nie ma minimalnego kursu 2.00. Niski, ale poprawny kurs nadal zapisuje typ.
+const lowOddsAccepted = chooseProbabilityBet(
+  { overProbability: 44.2, underProbability: 55.8 },
+  { over: 2.9, under: 1.35 },
+  { minProbability: 51 }
+)
+assert.equal(lowOddsAccepted.market, 'under_2_5')
+assert.equal(lowOddsAccepted.odds, 1.35)
+assert.equal(lowOddsAccepted.reason, 'higher_probability')
+
+console.log('OK: WERSJA 1891 probability-first, bez minimalnego kursu')
