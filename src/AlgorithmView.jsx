@@ -10,7 +10,7 @@ const FILTERS = [
 const TEXT = {
   pl: {
     title: 'Algorytm Powyżej / Poniżej 2.5',
-    subtitle: 'Pełny automat pre-match: co 15 minut skanuje wyłącznie nierozpoczęte mecze, wybiera stronę z większą szansą modelu i stawia płasko 1 jednostkę przy minimum 51%.',
+    subtitle: 'Pełny automat pre-match: co 15 minut skanuje nierozpoczęte mecze, wybiera stronę z większą szansą modelu i stawia 1 jednostkę przy minimum 51% oraz kursie co najmniej 2.00.',
     refresh: 'Odśwież dane',
     scan: 'Uruchom pełny skan',
     settle: 'Rozlicz mecze',
@@ -18,7 +18,7 @@ const TEXT = {
     empty: 'Brak meczów w tym widoku.',
     setupEmpty: 'Brak zapisanych analiz. Uruchom migrację SQL, sprawdź klucze Netlify i uruchom pierwszy skan.',
     formula: 'Jak działa wybór typu',
-    formulaCopy: 'Wzór liczy szansę Powyżej i Poniżej 2.5. System zawsze wybiera stronę z WYŻSZYM prawdopodobieństwem. Jeżeli większa szansa ma co najmniej 51%, zapisuje zakład za 1 jednostkę. Kurs nie zmienia kierunku typu — służy tylko do późniejszego obliczenia zysku lub straty.',
+    formulaCopy: 'Wzór liczy szansę Powyżej i Poniżej 2.5. System zawsze wybiera stronę z WYŻSZYM prawdopodobieństwem. Zakład za 1 jednostkę zapisuje tylko wtedy, gdy szansa wynosi minimum 51%, a kurs wybranego rynku minimum 2.00. Kurs nie zmienia kierunku typu.',
     profit: 'Zysk',
     roi: 'ROI',
     hitRate: 'Skuteczność',
@@ -54,7 +54,7 @@ const TEXT = {
     statusNoBet: 'POMINIĘTY',
     statusAnalyzing: 'LICZENIE DANYCH',
     waitingPick: 'Oczekuje na statystyki',
-    waitingText: 'Mecz został już dodany. Automat pobiera historyczne strzały i rożne; po obliczeniu sam zapisze typ przy minimum 51%.',
+    waitingText: 'Mecz został już dodany. Automat pobiera historyczne strzały i rożne; po obliczeniu zapisze typ tylko przy minimum 51% i kursie co najmniej 2.00.',
     errorPrefix: 'Błąd:',
     saved: 'Skan uruchomiony w tle. Dane pojawią się automatycznie',
     settled: 'Rozliczenie zakończone',
@@ -96,12 +96,12 @@ const TEXT = {
     maxOddsSub: 'Najwyższy kurs',
     topToday: 'TOP 5 NA DZIŚ',
     topTodayTitle: 'Najwyższe prawdopodobieństwa',
-    topTodaySubtitle: 'Gotowe typy pre-match na dzisiaj, posortowane wyłącznie według szansy modelu.',
+    topTodaySubtitle: 'Gotowe typy pre-match na dzisiaj: minimum 51% i kurs co najmniej 2.00, ranking według szansy modelu.',
     topTodayEmpty: 'Brak gotowych typów na dzisiaj.',
     startsAt: 'Start',
     progressEyebrow: 'POSTĘP AUTOMATU',
     progressTitle: 'Skanowanie meczów pre-match',
-    progressSubtitle: 'System sprawdza kolejkę, pobiera statystyki i zapisuje tylko gotowe typy z minimum 51%.',
+    progressSubtitle: 'System sprawdza kolejkę, pobiera statystyki i zapisuje tylko typy z minimum 51% oraz kursem co najmniej 2.00.',
     checked: 'Sprawdzono',
     readyPicks: 'Gotowe typy',
     inQueue: 'W kolejce',
@@ -114,8 +114,8 @@ const TEXT = {
   },
   en: {
     title: 'Over / Under 2.5 Algorithm',
-    subtitle: 'Fully automated pre-match test: every 15 minutes it scans only matches that have not started, selects the higher model probability and stakes a flat 1 unit at 51% or more.',
-    refresh: 'Refresh data', scan: 'Run full scan', settle: 'Settle matches', loading: 'Loading algorithm data…', empty: 'No matches in this view.', setupEmpty: 'No saved analyses. Run the SQL migration, check Netlify keys and start the first scan.', formula: 'How the pick is selected', formulaCopy: 'The formula calculates Over and Under 2.5 probabilities. The system always selects the side with the HIGHER probability. If that probability is at least 51%, it saves a 1-unit bet. Odds do not change the direction; they are used only to calculate profit or loss.', profit: 'Profit', roi: 'ROI', hitRate: 'Hit rate', bets: 'Bets', pending: 'Pending', analyzed: 'Analysed', stake: 'Stake', edge: 'Odds EV', pressure: 'Total pressure', model: 'Model pick', odds: 'Odds', noOdds: 'no odds', probability: 'Probability', noBet: 'NO BET', details: 'Show calculation', hide: 'Hide calculation', home: 'Home', away: 'Away', shots: 'Shots', corners: 'Corners', allowedShots: 'Shots allowed', allowedCorners: 'Corners allowed', attack: 'Attacking pressure', defence: 'Defensive pressure', expected: 'Expected pressure', over: 'Over 2.5', under: 'Under 2.5', result: 'Result', statusPending: 'PENDING', statusWon: 'WON', statusLost: 'LOST', statusVoid: 'VOID', statusNoBet: 'SKIPPED', statusAnalyzing: 'CALCULATING', waitingPick: 'Waiting for statistics', waitingText: 'The match has already been added. The automation is fetching historical shots and corners and will save the pick automatically once calculated.', errorPrefix: 'Error:', saved: 'Background scan started. Data will appear automatically', settled: 'Settlement completed', automation: 'AUTO EVERY 15 MIN', lastScan: 'Last scan', statsTitle: 'Algorithm statistics', balanceChart: 'Algorithm balance chart', cumulative: 'Cumulative balance', settledPicks: 'settled picks', avgOdds: 'Avg. odds', avgProbability: 'Avg. probability', record: 'W/L record', maxDrawdown: 'Max drawdown', byLeague: 'Statistics by league', byMarket: 'Statistics by pick type', byOdds: 'Statistics by odds range', byProbability: 'Statistics by probability range', count: 'Count', balance: 'Profit', yield: 'Yield', league: 'League', market: 'Pick type', range: 'Range', noStats: 'Statistics will appear after the first bets are settled.', topToday: 'TOP 5 TODAY', topTodayTitle: 'Highest probabilities', topTodaySubtitle: 'Today’s ready pre-match picks, sorted only by model probability.', topTodayEmpty: 'No ready picks for today.', startsAt: 'Kick-off', progressEyebrow: 'AUTOMATION PROGRESS', progressTitle: 'Scanning pre-match fixtures', progressSubtitle: 'The system checks the queue, downloads statistics and saves only ready picks at 51% or more.', checked: 'Checked', readyPicks: 'Ready picks', inQueue: 'In queue', noData: 'No data', nextScan: 'Next scan', workerWorking: 'WORKING', workerWaiting: 'WAITING FOR CYCLE', queueDone: 'QUEUE CHECKED', anyMoment: 'any moment'
+    subtitle: 'Fully automated pre-match test: every 15 minutes it scans matches that have not started, selects the higher model probability and stakes 1 unit only at 51% or more with odds of at least 2.00.',
+    refresh: 'Refresh data', scan: 'Run full scan', settle: 'Settle matches', loading: 'Loading algorithm data…', empty: 'No matches in this view.', setupEmpty: 'No saved analyses. Run the SQL migration, check Netlify keys and start the first scan.', formula: 'How the pick is selected', formulaCopy: 'The formula calculates Over and Under 2.5 probabilities. The system always selects the side with the HIGHER probability. It saves a 1-unit bet only when probability is at least 51% and the selected market odds are at least 2.00. Odds do not change the direction.', profit: 'Profit', roi: 'ROI', hitRate: 'Hit rate', bets: 'Bets', pending: 'Pending', analyzed: 'Analysed', stake: 'Stake', edge: 'Odds EV', pressure: 'Total pressure', model: 'Model pick', odds: 'Odds', noOdds: 'no odds', probability: 'Probability', noBet: 'NO BET', details: 'Show calculation', hide: 'Hide calculation', home: 'Home', away: 'Away', shots: 'Shots', corners: 'Corners', allowedShots: 'Shots allowed', allowedCorners: 'Corners allowed', attack: 'Attacking pressure', defence: 'Defensive pressure', expected: 'Expected pressure', over: 'Over 2.5', under: 'Under 2.5', result: 'Result', statusPending: 'PENDING', statusWon: 'WON', statusLost: 'LOST', statusVoid: 'VOID', statusNoBet: 'SKIPPED', statusAnalyzing: 'CALCULATING', waitingPick: 'Waiting for statistics', waitingText: 'The match has already been added. The automation is fetching historical shots and corners and will save a pick only at 51% or more and odds of at least 2.00.', errorPrefix: 'Error:', saved: 'Background scan started. Data will appear automatically', settled: 'Settlement completed', automation: 'AUTO EVERY 15 MIN', lastScan: 'Last scan', statsTitle: 'Algorithm statistics', balanceChart: 'Algorithm balance chart', cumulative: 'Cumulative balance', settledPicks: 'settled picks', avgOdds: 'Avg. odds', avgProbability: 'Avg. probability', record: 'W/L record', maxDrawdown: 'Max drawdown', byLeague: 'Statistics by league', byMarket: 'Statistics by pick type', byOdds: 'Statistics by odds range', byProbability: 'Statistics by probability range', count: 'Count', balance: 'Profit', yield: 'Yield', league: 'League', market: 'Pick type', range: 'Range', noStats: 'Statistics will appear after the first bets are settled.', topToday: 'TOP 5 TODAY', topTodayTitle: 'Highest probabilities', topTodaySubtitle: 'Today’s ready pre-match picks with at least 51% probability and odds of 2.00 or higher, ranked by model probability.', topTodayEmpty: 'No ready picks for today.', startsAt: 'Kick-off', progressEyebrow: 'AUTOMATION PROGRESS', progressTitle: 'Scanning pre-match fixtures', progressSubtitle: 'The system checks the queue, downloads statistics and saves only picks at 51% or more with odds of at least 2.00.', checked: 'Checked', readyPicks: 'Ready picks', inQueue: 'In queue', noData: 'No data', nextScan: 'Next scan', workerWorking: 'WORKING', workerWaiting: 'WAITING FOR CYCLE', queueDone: 'QUEUE CHECKED', anyMoment: 'any moment'
   }
 }
 
@@ -492,7 +492,7 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
   return (
     <div className="algorithm-page-v1880">
       <section className="algorithm-hero-v1880">
-        <div className="algorithm-hero-copy-v1880"><span>PRESSURE O/U 2.5 · V8</span><h1>{t.title}</h1><p>{t.subtitle}</p><div className="algorithm-auto-meta-v1882"><b>{t.automation}</b><span>{t.lastScan}: {latestScan?.started_at ? dateTime(latestScan.started_at, lang) : '—'}</span></div></div>
+        <div className="algorithm-hero-copy-v1880"><span>PRESSURE O/U 2.5 · V9</span><h1>{t.title}</h1><p>{t.subtitle}</p><div className="algorithm-auto-meta-v1882"><b>{t.automation}</b><span>{t.lastScan}: {latestScan?.started_at ? dateTime(latestScan.started_at, lang) : '—'}</span></div></div>
         <div className="algorithm-hero-actions-v1880">
           <button type="button" onClick={() => load()} disabled={loading}>{loading ? '…' : '↻'} {t.refresh}</button>
           {isAdmin && <button type="button" className="is-primary" onClick={() => runAdminAction('scan')} disabled={Boolean(action)}>{action === 'scan' ? '…' : '▶'} {t.scan}</button>}

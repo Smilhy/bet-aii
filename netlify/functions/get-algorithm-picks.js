@@ -135,8 +135,8 @@ exports.handler = async function(event) {
         version: MODEL_VERSION,
         stake: 1,
         min_probability: 51,
-        min_odds: null,
-        rule: 'Wyłącznie pre-match: jeden worker pobiera dane z kontrolą tempa, wybiera wyższe prawdopodobieństwo i zapisuje 1 jednostkę przy minimum 51%. Nie ma minimalnego kursu; każdy poprawny kurs powyżej 1.00 jest zapisywany. Po pełnym sprawdzeniu brak kompletu statystyk kończy analizę i rekord znika z dashboardu.'
+        min_odds: 2,
+        rule: 'Wyłącznie pre-match: kierunek wybiera wyższe prawdopodobieństwo modelu. Zakład 1 jednostka powstaje tylko przy minimum 51% oraz kursie wybranego rynku co najmniej 2.00. Kurs nie wybiera kierunku. Po pełnym sprawdzeniu brak kompletu statystyk kończy analizę i rekord znika z dashboardu.'
       },
       automation: {
         scan_every_minutes: 15,

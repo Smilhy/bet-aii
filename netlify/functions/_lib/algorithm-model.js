@@ -104,14 +104,14 @@ function expectedValue(probabilityPercent, decimalOdds) {
 }
 
 /**
- * WERSJA 1882
+ * WERSJA 1892
  * Kierunek zakładu wybiera WYŁĄCZNIE wyższe prawdopodobieństwo modelu.
- * Kurs służy tylko do zapisania ceny i późniejszego liczenia zysku/straty.
- * NIE MA minimalnego kursu: każdy poprawny kurs dziesiętny > 1.00 jest akceptowany.
- * Brak kursu NIE blokuje typu. Zakład powstaje, gdy większa z dwóch szans ma co najmniej minProbability (domyślnie 51%).
+ * Kurs nie zmienia kierunku, ale zakład powstaje tylko wtedy, gdy kurs
+ * wybranego rynku osiąga co najmniej minOdds (domyślnie 2.00).
  */
 function chooseProbabilityBet(model = {}, odds = {}, options = {}) {
   const minProbability = clamp(options.minProbability ?? options.min_probability ?? 51, 50, 100)
+  const minOdds = Math.max(1.01, toFiniteNumber(options.minOdds ?? options.min_odds, 2))
   const overOdds = toFiniteNumber(odds.over ?? odds.overOdds ?? odds.over_odds, 0)
   const underOdds = toFiniteNumber(odds.under ?? odds.underOdds ?? odds.under_odds, 0)
   const overProbability = clamp(model.overProbability, 0, 100)
@@ -136,6 +136,7 @@ function chooseProbabilityBet(model = {}, odds = {}, options = {}) {
       }
 
   const hasPrice = Number.isFinite(selected.odds) && selected.odds > 1
+  const meetsMinOdds = hasPrice && selected.odds >= minOdds
   if (selected.probability < minProbability) {
     return {
       market: 'no_bet',
@@ -146,20 +147,41 @@ function chooseProbabilityBet(model = {}, odds = {}, options = {}) {
       overEv,
       underEv,
       minProbability,
+      minOdds,
       hasPrice,
+      meetsMinOdds,
       reason: 'probability_below_threshold'
+    }
+  }
+
+  if (!meetsMinOdds) {
+    return {
+      market: 'no_bet',
+      label: 'Brak zakładu',
+      probability: selected.probability,
+      odds: hasPrice ? selected.odds : 0,
+      edge: hasPrice ? selected.ev : null,
+      overEv,
+      underEv,
+      minProbability,
+      minOdds,
+      hasPrice,
+      meetsMinOdds,
+      reason: hasPrice ? 'odds_below_threshold' : 'missing_selected_odds'
     }
   }
 
   return {
     ...selected,
-    odds: hasPrice ? selected.odds : 0,
-    edge: hasPrice ? selected.ev : null,
+    odds: selected.odds,
+    edge: selected.ev,
     overEv,
     underEv,
     minProbability,
+    minOdds,
     hasPrice,
-    reason: hasPrice ? 'higher_probability' : 'higher_probability_missing_odds'
+    meetsMinOdds,
+    reason: 'higher_probability_min_odds'
   }
 }
 

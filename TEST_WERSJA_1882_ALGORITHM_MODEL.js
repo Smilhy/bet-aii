@@ -20,45 +20,54 @@ assert.equal(spainBelgium.overProbability, 44.22)
 assert.equal(spainBelgium.underProbability, 55.78)
 assert.equal(expectedValue(55.78, 2).toFixed(4), '0.1156')
 
-// Najważniejszy test wersji 1882: wysoki kurs na Over nie może już odwrócić typu.
-const higherOddsOver = chooseProbabilityBet(spainBelgium, { over: 3.75, under: 1.8 })
-assert.equal(higherOddsOver.market, 'under_2_5')
-assert.equal(higherOddsOver.probability, 55.78)
-assert.equal(higherOddsOver.odds, 1.8)
+// Wysoki kurs po przeciwnej stronie nie może odwrócić kierunku modelu.
+const probabilityFirst = chooseProbabilityBet(spainBelgium, { over: 3.75, under: 2.12 })
+assert.equal(probabilityFirst.market, 'under_2_5')
+assert.equal(probabilityFirst.probability, 55.78)
+assert.equal(probabilityFirst.odds, 2.12)
+assert.equal(probabilityFirst.reason, 'higher_probability_min_odds')
 
-// Alias starszej funkcji ma tę samą nową logikę.
-const aliasSelection = chooseValueBet(spainBelgium, { over: 3.75, under: 1.8 })
+// Alias starszej funkcji ma tę samą logikę.
+const aliasSelection = chooseValueBet(spainBelgium, { over: 3.75, under: 2.12 })
 assert.equal(aliasSelection.market, 'under_2_5')
 
-// Próg 51%: 50.8% nie tworzy zakładu.
-const belowThreshold = chooseProbabilityBet(
+// Próg 51%: 50.8% nie tworzy zakładu nawet przy dobrym kursie.
+const belowProbability = chooseProbabilityBet(
   { overProbability: 49.2, underProbability: 50.8 },
-  { over: 2.1, under: 1.9 },
-  { minProbability: 51 }
+  { over: 2.2, under: 2.1 },
+  { minProbability: 51, minOdds: 2 }
 )
-assert.equal(belowThreshold.market, 'no_bet')
-assert.equal(belowThreshold.reason, 'probability_below_threshold')
+assert.equal(belowProbability.market, 'no_bet')
+assert.equal(belowProbability.reason, 'probability_below_threshold')
 
-// V1884: brak kursu nie blokuje typu. Kurs może zostać dopisany w kolejnym skanie.
+// Brak kursu blokuje zakład, ale nie zmienia obliczonego prawdopodobieństwa.
 const missingSelectedOdds = chooseProbabilityBet(
   { overProbability: 44.8, underProbability: 55.2 },
   { over: 3.75, under: 0 },
-  { minProbability: 51 }
+  { minProbability: 51, minOdds: 2 }
 )
-assert.equal(missingSelectedOdds.market, 'under_2_5')
+assert.equal(missingSelectedOdds.market, 'no_bet')
 assert.equal(missingSelectedOdds.probability, 55.2)
 assert.equal(missingSelectedOdds.odds, 0)
-assert.equal(missingSelectedOdds.reason, 'higher_probability_missing_odds')
+assert.equal(missingSelectedOdds.reason, 'missing_selected_odds')
 
-
-// V1891: nie ma minimalnego kursu 2.00. Niski, ale poprawny kurs nadal zapisuje typ.
-const lowOddsAccepted = chooseProbabilityBet(
+// Kurs poniżej 2.00 blokuje zakład.
+const lowOddsRejected = chooseProbabilityBet(
   { overProbability: 44.2, underProbability: 55.8 },
-  { over: 2.9, under: 1.35 },
-  { minProbability: 51 }
+  { over: 2.9, under: 1.99 },
+  { minProbability: 51, minOdds: 2 }
 )
-assert.equal(lowOddsAccepted.market, 'under_2_5')
-assert.equal(lowOddsAccepted.odds, 1.35)
-assert.equal(lowOddsAccepted.reason, 'higher_probability')
+assert.equal(lowOddsRejected.market, 'no_bet')
+assert.equal(lowOddsRejected.odds, 1.99)
+assert.equal(lowOddsRejected.reason, 'odds_below_threshold')
 
-console.log('OK: WERSJA 1891 probability-first, bez minimalnego kursu')
+// Kurs dokładnie 2.00 spełnia warunek.
+const exactMinimumAccepted = chooseProbabilityBet(
+  { overProbability: 44.2, underProbability: 55.8 },
+  { over: 2.9, under: 2.0 },
+  { minProbability: 51, minOdds: 2 }
+)
+assert.equal(exactMinimumAccepted.market, 'under_2_5')
+assert.equal(exactMinimumAccepted.odds, 2)
+
+console.log('OK: WERSJA 1892 probability-first, minimalny kurs 2.00')

@@ -10,7 +10,7 @@ const API_BASE = 'https://v3.football.api-sports.io'
 const FINISHED_STATUSES = new Set(['FT', 'AET', 'PEN'])
 const UPCOMING_STATUSES = new Set(['NS', 'TBD'])
 const SETTLED_STATUSES = new Set(['won', 'lost', 'void'])
-const MODEL_VERSION = 'pressure-ou25-v7-no-min-odds'
+const MODEL_VERSION = 'pressure-ou25-v8-min-odds-2'
 const PREMATCH_MIN_LEAD_MINUTES = Math.max(1, Number(process.env.ALGORITHM_PREMATCH_MIN_LEAD_MINUTES || 10) || 10)
 const API_MIN_INTERVAL_MS = Math.max(250, Number(process.env.ALGORITHM_API_MIN_INTERVAL_MS || 350) || 350)
 const API_RATE_LIMIT_RETRY_MS = Math.max(15_000, Number(process.env.ALGORITHM_API_RATE_LIMIT_RETRY_MS || 65_000) || 65_000)
@@ -445,12 +445,12 @@ async function fetchTeamForm({ supabase, teamId, teamName, asOfKickoff, sampleSi
   return teamForm
 }
 
-function buildAlgorithmRow(fixture, odds, homeForm, awayForm, sampleSize, minProbability) {
+function buildAlgorithmRow(fixture, odds, homeForm, awayForm, sampleSize, minProbability, minOdds) {
   const model = calculatePressureModel(homeForm, awayForm)
   const selection = chooseProbabilityBet(model, {
     over: odds?.over?.best,
     under: odds?.under?.best
-  }, { minProbability })
+  }, { minProbability, minOdds })
   const isBet = selection.market !== 'no_bet'
   const now = new Date().toISOString()
 
@@ -524,10 +524,12 @@ function buildAlgorithmRow(fixture, odds, homeForm, awayForm, sampleSize, minPro
         [24, 42.2], [28, 42.9], [32, 43.6], [36, 44.2],
         [40, 44.9], [44, 45.6], [48, 46.3]
       ],
-      selection_rule: 'higher_probability_min_51',
+      selection_rule: 'higher_probability_min_51_min_odds_2',
       min_probability: minProbability,
+      min_odds: minOdds,
       selection_reason: selection.reason,
-      odds_are_informational_for_selection: true,
+      odds_choose_direction: false,
+      odds_required_to_place_bet: true,
       odds_available_for_selected_market: Boolean(selection.hasPrice),
       prematch_only: true,
       over_consensus_odds: odds?.over?.consensus || 0,
@@ -679,6 +681,7 @@ async function generateAlgorithmPicks(options = {}) {
   const processBatch = Math.max(1, Math.min(40, Number(options.processBatch || process.env.ALGORITHM_PROCESS_BATCH || 20) || 20))
   const days = Math.max(1, Math.min(3, Number(options.days || process.env.ALGORITHM_DAYS || 1) || 1))
   const minProbability = Math.max(50, Math.min(99, Number(options.minProbability ?? process.env.ALGORITHM_MIN_PROBABILITY ?? 51) || 51))
+  const minOdds = Math.max(1.01, Math.min(10, Number(options.minOdds ?? process.env.ALGORITHM_MIN_ODDS ?? 2) || 2))
   const includeAll = options.includeAll == null ? boolEnv(process.env.ALGORITHM_INCLUDE_ALL, true) : Boolean(options.includeAll)
   const startDate = String(options.date || dateKeyInTimezone(new Date(), timezone)).slice(0, 10)
   const minLeadMinutes = Math.max(1, Number(options.minLeadMinutes || PREMATCH_MIN_LEAD_MINUTES) || PREMATCH_MIN_LEAD_MINUTES)
@@ -740,7 +743,7 @@ async function generateAlgorithmPicks(options = {}) {
       for (const idBatch of chunk(candidateIds, 100)) {
         const { data, error } = await supabase
           .from('algorithm_bets')
-          .select('fixture_id,status,updated_at,over_odds,under_odds,over_bookmaker,under_bookmaker,over_market_books,under_market_books,selected_odds,selected_market,analysis_state,analysis_error,analysis_attempts,analysis_started_at,analysis_finished_at,analysis_next_retry_at')
+          .select('fixture_id,status,updated_at,over_odds,under_odds,over_bookmaker,under_bookmaker,over_market_books,under_market_books,over_probability,under_probability,selected_odds,selected_market,selected_label,selected_probability,edge_pct,stake,formula_snapshot,analysis_state,analysis_error,analysis_attempts,analysis_started_at,analysis_finished_at,analysis_next_retry_at')
           .in('fixture_id', idBatch)
         if (error) throw error
         ;(data || []).forEach(row => existingMap.set(String(row.fixture_id), row))
@@ -762,27 +765,60 @@ async function generateAlgorithmPicks(options = {}) {
       waitingRows.forEach(row => existingMap.set(String(row.fixture_id), row))
     }
 
-    // Dla gotowych typów aktualizujemy kurs tylko wtedy, gdy mecz nadal jest pre-match.
+    // Odświeżamy snapshot rynku wyłącznie pre-match. Kurs wybranego i już
+    // zapisanego zakładu jest blokowany w chwili spełnienia progu 2.00.
+    // Rekord no_bet może zostać automatycznie promowany, gdy później pojawi
+    // się kurs >= 2.00 dla strony o wyższym prawdopodobieństwie.
     let oddsRefreshed = 0
+    let oddsPromoted = 0
     for (const fixture of allCandidates) {
       const fixtureId = String(fixture?.fixture?.id || '')
       const existing = existingMap.get(fixtureId)
       const fresh = oddsMap.get(fixtureId)
       if (!existing || !fresh || String(existing.analysis_state || 'ready') !== 'ready') continue
-      if (!['over_2_5', 'under_2_5'].includes(String(existing.selected_market || ''))) continue
+
       const effective = mergeOddsSnapshot(fresh, oddsFromExistingBet(existing))
       const selectedMarket = String(existing.selected_market || '')
-      const selectedOdds = selectedMarket === 'over_2_5' ? effective.over.best : effective.under.best
-      const { error } = await supabase.from('algorithm_bets').update({
+      const update = {
         over_odds: effective.over.best || null,
         under_odds: effective.under.best || null,
         over_bookmaker: effective.over.bestBookmaker || '',
         under_bookmaker: effective.under.bestBookmaker || '',
         over_market_books: effective.over.books || 0,
         under_market_books: effective.under.books || 0,
-        selected_odds: selectedOdds || 0,
         updated_at: new Date().toISOString()
-      }).eq('fixture_id', Number(fixtureId))
+      }
+
+      if (selectedMarket === 'no_bet') {
+        const selection = chooseProbabilityBet({
+          overProbability: Number(existing.over_probability || 0),
+          underProbability: Number(existing.under_probability || 0)
+        }, {
+          over: effective.over.best,
+          under: effective.under.best
+        }, { minProbability, minOdds })
+
+        update.selected_market = selection.market
+        update.selected_label = selection.label
+        update.selected_probability = round(selection.probability, 2)
+        update.selected_odds = round(selection.odds, 2)
+        update.edge_pct = selection.edge == null ? null : round(selection.edge * 100, 2)
+        update.stake = selection.market === 'no_bet' ? 0 : 1
+        update.status = selection.market === 'no_bet' ? 'no_bet' : 'pending'
+        update.formula_snapshot = {
+          ...(existing.formula_snapshot || {}),
+          selection_rule: 'higher_probability_min_51_min_odds_2',
+          min_probability: minProbability,
+          min_odds: minOdds,
+          selection_reason: selection.reason,
+          odds_choose_direction: false,
+          odds_required_to_place_bet: true,
+          odds_available_for_selected_market: Boolean(selection.hasPrice)
+        }
+        if (selection.market !== 'no_bet') oddsPromoted += 1
+      }
+
+      const { error } = await supabase.from('algorithm_bets').update(update).eq('fixture_id', Number(fixtureId))
       if (!error) oddsRefreshed += 1
     }
 
@@ -858,7 +894,7 @@ async function generateAlgorithmPicks(options = {}) {
         let freshOdds = oddsMap.get(fixtureId) || null
         if (!freshOdds && Date.now() < runDeadline - 15_000) freshOdds = await fetchOddsForFixture(fixtureId)
         const effectiveOdds = mergeOddsSnapshot(freshOdds || {}, previousOdds)
-        const row = buildAlgorithmRow(fixture, effectiveOdds, homeForm, awayForm, sampleSize, minProbability)
+        const row = buildAlgorithmRow(fixture, effectiveOdds, homeForm, awayForm, sampleSize, minProbability, minOdds)
         row.analysis_attempts = Number(previous.analysis_attempts || 0) + 1
         row.analysis_started_at = analysisStartedAt
         row.analysis_finished_at = new Date().toISOString()
@@ -920,7 +956,7 @@ async function generateAlgorithmPicks(options = {}) {
     const result = {
       ok: true,
       model_version: MODEL_VERSION,
-      selection_rule: 'higher_probability_min_51',
+      selection_rule: 'higher_probability_min_51_min_odds_2',
       prematch_only: true,
       prematch_min_lead_minutes: minLeadMinutes,
       date_from: startDate,
@@ -928,6 +964,7 @@ async function generateAlgorithmPicks(options = {}) {
       sample_size: sampleSize,
       min_form_matches: minFormMatches,
       min_probability: minProbability,
+      min_odds: minOdds,
       include_all_competitions: includeAll,
       fixtures_loaded: fixtures.length,
       fixtures_discovered: allCandidates.length,
@@ -936,6 +973,7 @@ async function generateAlgorithmPicks(options = {}) {
       expired_before_analysis: Array.isArray(expiredRows) ? expiredRows.length : 0,
       no_data_rows_finalized: Array.isArray(finalizedMissingRows) ? finalizedMissingRows.length : 0,
       odds_refreshed: oddsRefreshed,
+      odds_promoted_to_bet: oddsPromoted,
       candidates_considered: processCandidates.length,
       process_batch: processBatch,
       rows_saved: savedRows.length,
