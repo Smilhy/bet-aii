@@ -31,6 +31,7 @@ const TEXT = {
     pressure: 'Łączna presja',
     model: 'Typ modelu',
     odds: 'Kurs',
+    noOdds: 'brak kursu',
     probability: 'Prawdopodobieństwo',
     noBet: 'BRAK ZAKŁADU',
     details: 'Pokaż obliczenia',
@@ -95,7 +96,7 @@ const TEXT = {
   en: {
     title: 'Over / Under 2.5 Algorithm',
     subtitle: 'Fully automated test: scans every 15 minutes, selects the side with the higher model probability and stakes a flat 1 unit when it reaches at least 51%.',
-    refresh: 'Refresh data', scan: 'Run full scan', settle: 'Settle matches', loading: 'Loading algorithm data…', empty: 'No matches in this view.', setupEmpty: 'No saved analyses. Run the SQL migration, check Netlify keys and start the first scan.', formula: 'How the pick is selected', formulaCopy: 'The formula calculates Over and Under 2.5 probabilities. The system always selects the side with the HIGHER probability. If that probability is at least 51%, it saves a 1-unit bet. Odds do not change the direction; they are used only to calculate profit or loss.', profit: 'Profit', roi: 'ROI', hitRate: 'Hit rate', bets: 'Bets', pending: 'Pending', analyzed: 'Analysed', stake: 'Stake', edge: 'Odds EV', pressure: 'Total pressure', model: 'Model pick', odds: 'Odds', probability: 'Probability', noBet: 'NO BET', details: 'Show calculation', hide: 'Hide calculation', home: 'Home', away: 'Away', shots: 'Shots', corners: 'Corners', allowedShots: 'Shots allowed', allowedCorners: 'Corners allowed', attack: 'Attacking pressure', defence: 'Defensive pressure', expected: 'Expected pressure', over: 'Over 2.5', under: 'Under 2.5', result: 'Result', statusPending: 'PENDING', statusWon: 'WON', statusLost: 'LOST', statusVoid: 'VOID', statusNoBet: 'SKIPPED', errorPrefix: 'Error:', saved: 'Background scan started. Data will appear automatically', settled: 'Settlement completed', automation: 'AUTO EVERY 15 MIN', lastScan: 'Last scan', statsTitle: 'Algorithm statistics', balanceChart: 'Algorithm balance chart', cumulative: 'Cumulative balance', settledPicks: 'settled picks', avgOdds: 'Avg. odds', avgProbability: 'Avg. probability', record: 'W/L record', maxDrawdown: 'Max drawdown', byLeague: 'Statistics by league', byMarket: 'Statistics by pick type', byOdds: 'Statistics by odds range', byProbability: 'Statistics by probability range', count: 'Count', balance: 'Profit', yield: 'Yield', league: 'League', market: 'Pick type', range: 'Range', noStats: 'Statistics will appear after the first bets are settled.'
+    refresh: 'Refresh data', scan: 'Run full scan', settle: 'Settle matches', loading: 'Loading algorithm data…', empty: 'No matches in this view.', setupEmpty: 'No saved analyses. Run the SQL migration, check Netlify keys and start the first scan.', formula: 'How the pick is selected', formulaCopy: 'The formula calculates Over and Under 2.5 probabilities. The system always selects the side with the HIGHER probability. If that probability is at least 51%, it saves a 1-unit bet. Odds do not change the direction; they are used only to calculate profit or loss.', profit: 'Profit', roi: 'ROI', hitRate: 'Hit rate', bets: 'Bets', pending: 'Pending', analyzed: 'Analysed', stake: 'Stake', edge: 'Odds EV', pressure: 'Total pressure', model: 'Model pick', odds: 'Odds', noOdds: 'no odds', probability: 'Probability', noBet: 'NO BET', details: 'Show calculation', hide: 'Hide calculation', home: 'Home', away: 'Away', shots: 'Shots', corners: 'Corners', allowedShots: 'Shots allowed', allowedCorners: 'Corners allowed', attack: 'Attacking pressure', defence: 'Defensive pressure', expected: 'Expected pressure', over: 'Over 2.5', under: 'Under 2.5', result: 'Result', statusPending: 'PENDING', statusWon: 'WON', statusLost: 'LOST', statusVoid: 'VOID', statusNoBet: 'SKIPPED', errorPrefix: 'Error:', saved: 'Background scan started. Data will appear automatically', settled: 'Settlement completed', automation: 'AUTO EVERY 15 MIN', lastScan: 'Last scan', statsTitle: 'Algorithm statistics', balanceChart: 'Algorithm balance chart', cumulative: 'Cumulative balance', settledPicks: 'settled picks', avgOdds: 'Avg. odds', avgProbability: 'Avg. probability', record: 'W/L record', maxDrawdown: 'Max drawdown', byLeague: 'Statistics by league', byMarket: 'Statistics by pick type', byOdds: 'Statistics by odds range', byProbability: 'Statistics by probability range', count: 'Count', balance: 'Profit', yield: 'Yield', league: 'League', market: 'Pick type', range: 'Range', noStats: 'Statistics will appear after the first bets are settled.'
   }
 }
 
@@ -211,8 +212,8 @@ function AlgorithmCard({ row, lang, t, expanded, onToggle }) {
       <div className="algorithm-pick-strip-v1880">
         <div><small>{t.model}</small><strong>{pick}</strong></div>
         <div><small>{t.probability}</small><strong>{isNoBet ? `${number(row.selected_probability, 1)}%` : `${number(row.selected_probability, 1)}%`}</strong></div>
-        <div><small>{t.odds}</small><strong>{isNoBet ? '—' : number(row.selected_odds, 2)}</strong></div>
-        <div><small>{t.edge}</small><strong className={Number(row.edge_pct || 0) >= 0 ? 'positive' : 'negative'}>{signed(row.edge_pct, 2, '%')}</strong></div>
+        <div><small>{t.odds}</small><strong>{isNoBet ? '—' : Number(row.selected_odds || 0) > 1 ? number(row.selected_odds, 2) : t.noOdds}</strong></div>
+        <div><small>{t.edge}</small><strong className={row.edge_pct == null ? '' : Number(row.edge_pct || 0) >= 0 ? 'positive' : 'negative'}>{row.edge_pct == null ? '—' : signed(row.edge_pct, 2, '%')}</strong></div>
         <div><small>{t.stake}</small><strong>{number(row.stake, 0)} j.</strong></div>
         <div><small>{t.pressure}</small><strong>{number(row.total_pressure, 2)}</strong></div>
       </div>
@@ -230,8 +231,8 @@ function AlgorithmCard({ row, lang, t, expanded, onToggle }) {
             <strong>{number(row.expected_home_pressure, 2)} + {number(row.expected_away_pressure, 2)} = {number(row.total_pressure, 2)}</strong>
           </div>
           <div className="algorithm-market-detail-v1880">
-            <span>{t.over}: {number(row.over_probability, 2)}% · {t.odds} {number(row.over_odds, 2)} · EV {signed(row.over_ev_pct, 2, '%')}</span>
-            <span>{t.under}: {number(row.under_probability, 2)}% · {t.odds} {number(row.under_odds, 2)} · EV {signed(row.under_ev_pct, 2, '%')}</span>
+            <span>{t.over}: {number(row.over_probability, 2)}% · {t.odds} {Number(row.over_odds || 0) > 1 ? number(row.over_odds, 2) : t.noOdds} · EV {row.over_ev_pct == null ? '—' : signed(row.over_ev_pct, 2, '%')}</span>
+            <span>{t.under}: {number(row.under_probability, 2)}% · {t.odds} {Number(row.under_odds || 0) > 1 ? number(row.under_odds, 2) : t.noOdds} · EV {row.under_ev_pct == null ? '—' : signed(row.under_ev_pct, 2, '%')}</span>
           </div>
         </div>
       )}
@@ -243,14 +244,17 @@ function groupStats(rows, keyGetter) {
   const map = new Map()
   rows.forEach(row => {
     const key = String(keyGetter(row) || 'Inne')
-    const current = map.get(key) || { key, bets: 0, settled: 0, stake: 0, profit: 0, odds: 0, probability: 0, won: 0, lost: 0 }
+    const current = map.get(key) || { key, bets: 0, settled: 0, stake: 0, profit: 0, odds: 0, oddsCount: 0, probability: 0, won: 0, lost: 0 }
     current.bets += 1
-    current.odds += Number(row.selected_odds || 0)
+    const hasOdds = Number(row.selected_odds || 0) > 1
+    if (hasOdds) { current.odds += Number(row.selected_odds || 0); current.oddsCount += 1 }
     current.probability += Number(row.selected_probability || 0)
     if (['won', 'lost'].includes(row.status)) {
       current.settled += 1
-      current.stake += Number(row.stake || 0)
-      current.profit += Number(row.profit || 0)
+      if (hasOdds) {
+        current.stake += Number(row.stake || 0)
+        current.profit += Number(row.profit || 0)
+      }
       if (row.status === 'won') current.won += 1
       if (row.status === 'lost') current.lost += 1
     }
@@ -258,7 +262,7 @@ function groupStats(rows, keyGetter) {
   })
   return [...map.values()].map(row => ({
     ...row,
-    avgOdds: row.bets ? row.odds / row.bets : 0,
+    avgOdds: row.oddsCount ? row.odds / row.oddsCount : 0,
     avgProbability: row.bets ? row.probability / row.bets : 0,
     yieldValue: row.stake ? row.profit / row.stake * 100 : 0
   })).sort((a, b) => b.bets - a.bets || b.profit - a.profit)
@@ -303,6 +307,7 @@ function AlgorithmStats({ rows, summary, t }) {
   const marketRows = groupStats(bets, row => row.selected_market === 'over_2_5' ? t.over : t.under)
   const oddsRows = groupStats(bets, row => {
     const odd = Number(row.selected_odds || 0)
+    if (odd <= 1) return t.noOdds
     if (odd < 1.5) return '1.00–1.49'
     if (odd < 2) return '1.50–1.99'
     if (odd < 2.5) return '2.00–2.49'
@@ -442,7 +447,7 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
   return (
     <div className="algorithm-page-v1880">
       <section className="algorithm-hero-v1880">
-        <div className="algorithm-hero-copy-v1880"><span>PRESSURE O/U 2.5 · V2</span><h1>{t.title}</h1><p>{t.subtitle}</p><div className="algorithm-auto-meta-v1882"><b>{t.automation}</b><span>{t.lastScan}: {latestScan?.started_at ? dateTime(latestScan.started_at, lang) : '—'}</span></div></div>
+        <div className="algorithm-hero-copy-v1880"><span>PRESSURE O/U 2.5 · V3</span><h1>{t.title}</h1><p>{t.subtitle}</p><div className="algorithm-auto-meta-v1882"><b>{t.automation}</b><span>{t.lastScan}: {latestScan?.started_at ? dateTime(latestScan.started_at, lang) : '—'}</span></div></div>
         <div className="algorithm-hero-actions-v1880">
           <button type="button" onClick={() => load()} disabled={loading}>{loading ? '…' : '↻'} {t.refresh}</button>
           {isAdmin && <button type="button" className="is-primary" onClick={() => runAdminAction('scan')} disabled={Boolean(action)}>{action === 'scan' ? '…' : '▶'} {t.scan}</button>}

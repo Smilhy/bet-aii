@@ -30,10 +30,11 @@ exports.handler = async function(event) {
     const settled = bets.filter(row => ['won', 'lost'].includes(String(row.status || '')))
     const won = settled.filter(row => row.status === 'won').length
     const lost = settled.filter(row => row.status === 'lost').length
+    const financiallySettled = settled.filter(row => Number(row.selected_odds || 0) > 1)
     const pending = bets.filter(row => row.status === 'pending').length
     const voided = bets.filter(row => row.status === 'void').length
-    const stake = settled.reduce((sum, row) => sum + Number(row.stake || 0), 0)
-    const profit = settled.reduce((sum, row) => sum + Number(row.profit || 0), 0)
+    const stake = financiallySettled.reduce((sum, row) => sum + Number(row.stake || 0), 0)
+    const profit = financiallySettled.reduce((sum, row) => sum + Number(row.profit || 0), 0)
 
     let latestRuns = []
     try {
@@ -54,6 +55,9 @@ exports.handler = async function(event) {
         analyzed: rows.length,
         bets: bets.length,
         settled: settled.length,
+        financially_settled: financiallySettled.length,
+        settled_without_odds: settled.length - financiallySettled.length,
+        bets_without_odds: bets.filter(row => Number(row.selected_odds || 0) <= 1).length,
         won,
         lost,
         pending,
@@ -65,14 +69,14 @@ exports.handler = async function(event) {
         stake: round(stake, 2),
         roi: stake > 0 ? round(profit / stake * 100, 2) : 0,
         hit_rate: settled.length > 0 ? round(won / settled.length * 100, 2) : 0,
-        avg_odds: round(average(settled, row => row.selected_odds), 2),
+        avg_odds: round(average(financiallySettled, row => row.selected_odds), 2),
         avg_probability: round(average(bets, row => row.selected_probability), 2)
       },
       model: {
         version: MODEL_VERSION,
         stake: 1,
         min_probability: 51,
-        rule: 'Wybór strony z wyższym prawdopodobieństwem modelu. Zakład przy minimum 51%. Kurs nie wybiera kierunku; służy do rozliczenia wyniku.'
+        rule: 'Wybór strony z wyższym prawdopodobieństwem modelu. Zakład przy minimum 51%. Brak kursu nie blokuje typu; ROI liczy się tylko dla rekordów z realnym kursem.'
       },
       automation: {
         scan_every_minutes: 15,

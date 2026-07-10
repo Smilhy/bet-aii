@@ -107,7 +107,7 @@ function expectedValue(probabilityPercent, decimalOdds) {
  * WERSJA 1882
  * Kierunek zakładu wybiera WYŁĄCZNIE wyższe prawdopodobieństwo modelu.
  * Kurs służy tylko do zapisania ceny i późniejszego liczenia zysku/straty.
- * Zakład powstaje, gdy większa z dwóch szans ma co najmniej minProbability (domyślnie 51%).
+ * Brak kursu NIE blokuje typu. Zakład powstaje, gdy większa z dwóch szans ma co najmniej minProbability (domyślnie 51%).
  */
 function chooseProbabilityBet(model = {}, odds = {}, options = {}) {
   const minProbability = clamp(options.minProbability ?? options.min_probability ?? 51, 50, 100)
@@ -135,27 +135,30 @@ function chooseProbabilityBet(model = {}, odds = {}, options = {}) {
       }
 
   const hasPrice = Number.isFinite(selected.odds) && selected.odds > 1
-  if (selected.probability < minProbability || !hasPrice) {
+  if (selected.probability < minProbability) {
     return {
       market: 'no_bet',
       label: 'Brak zakładu',
       probability: selected.probability,
-      odds: selected.odds,
+      odds: hasPrice ? selected.odds : 0,
       edge: selected.ev,
       overEv,
       underEv,
       minProbability,
-      reason: selected.probability < minProbability ? 'probability_below_threshold' : 'missing_selected_odds'
+      hasPrice,
+      reason: 'probability_below_threshold'
     }
   }
 
   return {
     ...selected,
-    edge: selected.ev,
+    odds: hasPrice ? selected.odds : 0,
+    edge: hasPrice ? selected.ev : null,
     overEv,
     underEv,
     minProbability,
-    reason: 'higher_probability'
+    hasPrice,
+    reason: hasPrice ? 'higher_probability' : 'higher_probability_missing_odds'
   }
 }
 

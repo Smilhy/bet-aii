@@ -39,13 +39,15 @@ const belowThreshold = chooseProbabilityBet(
 assert.equal(belowThreshold.market, 'no_bet')
 assert.equal(belowThreshold.reason, 'probability_below_threshold')
 
-// Brak kursu po wybranej stronie również nie tworzy nierozliczalnego zakładu.
+// V1884: brak kursu nie blokuje typu. Kurs może zostać dopisany w kolejnym skanie.
 const missingSelectedOdds = chooseProbabilityBet(
   { overProbability: 44.8, underProbability: 55.2 },
   { over: 3.75, under: 0 },
   { minProbability: 51 }
 )
-assert.equal(missingSelectedOdds.market, 'no_bet')
-assert.equal(missingSelectedOdds.reason, 'missing_selected_odds')
+assert.equal(missingSelectedOdds.market, 'under_2_5')
+assert.equal(missingSelectedOdds.probability, 55.2)
+assert.equal(missingSelectedOdds.odds, 0)
+assert.equal(missingSelectedOdds.reason, 'higher_probability_missing_odds')
 
-console.log('OK: WERSJA 1882 probability-first algorithm model')
+console.log('OK: WERSJA 1884 all-fixtures probability-first algorithm model')

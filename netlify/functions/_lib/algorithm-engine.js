@@ -10,7 +10,7 @@ const API_BASE = 'https://v3.football.api-sports.io'
 const FINISHED_STATUSES = new Set(['FT', 'AET', 'PEN'])
 const UPCOMING_STATUSES = new Set(['NS', 'TBD'])
 const SETTLED_STATUSES = new Set(['won', 'lost', 'void'])
-const MODEL_VERSION = 'pressure-ou25-v2-probability-51'
+const MODEL_VERSION = 'pressure-ou25-v3-all-fixtures-probability-51'
 
 function getApiKey() {
   return process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || ''
@@ -160,6 +160,27 @@ function buildOverUnderOddsMap(rows = []) {
     map.set(fixtureId, { over: summarize(prices.over), under: summarize(prices.under) })
   })
   return map
+}
+
+function oddsFromExistingBet(row = {}) {
+  const side = (odd, bookmaker = '') => {
+    const value = toFiniteNumber(odd, 0)
+    return value > 1
+      ? { best: round(value, 2), bestBookmaker: String(bookmaker || ''), consensus: round(value, 2), books: 1 }
+      : { best: 0, bestBookmaker: '', consensus: 0, books: 0 }
+  }
+  return {
+    over: side(row.over_odds, row.over_bookmaker),
+    under: side(row.under_odds, row.under_bookmaker)
+  }
+}
+
+function mergeOddsSnapshot(current = {}, previous = {}) {
+  const choose = (fresh, old) => toFiniteNumber(fresh?.best, 0) > 1 ? fresh : (old || { best: 0, bestBookmaker: '', consensus: 0, books: 0 })
+  return {
+    over: choose(current?.over, previous?.over),
+    under: choose(current?.under, previous?.under)
+  }
 }
 
 function isExcludedFixture(fixture = {}) {
@@ -402,6 +423,7 @@ function buildAlgorithmRow(fixture, odds, homeForm, awayForm, sampleSize, minPro
       min_probability: minProbability,
       selection_reason: selection.reason,
       odds_are_informational_for_selection: true,
+      odds_available_for_selected_market: Boolean(selection.hasPrice),
       over_consensus_odds: odds?.over?.consensus || 0,
       under_consensus_odds: odds?.under?.consensus || 0,
       home_source_fixture_ids: homeForm.sourceFixtureIds,
@@ -449,14 +471,20 @@ async function generateAlgorithmPicks(options = {}) {
   try {
     const fixtures = []
     const oddsRows = []
+    const scanWarnings = []
     for (let offset = 0; offset < days; offset += 1) {
       const date = shiftDateKey(startDate, offset)
-      const [dateFixtures, dateOdds] = await Promise.all([
+      const [fixturesResult, oddsResult] = await Promise.allSettled([
         fetchFixturesForDate(date, timezone),
         fetchOddsForDate(date, options.oddsMaxPages)
       ])
-      fixtures.push(...dateFixtures)
-      oddsRows.push(...dateOdds)
+      if (fixturesResult.status === 'rejected') throw fixturesResult.reason
+      fixtures.push(...(fixturesResult.value || []))
+      if (oddsResult.status === 'fulfilled') {
+        oddsRows.push(...(oddsResult.value || []))
+      } else {
+        scanWarnings.push(`Kursy ${date}: ${String(oddsResult.reason?.message || oddsResult.reason)}`)
+      }
     }
 
     const oddsMap = buildOverUnderOddsMap(oddsRows)
@@ -464,7 +492,9 @@ async function generateAlgorithmPicks(options = {}) {
       .filter(fixture => UPCOMING_STATUSES.has(String(fixture?.fixture?.status?.short || '').toUpperCase()))
       .filter(fixture => fixtureKickoffMs(fixture) > nowMs - 15 * 60 * 1000)
       .filter(fixture => includeAll || !isExcludedFixture(fixture))
-      .filter(fixture => oddsMap.has(String(fixture?.fixture?.id || '')))
+      // V1884: kurs O/U 2.5 nie jest już warunkiem wejścia do skanu.
+      // Każdy nierozpoczęty mecz może zostać policzony, a kurs jest dopisywany,
+      // gdy API go udostępni w którymkolwiek kolejnym skanie.
       .sort((a, b) => fixtureKickoffMs(a) - fixtureKickoffMs(b))
 
     const candidateIds = candidates.map(item => Number(item?.fixture?.id)).filter(Boolean)
@@ -473,7 +503,7 @@ async function generateAlgorithmPicks(options = {}) {
       for (const idBatch of chunk(candidateIds, 100)) {
         const { data, error } = await supabase
           .from('algorithm_bets')
-          .select('fixture_id,status,updated_at')
+          .select('fixture_id,status,updated_at,over_odds,under_odds,over_bookmaker,under_bookmaker,selected_odds')
           .in('fixture_id', idBatch)
         if (error) throw error
         ;(data || []).forEach(row => existingMap.set(String(row.fixture_id), row))
@@ -519,7 +549,9 @@ async function generateAlgorithmPicks(options = {}) {
           getTeamForm({ teamId: homeId, teamName: fixture?.teams?.home?.name, asOfKickoff: kickoff }),
           getTeamForm({ teamId: awayId, teamName: fixture?.teams?.away?.name, asOfKickoff: kickoff })
         ])
-        return buildAlgorithmRow(fixture, oddsMap.get(fixtureId), homeForm, awayForm, sampleSize, minProbability)
+        const previousOdds = oddsFromExistingBet(existingMap.get(fixtureId) || {})
+        const effectiveOdds = mergeOddsSnapshot(oddsMap.get(fixtureId) || {}, previousOdds)
+        return buildAlgorithmRow(fixture, effectiveOdds, homeForm, awayForm, sampleSize, minProbability)
       } catch (error) {
         errors.push({
           fixture_id: Number(fixtureId),
@@ -550,14 +582,17 @@ async function generateAlgorithmPicks(options = {}) {
       include_all_competitions: includeAll,
       fixtures_loaded: fixtures.length,
       fixtures_with_ou25_odds: oddsMap.size,
+      fixtures_without_ou25_odds: Math.max(0, candidates.length - candidates.filter(item => oddsMap.has(String(item?.fixture?.id || ''))).length),
       candidates_found: candidateIds.length,
       candidates_considered: candidates.length,
       rows_saved: rows.length,
       bets_saved: rows.filter(row => row.selected_market !== 'no_bet').length,
+      bets_without_selected_odds: rows.filter(row => row.selected_market !== 'no_bet' && Number(row.selected_odds || 0) <= 1).length,
       no_bet_saved: rows.filter(row => row.selected_market === 'no_bet').length,
       over_saved: rows.filter(row => row.selected_market === 'over_2_5').length,
       under_saved: rows.filter(row => row.selected_market === 'under_2_5').length,
       skipped_errors: errors.length,
+      warnings: scanWarnings.slice(0, 50),
       errors: errors.slice(0, 50)
     }
     await recordAlgorithmRun(supabase, 'scan', errors.length ? 'partial' : 'success', startedAt, result)
@@ -579,6 +614,8 @@ module.exports = {
   dateKeyInTimezone,
   shiftDateKey,
   buildOverUnderOddsMap,
+  oddsFromExistingBet,
+  mergeOddsSnapshot,
   fetchTeamForm,
   parseTeamFixtureStats
 }

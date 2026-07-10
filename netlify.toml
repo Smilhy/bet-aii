@@ -98,7 +98,7 @@
 
 # WERSJA 1882 — pełny automat algorytmu co 15 minut.
 # Scheduled Function tylko uruchamia Background Function; cykl najpierw rozlicza
-# zakończone mecze, a następnie skanuje wszystkie dzisiejsze mecze z kursem O/U 2.5.
+# zakończone mecze, a następnie skanuje wszystkie dzisiejsze mecze. Brak kursu O/U 2.5 nie blokuje typu.
 # Kierunek typu wybiera wyższe prawdopodobieństwo modelu (minimum 51%), nie EV.
 [functions."scheduled-generate-algorithm-picks"]
   schedule = "*/15 * * * *"

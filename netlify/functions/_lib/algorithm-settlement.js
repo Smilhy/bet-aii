@@ -86,7 +86,10 @@ async function settleAlgorithmPicks(options = {}) {
 
       const stake = Number(row.stake || 1)
       const odds = Number(row.selected_odds || 0)
-      const profit = won ? stake * (odds - 1) : -stake
+      const hasSettlementOdds = Number.isFinite(odds) && odds > 1
+      // Gdy API nigdy nie podało kursu, nadal rozliczamy trafność typu,
+      // ale nie wymyślamy finansowego wyniku. Takie rekordy nie wchodzą do ROI.
+      const profit = hasSettlementOdds ? (won ? stake * (odds - 1) : -stake) : 0
       const patch = {
         status: won ? 'won' : 'lost',
         result: won ? 'won' : 'lost',
@@ -94,13 +97,13 @@ async function settleAlgorithmPicks(options = {}) {
         away_goals: score.away,
         total_goals: totalGoals,
         profit: round(profit, 2),
-        settlement_source: 'api-football',
+        settlement_source: hasSettlementOdds ? 'api-football' : 'api-football-no-odds',
         settled_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
       const { error: updateError } = await supabase.from('algorithm_bets').update(patch).eq('id', row.id)
       if (updateError) throw updateError
-      results.push({ fixture_id: row.fixture_id, status: patch.status, profit: patch.profit, score: `${score.home}:${score.away}` })
+      results.push({ fixture_id: row.fixture_id, status: patch.status, profit: patch.profit, odds_available: hasSettlementOdds, score: `${score.home}:${score.away}` })
     } catch (error) {
       results.push({ fixture_id: row.fixture_id, status: 'error', error: String(error?.message || error) })
     }
