@@ -34,6 +34,7 @@ import { createRoot } from 'react-dom/client'
 import { createPortal } from 'react-dom'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
+import AlgorithmView from './AlgorithmView'
 import achievementFanatykV1772 from './assets/achievements-v1772/fanatyk.svg'
 import achievementWinnerV1772 from './assets/achievements-v1772/prawdziwy-wygrany.svg'
 import achievementFearlessV1772 from './assets/achievements-v1772/nieustraszony.svg'
@@ -258,7 +259,7 @@ function getLocalizedDashboardHeroSrc(src, lang) {
 
 const BETAI_DASHBOARD_TRANSLATIONS = {
   en: {
-    'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Ulepsz konto': 'Upgrade account', 'Saldo': 'Balance', 'Coiny': 'Coin', 'Odblokowane': 'Unlocked', 'Przejdź na Premium': 'Go Premium', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować typera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
+    'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Algorytm': 'Algorithm', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Ulepsz konto': 'Upgrade account', 'Saldo': 'Balance', 'Coiny': 'Coin', 'Odblokowane': 'Unlocked', 'Przejdź na Premium': 'Go Premium', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować typera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
   }
 }
 
@@ -1953,7 +1954,7 @@ const BETAI_COMMUNITY_TRANSLATIONS_V1860 = {
 const BETAI_AI_TOP_TIPSTERS_TRANSLATIONS_V1863 = {
   en: {
     // AI Picks
-    'Typy AI': 'AI picks',
+    'Typy AI': 'AI picks', 'Algorytm': 'Algorithm',
     'SPORTY • VALUE • LIVE AI': 'SPORTS • VALUE • LIVE AI',
     'Szybkie skanowanie': 'Fast scanning',
     'Top mecze, live i najlepsze value': 'Top matches, live action and the best value',
@@ -4822,6 +4823,7 @@ const LOCKED_SIDEBAR_ITEMS_V1130 = Object.freeze([
   Object.freeze({ id: 'leaderboard', label: '🏆 Ranking', activeViews: Object.freeze(['leaderboard']) }),
   Object.freeze({ id: 'referrals', label: '👥 Społeczność', activeViews: Object.freeze(['referrals']) }),
   Object.freeze({ id: 'aiPicks', label: '🧠 Typy AI', activeViews: Object.freeze(['aiPicks']) }),
+  Object.freeze({ id: 'algorithm', label: '📐 Algorytm', activeViews: Object.freeze(['algorithm']) }),
   Object.freeze({ id: 'articles', label: '📰 Artykuły/TV Live', activeViews: Object.freeze(['articles']) }),
   Object.freeze({ id: 'rewardsBonuses', label: '🎁 Nagrody/Bonusy', activeViews: Object.freeze(['rewardsBonuses']) }),
   Object.freeze({ id: 'worldMap', label: '🗺️ Mapa świata', activeViews: Object.freeze(['worldMap']), clearTipster: true })
@@ -36710,6 +36712,10 @@ function App() {
 
         {view === 'aiPicks' && (
           <AiPicksView tips={tips} loading={loading} liveGenerating={aiLiveGenerating} settleGenerating={aiSettleGenerating} onGenerateLive={runLiveAiEngine} onSettle={runAiSettlement} onRefresh={() => fetchTips(sessionUser?.id)} />
+        )}
+
+        {view === 'algorithm' && (
+          <AlgorithmView lang={appLang} isAdmin={isAdminUser(effectiveAccountProfile || sessionUser)} />
         )}
 
 

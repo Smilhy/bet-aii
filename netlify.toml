@@ -95,3 +95,12 @@
 
 [functions."ai-bot-maintenance-background"]
   background = true
+
+# WERSJA 1880 — automatyczny test wzoru presji Over/Under 2.5.
+# Skan zapisuje nowe mecze i stawia płaską stawkę 1 j. wyłącznie przy dodatnim EV.
+[functions."scheduled-generate-algorithm-picks"]
+  schedule = "33 */3 * * *"
+
+# Rozliczenie standardowego rynku po 90 minutach, bez dogrywki i karnych.
+[functions."scheduled-settle-algorithm-picks"]
+  schedule = "23 * * * *"
