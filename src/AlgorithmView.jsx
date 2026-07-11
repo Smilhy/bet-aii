@@ -27,7 +27,7 @@ const TEXT = {
     noBetReason: 'Powód braku zakładu', reasonProbability: 'Prawdopodobieństwo {value}% — wymagane minimum 51%', reasonOdds: 'Kurs {value} — wymagane minimum 2.00', reasonMissingOdds: 'Brak kursu O/U 2.5 dla wybranego kierunku', reasonNoData: 'Brak pełnych statystyk strzałów i rożnych', reasonStarted: 'Mecz rozpoczęty — pominięty', reasonCompetition: 'Mecz poza listą topowych rozgrywek', reasonUnknown: 'Warunki zakładu nie zostały spełnione',
     lockedPick: 'ZAMROŻONE PRE-MATCH', pickSaved: 'Typ zapisano', oddsSaved: 'Kurs zapisano', noPostKickoffChanges: 'Bez zmian po rozpoczęciu',
     forecastHitRate: 'Trafność wszystkich prognoz', financialRoi: 'ROI zakładów z kursem ≥ 2.00', forecastsSettled: 'Wszystkie rozliczone prognozy', financialSettled: 'Rozliczone finansowo',
-    filters: { bets: 'Zakłady', queue: 'W kolejce', no_bet: 'Bez zakładu', results: 'Wyniki', all: 'Wszystkie', stats: 'Statystyki' }
+    overviewMore: 'Więcej statystyk', progressMore: 'Szczegóły skanu', filters: { bets: 'Zakłady', queue: 'W kolejce', no_bet: 'Bez zakładu', results: 'Wyniki', all: 'Wszystkie', stats: 'Statystyki' }
   },
   en: {
     title: 'Over / Under 2.5 Algorithm',
@@ -45,7 +45,7 @@ const TEXT = {
     noBetReason: 'No-bet reason', reasonProbability: 'Probability {value}% — minimum 51% required', reasonOdds: 'Odds {value} — minimum 2.00 required', reasonMissingOdds: 'No O/U 2.5 odds for the selected side', reasonNoData: 'Missing complete shots and corners data', reasonStarted: 'Match started — skipped', reasonCompetition: 'Outside the top competitions list', reasonUnknown: 'Bet conditions were not met',
     lockedPick: 'PRE-MATCH LOCKED', pickSaved: 'Pick saved', oddsSaved: 'Odds saved', noPostKickoffChanges: 'No changes after kick-off',
     forecastHitRate: 'Hit rate of all forecasts', financialRoi: 'ROI for bets with odds ≥ 2.00', forecastsSettled: 'All settled forecasts', financialSettled: 'Financially settled',
-    filters: { bets: 'Bets', queue: 'In queue', no_bet: 'No bet', results: 'Results', all: 'All', stats: 'Statistics' }
+    overviewMore: 'More statistics', progressMore: 'Scan details', filters: { bets: 'Bets', queue: 'In queue', no_bet: 'No bet', results: 'Results', all: 'All', stats: 'Statistics' }
   }
 }
 
@@ -229,24 +229,25 @@ function TopPickCard({ row, index, lang, t, onOpen }) {
   const pick = pickedDirectionLabel(row, t)
   const quality = getDataQuality(row, t)
   return (
-    <button type="button" className="algorithm-top-pick-v1897" onClick={onOpen}>
-      <span className="algorithm-top-rank-v1887">#{index + 1}</span>
-      <div className="algorithm-top-league-v1897">{row.league_name || 'Piłka nożna'}</div>
-      <div className="algorithm-top-match-v1887">
+    <button type="button" className="algorithm-top-pick-v1897 algorithm-top-pick-v1898" onClick={onOpen}>
+      <div className="algorithm-top-head-v1898">
+        <div className="algorithm-top-league-v1897">{row.league_name || 'Piłka nożna'}</div>
+        <span className="algorithm-top-rank-v1887">#{index + 1}</span>
+      </div>
+      <div className="algorithm-top-match-v1887 algorithm-top-match-v1898">
         <strong>{row.home_team}</strong><small>vs</small><strong>{row.away_team}</strong>
       </div>
-      <div className="algorithm-top-pick-info-v1887">
-        <b>{pick}</b><span>{number(row.selected_probability, 1)}%</span>
+      <div className="algorithm-top-choice-v1898">
+        <b>{pick}</b><strong>{number(row.selected_probability, 1)}%</strong>
       </div>
-      <div className="algorithm-top-signals-v1897">
-        <span><small>{t.chance}</small><b>{number(row.selected_probability, 1)}%</b></span>
-        <span><small>{t.ev}</small><b className={Number(row.edge_pct || 0) >= 0 ? 'positive' : 'negative'}>{row.edge_pct == null ? '—' : signed(row.edge_pct, 2, '%')}</b></span>
+      <div className="algorithm-top-meta-v1887 algorithm-top-meta-v1898">
+        <span>{t.odds}: <b>{Number(row.selected_odds || 0) > 1 ? number(row.selected_odds, 2) : t.noOdds}</b></span>
+        <span>{t.startsAt}: <b>{shortTime(row.kickoff, lang)}</b></span>
       </div>
-      <div className="algorithm-top-meta-v1887">
-        <span>{t.odds}: {Number(row.selected_odds || 0) > 1 ? number(row.selected_odds, 2) : t.noOdds}</span>
-        <span>{t.startsAt}: {shortTime(row.kickoff, lang)}</span>
+      <div className="algorithm-top-footer-v1898">
+        <span>{t.ev}: <b className={Number(row.edge_pct || 0) >= 0 ? 'positive' : 'negative'}>{row.edge_pct == null ? '—' : signed(row.edge_pct, 2, '%')}</b></span>
+        <span className={`algorithm-quality-chip-v1897 ${quality.className}`}>{quality.label} · {quality.used}/{quality.target}</span>
       </div>
-      <div className={`algorithm-quality-chip-v1897 ${quality.className}`}>{quality.label} · {quality.used}/{quality.target}</div>
     </button>
   )
 }
@@ -279,13 +280,11 @@ function AlgorithmCard({ row, lang, t, expanded, onToggle }) {
           <strong>{row.away_team}</strong>
         </div>
       </div>
-      <div className="algorithm-pick-strip-v1880">
+      <div className="algorithm-pick-strip-v1880 algorithm-pick-strip-v1898">
         <div><small>{t.model}</small><strong>{pick}</strong></div>
         <div><small>{t.probability}</small><strong>{waiting ? '—' : `${number(row.selected_probability, 1)}%`}</strong></div>
-        <div><small>{t.odds}</small><strong>{waiting ? (Number(row.over_odds || 0) > 1 || Number(row.under_odds || 0) > 1 ? '✓' : t.noOdds) : isNoBet ? selectedOddsText : selectedOddsText}</strong></div>
-        <div><small>{t.edge}</small><strong className={row.edge_pct == null ? '' : Number(row.edge_pct || 0) >= 0 ? 'positive' : 'negative'}>{waiting || row.edge_pct == null ? '—' : signed(row.edge_pct, 2, '%')}</strong></div>
+        <div><small>{t.odds}</small><strong>{waiting ? (Number(row.over_odds || 0) > 1 || Number(row.under_odds || 0) > 1 ? '✓' : t.noOdds) : selectedOddsText}</strong></div>
         <div><small>{t.stake}</small><strong>{waiting ? '—' : `${number(row.stake, 0)} j.`}</strong></div>
-        <div><small>{t.pressure}</small><strong>{waiting ? '—' : number(row.total_pressure, 2)}</strong></div>
       </div>
 
       {waiting ? (
@@ -300,9 +299,12 @@ function AlgorithmCard({ row, lang, t, expanded, onToggle }) {
             <div className={row.selected_market === 'under_2_5' ? 'is-selected' : ''}><span><b>{t.under}</b><em>{number(row.under_probability, 1)}%</em></span><i><u style={{ width: `${Math.max(0, Math.min(100, Number(row.under_probability || 0)))}%` }} /></i></div>
           </div>
           {isNoBet && <div className="algorithm-no-bet-reason-v1897"><b>{t.noBetReason}</b><span>{getSelectionReason(row, t)}</span></div>}
-          <div className="algorithm-data-audit-v1897">
-            <div className={`algorithm-quality-v1897 ${quality.className}`}><b>{quality.label}</b><span>{t.sample}: {quality.used}/{quality.target}</span><span>{t.completeness}: {number(quality.completeness, 0)}%</span><small>{t.updated}: {dateTime(row.analysis_updated_at || row.updated_at, lang)}</small></div>
-            <div className="algorithm-freeze-v1897"><b>{t.lockedPick}</b><span>{t.pickSaved}: {dateTime(saved, lang)}</span><span>{t.oddsSaved}: {selectedOddsText}</span><small>✓ {t.noPostKickoffChanges}</small></div>
+          <div className="algorithm-card-meta-v1898">
+            <span className={`algorithm-meta-chip-v1898 ${quality.className}`} title={`${t.completeness}: ${number(quality.completeness, 0)}%`}>{quality.label} · {quality.used}/{quality.target}</span>
+            <span className="algorithm-meta-chip-v1898">{t.edge}: <b className={Number(row.edge_pct || 0) >= 0 ? 'positive' : 'negative'}>{row.edge_pct == null ? '—' : signed(row.edge_pct, 2, '%')}</b></span>
+            <span className="algorithm-meta-chip-v1898">{t.pressure}: <b>{number(row.total_pressure, 2)}</b></span>
+            <span className="algorithm-meta-chip-v1898 is-locked" title={`${t.pickSaved}: ${dateTime(saved, lang)} · ${t.oddsSaved}: ${selectedOddsText}`}>🔒 {t.lockedPick}</span>
+            <span className="algorithm-meta-chip-v1898 is-muted">{t.updated}: {shortTime(row.analysis_updated_at || row.updated_at, lang)}</span>
           </div>
         </>
       )}
@@ -403,16 +405,21 @@ function AutomationProgress({ automation, latestScan, clock, t, lang }) {
         <div className="algorithm-progress-label-v1888"><strong>{t.checked}: {processed}/{total}</strong><span>{number(percent, 1)}%</span></div>
         <div className="algorithm-progress-track-v1888" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(percent)} aria-label={t.progressTitle}><i style={{ width: `${percent}%` }} /></div>
       </div>
-      <div className="algorithm-progress-stats-v1897">
+      <div className="algorithm-progress-stats-v1897 algorithm-progress-primary-v1898">
         <div><span>{t.readyPicks}</span><strong>{picks}</strong></div>
         <div><span>{t.inQueue}</span><strong>{waiting}</strong></div>
         <div><span>{t.noData}</span><strong>{noData}</strong></div>
-        <div><span>{t.newPicks}</span><strong>{newPicks}</strong></div>
-        <div><span>{t.apiErrors}</span><strong className={apiErrors ? 'is-error' : ''}>{apiErrors}</strong></div>
-        <div><span>{t.lastCycle}</span><strong>{latestScan?.started_at ? shortTime(latestScan.started_at, lang) : '—'}</strong><small>{latestScan?.status || '—'}</small></div>
         <div><span>{t.checked}</span><strong>{processed}/{total}</strong><small>{number(percent, 1)}%</small></div>
-        <div><span>{t.nextScan}</span><strong>{nextScan}</strong><small>{automation?.next_scan_at ? shortTime(automation.next_scan_at, lang) : '—'}</small></div>
       </div>
+      <details className="algorithm-progress-more-v1898">
+        <summary>{t.progressMore}</summary>
+        <div>
+          <span><small>{t.newPicks}</small><b>{newPicks}</b></span>
+          <span><small>{t.apiErrors}</small><b className={apiErrors ? 'is-error' : ''}>{apiErrors}</b></span>
+          <span><small>{t.lastCycle}</small><b>{latestScan?.started_at ? shortTime(latestScan.started_at, lang) : '—'}</b></span>
+          <span><small>{t.nextScan}</small><b>{nextScan}</b></span>
+        </div>
+      </details>
     </section>
   )
 }
@@ -616,17 +623,24 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
         </div>
       </section>
 
-      <section className="algorithm-summary-grid-v1883 algorithm-summary-grid-v1897">
-        <AlgorithmSummaryCard label={t.yieldCard} value={signed(summaryCards.roiValue, 2, '%')} subtitle={t.yieldCardSub} icon="◔" tone={summaryCards.roiValue >= 0 ? 'is-success' : 'is-danger'} />
-        <AlgorithmSummaryCard label={t.profit} value={signed(summaryCards.profitValue, 2, ' j.')} subtitle={t.profitCardSub} icon="₿" tone={summaryCards.profitValue >= 0 ? 'is-success' : 'is-danger'} />
-        <AlgorithmSummaryCard label={t.readyNow} value={String(summaryCards.readyNow)} subtitle={t.readyNowSub} icon="✓" tone="is-success" />
-        <AlgorithmSummaryCard label={t.queueNow} value={String(summaryCards.queueNow)} subtitle={t.queueNowSub} icon="↻" tone="is-warning" />
-        <AlgorithmSummaryCard label={t.noBetNow} value={String(summaryCards.noBetNow)} subtitle={t.noBetNowSub} icon="—" />
-        <AlgorithmSummaryCard label={t.wonCard} value={String(summary.won || 0)} subtitle={t.wonCardSub} icon="♛" tone="is-success" />
-        <AlgorithmSummaryCard label={t.lostCard} value={String(summary.lost || 0)} subtitle={t.lostCardSub} icon="☹" tone="is-danger" />
-        <AlgorithmSummaryCard label={t.stakesCard} value={`${number(summaryCards.totalStake, 2)} j.`} subtitle={t.stakesCardSub} icon="◎" />
-        <AlgorithmSummaryCard label={t.avgOdds} value={number(summaryCards.averageOdds, 2)} subtitle={t.avgOddsCardSub} icon="⌁" />
-        <AlgorithmSummaryCard label={t.maxOdds} value={number(summaryCards.maxOdds, 2)} subtitle={t.maxOddsSub} icon="↗" />
+      <section className="algorithm-overview-v1898">
+        <div className="algorithm-summary-grid-v1883 algorithm-summary-primary-v1898">
+          <AlgorithmSummaryCard label={t.yieldCard} value={signed(summaryCards.roiValue, 2, '%')} subtitle={t.yieldCardSub} icon="◔" tone={summaryCards.roiValue >= 0 ? 'is-success' : 'is-danger'} />
+          <AlgorithmSummaryCard label={t.profit} value={signed(summaryCards.profitValue, 2, ' j.')} subtitle={t.profitCardSub} icon="₿" tone={summaryCards.profitValue >= 0 ? 'is-success' : 'is-danger'} />
+          <AlgorithmSummaryCard label={t.readyNow} value={String(summaryCards.readyNow)} subtitle={t.readyNowSub} icon="✓" tone="is-success" />
+          <AlgorithmSummaryCard label={t.wonCard} value={String(summary.won || 0)} subtitle={t.wonCardSub} icon="♛" tone="is-success" />
+          <AlgorithmSummaryCard label={t.lostCard} value={String(summary.lost || 0)} subtitle={t.lostCardSub} icon="☹" tone="is-danger" />
+        </div>
+        <details className="algorithm-overview-more-v1898">
+          <summary>{t.overviewMore}</summary>
+          <div className="algorithm-summary-grid-v1883 algorithm-summary-secondary-v1898">
+            <AlgorithmSummaryCard label={t.queueNow} value={String(summaryCards.queueNow)} subtitle={t.queueNowSub} icon="↻" tone="is-warning" />
+            <AlgorithmSummaryCard label={t.noBetNow} value={String(summaryCards.noBetNow)} subtitle={t.noBetNowSub} icon="—" />
+            <AlgorithmSummaryCard label={t.stakesCard} value={`${number(summaryCards.totalStake, 2)} j.`} subtitle={t.stakesCardSub} icon="◎" />
+            <AlgorithmSummaryCard label={t.avgOdds} value={number(summaryCards.averageOdds, 2)} subtitle={t.avgOddsCardSub} icon="⌁" />
+            <AlgorithmSummaryCard label={t.maxOdds} value={number(summaryCards.maxOdds, 2)} subtitle={t.maxOddsSub} icon="↗" />
+          </div>
+        </details>
       </section>
 
       <AutomationProgress automation={automation} latestScan={latestScan} clock={clock} t={t} lang={lang} />
