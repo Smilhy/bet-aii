@@ -27706,7 +27706,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
   const buildAchievementV1768 = ({ key, iconSrc, title, description, value, target, suffix = '' }) => {
     const persisted = achievementProgressV1774?.[key] || null
-    const safeValue = Math.max(0, Number(persisted?.current_value ?? value ?? 0) || 0)
+    const liveValueV1900 = Math.max(0, Number(value ?? 0) || 0)
+    const persistedValueV1900 = Math.max(0, Number(persisted?.current_value ?? 0) || 0)
+
+    // FIX 1900 — kafelki profilu są źródłem bieżących statystyk.
+    // Tabela osiągnięć mogła zawierać starą bazę importu (np. 812 typów / 474 wygrane),
+    // podczas gdy profil poprawnie dodawał nowe typy po imporcie (np. 848 / 492).
+    // Osiągnięcie pokazuje więc większą z dwóch wartości i nigdy nie cofa postępu.
+    const safeValue = Math.max(liveValueV1900, persistedValueV1900)
     const isCriticAchievementV1780 = key === 'krytyk-bukmacherski'
     const configuredTarget = Math.max(1, Number(target ?? 1) || 1)
     const persistedTarget = Math.max(1, Number(persisted?.target_value ?? configuredTarget) || configuredTarget)
