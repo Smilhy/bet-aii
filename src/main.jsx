@@ -28581,6 +28581,99 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   ]
   const coachDataSourceLabel = `Analiza profilu ${displayName}: ${totalTips} typów, ${settledTips} rozliczonych, ${liveSportStatsRows.length} dyscyplin.`
 
+
+  // WERSJA 5 — Tip DNA + Trust Score.
+  // Każdy profil typera liczy własny styl i zaufanie z tych samych danych, które widzi profil:
+  // aktywne/importowane typy, wyniki, kursy, dyscypliny, rynki, formaty, followers i opinie.
+  const clampProfileScoreV5 = (value) => Math.max(0, Math.min(100, Math.round(Number(value || 0) || 0)))
+  const profileBestOddsRangeRowV5 = coachPickBestRow(liveOddsStatsRows, liveOddsStatsRows.some(row => Number(row.coupons || 0) >= 3) ? 3 : 1)
+  const profileWorstMarketRowV5 = coachPickWorstRow(liveBetTypeStatsRows, liveBetTypeStatsRows.some(row => Number(row.coupons || 0) >= 3) ? 3 : 1)
+  const profileHighOddsRatioV5 = settledTips ? coachHighOddsSettled.length / settledTips : 0
+  const profileIsAggressiveV5 = avgOddsNumber >= 2.25 || profileHighOddsRatioV5 >= 0.22 || coachRiskScore >= 64
+  const profileIsSafeV5 = avgOddsNumber > 0 && avgOddsNumber <= 1.70 && coachRiskScore <= 50
+  const profileIsSpecialistV5 = Boolean(coachBestMarketRow?.label && Number(coachBestMarketRow?.yield || 0) > 0 && Number(coachBestMarketRow?.coupons || 0) >= 3)
+  const profileDnaStyleNameV5 = totalTips < 5
+    ? 'Nowy profil'
+    : profileIsAggressiveV5 && roi >= 0
+      ? 'Agresywny Analityk'
+      : profileIsAggressiveV5
+        ? 'Łowca kursów'
+        : profileIsSafeV5
+          ? 'Bezpieczny Strateg'
+          : profileIsSpecialistV5
+            ? 'Specjalista rynku'
+            : 'Zbalansowany Typer'
+  const profileDnaStrongSidesV5 = [
+    coachBestMarketRow?.label ? `${coachBestMarketRow.label}` : '',
+    profileBestOddsRangeRowV5?.label ? `Kursy ${profileBestOddsRangeRowV5.label}` : '',
+    coachBestFormatRow?.label ? `${coachBestFormatRow.label}` : '',
+  ].filter(Boolean).slice(0, 3)
+  const profileDnaWeakSidesV5 = [
+    coachHighOddsLossRate >= 50 ? 'Kursy powyżej 3.00' : (coachWorstOddsRow?.label ? `Kursy ${coachWorstOddsRow.label}` : ''),
+    profileWorstMarketRowV5?.label && Number(profileWorstMarketRowV5.yield || 0) < 0 ? profileWorstMarketRowV5.label : '',
+    coachSoloFormatRow && coachAkoFormatRow && Number(coachAkoFormatRow.yield || 0) < Number(coachSoloFormatRow.yield || 0) ? 'AKO' : '',
+  ].filter(Boolean).slice(0, 3)
+  const profileDnaSummaryRowsV5 = [
+    ['Styl gry', profileDnaStyleNameV5],
+    ['Najczęściej grany sport', coachBestSportRow?.label || preferredSport || 'Brak danych'],
+    ['Ulubiony rynek', coachBestMarketRow?.label || 'Brak danych'],
+    ['Średni kurs', avgOddsNumber ? avgOddsNumber.toFixed(2) : '—'],
+    ['Najlepszy zakres kursów', profileBestOddsRangeRowV5?.label || 'Brak danych'],
+    ['Preferowany format', coachBestFormatRow?.label || 'Brak danych'],
+  ]
+  const profileDnaRecommendationV5 = profileDnaStrongSidesV5.length
+    ? `Trzymaj się swojej mocnej strony: ${profileDnaStrongSidesV5.join(' • ')}.`
+    : 'Dodaj i rozlicz więcej typów, aby zbudować pełne DNA typera.'
+
+  const profileReviewsForTrustV5 = Array.isArray(profileReviews) ? profileReviews.filter(review => review.is_approved !== false) : []
+  const profileReviewCountForTrustV5 = profileReviewsForTrustV5.length || Number(user?.rating_count ?? user?.reviews_count ?? user?.top_review_rating_count ?? 0) || 0
+  const profileRatingAverageForTrustV5 = profileReviewsForTrustV5.length
+    ? profileReviewsForTrustV5.reduce((total, review) => total + (Number(review.rating) || 0), 0) / profileReviewsForTrustV5.length
+    : Number(user?.rating_avg ?? user?.top_review_rating_avg ?? 0) || 0
+  const trustWinRateScoreV5 = clampProfileScoreV5(winRate)
+  const trustYieldScoreV5 = clampProfileScoreV5(50 + (Math.max(-30, Math.min(35, Number(roi || 0))) * 1.35))
+  const trustRegularityScoreV5 = clampProfileScoreV5((Math.min(totalTips, 500) / 500) * 55 + (Math.min(importedActiveDaysV1810 || loyalActiveDaysCount || 0, 180) / 180) * 45)
+  const trustAvgOddsScoreV5 = avgOddsNumber
+    ? clampProfileScoreV5(100 - Math.abs(avgOddsNumber - 1.90) * 24 - Math.max(0, avgOddsNumber - 3) * 12)
+    : 45
+  const trustActivityScoreV5 = clampProfileScoreV5((Math.min(totalTips, 1000) / 1000) * 72 + (coachLast7Tips.length ? 28 : 0))
+  const trustReviewsScoreV5 = profileReviewCountForTrustV5
+    ? clampProfileScoreV5((profileRatingAverageForTrustV5 / 5) * 86 + Math.min(profileReviewCountForTrustV5, 40) * 0.35)
+    : clampProfileScoreV5(62 + Math.min(followersCount, 200) * 0.08)
+  const trustSettlementScoreV5 = totalTips ? clampProfileScoreV5(((settledTips + voidTips) / Math.max(1, totalTips)) * 100) : 45
+  const trustScoreRowsV5 = [
+    { label: 'Skuteczność', score: trustWinRateScoreV5, weight: 1.25 },
+    { label: 'Yield (Zyskowność)', score: trustYieldScoreV5, weight: 1.15 },
+    { label: 'Regularność', score: trustRegularityScoreV5, weight: 1.00 },
+    { label: 'Średni kurs', score: trustAvgOddsScoreV5, weight: 0.80 },
+    { label: 'Aktywność', score: trustActivityScoreV5, weight: 0.95 },
+    { label: 'Opinie społeczności', score: trustReviewsScoreV5, weight: 0.80 },
+    { label: 'Historia rozliczeń', score: trustSettlementScoreV5, weight: 1.05 },
+  ]
+  const trustScoreValueV5 = clampProfileScoreV5(
+    trustScoreRowsV5.reduce((sum, row) => sum + (Number(row.score || 0) * Number(row.weight || 1)), 0) /
+    Math.max(1, trustScoreRowsV5.reduce((sum, row) => sum + Number(row.weight || 1), 0))
+  )
+  const trustScoreLabelV5 = trustScoreValueV5 >= 85
+    ? 'Wysokie zaufanie'
+    : trustScoreValueV5 >= 70
+      ? 'Dobre zaufanie'
+      : trustScoreValueV5 >= 50
+        ? 'Średnie zaufanie'
+        : 'Niskie zaufanie'
+  const trustScoreToneV5 = trustScoreValueV5 >= 85 ? 'elite' : trustScoreValueV5 >= 70 ? 'good' : trustScoreValueV5 >= 50 ? 'medium' : 'low'
+  const coachSnapshotBulletsV5 = [
+    coachLast7Tips.length ? `Twoja forma w ostatnich 7 dniach: ${coachRiskTrendDelta > 0.15 ? 'bardziej ryzykowna' : coachRiskTrendDelta < -0.15 ? 'ostrożniejsza' : 'stabilna'}.` : 'Coach czeka na nowe typy z ostatnich 7 dni.',
+    coachBestMarketRow ? `Najlepszy rynek: ${coachBestMarketRow.label}.` : 'Po kilku rozliczeniach pojawi się najlepszy rynek.',
+    coachWorstOddsRow ? `Uważaj na zakres: ${coachWorstOddsRow.label}.` : 'Brak wyraźnie słabego zakresu kursów.',
+  ]
+  const coachDailyRecommendationV5 = {
+    market: coachBestMarketRow?.label || 'Over/Under',
+    odds: profileBestOddsRangeRowV5?.label || (avgOddsNumber ? `${Math.max(1.1, avgOddsNumber - 0.2).toFixed(2)} – ${(avgOddsNumber + 0.25).toFixed(2)}` : '1.60 – 2.20'),
+    format: coachBestFormatRow?.label || 'Single',
+    confidence: trustScoreValueV5 ? Math.max(45, Math.min(92, Math.round((trustScoreValueV5 * 0.58) + (coachConfidenceScore * 0.42)))) : coachConfidenceScore,
+  }
+
   const profileChartRanges = [
     { key: '7d', label: '7D', days: 7 },
     { key: '30d', label: '30D', days: 30 },
@@ -29189,6 +29282,70 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             <div className="profile-rank-progress-v1557"><i style={{ width: `${Math.max(0, Math.min(100, Number(profileRank.progress_percent || 0)))}%` }} /></div>
           </section>
 
+          <section className="profile-dna-trust-grid-v5" aria-label="Tip DNA i Trust Score typera">
+            <article className="glass-profile-v3 profile-v3-card profile-dna-card-v5">
+              <div className="profile-dna-card-head-v5">
+                <h3>🧬 Tip DNA <span>— Twój profil stylu</span></h3>
+                <em>Każdy typer ma własne DNA</em>
+              </div>
+              <div className="profile-dna-main-v5">
+                <div className={`profile-dna-orb-v5 ${trustScoreToneV5}`}>
+                  <span>🏆</span>
+                  <strong>{profileDnaStyleNameV5}</strong>
+                  <small>Twój styl gry</small>
+                </div>
+                <div className="profile-dna-rows-v5">
+                  {profileDnaSummaryRowsV5.map(([label, value]) => (
+                    <div key={`dna-row-${label}`}>
+                      <span>{label}</span>
+                      <b>{value}</b>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="profile-dna-strengths-v5">
+                <section>
+                  <strong>Mocne strony</strong>
+                  {(profileDnaStrongSidesV5.length ? profileDnaStrongSidesV5 : ['Czekamy na dane']).map(item => <span key={`strong-${item}`}>✓ {item}</span>)}
+                </section>
+                <section className="weak">
+                  <strong>Słabe strony</strong>
+                  {(profileDnaWeakSidesV5.length ? profileDnaWeakSidesV5 : ['Brak wyraźnych słabych punktów']).map(item => <span key={`weak-${item}`}>× {item}</span>)}
+                </section>
+              </div>
+              <div className="profile-dna-reco-v5">
+                <i>🤖</i>
+                <div>
+                  <strong>Rekomendacja Coach AI</strong>
+                  <span>{profileDnaRecommendationV5}</span>
+                </div>
+              </div>
+            </article>
+
+            <article className="glass-profile-v3 profile-v3-card profile-trust-card-v5">
+              <div className="profile-dna-card-head-v5">
+                <h3>🛡️ Trust Score <span>— Zaufanie społeczności</span></h3>
+                <em>{settledTips ? `${settledTips} rozliczonych typów` : 'Budowanie historii'}</em>
+              </div>
+              <div className="profile-trust-body-v5">
+                <div className={`profile-trust-ring-v5 ${trustScoreToneV5}`} style={{ '--score': trustScoreValueV5 }}>
+                  <strong>{trustScoreValueV5}</strong>
+                  <span>/ 100</span>
+                  <small>{trustScoreLabelV5}</small>
+                </div>
+                <div className="profile-trust-bars-v5">
+                  {trustScoreRowsV5.map(row => (
+                    <div className="profile-trust-bar-row-v5" key={`trust-${row.label}`}>
+                      <div><span>{row.label}</span><b>{row.score}/100</b></div>
+                      <i><em style={{ width: `${row.score}%` }} /></i>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <button type="button" className="profile-trust-details-btn-v5" onClick={() => setProfileTab('coach')}>Zobacz szczegóły Trust Score</button>
+            </article>
+          </section>
+
           <section className="glass-profile-v3 profile-v3-card profile-stats-cards-section">
             <div className="profile-v3-card-head">
               <h3>📊 {t('Twoje statystyki')}</h3>
@@ -29211,13 +29368,40 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             <button type="button" className={profileTab === 'tips' ? 'active' : ''} onClick={() => setProfileTab('tips')}><span>◉</span> {t('Typy')} <b>{totalTips}</b></button>
             <button type="button" className={profileTab === 'results' ? 'active' : ''} onClick={() => setProfileTab('results')}><span>↗</span> {t('Wyniki')}</button>
             <button type="button" className={profileTab === 'stats' ? 'active' : ''} onClick={() => setProfileTab('stats')}><span>▮▮</span> {t('Statystyki')}</button>
-            <button type="button" className={profileTab === 'coach' ? 'active' : ''} onClick={() => setProfileTab('coach')}><span>🧠</span> Coach AI</button>
+            <button type="button" className={profileTab === 'coach' ? 'active' : ''} onClick={() => setProfileTab('coach')}><span>🧠</span> Coach AI <b className="profile-tab-new-badge-v5">NOWE</b></button>
             <button type="button" className={profileTab === 'history' ? 'active' : ''} onClick={() => setProfileTab('history')}><span>◷</span> {t('Historia')}</button>
             <button type="button" className={profileTab === 'opinions' ? 'active' : ''} onClick={() => setProfileTab('opinions')}><span>☁</span> {t('Opinie')}</button>
             {profileIsOwnForViewer && canMonetizeProfile ? (
               <button type="button" className={profileTab === 'pricing' ? 'active' : ''} onClick={() => setProfileTab('pricing')}><span>▣</span> {t('Cennik subskrypcji')}</button>
             ) : null}
           </div>
+
+          {profileTab === 'coach' && (
+            <section className="profile-coach-snapshot-grid-v5" aria-label="Szybka analiza Coach AI">
+              <article className="glass-profile-v3 profile-v3-card profile-coach-snapshot-v5">
+                <div className="profile-coach-snapshot-copy-v5">
+                  <h3>🤖 Coach AI — Ostatnia analiza</h3>
+                  <strong>{coachRiskTrendDelta > 0.15 ? 'Ryzyko ostatnio rośnie 🔥' : coachRiskTrendDelta < -0.15 ? 'Ryzyko ostatnio spada 🛡️' : 'Forma jest stabilna ✅'}</strong>
+                  <ul>
+                    {coachSnapshotBulletsV5.map(item => <li key={`coach-snapshot-${item}`}>{item}</li>)}
+                  </ul>
+                  <button type="button" onClick={() => setProfileTab('coach')}>Przejdź do Coach AI</button>
+                </div>
+                <div className="profile-coach-robot-v5" aria-hidden="true">🤖</div>
+              </article>
+              <article className="glass-profile-v3 profile-v3-card profile-coach-today-v5">
+                <div>
+                  <h3>💡 Rekomendacja na dziś</h3>
+                  <p>Dziś najlepiej pasuje styl: <b>{coachDailyRecommendationV5.market}</b>.</p>
+                  <span>Zalecany kurs: {coachDailyRecommendationV5.odds}</span>
+                  <span>Preferowany format: {coachDailyRecommendationV5.format}</span>
+                  <span>Pewność Coacha: {coachDailyRecommendationV5.confidence}%</span>
+                  <button type="button" onClick={() => setProfileTab('tips')}>Sprawdź typy dnia</button>
+                </div>
+                <div className="profile-coach-target-v5" aria-hidden="true">🎯</div>
+              </article>
+            </section>
+          )}
 
           {profileTab === 'tips' && (
             <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-tips-page">

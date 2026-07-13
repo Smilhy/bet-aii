@@ -1,0 +1,46 @@
+BetAI — WERSJA 5 TIP DNA + TRUST SCORE
+
+Zakres zmian:
+- Dodano sekcję Tip DNA na profilu typera.
+- Dodano sekcję Trust Score na profilu typera.
+- Dodano logikę indywidualną: każdy typer ma własne DNA i własny Trust Score liczone z jego profilu.
+- Dane liczone są z aktualnie oglądanego profilu: typy, wyniki, kursy, sporty, rynki, formaty, aktywność, followers i opinie.
+- Dodano oznaczenie NOWE przy zakładce Coach AI.
+- Dodano szybki podgląd Coach AI i rekomendację na dziś w zakładce Coach AI.
+- Nie dodano nowych tabel Supabase.
+- Nie zmieniono funkcji płatności, Stripe ani istniejących tabel.
+
+Logika Tip DNA:
+- Styl gry: Nowy profil / Agresywny Analityk / Łowca kursów / Bezpieczny Strateg / Specjalista rynku / Zbalansowany Typer.
+- Najczęściej grany sport: najlepsza dyscyplina danego typera.
+- Ulubiony rynek: najlepszy rynek danego typera.
+- Średni kurs: średni kurs z profilu.
+- Najlepszy zakres kursów: zakres z najlepszym wynikiem.
+- Preferowany format: najlepszy format, np. Single/AKO.
+- Mocne i słabe strony są osobne dla każdego profilu.
+
+Logika Trust Score:
+- Skuteczność.
+- Yield / zyskowność.
+- Regularność.
+- Średni kurs.
+- Aktywność.
+- Opinie społeczności.
+- Historia rozliczeń.
+
+Testy:
+- npm ci: OK
+- npm run build: OK
+- npm audit --audit-level=moderate: OK, 0 vulnerabilities
+- test:settlement: OK
+- test:ai-source: OK
+- test:ai-predictions: OK
+- test:ai-prediction-stats: OK
+- test:ai-prediction-results: OK
+- test:algorithm: OK
+- node --check netlify/functions/*.js: OK
+
+Ważne:
+- Tip DNA i Trust Score liczą się dla aktualnie oglądanego profilu typera, nie globalnie.
+- Każdy typer ma osobny wynik, ponieważ wartości bazują na jego własnych typach i statystykach.
+- Nie wymaga zmian w Supabase.
