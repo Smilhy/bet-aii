@@ -28441,6 +28441,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     buildLiveStatRows(monthLiveTipsV1578, getProfileTipMonth).map(row => ({ ...row, label: row.label }))
   )
 
+  // WERSJA 4 — runtime fix: Coach AI używa tego helpera niżej w tym samym renderze.
+  // Musi być zdefiniowany PRZED obliczeniami Coach AI, inaczej produkcyjny build potrafi dać
+  // błąd TDZ: Cannot access 'Ma' before initialization.
+  const formatStatValue = (value, decimals = 2) => Number(value || 0).toFixed(decimals)
+
   // WERSJA 2 — BetAI Coach w profilu typera.
   // Coach liczy analizę OSOBNO dla aktualnie oglądanego profilu, ponieważ bazuje na userTips
   // odfiltrowanych po ID/e-mailu/nazwie tego konkretnego typera.
@@ -28833,7 +28838,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const voidResultsCount = allProfileTipCards.filter(tip => tip.statusLabel === 'Zwrot').length
   const rejectedResultsCount = allProfileTipCards.filter(tip => tip.statusLabel === 'Odrzucony').length
   const autoResultsCount = allProfileTipCards.filter(tip => String(tip.settlementSource || '').includes('auto')).length
-  const formatStatValue = (value, decimals = 2) => Number(value || 0).toFixed(decimals)
+  // WERSJA 4 — formatStatValue przeniesiony wyżej przed Coach AI.
   const linePoints = chartLinePoints || '0,96 100,96'
   const getHistoryEventTimestamp = (tip, statusLabel = '') => {
     const status = String(statusLabel || tip?.status || '').toLowerCase()

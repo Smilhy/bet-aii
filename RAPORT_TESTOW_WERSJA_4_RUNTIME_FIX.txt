@@ -1,0 +1,29 @@
+BetAI WERSJA 4 — Coach AI Runtime Fix
+Data: 2026-07-13
+
+NAPRAWIONY BŁĄD:
+- Po wejściu w „Mój profil” aplikacja pokazywała: Cannot access 'Ma' before initialization.
+- Przyczyna: nowy blok Coach AI używał helpera formatStatValue zanim helper został zainicjalizowany w tym samym renderze komponentu.
+- W buildzie produkcyjnym Vite nazwa helpera została zminimalizowana do „Ma”, dlatego komunikat był nieczytelny.
+
+ZMIANA:
+- formatStatValue został przeniesiony PRZED obliczenia Coach AI.
+- Usunięto późniejszą deklarację tego samego helpera.
+- Coach AI zostaje w zakładce: Mój profil -> Coach AI.
+- Poprawka nie wymaga nowej tabeli Supabase.
+
+TESTY:
+- npm ci: OK
+- npm run build: OK
+- npm audit --audit-level=moderate: OK, 0 vulnerabilities
+- test DNB 90 min: OK
+- test AI source filter: OK
+- test AI predictions: OK
+- test AI prediction stats: OK
+- test AI prediction results: OK
+- test algorithm model: OK
+- składnia funkcji Netlify node --check: OK
+
+UWAGA:
+- Nie mogę lokalnie zalogować się do Twojej produkcyjnej bazy Supabase z Twoją sesją użytkownika.
+- Naprawiony błąd był błędem runtime frontendu i został usunięty w kodzie.

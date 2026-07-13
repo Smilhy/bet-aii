@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-3-coach-ai-deploy-fix",
-  "version": "3.0.0",
+  "name": "betai-wersja-4-coach-ai-runtime-fix",
+  "version": "4.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
