@@ -10798,7 +10798,7 @@ button.notify-btn b{
   height:100vh;
   min-width:0;
   aspect-ratio:auto;
-  background:url('/auth-final-455.png') center center / 100% 100% no-repeat;
+  background:url('/auth-final-460-2k.webp') center center / 100% 100% no-repeat;
   flex:0 0 auto;
   isolation:isolate;
   overflow:hidden;
@@ -31492,7 +31492,6 @@ button.betfolio-fetch-btn{
 
 
 /* WERSJA 883 — usuń Przegląd, usuń Zobacz typ i zapis, popraw analizę */
-.profile-v4-tabs button:has(span + :contains("Przegląd")){display:none!important;} /* fallback ignored by most browsers */
 .profile-ticket-v6-footer .ticket-save-btn-v877,
 .profile-ticket-v6-footer > button.ticket-save-btn-v877{
   display:none!important;

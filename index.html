@@ -149,45 +149,6 @@
       } catch (e) {}
     })();
   </script>
-<script>
-    // WERSJA 1592 — tablet 10": zostawia efekt 50%, ale rozciąga stronę do pełnej szerokości tabletu.
-    // Nie dotyka desktopu 2K, TV 2K, laptopów bez dotyku ani telefonów.
-    (function () {
-      try {
-        var touchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
-        var coarse = false;
-        try { coarse = window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches; } catch (e) {}
-
-        var vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0, 0);
-        var vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0, 0);
-        var sw = window.screen && window.screen.width ? window.screen.width : vw;
-        var sh = window.screen && window.screen.height ? window.screen.height : vh;
-        var shortSide = Math.min(sw, sh, vw || sw);
-        var longSide = Math.max(sw, sh, vw || sw);
-
-        // Tablet 10" może zgłaszać różne wartości zależnie od Chrome/Samsung/desktop mode.
-        // Łapiemy tablety dotykowe, ale omijamy telefony i zwykłe laptopy/monitory.
-        var isTouchDevice = touchPoints > 1 || coarse;
-        var looksLikeTablet = isTouchDevice && shortSide >= 600 && longSide >= 900;
-        var notHugeDesktopTouch = longSide <= 2200;
-
-        if (looksLikeTablet && notHugeDesktopTouch) {
-          var baseWidth = vw || shortSide || 1000;
-          // efekt jak przeglądarkowy zoom 50%: viewport roboczy = 2x szerokość tabletu
-          var layoutWidth = Math.round(Math.max(1600, Math.min(2600, baseWidth * 2)));
-          var viewport = document.querySelector('meta[name="viewport"]');
-          if (viewport) {
-            viewport.setAttribute('content', 'width=' + layoutWidth + ', initial-scale=0.5, maximum-scale=5.0, user-scalable=yes');
-          }
-          document.documentElement.classList.add('betai-tablet-wide50');
-          document.documentElement.style.setProperty('--betai-tablet-layout-width', layoutWidth + 'px');
-        }
-      } catch (e) {}
-    })();
-  </script>
-
-
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
