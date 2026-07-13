@@ -28441,6 +28441,141 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     buildLiveStatRows(monthLiveTipsV1578, getProfileTipMonth).map(row => ({ ...row, label: row.label }))
   )
 
+  // WERSJA 2 — BetAI Coach w profilu typera.
+  // Coach liczy analizę OSOBNO dla aktualnie oglądanego profilu, ponieważ bazuje na userTips
+  // odfiltrowanych po ID/e-mailu/nazwie tego konkretnego typera.
+  const coachSettledTips = activeStatsTips.filter(tip => ['won', 'lost'].includes(getProfileTipSettlement(tip)))
+  const coachRecentTips = [...activeStatsTips]
+    .map(tip => {
+      const rawTime = tip.created_at || tip.updated_at || tip.match_time || tip.event_time || tip.start_time || ''
+      const time = new Date(rawTime || 0)
+      return { tip, time }
+    })
+    .filter(row => Number.isFinite(row.time.getTime()))
+    .sort((a, b) => b.time.getTime() - a.time.getTime())
+  const coachLatestTime = coachRecentTips[0]?.time || new Date()
+  const coachLast7Cutoff = new Date(coachLatestTime.getTime() - 7 * 86400000)
+  const coachPrevious30Cutoff = new Date(coachLatestTime.getTime() - 37 * 86400000)
+  const coachLast7Tips = coachRecentTips.filter(row => row.time >= coachLast7Cutoff).map(row => row.tip)
+  const coachPrevious30Tips = coachRecentTips.filter(row => row.time < coachLast7Cutoff && row.time >= coachPrevious30Cutoff).map(row => row.tip)
+  const coachAverageOddsForTips = (rows = []) => {
+    const oddsRows = rows.map(getProfileTipOdds).filter(value => Number(value || 0) > 0)
+    return oddsRows.length ? oddsRows.reduce((sum, value) => sum + Number(value || 0), 0) / oddsRows.length : 0
+  }
+  const coachLast7AvgOdds = coachAverageOddsForTips(coachLast7Tips)
+  const coachPreviousAvgOdds = coachAverageOddsForTips(coachPrevious30Tips) || avgOddsNumber || 0
+  const coachRiskTrendDelta = coachLast7AvgOdds && coachPreviousAvgOdds ? coachLast7AvgOdds - coachPreviousAvgOdds : 0
+  const coachRiskTrendLabel = !coachLast7Tips.length
+    ? 'Brak nowych typów z ostatnich 7 dni'
+    : coachRiskTrendDelta > 0.15
+      ? 'Grasz bardziej ryzykownie niż zwykle'
+      : coachRiskTrendDelta < -0.15
+        ? 'Grasz ostrożniej niż zwykle'
+        : 'Ryzyko gry jest stabilne'
+
+  const coachPickBestRow = (rows = [], minCoupons = 1) => [...rows]
+    .filter(row => Number(row?.coupons || row?.settledCoupons || 0) >= minCoupons)
+    .sort((a, b) => Number(b.yield || 0) - Number(a.yield || 0) || Number(b.coupons || 0) - Number(a.coupons || 0))[0] || null
+  const coachPickWorstRow = (rows = [], minCoupons = 1) => [...rows]
+    .filter(row => Number(row?.coupons || row?.settledCoupons || 0) >= minCoupons)
+    .sort((a, b) => Number(a.yield || 0) - Number(b.yield || 0) || Number(b.coupons || 0) - Number(a.coupons || 0))[0] || null
+  const coachBestSportRow = coachPickBestRow(liveSportStatsRows, liveSportStatsRows.some(row => Number(row.coupons || 0) >= 3) ? 3 : 1)
+  const coachBestMarketRow = coachPickBestRow(liveBetTypeStatsRows, liveBetTypeStatsRows.some(row => Number(row.coupons || 0) >= 3) ? 3 : 1)
+  const coachBestFormatRow = coachPickBestRow(liveBetFormatStatsRowsV1805, 1)
+  const coachSoloFormatRow = liveBetFormatStatsRowsV1805.find(row => String(row.label || '').toUpperCase() === 'SOLO') || null
+  const coachAkoFormatRow = liveBetFormatStatsRowsV1805.find(row => String(row.label || '').toUpperCase() === 'AKO') || null
+  const coachHighOddsRows = liveOddsStatsRows.filter(row => /3\.01|5\.01|8\.01|10\.00|10\+/.test(String(row.label || '')))
+  const coachWorstOddsRow = coachPickWorstRow(coachHighOddsRows.length ? coachHighOddsRows : liveOddsStatsRows, 1)
+  const coachHighOddsSettled = coachSettledTips.filter(tip => getProfileTipOdds(tip) > 3)
+  const coachHighOddsLost = coachHighOddsSettled.filter(tip => getProfileTipSettlement(tip) === 'lost')
+  const coachHighOddsLossRate = coachHighOddsSettled.length ? Math.round((coachHighOddsLost.length / coachHighOddsSettled.length) * 100) : 0
+  const coachAkoVsSoloText = coachSoloFormatRow && coachAkoFormatRow
+    ? Number(coachSoloFormatRow.yield || 0) >= Number(coachAkoFormatRow.yield || 0)
+      ? `Single wypadają lepiej niż AKO (${formatStatValue(coachSoloFormatRow.yield)}% vs ${formatStatValue(coachAkoFormatRow.yield)}%).`
+      : `AKO wypada lepiej niż single (${formatStatValue(coachAkoFormatRow.yield)}% vs ${formatStatValue(coachSoloFormatRow.yield)}%).`
+    : coachBestFormatRow
+      ? `Najlepszy format kuponu: ${coachBestFormatRow.label}.`
+      : 'Dodaj więcej rozliczonych typów, aby porównać single i AKO.'
+  const coachRiskScore = Math.max(0, Math.min(100, Math.round(
+    35 +
+    (avgOddsNumber >= 3 ? 26 : avgOddsNumber >= 2.2 ? 16 : avgOddsNumber >= 1.8 ? 8 : 0) +
+    (coachHighOddsLossRate >= 60 ? 16 : coachHighOddsLossRate >= 45 ? 8 : 0) +
+    (coachAkoFormatRow && coachSoloFormatRow && Number(coachAkoFormatRow.yield || 0) < Number(coachSoloFormatRow.yield || 0) ? 8 : 0) +
+    (roi < 0 ? 12 : roi > 15 ? -10 : 0) +
+    (coachRiskTrendDelta > 0.15 ? 8 : coachRiskTrendDelta < -0.15 ? -5 : 0)
+  )))
+  const coachRiskLevel = coachRiskScore >= 72 ? 'Wysokie' : coachRiskScore >= 48 ? 'Średnie' : 'Niskie'
+  const coachRiskTone = coachRiskLevel === 'Wysokie' ? 'danger' : coachRiskLevel === 'Średnie' ? 'warning' : 'success'
+  const coachConfidenceScore = Math.max(0, Math.min(100, Math.round(
+    (winRate * 0.48) +
+    ((Math.max(-35, Math.min(35, roi)) + 35) / 70) * 32 +
+    (100 - coachRiskScore) * 0.20
+  )))
+  const coachInsightCards = [
+    {
+      tone: coachRiskTone,
+      icon: '🧠',
+      title: 'Ryzyko gry',
+      value: coachRiskLevel,
+      text: `Średni kurs: ${avgOddsNumber ? avgOddsNumber.toFixed(2) : '—'} • wynik ryzyka ${coachRiskScore}/100.`
+    },
+    {
+      tone: 'success',
+      icon: '🏟️',
+      title: 'Najlepszy sport',
+      value: coachBestSportRow?.label || 'Brak danych',
+      text: coachBestSportRow ? `Yield ${formatStatValue(coachBestSportRow.yield)}% przy ${coachBestSportRow.coupons} typach.` : 'Coach potrzebuje więcej typów z rozliczeniem.'
+    },
+    {
+      tone: 'info',
+      icon: '🎯',
+      title: 'Najlepszy rynek',
+      value: coachBestMarketRow?.label || 'Brak danych',
+      text: coachBestMarketRow ? `Yield ${formatStatValue(coachBestMarketRow.yield)}% • średni kurs ${formatStatValue(coachBestMarketRow.avgOdds)}.` : 'Po kilku typach pojawi się najlepszy rynek.'
+    },
+    {
+      tone: 'premium',
+      icon: '🎫',
+      title: 'Single / AKO',
+      value: coachBestFormatRow?.label || 'Brak danych',
+      text: coachAkoVsSoloText
+    },
+    {
+      tone: coachRiskTrendDelta > 0.15 ? 'warning' : 'success',
+      icon: '📈',
+      title: 'Trend 7 dni',
+      value: coachLast7Tips.length ? `${coachLast7AvgOdds.toFixed(2)} śr. kurs` : 'Brak danych',
+      text: coachRiskTrendLabel
+    },
+    {
+      tone: 'danger',
+      icon: '⚠️',
+      title: 'Najgorszy zakres kursów',
+      value: coachWorstOddsRow?.label || 'Brak danych',
+      text: coachWorstOddsRow ? `Yield ${formatStatValue(coachWorstOddsRow.yield)}% przy ${coachWorstOddsRow.coupons} typach.` : 'Brak stratnego zakresu do pokazania.'
+    },
+  ]
+  const coachRecommendations = [
+    coachWorstOddsRow && Number(coachWorstOddsRow.yield || 0) < 0
+      ? `Uważaj na kursy ${coachWorstOddsRow.label} — ten zakres ma u Ciebie najsłabszy wynik.`
+      : 'Nie widać jeszcze wyraźnie stratnego zakresu kursów.',
+    coachBestSportRow
+      ? `Najlepiej wygląda u Ciebie ${coachBestSportRow.label}. Warto budować analizę od tej dyscypliny.`
+      : 'Dodaj więcej typów z dyscyplinami, aby Coach wskazał najlepszy sport.',
+    coachBestMarketRow
+      ? `Najmocniejszy rynek: ${coachBestMarketRow.label}. To może być Twoja specjalizacja.`
+      : 'Po rozliczeniu kolejnych typów Coach wskaże najlepszy rynek.',
+    coachSoloFormatRow && coachAkoFormatRow
+      ? (Number(coachSoloFormatRow.yield || 0) >= Number(coachAkoFormatRow.yield || 0)
+        ? 'Rozważ więcej singli — aktualnie są stabilniejsze niż AKO.'
+        : 'AKO wygląda dobrze, ale pilnuj liczby zdarzeń i średniego kursu.')
+      : 'Gdy pojawią się single i AKO, Coach porówna ich skuteczność.',
+    coachRiskTrendDelta > 0.15
+      ? 'W ostatnich 7 dniach średni kurs wzrósł. Sprawdź, czy nie zwiększasz ryzyka za szybko.'
+      : 'Aktualny trend ryzyka nie wymaga alarmu.',
+  ]
+  const coachDataSourceLabel = `Analiza profilu ${displayName}: ${totalTips} typów, ${settledTips} rozliczonych, ${liveSportStatsRows.length} dyscyplin.`
+
   const profileChartRanges = [
     { key: '7d', label: '7D', days: 7 },
     { key: '30d', label: '30D', days: 30 },
@@ -29071,6 +29206,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             <button type="button" className={profileTab === 'tips' ? 'active' : ''} onClick={() => setProfileTab('tips')}><span>◉</span> {t('Typy')} <b>{totalTips}</b></button>
             <button type="button" className={profileTab === 'results' ? 'active' : ''} onClick={() => setProfileTab('results')}><span>↗</span> {t('Wyniki')}</button>
             <button type="button" className={profileTab === 'stats' ? 'active' : ''} onClick={() => setProfileTab('stats')}><span>▮▮</span> {t('Statystyki')}</button>
+            <button type="button" className={profileTab === 'coach' ? 'active' : ''} onClick={() => setProfileTab('coach')}><span>🧠</span> Coach AI</button>
             <button type="button" className={profileTab === 'history' ? 'active' : ''} onClick={() => setProfileTab('history')}><span>◷</span> {t('Historia')}</button>
             <button type="button" className={profileTab === 'opinions' ? 'active' : ''} onClick={() => setProfileTab('opinions')}><span>☁</span> {t('Opinie')}</button>
             {profileIsOwnForViewer && canMonetizeProfile ? (
@@ -29473,6 +29609,63 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               </div>
             </div>
           ) : null}
+
+          {profileTab === 'coach' && (
+            <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-coach-page-v2">
+              <div className="profile-coach-hero-v2">
+                <div className="profile-coach-hero-copy-v2">
+                  <small>BETAI COACH</small>
+                  <h3>🧠 Analiza gry typera</h3>
+                  <p>Każdy typer ma osobnego Coacha. Ten panel liczy wnioski tylko z typów aktualnie oglądanego profilu: kursów, wyników, dyscyplin, rynków i formatu kuponów.</p>
+                  <span>{coachDataSourceLabel}</span>
+                </div>
+                <div className={`profile-coach-score-v2 ${coachRiskTone}`}>
+                  <small>Poziom ryzyka</small>
+                  <strong>{coachRiskLevel}</strong>
+                  <em>{coachConfidenceScore}/100 ocena stylu</em>
+                </div>
+              </div>
+
+              <div className="profile-coach-grid-v2">
+                {coachInsightCards.map((card, index) => (
+                  <article key={`${card.title}-${index}`} className={`profile-coach-card-v2 ${card.tone}`}>
+                    <div className="profile-coach-icon-v2">{card.icon}</div>
+                    <div>
+                      <small>{card.title}</small>
+                      <strong>{card.value}</strong>
+                      <span>{card.text}</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <div className="profile-coach-bottom-v2">
+                <section className="profile-coach-recommendations-v2">
+                  <div className="profile-v3-card-head">
+                    <h3>✅ Rekomendacje Coacha</h3>
+                    <span>{settledTips ? `${settledTips} rozliczonych typów` : 'Czekamy na dane'}</span>
+                  </div>
+                  <div className="profile-coach-advice-list-v2">
+                    {coachRecommendations.map((item, index) => (
+                      <article key={`coach-advice-${index}`}>
+                        <b>{index + 1}</b>
+                        <span>{item}</span>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+
+                <aside className="profile-coach-summary-v2">
+                  <h3>📌 Jak to działa?</h3>
+                  <p>Coach nie jest wspólny dla całej strony. Analiza jest tworzona oddzielnie dla każdego profilu typera.</p>
+                  <div><span>Typer</span><b>{displayName}</b></div>
+                  <div><span>Skuteczność</span><b>{winRate}%</b></div>
+                  <div><span>Yield</span><b className={roi < 0 ? 'neg' : roi > 0 ? 'pos' : ''}>{roi}%</b></div>
+                  <div><span>Kursy &gt; 3.00</span><b>{coachHighOddsSettled.length ? `${coachHighOddsLossRate}% stratnych` : 'Brak danych'}</b></div>
+                </aside>
+              </div>
+            </section>
+          )}
 
           {profileTab === 'history' && (
             <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-history-page">

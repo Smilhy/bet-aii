@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-1-mobile-fix",
-  "version": "1.0.0",
+  "name": "betai-wersja-2-coach-ai",
+  "version": "2.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
