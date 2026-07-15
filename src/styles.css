@@ -80494,333 +80494,45 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   .profile-coach-snapshot-grid-v5{gap:12px!important;}
 }
 
-
-/* WERSJA 8 — HERO GLOW UPGRADE: jaśniejszy, bardziej premium i neonowy hero/news banner */
-.betai-dashboard-hero-v551{
-  border:1px solid rgba(49,239,230,.28)!important;
-  box-shadow:
-    0 34px 96px rgba(0,0,0,.36),
-    0 0 0 1px rgba(49,239,230,.08),
-    0 0 36px rgba(49,239,230,.08),
-    inset 0 1px 0 rgba(255,255,255,.06)!important;
-  background:
-    radial-gradient(circle at 10% 18%, rgba(49,239,230,.14), transparent 24%),
-    radial-gradient(circle at 84% 14%, rgba(87,166,255,.16), transparent 22%),
-    linear-gradient(135deg, rgba(5,16,27,.98) 0%, rgba(7,21,34,.98) 58%, rgba(6,18,29,.99) 100%)!important;
-}
-.betai-dashboard-hero-v551::before{
-  background:
-    linear-gradient(180deg, rgba(4,12,20,.04) 0%, rgba(4,12,20,0) 20%, rgba(4,12,20,0) 74%, rgba(4,12,20,.22) 100%),
-    radial-gradient(circle at 15% 50%, rgba(49,239,230,.10), transparent 32%)!important;
-}
-.betai-dashboard-hero-v551::after{
-  border-color:rgba(255,255,255,.07)!important;
-  box-shadow:
-    inset 0 0 0 1px rgba(49,239,230,.05),
-    inset 0 20px 40px rgba(255,255,255,.025),
-    0 0 24px rgba(49,239,230,.06)!important;
-}
-.betai-dashboard-stage-v551{
-  background:
-    linear-gradient(180deg, rgba(6,18,29,.40), rgba(5,14,22,.16))!important;
-}
-.betai-dashboard-slide-v551 img{
-  filter:drop-shadow(0 16px 32px rgba(0,0,0,.24)) saturate(1.14) contrast(1.06) brightness(1.05)!important;
-}
-.betai-dashboard-nav-v551 .hero-arrow-v553{
-  border-color:rgba(58,233,238,.28)!important;
-  background:linear-gradient(180deg, rgba(9,25,39,.82), rgba(5,16,27,.90))!important;
-  box-shadow:0 14px 36px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.06), 0 0 22px rgba(37,236,232,.16)!important;
-}
-.betai-dashboard-nav-v551 .hero-arrow-v553:hover{
-  border-color:rgba(58,233,238,.40)!important;
-  box-shadow:0 16px 42px rgba(0,0,0,.34), 0 0 28px rgba(37,236,232,.24)!important;
-  background:linear-gradient(180deg, rgba(11,30,45,.96), rgba(6,19,31,.96))!important;
-}
-
-.betai-dashboard-news-v40{
-  background:
-    radial-gradient(circle at 16% 18%, rgba(37,236,232,.28), transparent 26%),
-    radial-gradient(circle at 84% 16%, rgba(255,208,87,.16), transparent 18%),
-    linear-gradient(105deg, rgba(4,12,20,.84) 0%, rgba(5,18,28,.72) 42%, rgba(6,16,26,.82) 100%)!important;
-  box-shadow:
-    inset 0 0 0 1px rgba(50,233,236,.16),
-    inset 0 1px 0 rgba(255,255,255,.08),
-    0 18px 40px rgba(0,0,0,.24),
-    0 0 28px rgba(37,236,232,.08)!important;
-}
-.betai-dashboard-news-v40::before{
-  background:
-    linear-gradient(90deg, rgba(3,9,15,.76) 0%, rgba(3,9,15,.60) 34%, rgba(3,9,15,.18) 62%, rgba(3,9,15,.48) 100%),
-    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 34%, rgba(0,0,0,.18) 100%),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 92px)!important;
-}
-.betai-dashboard-news-v40.has-image-v40::before{
-  background:
-    linear-gradient(90deg, rgba(3,9,15,.82) 0%, rgba(3,9,15,.66) 36%, rgba(3,9,15,.16) 66%, rgba(3,9,15,.46) 100%),
-    linear-gradient(180deg, rgba(3,9,15,.24), rgba(3,9,15,.02) 40%, rgba(3,9,15,.34) 100%)!important;
-}
-.betai-dashboard-news-v40 > img{
-  opacity:.80!important;
-  filter:saturate(1.24) contrast(1.08) brightness(1.02)!important;
-}
-.betai-dashboard-news-overlay-v40{
-  background:
-    radial-gradient(circle at 18% 50%, rgba(37,236,232,.26), transparent 30%),
-    radial-gradient(circle at 72% 24%, rgba(87,166,255,.14), transparent 24%),
-    linear-gradient(180deg, rgba(255,255,255,.05), transparent 38%, rgba(0,0,0,.12))!important;
-}
-.betai-dashboard-news-badge-v40{
-  border:1px solid rgba(255,211,87,.34)!important;
-  background:linear-gradient(180deg, rgba(11,28,41,.72), rgba(4,14,23,.54))!important;
-  box-shadow:0 12px 28px rgba(0,0,0,.24), 0 0 28px rgba(255,205,65,.11), inset 0 1px 0 rgba(255,255,255,.08)!important;
-}
-.betai-dashboard-news-badge-v40 b{color:#ffe37a!important;text-shadow:0 0 14px rgba(255,217,102,.18)!important;}
-.betai-dashboard-news-badge-v40 em{color:#d4e1eb!important;}
-.betai-dashboard-news-copy-v40{
-  padding:18px 20px 18px 0!important;
-}
-.betai-dashboard-news-copy-v40::before{
-  content:''!important;
-  position:absolute!important;
-  inset:-12px -12px -12px -16px!important;
-  z-index:-1!important;
-  border-radius:24px!important;
-  background:linear-gradient(180deg, rgba(8,22,34,.30), rgba(8,22,34,.14))!important;
-  border:1px solid rgba(255,255,255,.05)!important;
-  backdrop-filter:blur(9px)!important;
-  box-shadow:0 12px 32px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.03)!important;
-}
-.betai-dashboard-news-copy-v40 strong{
-  color:#ffffff!important;
-  text-shadow:0 6px 26px rgba(0,0,0,.40), 0 0 18px rgba(37,236,232,.08)!important;
-}
-.betai-dashboard-news-copy-v40 span{
-  color:#e0ebf2!important;
-  text-shadow:0 2px 16px rgba(0,0,0,.32)!important;
-}
-.betai-dashboard-news-copy-v40 i{
-  background:linear-gradient(90deg,#2cf0ea,#8bfff5)!important;
-  box-shadow:0 14px 34px rgba(37,236,232,.22), 0 0 18px rgba(37,236,232,.14)!important;
-}
-.betai-dashboard-news-v40:hover .betai-dashboard-news-copy-v40 i{
-  transform:translateY(-1px) scale(1.01)!important;
-  box-shadow:0 16px 36px rgba(37,236,232,.28), 0 0 22px rgba(37,236,232,.20)!important;
-}
-@media(max-width:900px){
-  .betai-dashboard-news-copy-v40{padding:12px 12px 12px 0!important;}
-  .betai-dashboard-news-copy-v40::before{inset:-8px -8px -8px -10px!important;border-radius:18px!important;}
-}
-@media(max-width:640px){
-  .betai-dashboard-news-copy-v40{padding:8px 8px 8px 0!important;}
-  .betai-dashboard-news-copy-v40::before{inset:-6px -6px -6px -8px!important;border-radius:14px!important;}
-  .betai-dashboard-news-v40 > img{opacity:.78!important;}
-}
-
-/* =========================================================
-   WERSJA 8 — HERO BANNER GLOW UPGRADE
-   Cel: jaśniejszy, bardziej premium hero na dashboardzie,
-   mocniejszy neon, lepsza czytelność newsów, bez zmiany logiki.
-   ========================================================= */
-.betai-dashboard-hero-v551{
-  border-color:rgba(40, 245, 238, .40)!important;
-  background:
-    radial-gradient(circle at 12% 18%, rgba(36, 246, 233, .20), transparent 28%),
-    radial-gradient(circle at 74% 16%, rgba(52, 168, 255, .18), transparent 30%),
-    radial-gradient(circle at 54% 86%, rgba(0, 255, 190, .10), transparent 35%),
-    linear-gradient(135deg, rgba(3,15,24,.98) 0%, rgba(7,26,38,.98) 52%, rgba(3,13,22,.99) 100%)!important;
-  box-shadow:
-    0 34px 100px rgba(0,0,0,.42),
-    0 0 44px rgba(31, 239, 230, .14),
-    0 0 90px rgba(31, 239, 230, .08),
-    inset 0 1px 0 rgba(255,255,255,.09),
-    inset 0 0 0 1px rgba(31,239,230,.08)!important;
-}
-.betai-dashboard-hero-v551::before{
-  content:''!important;
-  position:absolute!important;
-  inset:0!important;
-  z-index:2!important;
-  pointer-events:none!important;
-  opacity:.92!important;
-  background:
-    linear-gradient(115deg, transparent 0%, rgba(255,255,255,.055) 38%, transparent 52%),
-    radial-gradient(circle at 22% 42%, rgba(31,239,230,.12), transparent 24%),
-    linear-gradient(180deg, rgba(3,10,18,.04) 0%, rgba(3,10,18,0) 54%, rgba(3,10,18,.18) 100%)!important;
-}
-.betai-dashboard-hero-v551::after{
-  border-color:rgba(255,255,255,.075)!important;
-  box-shadow:
-    inset 0 0 0 1px rgba(32,230,221,.10),
-    inset 0 22px 52px rgba(255,255,255,.024),
-    0 0 24px rgba(31,239,230,.12)!important;
-}
-.betai-dashboard-stage-v551{
-  background:
-    radial-gradient(circle at 50% 45%, rgba(31,239,230,.05), transparent 52%),
-    linear-gradient(180deg, rgba(7,22,34,.34), rgba(4,12,20,.18))!important;
-  box-shadow:inset 0 0 0 1px rgba(31,239,230,.08)!important;
-}
-.betai-dashboard-slide-v551 img{
-  filter:drop-shadow(0 16px 34px rgba(0,0,0,.24)) saturate(1.18) contrast(1.08) brightness(1.05)!important;
-}
-.betai-dashboard-news-v40{
-  border:1px solid rgba(44, 238, 233, .18)!important;
-  background:
-    radial-gradient(circle at 18% 20%, rgba(43,237,232,.36), transparent 30%),
-    radial-gradient(circle at 72% 18%, rgba(56,163,255,.24), transparent 32%),
-    radial-gradient(circle at 96% 16%, rgba(255,204,73,.18), transparent 23%),
-    linear-gradient(105deg, rgba(4,16,26,.98) 0%, rgba(6,30,42,.91) 48%, rgba(7,22,35,.98) 100%)!important;
-  box-shadow:
-    inset 0 0 0 1px rgba(50,233,236,.18),
-    inset 0 1px 0 rgba(255,255,255,.09),
-    0 18px 44px rgba(0,0,0,.24),
-    0 0 34px rgba(37,236,232,.11)!important;
-}
-.betai-dashboard-news-v40 > img{
-  opacity:.84!important;
-  filter:saturate(1.28) contrast(1.12) brightness(1.06)!important;
-}
-.betai-dashboard-news-v40::before{
-  background:
-    linear-gradient(90deg, rgba(2,8,14,.86) 0%, rgba(2,8,14,.70) 32%, rgba(2,8,14,.20) 62%, rgba(2,8,14,.40) 100%),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.045) 0 1px, transparent 1px 96px)!important;
-}
-.betai-dashboard-news-v40.has-image-v40::before{
-  background:
-    linear-gradient(90deg, rgba(2,8,14,.88) 0%, rgba(2,8,14,.70) 34%, rgba(2,8,14,.18) 66%, rgba(2,8,14,.34) 100%),
-    linear-gradient(0deg, rgba(2,8,14,.46), rgba(2,8,14,.02) 44%, rgba(2,8,14,.22) 100%)!important;
-}
-.betai-dashboard-news-overlay-v40{
-  background:
-    radial-gradient(circle at 16% 50%, rgba(37,236,232,.30), transparent 29%),
-    radial-gradient(circle at 72% 28%, rgba(58,170,255,.18), transparent 30%),
-    linear-gradient(180deg, rgba(255,255,255,.055), transparent 38%, rgba(0,0,0,.12))!important;
-}
-.betai-dashboard-news-badge-v40{
-  border-color:rgba(255,216,93,.42)!important;
-  background:linear-gradient(180deg, rgba(11,35,47,.88), rgba(4,17,27,.78))!important;
-  box-shadow:
-    0 12px 30px rgba(0,0,0,.26),
-    0 0 22px rgba(255,205,65,.14),
-    0 0 28px rgba(37,236,232,.10),
-    inset 0 1px 0 rgba(255,255,255,.09)!important;
-}
-.betai-dashboard-news-badge-v40 b{
-  color:#ffe27a!important;
-  text-shadow:0 0 12px rgba(255,216,93,.32)!important;
-}
-.betai-dashboard-news-badge-v40 b::before{
-  background:#25ece8!important;
-  box-shadow:0 0 12px rgba(37,236,232,.95),0 0 28px rgba(37,236,232,.58)!important;
-}
-.betai-dashboard-news-copy-v40 strong{
-  color:#ffffff!important;
-  text-shadow:
-    0 4px 20px rgba(0,0,0,.56),
-    0 0 20px rgba(37,236,232,.16)!important;
-}
-.betai-dashboard-news-copy-v40 span{
-  color:#e5f3fb!important;
-  text-shadow:0 2px 14px rgba(0,0,0,.46)!important;
-}
-.betai-dashboard-news-copy-v40 i{
-  background:linear-gradient(90deg,#22f2e8 0%,#77fff4 55%,#2bd5ff 100%)!important;
-  box-shadow:
-    0 14px 34px rgba(37,236,232,.28),
-    0 0 24px rgba(37,236,232,.22),
-    inset 0 1px 0 rgba(255,255,255,.35)!important;
-}
-.betai-dashboard-nav-v551 .hero-arrow-v553{
-  border-color:rgba(58, 233, 238, .34)!important;
-  background:linear-gradient(180deg, rgba(10,32,47,.86), rgba(4,15,26,.90))!important;
-  color:#ffffff!important;
-  box-shadow:
-    0 14px 38px rgba(0,0,0,.32),
-    inset 0 1px 0 rgba(255,255,255,.08),
-    0 0 20px rgba(37,236,232,.18)!important;
-}
-.betai-dashboard-nav-v551 .hero-arrow-v553:hover{
-  border-color:rgba(96,255,248,.62)!important;
-  box-shadow:
-    0 16px 44px rgba(0,0,0,.34),
-    0 0 30px rgba(37,236,232,.30),
-    inset 0 1px 0 rgba(255,255,255,.10)!important;
-}
-@media(max-width:640px){
-  .betai-dashboard-news-v40 > img{opacity:.74!important;filter:saturate(1.18) contrast(1.08) brightness(1.00)!important;}
-  .betai-dashboard-news-v40::before,
-  .betai-dashboard-news-v40.has-image-v40::before{
-    background:linear-gradient(90deg, rgba(2,8,14,.90) 0%, rgba(2,8,14,.66) 58%, rgba(2,8,14,.34) 100%)!important;
-  }
-}
-@media (prefers-reduced-motion: no-preference){
-  .betai-dashboard-hero-v551::before{animation:betaiHeroGlowSweepV8 6s ease-in-out infinite alternate!important;}
-  @keyframes betaiHeroGlowSweepV8{
-    from{opacity:.72;filter:brightness(1)}
-    to{opacity:1;filter:brightness(1.12)}
-  }
-}
-
-
-/* WERSJA 9 — Team Total Goals: osobny układ Goście/Gospodarze + filtrowane linie */
-.add-tip-betfolio-page .betfolio-team-total-v9{
+/* WERSJA 1910 — Team Total: gospodarz i gość mają własne sekcje, a POWYŻEJ/PONIŻEJ są obok siebie */
+.team-total-board-v1711{
   display:flex!important;
   flex-direction:column!important;
-  gap:14px!important;
-  padding:0 12px 14px!important;
+  gap:16px!important;
 }
-.add-tip-betfolio-page .betfolio-team-total-info-v9{
-  padding:10px 12px!important;
-  border-radius:14px!important;
-  color:#9fb8c8!important;
-  font-size:12px!important;
+.team-total-note-v1711{
+  padding:12px 16px!important;
+  border-radius:16px!important;
+  border:1px solid rgba(49,239,230,.12)!important;
+  background:linear-gradient(180deg, rgba(7,22,35,.82), rgba(4,14,23,.9))!important;
+  color:#a8c6d5!important;
+  font-size:13px!important;
   font-weight:800!important;
-  background:rgba(6,22,35,.72)!important;
-  border:1px solid rgba(52,234,255,.14)!important;
 }
-.add-tip-betfolio-page .betfolio-team-total-row-v9{
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  gap:12px!important;
-  padding:12px!important;
-  border-radius:20px!important;
-  background:linear-gradient(180deg,rgba(5,23,37,.72),rgba(3,16,28,.92))!important;
-  border:1px solid rgba(52,234,255,.16)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 10px 24px rgba(0,0,0,.16)!important;
-}
-.add-tip-betfolio-page .betfolio-team-total-team-v9{
-  grid-column:1/-1!important;
+.team-total-team-card-v1711{
   display:flex!important;
-  align-items:center!important;
-  gap:8px!important;
-  color:#e8fbff!important;
-  font-size:15px!important;
-  font-weight:950!important;
-  letter-spacing:.01em!important;
+  flex-direction:column!important;
+  gap:12px!important;
+  padding:16px!important;
+  border-radius:20px!important;
+  border:1px solid rgba(49,239,230,.14)!important;
+  background:linear-gradient(180deg, rgba(5,17,28,.92), rgba(4,12,20,.96))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03), 0 10px 28px rgba(0,0,0,.16)!important;
 }
-.add-tip-betfolio-page .betfolio-team-total-team-v9::before{
-  content:'⚽'!important;
-  width:28px!important;
-  height:28px!important;
+.team-total-team-header-v1711{
+  color:#f4fbff!important;
+  font-size:16px!important;
+  font-weight:1000!important;
+  letter-spacing:-.01em!important;
+}
+.team-total-columns-v1711{
   display:grid!important;
-  place-items:center!important;
-  border-radius:999px!important;
-  background:rgba(52,234,255,.10)!important;
-  border:1px solid rgba(52,234,255,.18)!important;
-  box-shadow:0 0 18px rgba(52,234,255,.10)!important;
+  grid-template-columns:repeat(2, minmax(0,1fr))!important;
+  gap:14px!important;
 }
-.add-tip-betfolio-page .betfolio-team-total-empty-v9{
-  min-height:42px!important;
-  display:grid!important;
-  place-items:center!important;
-  border-radius:11px!important;
-  color:#718da0!important;
-  font-size:12px!important;
-  font-weight:850!important;
-  border:1px dashed rgba(120,160,185,.16)!important;
-  background:rgba(8,25,40,.48)!important;
+.team-total-ready-v1711 .betfolio-goals-column-v1704{
+  min-width:0!important;
 }
-@media(max-width:1100px){
-  .add-tip-betfolio-page .betfolio-team-total-row-v9{grid-template-columns:1fr!important;}
+@media(max-width:900px){
+  .team-total-columns-v1711{grid-template-columns:1fr!important;}
 }
