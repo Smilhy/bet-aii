@@ -8133,6 +8133,7 @@ const BETAI_ALLOWED_FOOTBALL_MARKETS_V1663 = new Set([
   'Podwójna szansa',
   'Gole',
   'Gole w 1. połowie',
+  'Team Total Goals',
   'BTTS',
   'Handicap',
   'DNB / Remis nie ma zakładu',
@@ -8155,6 +8156,24 @@ function betaiCanonicalMarketLabelV1663(rawMarket = '', rawPick = '') {
   // Nie wolno wrzucać wyników typu 1:0 / 2:3 do grupy 1X2.
   if (text.includes('exact score') || text.includes('correct score') || text.includes('dokladny') || looksLikeScore) return 'Dokładny wynik'
 
+  // WERSJA 7: Team Total Goals — gole konkretnej drużyny over/under.
+  // Musi być przed ogólną regułą goals/over-under, inaczej wpada do zwykłych Goli.
+  if (
+    text.includes('team total') ||
+    text.includes('team totals') ||
+    text.includes('team goals over/under') ||
+    text.includes('team goals over under') ||
+    text.includes('team total goals') ||
+    text.includes('home team goals') ||
+    text.includes('away team goals') ||
+    text.includes('home goals over/under') ||
+    text.includes('away goals over/under') ||
+    text.includes('gole druzyny') ||
+    text.includes('suma goli druzyny') ||
+    text.includes('bramki druzyny') ||
+    pickText.includes('team total')
+  ) return 'Team Total Goals'
+
   // WERSJA 1847: trzy realne rynki połowowe z API-FOOTBALL.
   // Muszą zostać rozpoznane przed ogólnymi regułami "winner" i "goals".
   if (
@@ -8172,9 +8191,21 @@ function betaiCanonicalMarketLabelV1663(rawMarket = '', rawPick = '') {
     text.includes('win either half') ||
     text.includes('to win either half')
   ) return 'Drużyna wygra jedną z połów'
-  if (
+  const firstHalfGoalTextV6 = !text.includes('second half') && !text.includes('2nd half') && (
     text.includes('gole w 1. polowie') ||
+    text.includes('1 polowa') ||
+    text.includes('first half') ||
+    text.includes('1st half') ||
+    text.includes('half time') ||
+    text.includes('halftime')
+  ) && (text.includes('goal') || text.includes('gole') || text.includes('bram') || text.includes('over/under') || pickText.includes('over') || pickText.includes('under'))
+  if (
+    firstHalfGoalTextV6 ||
     text.includes('goals over/under first half') ||
+    text.includes('goals over under first half') ||
+    text.includes('goals over/under - first half') ||
+    text.includes('first half goals over/under') ||
+    text.includes('1st half goals over/under') ||
     text.includes('over/under first half') ||
     text.includes('over/under (1st half)') ||
     text.includes('over/under line (1st half)')
@@ -8242,6 +8273,11 @@ function betaiIsSafePopularFootballPickV1664(market = '', pick = '', home = '', 
     return hasLine && (text.includes('powyzej') || text.includes('ponizej') || text.includes('over') || text.includes('under'))
   }
 
+  if (label === 'Team Total Goals') {
+    const hasSide = (homeText && text.includes(homeText)) || (awayText && text.includes(awayText)) || text.includes('home') || text.includes('away') || text.includes('gospodar') || text.includes('gosc')
+    return hasSide && hasLine && (text.includes('powyzej') || text.includes('ponizej') || text.includes('over') || text.includes('under'))
+  }
+
   if (label === 'Handicap') {
     return hasLine && (text.includes('+') || text.includes('-') || text.includes('handicap'))
   }
@@ -8292,6 +8328,16 @@ function betaiCanonicalPickV1663(market = '', pick = '', home = '', away = '') {
     if (text === 'yes' || text.includes('tak')) return 'Obie drużyny strzelą: TAK'
     if (text === 'no' || text.includes('nie')) return 'Obie drużyny strzelą: NIE'
   }
+  if (label === 'Team Total Goals') {
+    const line = text.match(/([0-9]+(?:[\.,][0-9]+)?)/)?.[1]?.replace(',', '.')
+    const homeText = betaiStripAccentsV1663(home)
+    const awayText = betaiStripAccentsV1663(away)
+    const side = (awayText && text.includes(awayText)) || text.includes('away') || text.includes('gosc')
+      ? away
+      : home
+    if ((text.includes('over') || text.includes('powyzej')) && line) return `${side} powyżej ${line} gola`
+    if ((text.includes('under') || text.includes('ponizej')) && line) return `${side} poniżej ${line} gola`
+  }
   if (label === 'Gole' || label === 'Gole w 1. połowie' || label === 'Rogi' || label === 'Kartki') {
     const suffix = label === 'Gole'
       ? 'gola'
@@ -8305,6 +8351,74 @@ function betaiCanonicalPickV1663(market = '', pick = '', home = '', away = '') {
     if ((text.includes('under') || text.includes('ponizej')) && line) return `Poniżej ${line.replace(',', '.')} ${suffix}`
   }
   return raw
+}
+
+
+function betaiMarketLineNumberV6(pick = '') {
+  const match = String(pick || '').match(/(\d+(?:[\.,]\d+)?)/)
+  return match ? Number(String(match[1]).replace(',', '.')) : null
+}
+
+function betaiChooseMarketDuplicateV6(bucket = []) {
+  const clean = (Array.isArray(bucket) ? bucket : [])
+    .map(item => ({ ...item, odds: Number(item?.odds) }))
+    .filter(item => Number.isFinite(item.odds) && item.odds > 1.001)
+    .sort((a, b) => a.odds - b.odds)
+  if (!clean.length) return null
+  const first = clean[0] || {}
+  const text = betaiStripAccentsV1663(`${first.market || ''} ${first.pick || ''}`)
+
+  // WERSJA 6: jeśli stary cache zdążył wrzucić kursy 1. połowy do zwykłych goli,
+  // dla pełnego meczu zostawiamy naturalny kurs: over = niższy, under = wyższy.
+  // Dzięki temu nie pojawia się np. Powyżej 2.0 gola @8.40 w pełnym meczu.
+  if (String(first.market || '') === 'Gole') {
+    if (text.includes('powyzej') || text.includes('over')) return clean[0]
+    if (text.includes('ponizej') || text.includes('under')) return clean[clean.length - 1]
+  }
+
+  const odds = clean.map(item => item.odds)
+  const median = odds[Math.floor(odds.length / 2)]
+  return clean
+    .filter(item => item.odds >= median * 0.55 && item.odds <= median * 1.85)
+    .sort((a, b) => Math.abs(a.odds - median) - Math.abs(b.odds - median))[0] || clean[Math.floor(clean.length / 2)]
+}
+
+function betaiDedupeMarketOptionsV6(items = []) {
+  const buckets = new Map()
+  ;(Array.isArray(items) ? items : []).forEach((item, index) => {
+    if (!item) return
+    const market = String(item.market || '').trim()
+    const pick = String(item.pick || '').trim()
+    const odds = Number(item.odds)
+    if (!market || !pick || !Number.isFinite(odds) || odds <= 1) return
+    const key = `${market}|${pick}`.toLowerCase()
+    if (!buckets.has(key)) buckets.set(key, [])
+    buckets.get(key).push({ ...item, __sourceIndexV6: index })
+  })
+
+  const normalized = []
+  buckets.forEach((bucket) => {
+    const chosen = betaiChooseMarketDuplicateV6(bucket)
+    if (!chosen) return
+    const duplicateCount = bucket.length
+    normalized.push({
+      ...chosen,
+      odds: Number(Number(chosen.odds).toFixed(2)),
+      oddsSamples: Number(chosen.oddsSamples || duplicateCount || 1),
+      isDedupedOddsV6: duplicateCount > 1 || Boolean(chosen.isDedupedOddsV6)
+    })
+  })
+
+  return normalized.sort((a, b) => {
+    const ai = Number(a.__sourceIndexV6 ?? 0)
+    const bi = Number(b.__sourceIndexV6 ?? 0)
+    const marketDiff = ai - bi
+    if (marketDiff) return marketDiff
+    const la = betaiMarketLineNumberV6(a.pick)
+    const lb = betaiMarketLineNumberV6(b.pick)
+    if (la !== null && lb !== null && la !== lb) return la - lb
+    return String(a.pick || '').localeCompare(String(b.pick || ''), 'pl')
+  }).map(({ __sourceIndexV6, ...item }) => item)
 }
 
 function betaiBuildSettlementKeysV1663(market = '', pick = '', home = '', away = '') {
@@ -8363,6 +8477,10 @@ function betaiBuildSettlementKeysV1663(market = '', pick = '', home = '', away =
   } else if (label === 'Gole w 1. połowie') {
     marketKey = 'first_half_goals_total'
     selectionKey = `${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${unsignedLine || ''}`
+  } else if (label === 'Team Total Goals') {
+    marketKey = 'team_total_goals'
+    const side = awayCompact && compact.includes(awayCompact) ? 'away' : 'home'
+    selectionKey = `${side}_${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${unsignedLine || ''}`
   } else if (label === 'BTTS') {
     marketKey = 'btts'
     selectionKey = text.includes('nie') || text.includes(' no') || compact.includes('bttsno') || compact.includes('bothteamstoscoreno') ? 'no' : 'yes'
@@ -12705,11 +12823,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const isBasketball = sportLabel.includes('koszyk') || sportLabel.includes('basketball') || sportLabel.includes('nba') || sportLabel.includes('ncaa basketball')
     const isHockey = sportLabel.includes('hokej') || sportLabel.includes('hockey') || sportLabel.includes('nhl')
 
-    const footballOnlyMarkets = ['BTTS', 'Kartki', 'Rogi', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Gole w 1. połowie', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Handicap', 'Dokładny wynik', 'Połowy', 'Połowa']
+    const footballOnlyMarkets = ['BTTS', 'Kartki', 'Rogi', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Gole w 1. połowie', 'Team Total Goals', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Handicap', 'Dokładny wynik', 'Połowy', 'Połowa']
     const base = (Array.isArray(sourceMarkets) ? sourceMarkets : [])
       .map(item => {
         const rawPick = item.pick || item.value || item.name || ''
-        const market = betaiCanonicalMarketLabelV1663(item.market || '', rawPick)
+        const rawMarketTextV6 = [item.market, item.rawBetName, item.rawMarket, item.betName, item.title, item.name].filter(Boolean).join(' ')
+        const market = betaiCanonicalMarketLabelV1663(rawMarketTextV6 || item.market || '', rawPick)
         const pick = betaiCanonicalPickV1663(market, rawPick, home, away)
         return { ...item, market, pick }
       })
@@ -12768,6 +12887,15 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       add('Gole', 'Poniżej 2.5 gola', 1.95, 62)
       add('Gole', 'Powyżej 3.5 gola', 2.65, 52)
       add('Gole', 'Poniżej 3.5 gola', 1.44, 70)
+
+      add('Team Total Goals', `${home} powyżej 0.5 gola`, 1.35, 73)
+      add('Team Total Goals', `${home} poniżej 0.5 gola`, 3.00, 48)
+      add('Team Total Goals', `${home} powyżej 1.5 gola`, 2.05, 58)
+      add('Team Total Goals', `${home} poniżej 1.5 gola`, 1.70, 64)
+      add('Team Total Goals', `${away} powyżej 0.5 gola`, 1.48, 68)
+      add('Team Total Goals', `${away} poniżej 0.5 gola`, 2.55, 51)
+      add('Team Total Goals', `${away} powyżej 1.5 gola`, 2.45, 52)
+      add('Team Total Goals', `${away} poniżej 1.5 gola`, 1.52, 69)
 
       add('BTTS', 'Obie drużyny strzelą: TAK', 1.72, 66)
       add('BTTS', 'Obie drużyny strzelą: NIE', 2.02, 59)
@@ -12845,7 +12973,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     return base
   }
 
-  const marketOptions = selectedMatch ? enrichPopularMarkets(selectedMatch, selectedMatch?.markets || []) : []
+  const marketOptions = selectedMatch ? betaiDedupeMarketOptionsV6(enrichPopularMarkets(selectedMatch, selectedMatch?.markets || [])) : []
   const noRealMarket = { market: 'Brak kursów', pick: 'Brak realnych kursów', odds: '', confidence: 50 }
   // WERSJA 1793 — gdy użytkownik wybiera nowy mecz i od razu klika kurs,
   // poprzedni render Reacta może jeszcze trzymać rynki starego meczu.
@@ -12862,7 +12990,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     groups[label].push({ ...item, __index: index })
     return groups
   }, {})
-  const marketGroupOrder = ['1X2', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Podwójna szansa', 'Gole', 'Gole w 1. połowie', 'BTTS', 'Handicap', 'DNB / Remis nie ma zakładu', 'Dokładny wynik', 'Rogi', 'Kartki']
+  const marketGroupOrder = ['1X2', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Podwójna szansa', 'Gole', 'Gole w 1. połowie', 'Team Total Goals', 'BTTS', 'Handicap', 'DNB / Remis nie ma zakładu', 'Dokładny wynik', 'Rogi', 'Kartki']
   const orderedMarketGroups = Object.entries(groupedMarketOptions).sort(([a], [b]) => {
     const ai = marketGroupOrder.indexOf(a)
     const bi = marketGroupOrder.indexOf(b)
@@ -14762,7 +14890,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 )}
                 {effectiveSelectedMatch && visibleMarketGroups.map(([groupLabel, items]) => {
                   const expanded = expandedMarketGroup === groupLabel
-                  const isGoalsGroup = groupLabel === 'Gole' || groupLabel === 'Gole w 1. połowie'
+                  const isGoalsGroup = groupLabel === 'Gole' || groupLabel === 'Gole w 1. połowie' || groupLabel === 'Team Total Goals'
                   const parseGoalLineValueV1704 = (item) => {
                     const rawText = `${item?.pick || ''} ${item?.market || ''}`
                     const match = rawText.match(/(\d+(?:[\.,]\d+)?)/)
@@ -14803,7 +14931,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                           <div className="betfolio-goals-split-v1704">
                             <div className="betfolio-goals-column-v1704 under">
                               <div className="betfolio-goals-column-head-v1704">
-                                <strong><span className="betfolio-goal-direction-arrow down" aria-hidden="true">↓</span>{groupLabel === 'Gole w 1. połowie' ? '1. połowa — PONIŻEJ' : 'Gole PONIŻEJ'}</strong>
+                                <strong><span className="betfolio-goal-direction-arrow down" aria-hidden="true">↓</span>{groupLabel === 'Team Total Goals' ? 'Team Total PONIŻEJ' : groupLabel === 'Gole w 1. połowie' ? '1. połowa — PONIŻEJ' : 'Gole PONIŻEJ'}</strong>
                                 <span>{underGoalItems.length} opcji</span>
                               </div>
                               <div className="betfolio-market-options board-options goals-column-options-v1704">
@@ -14812,7 +14940,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                             </div>
                             <div className="betfolio-goals-column-v1704 over">
                               <div className="betfolio-goals-column-head-v1704">
-                                <strong><span className="betfolio-goal-direction-arrow up" aria-hidden="true">↑</span>{groupLabel === 'Gole w 1. połowie' ? '1. połowa — POWYŻEJ' : 'Gole POWYŻEJ'}</strong>
+                                <strong><span className="betfolio-goal-direction-arrow up" aria-hidden="true">↑</span>{groupLabel === 'Team Total Goals' ? 'Team Total POWYŻEJ' : groupLabel === 'Gole w 1. połowie' ? '1. połowa — POWYŻEJ' : 'Gole POWYŻEJ'}</strong>
                                 <span>{overGoalItems.length} opcji</span>
                               </div>
                               <div className="betfolio-market-options board-options goals-column-options-v1704">

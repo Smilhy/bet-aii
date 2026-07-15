@@ -290,6 +290,18 @@ function inferPolishSettlementKeysV1723(tip) {
     if (pickC === '12' || pickC.includes('12')) return { market: 'double_chance', selection: '12' }
   }
 
+  // Team Total Goals: gole wybranej drużyny over/under.
+  if (c.includes('teamtotal') || c.includes('goledruzyny') || c.includes('sumagolidruzyny') || c.includes('bramkidruzyny')) {
+    const side = awayC && pickC.includes(awayC) ? 'away' : 'home'
+    if (pickC.includes('powyzej') || pickC.includes('over')) return { market: 'team_total_goals', selection: side + '_over_' + onlyLine(pickText || t) }
+    if (pickC.includes('ponizej') || pickC.includes('under')) return { market: 'team_total_goals', selection: side + '_under_' + onlyLine(pickText || t) }
+  }
+  if ((homeC && pickC.includes(homeC)) || (awayC && pickC.includes(awayC))) {
+    const side = awayC && pickC.includes(awayC) ? 'away' : 'home'
+    if ((pickC.includes('powyzej') || pickC.includes('over')) && (pickC.includes('gola') || pickC.includes('goal'))) return { market: 'team_total_goals', selection: side + '_over_' + onlyLine(pickText || t) }
+    if ((pickC.includes('ponizej') || pickC.includes('under')) && (pickC.includes('gola') || pickC.includes('goal'))) return { market: 'team_total_goals', selection: side + '_under_' + onlyLine(pickText || t) }
+  }
+
   // "Powyżej 2.5 gola" / "Ponizej 3.5 gola"
   if (pickC.includes('powyzej') || pickC.includes('over')) {
     return { market: 'goals_over_under', selection: 'over_' + onlyLine(pickText || t) }
@@ -423,7 +435,16 @@ function settleByKeys(tip, homeGoals, awayGoals, fixtureStats, periodScores = {}
     if (!['1x','x2','12'].includes(selection)) return { status: 'pending_admin_review', reason: 'Podwojna szansa: zly selection_key=' + selection }
     return { status: won ? 'won' : 'lost', reason: 'DC ' + selection + ' wynik=' + result }
   }
-  if (['goals_over_under', 'goals_total', 'goals_2_5', 'total_goals', 'over_under_goals'].includes(market)) return overUnder(selection, total, 'Gole')
+  if (market === 'team_total_goals') {
+    const side = selection.startsWith('away') ? 'away' : 'home'
+    const direction = selection.includes('_under_') ? 'under' : 'over'
+    const lineMatch = String(selection || '').match(/(?:home|away)_(?:over|under)_([0-9]+(?:[._][0-9]+)?)/)
+    const line = lineMatch ? lineMatch[1].replace('_', '.') : ''
+    const normalizedSelection = direction + '_' + String(line || '').replace('.', '_')
+    const teamGoals = side === 'away' ? awayGoals : homeGoals
+    return overUnder(normalizedSelection, teamGoals, side === 'away' ? 'Gole gości' : 'Gole gospodarzy')
+  }
+    if (['goals_over_under', 'goals_total', 'goals_2_5', 'total_goals', 'over_under_goals'].includes(market)) return overUnder(selection, total, 'Gole')
   if (market === 'btts') {
     if (!['yes','no'].includes(selection)) return { status: 'pending_admin_review', reason: 'BTTS: zly selection_key=' + selection }
     const yes = homeGoals > 0 && awayGoals > 0

@@ -38,6 +38,10 @@ exports.handler = async function(event) {
   // Dodaj typ ma pokazywać pełną listę meczów z API, a nie TOP-y z Typów AI.
   // Limit zostawiamy tylko techniczny, żeby nie zabić Netlify/UI przy tysiącach rekordów.
   const MAX_FIXTURES_RETURN = Math.max(500, Math.min(5000, Number(process.env.MAX_FIXTURES_RETURN || 2500) || 2500))
+  // WERSJA 6: marker schematu kursów. Stare cache z błędnie wrzuconymi kursami
+  // 1. połowy do grupy "Gole" ignorujemy, żeby po deployu UI dostało świeże,
+  // poprawnie rozdzielone rynki.
+  const ODDS_SCHEMA_VERSION = 'team-total-goals-v7'
   const getSupabaseAdmin = () => {
     const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -64,7 +68,7 @@ exports.handler = async function(event) {
         home: String(item.home || ''),
         away: String(item.away || ''),
         commence_time: item.commence_time || null,
-        fixture_json: item,
+        fixture_json: { ...item, oddsSchemaVersion: ODDS_SCHEMA_VERSION },
         fetched_at: now.toISOString(),
         expires_at: expiresAt
       }))
@@ -94,6 +98,7 @@ exports.handler = async function(event) {
       return (data || [])
         .map(row => row?.fixture_json)
         .filter(Boolean)
+        .filter(item => item?.oddsSchemaVersion === ODDS_SCHEMA_VERSION)
         .filter(item => {
           if (!wanted) return true
           return matchesFootballSearchText(item, rawQuery)
@@ -478,21 +483,29 @@ exports.handler = async function(event) {
     btts: 'BTTS',
     draw_no_bet: 'Draw No Bet',
     alternate_totals: 'Over/Under',
-    alternate_spreads: 'Handicap'
+    alternate_spreads: 'Handicap',
+    team_totals: 'Team Total Goals'
   }
 
-  const normalizeOutcomePick = (marketKey, outcomeName, point, home, away) => {
+  const normalizeOutcomePick = (marketKey, outcomeName, point, home, away, description = '') => {
     const name = String(outcomeName || '')
     const lower = name.toLowerCase()
     const homeLower = String(home || '').toLowerCase()
     const awayLower = String(away || '').toLowerCase()
     const pointLabel = point !== undefined && point !== null ? ` ${point}` : ''
+    const descriptionLower = String(description || '').toLowerCase()
 
     if (marketKey === 'h2h' || marketKey === 'h2h_3_way') {
       if (lower.includes('draw') || lower.includes('remis')) return 'Remis'
       if (lower.includes(awayLower)) return `${away} wygra`
       if (lower.includes(homeLower)) return `${home} wygra`
       return name
+    }
+    if (marketKey === 'team_totals') {
+      const side = descriptionLower.includes(awayLower) || lower.includes(awayLower) ? away : home
+      if (lower.includes('over')) return `${side} powyżej${pointLabel} gola`
+      if (lower.includes('under')) return `${side} poniżej${pointLabel} gola`
+      return `${side} ${name}${pointLabel}`
     }
     if (marketKey === 'totals' || marketKey === 'alternate_totals') {
       if (lower.includes('over')) return `Powyżej${pointLabel}`
@@ -523,6 +536,7 @@ exports.handler = async function(event) {
     'Podwójna szansa',
     'Gole',
     'Gole w 1. połowie',
+    'Team Total Goals',
     'BTTS',
     'Handicap',
     'DNB / Remis nie ma zakładu',
@@ -559,7 +573,7 @@ exports.handler = async function(event) {
       bookMarket.outcomes.slice(0, 18).forEach(outcome => {
         markets.push({
           market: label,
-          pick: normalizeOutcomePick(key, outcome.name, outcome.point, home, away),
+          pick: normalizeOutcomePick(key, outcome.name, outcome.point, home, away, outcome.description),
           odds: Number(outcome.price || 0) || 1.7,
           confidence: 60 + Math.floor(Math.random() * 16)
         })
@@ -592,6 +606,14 @@ exports.handler = async function(event) {
       addMarketIfMissing(markets, 'Gole', 'Poniżej 1.5 gola', 3.10, 48)
       addMarketIfMissing(markets, 'Gole', 'Powyżej 2.5 gola', 1.82, 68)
       addMarketIfMissing(markets, 'Gole', 'Poniżej 2.5 gola', 1.95, 62)
+      addMarketIfMissing(markets, 'Team Total Goals', `${home} powyżej 0.5 gola`, 1.35, 73)
+      addMarketIfMissing(markets, 'Team Total Goals', `${home} poniżej 0.5 gola`, 3.00, 48)
+      addMarketIfMissing(markets, 'Team Total Goals', `${home} powyżej 1.5 gola`, 2.05, 58)
+      addMarketIfMissing(markets, 'Team Total Goals', `${home} poniżej 1.5 gola`, 1.70, 64)
+      addMarketIfMissing(markets, 'Team Total Goals', `${away} powyżej 0.5 gola`, 1.48, 68)
+      addMarketIfMissing(markets, 'Team Total Goals', `${away} poniżej 0.5 gola`, 2.55, 51)
+      addMarketIfMissing(markets, 'Team Total Goals', `${away} powyżej 1.5 gola`, 2.45, 52)
+      addMarketIfMissing(markets, 'Team Total Goals', `${away} poniżej 1.5 gola`, 1.52, 69)
       addMarketIfMissing(markets, 'BTTS', 'Obie drużyny strzelą: TAK', 1.72, 66)
       addMarketIfMissing(markets, 'BTTS', 'Obie drużyny strzelą: NIE', 2.02, 59)
       addMarketIfMissing(markets, 'Handicap', `${home} -1.5`, 2.35, 58)
@@ -1116,6 +1138,21 @@ exports.handler = async function(event) {
     const lower = name.toLowerCase()
     const betId = Number(rawId)
 
+    // WERSJA 7: Team Total Goals — gole konkretnej drużyny.
+    // API-FOOTBALL może zwrócić nazwy w kilku wariantach, np.
+    // Home Team Goals Over/Under, Away Team Goals Over/Under, Team Total Goals.
+    if (
+      lower.includes('team total') ||
+      lower.includes('team totals') ||
+      lower.includes('team goals over/under') ||
+      lower.includes('team goals over under') ||
+      lower.includes('team total goals') ||
+      lower.includes('home team goals') ||
+      lower.includes('away team goals') ||
+      lower.includes('home goals over/under') ||
+      lower.includes('away goals over/under')
+    ) return 'Team Total Goals'
+
     // WERSJA 1847: te reguły muszą być przed ogólnym "winner" i "over/under".
     // Oficjalne nazwy API-FOOTBALL obejmują m.in. First Half Winner (id 13)
     // i Goals Over/Under First Half (id 6). Obsługujemy też warianty nazw dostawców.
@@ -1132,13 +1169,20 @@ exports.handler = async function(event) {
       lower.includes('win either half') ||
       lower.includes('to win either half')
     ) return 'Drużyna wygra jedną z połów'
+    const isFirstHalfText = /(^|[^a-z])(1st|first|1 h|1h|half time|halftime)([^a-z]|$)/.test(lower) || lower.includes('first half') || lower.includes('1st half')
+    const isSecondHalfText = lower.includes('second half') || lower.includes('2nd half')
+    const isGoalTotalText = lower.includes('goal') || lower.includes('over/under') || lower.includes('over under') || lower.includes('total')
     if (
       betId === 6 ||
+      (!isSecondHalfText && isFirstHalfText && isGoalTotalText) ||
       lower === 'goals over/under first half' ||
       lower === 'goals over under first half' ||
       lower === 'over/under first half' ||
       lower === 'over/under (1st half)' ||
-      lower === 'over/under line (1st half)'
+      lower === 'over/under line (1st half)' ||
+      lower.includes('goals over/under - first half') ||
+      lower.includes('first half goals over/under') ||
+      lower.includes('1st half goals over/under')
     ) return 'Gole w 1. połowie'
 
     if (lower === 'match winner' || lower === 'winner') return '1X2'
@@ -1194,6 +1238,19 @@ exports.handler = async function(event) {
       if (lower === 'home') return `${home} DNB`
       if (lower === 'away') return `${away} DNB`
     }
+    if (market === 'Team Total Goals') {
+      const normalizedValue = String(value || '').toLowerCase()
+      const homeKey = String(home || '').toLowerCase()
+      const awayKey = String(away || '').toLowerCase()
+      const side = betName.includes('away') || betName.includes('visitor') || betName.includes('guest') || (awayKey && normalizedValue.includes(awayKey)) ? away : home
+      const line = value.match(/([0-9]+(?:[\.,][0-9]+)?)/)?.[1]?.replace(',', '.') || ''
+      if ((lower.includes('over') || lower.includes('powyzej')) && line) return `${side} powyżej ${line} gola`
+      if ((lower.includes('under') || lower.includes('ponizej')) && line) return `${side} poniżej ${line} gola`
+      const compact = lower.replace(/[^a-z0-9.]+/g, '')
+      if (compact.startsWith('over') && line) return `${side} powyżej ${line} gola`
+      if (compact.startsWith('under') && line) return `${side} poniżej ${line} gola`
+      return ''
+    }
     if (market === 'Gole') {
       if (lower.startsWith('over ')) return `Powyżej ${value.slice(5)} gola`
       if (lower.startsWith('under ')) return `Poniżej ${value.slice(6)} gola`
@@ -1214,11 +1271,84 @@ exports.handler = async function(event) {
     return value
   }
 
+  const getGoalLineNumberV6 = (pick = '') => {
+    const match = String(pick || '').match(/(\d+(?:[\.,]\d+)?)/)
+    return match ? Number(String(match[1]).replace(',', '.')) : null
+  }
+
+  const normalizeOddsForMarketV6 = (market, pick, oddsList = []) => {
+    const cleanOdds = oddsList
+      .map(item => ({ ...item, odds: Number(item.odds) }))
+      .filter(item => Number.isFinite(item.odds) && item.odds > 1.001 && item.odds < 100)
+      .sort((a, b) => a.odds - b.odds)
+    if (!cleanOdds.length) return null
+
+    // Jedna linia z kilku bukmacherów ma być pokazana raz. Nie bierzemy pierwszego
+    // kursu z API, bo czasem pierwszy bukmacher ma skrajny kurs. Medianę trudniej
+    // zepsuć pojedynczym outlierem.
+    const oddsValues = cleanOdds.map(item => item.odds)
+    const median = oddsValues[Math.floor(oddsValues.length / 2)]
+    const stable = cleanOdds.filter(item => item.odds >= median * 0.55 && item.odds <= median * 1.85)
+    const pool = stable.length ? stable : cleanOdds
+    const chosen = pool.sort((a, b) => Math.abs(a.odds - median) - Math.abs(b.odds - median))[0]
+
+    return {
+      ...chosen,
+      odds: Number(chosen.odds.toFixed(2)),
+      oddsSamples: cleanOdds.length,
+      oddsSource: cleanOdds.length > 1 ? 'median-bookmaker' : 'single-bookmaker'
+    }
+  }
+
+  const dedupeAndNormalizeMarketsV6 = (items = []) => {
+    const buckets = new Map()
+    ;(Array.isArray(items) ? items : []).forEach(item => {
+      if (!item) return
+      const market = String(item.market || '').trim()
+      const pick = String(item.pick || '').trim()
+      const odds = Number(item.odds)
+      if (!market || !pick || !Number.isFinite(odds) || odds <= 1) return
+      const key = `${market}|${pick}`.toLowerCase()
+      if (!buckets.has(key)) buckets.set(key, [])
+      buckets.get(key).push(item)
+    })
+
+    const normalized = []
+    buckets.forEach((bucket) => {
+      const first = bucket[0] || {}
+      const chosen = normalizeOddsForMarketV6(first.market, first.pick, bucket)
+      if (!chosen) return
+      normalized.push({
+        ...first,
+        ...chosen,
+        market: first.market,
+        pick: first.pick,
+        confidence: Number(first.confidence || chosen.confidence || 0),
+        source: first.source || chosen.source || 'api-football-odds',
+        bookmaker: chosen.bookmaker || first.bookmaker || '',
+        note: bucket.length > 1
+          ? `Realny kurs pre-match z API-FOOTBALL. Ujednolicono ${bucket.length} kursów bukmacherów.`
+          : (first.note || 'Realny kurs pre-match z API-FOOTBALL.')
+      })
+    })
+
+    const marketOrder = ['1X2', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Podwójna szansa', 'Gole', 'Gole w 1. połowie', 'Team Total Goals', 'BTTS', 'Handicap', 'DNB / Remis nie ma zakładu', 'Dokładny wynik', 'Rogi', 'Kartki']
+    return normalized.sort((a, b) => {
+      const ma = marketOrder.indexOf(a.market)
+      const mb = marketOrder.indexOf(b.market)
+      const marketDiff = (ma === -1 ? 999 : ma) - (mb === -1 ? 999 : mb)
+      if (marketDiff) return marketDiff
+      const la = getGoalLineNumberV6(a.pick)
+      const lb = getGoalLineNumberV6(b.pick)
+      if (la !== null && lb !== null && la !== lb) return la - lb
+      return String(a.pick || '').localeCompare(String(b.pick || ''), 'pl')
+    })
+  }
+
   const mapApiFootballOddsRowsToMarkets = (rows, fixture) => {
-    const markets = []
+    const rawMarkets = []
     const home = fixture?.home || ''
     const away = fixture?.away || ''
-    const seen = new Set()
     ;(Array.isArray(rows) ? rows : []).forEach(row => {
       ;(Array.isArray(row?.bookmakers) ? row.bookmakers : []).forEach(bookmaker => {
         ;(Array.isArray(bookmaker?.bets) ? bookmaker.bets : []).forEach(bet => {
@@ -1229,23 +1359,23 @@ exports.handler = async function(event) {
             if (!Number.isFinite(rawOdd) || rawOdd <= 1) return
             const pick = normalizeApiFootballOddPick(market, value?.value, home, away, bet?.name, bet?.id)
             if (!pick) return
-            const key = `${market}|${pick}`.toLowerCase()
-            if (seen.has(key)) return
-            seen.add(key)
-            markets.push({
+            rawMarkets.push({
               market,
               pick,
               odds: rawOdd,
               confidence: 0,
               bookmaker: bookmaker?.name || '',
               source: 'api-football-odds',
+              rawBetName: bet?.name || '',
+              rawBetId: bet?.id ?? null,
+              rawValue: value?.value || '',
               note: 'Realny kurs pre-match z API-FOOTBALL.'
             })
           })
         })
       })
     })
-    return markets
+    return dedupeAndNormalizeMarketsV6(rawMarkets)
   }
 
   const fetchApiFootballOddsByDate = async (apiKey, cfg, dayKey) => {

@@ -1,0 +1,48 @@
+BetAI — WERSJA 6 GOLE DUPLIKATY FIX
+
+Problem zgłoszony:
+- W Dodaj typ -> Gole pojawiały się podwójne wpisy Powyżej/Poniżej tej samej linii.
+- Część kursów wyglądała nierealnie wysoko, np. Powyżej 2.0 gola @8.40.
+
+Przyczyna:
+- API-FOOTBALL zwraca osobne rynki dla pełnego meczu i dla 1. połowy.
+- Niektóre nazwy rynku 1. połowy, np. "Goals Over/Under - First Half" albo "First Half Goals Over/Under", nie były rozpoznawane szeroko.
+- Przez to kursy 1. połowy trafiały do zwykłej grupy "Gole".
+- Kurs @8.40 nie był kursem pełnego meczu, tylko kursem na 1. połowę, dlatego wyglądał jak błąd.
+
+Naprawa:
+1. Backend netlify/functions/get-sports-events.js:
+   - Dodano szersze rozpoznawanie rynków 1. połowy.
+   - Rynki 1. połowy trafiają teraz do "Gole w 1. połowie".
+   - Pełny mecz zostaje w "Gole".
+   - Dodano deduplikację kursów po kluczu market + pick.
+   - Jeśli kilku bukmacherów zwraca tę samą linię, UI dostaje jeden kurs reprezentatywny zamiast kilku duplikatów.
+   - Dodano nowy marker cache oddsSchemaVersion = goals-dedupe-v6, żeby stare cache z błędnymi rynkami nie było używane po deployu.
+
+2. Frontend src/main.jsx:
+   - Dodano awaryjną deduplikację po stronie UI.
+   - Poszerzono rozpoznawanie "Gole w 1. połowie" także na podstawie surowych nazw z API.
+   - Stary cache z podwójnymi pełnymi golami jest filtrowany tak, żeby nie pokazywać Powyżej 2.0 gola @8.40 w zwykłej grupie "Gole".
+
+Efekt po poprawce:
+- W grupie "Gole" zostają kursy pełnego meczu.
+- Kursy 1. połowy są w grupie "Gole w 1. połowie".
+- Ta sama linia Powyżej/Poniżej nie powinna pojawiać się podwójnie w jednej grupie.
+- Nie trzeba zmieniać Supabase ani dodawać nowych tabel.
+
+Testy wykonane lokalnie:
+- node --check dla 55 funkcji Netlify: OK
+- npm ci: OK
+- npm run build: OK
+- npm audit --omit=dev: 0 podatności
+- TEST_WERSJA_6_GOLE_DUPLIKATY_FIX.js: OK
+- test:settlement: OK
+- test:ai-source: OK
+- test:ai-predictions: OK
+- test:ai-prediction-stats: OK
+- test:ai-prediction-results: OK
+- test:algorithm: OK
+
+Uwaga po deployu:
+- Po wrzuceniu wersji na Netlify odśwież stronę twardo Ctrl+F5.
+- Jeżeli przeglądarka nadal trzyma stary widok, kliknij w aplikacji przycisk czyszczenia cache albo wyczyść cache strony.
