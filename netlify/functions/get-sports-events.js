@@ -41,7 +41,7 @@ exports.handler = async function(event) {
   // WERSJA 6: marker schematu kursów. Stare cache z błędnie wrzuconymi kursami
   // 1. połowy do grupy "Gole" ignorujemy, żeby po deployu UI dostało świeże,
   // poprawnie rozdzielone rynki.
-  const ODDS_SCHEMA_VERSION = 'team-total-goals-v7'
+  const ODDS_SCHEMA_VERSION = 'team-total-goals-v9'
   const getSupabaseAdmin = () => {
     const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -1141,17 +1141,16 @@ exports.handler = async function(event) {
     // WERSJA 7: Team Total Goals — gole konkretnej drużyny.
     // API-FOOTBALL może zwrócić nazwy w kilku wariantach, np.
     // Home Team Goals Over/Under, Away Team Goals Over/Under, Team Total Goals.
-    if (
+    const looksLikeTeamTotalOverUnderV9 = (
       lower.includes('team total') ||
       lower.includes('team totals') ||
       lower.includes('team goals over/under') ||
       lower.includes('team goals over under') ||
       lower.includes('team total goals') ||
-      lower.includes('home team goals') ||
-      lower.includes('away team goals') ||
-      lower.includes('home goals over/under') ||
-      lower.includes('away goals over/under')
-    ) return 'Team Total Goals'
+      (((lower.includes('home team goals') || lower.includes('away team goals') || lower.includes('home goals') || lower.includes('away goals')) &&
+        (lower.includes('over/under') || lower.includes('over under') || lower.includes('total'))))
+    )
+    if (looksLikeTeamTotalOverUnderV9) return 'Team Total Goals'
 
     // WERSJA 1847: te reguły muszą być przed ogólnym "winner" i "over/under".
     // Oficjalne nazwy API-FOOTBALL obejmują m.in. First Half Winner (id 13)
@@ -1240,15 +1239,21 @@ exports.handler = async function(event) {
     }
     if (market === 'Team Total Goals') {
       const normalizedValue = String(value || '').toLowerCase()
+      const normalizedBet = String(rawBetName || '').toLowerCase()
       const homeKey = String(home || '').toLowerCase()
       const awayKey = String(away || '').toLowerCase()
-      const side = betName.includes('away') || betName.includes('visitor') || betName.includes('guest') || (awayKey && normalizedValue.includes(awayKey)) ? away : home
-      const line = value.match(/([0-9]+(?:[\.,][0-9]+)?)/)?.[1]?.replace(',', '.') || ''
-      if ((lower.includes('over') || lower.includes('powyzej')) && line) return `${side} powyżej ${line} gola`
-      if ((lower.includes('under') || lower.includes('ponizej')) && line) return `${side} poniżej ${line} gola`
+      const side = normalizedBet.includes('away') || normalizedBet.includes('visitor') || normalizedBet.includes('guest') || (awayKey && normalizedValue.includes(awayKey)) ? away : home
+      const lineRaw = value.match(/([0-9]+(?:[\.,][0-9]+)?)/)?.[1]?.replace(',', '.') || ''
+      const lineNum = Number(lineRaw)
+      const isHalfLine = Number.isFinite(lineNum) && Math.abs((lineNum % 1) - 0.5) < 0.001
+      // WERSJA 9: pokazujemy tylko popularne, jednoznaczne linie 0.5 i 1.5.
+      // Całe linie 1.0/2.0 są azjatyckie i mogą wymagać zwrotu, a 2.5+ często daje egzotyczne kursy 13–20.
+      if (!isHalfLine || lineNum < 0.5 || lineNum > 1.5) return ''
+      if (lower.includes('over') || lower.includes('powyzej')) return `${side} powyżej ${lineRaw} gola`
+      if (lower.includes('under') || lower.includes('ponizej')) return `${side} poniżej ${lineRaw} gola`
       const compact = lower.replace(/[^a-z0-9.]+/g, '')
-      if (compact.startsWith('over') && line) return `${side} powyżej ${line} gola`
-      if (compact.startsWith('under') && line) return `${side} poniżej ${line} gola`
+      if (compact.startsWith('over')) return `${side} powyżej ${lineRaw} gola`
+      if (compact.startsWith('under')) return `${side} poniżej ${lineRaw} gola`
       return ''
     }
     if (market === 'Gole') {
@@ -1279,7 +1284,7 @@ exports.handler = async function(event) {
   const normalizeOddsForMarketV6 = (market, pick, oddsList = []) => {
     const cleanOdds = oddsList
       .map(item => ({ ...item, odds: Number(item.odds) }))
-      .filter(item => Number.isFinite(item.odds) && item.odds > 1.001 && item.odds < 100)
+      .filter(item => Number.isFinite(item.odds) && item.odds > 1.001 && item.odds < (String(market || '') === 'Team Total Goals' ? 10 : 100))
       .sort((a, b) => a.odds - b.odds)
     if (!cleanOdds.length) return null
 

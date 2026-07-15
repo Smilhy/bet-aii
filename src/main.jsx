@@ -8359,6 +8359,32 @@ function betaiMarketLineNumberV6(pick = '') {
   return match ? Number(String(match[1]).replace(',', '.')) : null
 }
 
+function betaiTeamTotalMetaV9(item = {}, home = '', away = '') {
+  const raw = `${item?.market || ''} ${item?.pick || ''} ${item?.rawBetName || ''} ${item?.rawValue || ''}`
+  const text = betaiStripAccentsV1663(raw)
+  const compact = text.replace(/[^a-z0-9.]+/g, '')
+  const homeText = betaiStripAccentsV1663(home)
+  const awayText = betaiStripAccentsV1663(away)
+  const homeCompact = homeText.replace(/[^a-z0-9]+/g, '')
+  const awayCompact = awayText.replace(/[^a-z0-9]+/g, '')
+  const line = betaiMarketLineNumberV6(`${item?.pick || ''} ${item?.rawValue || ''}`)
+  const direction = text.includes('ponizej') || text.includes('under') ? 'under' : (text.includes('powyzej') || text.includes('over') ? 'over' : '')
+  let side = ''
+  if ((awayText && text.includes(awayText)) || (awayCompact && compact.includes(awayCompact)) || text.includes('away') || text.includes('visitor') || text.includes('guest') || text.includes('gosc')) side = 'away'
+  else if ((homeText && text.includes(homeText)) || (homeCompact && compact.includes(homeCompact)) || text.includes('home') || text.includes('gospodar')) side = 'home'
+  return { side, direction, line, sideName: side === 'away' ? away : side === 'home' ? home : '' }
+}
+
+function betaiIsCleanTeamTotalOptionV9(item = {}, home = '', away = '') {
+  const meta = betaiTeamTotalMetaV9(item, home, away)
+  const odds = Number(item?.odds)
+  if (!meta.side || !meta.direction || !Number.isFinite(meta.line) || !Number.isFinite(odds)) return false
+  // Team Total w UI ma pokazywać proste linie 0.5 / 1.5.
+  // Odrzucamy linie azjatyckie 1.0/2.0 oraz egzotyczne 2.5+, które dawały kursy 13–20 i wyglądały jak błąd.
+  const isHalfLine = Math.abs((meta.line % 1) - 0.5) < 0.001
+  return isHalfLine && meta.line >= 0.5 && meta.line <= 1.5 && odds > 1.001 && odds < 10
+}
+
 function betaiChooseMarketDuplicateV6(bucket = []) {
   const clean = (Array.isArray(bucket) ? bucket : [])
     .map(item => ({ ...item, odds: Number(item?.odds) }))
@@ -14896,15 +14922,30 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                     const match = rawText.match(/(\d+(?:[\.,]\d+)?)/)
                     return match ? Number(String(match[1]).replace(',', '.')) : Number.POSITIVE_INFINITY
                   }
-                  const underGoalItems = isGoalsGroup ? items.filter(item => {
+                  const isTeamTotalGroup = groupLabel === 'Team Total Goals'
+                  const teamTotalCleanItems = isTeamTotalGroup ? items.filter(item => betaiIsCleanTeamTotalOptionV9(item, effectiveSelectedMatch?.home || '', effectiveSelectedMatch?.away || '')) : []
+                  const teamTotalSortV9 = (a, b) => {
+                    const ma = betaiTeamTotalMetaV9(a, effectiveSelectedMatch?.home || '', effectiveSelectedMatch?.away || '')
+                    const mb = betaiTeamTotalMetaV9(b, effectiveSelectedMatch?.home || '', effectiveSelectedMatch?.away || '')
+                    if (ma.line !== mb.line) return ma.line - mb.line
+                    return Number(a.odds || 0) - Number(b.odds || 0)
+                  }
+                  const teamTotalBucketsV9 = {
+                    awayOver: teamTotalCleanItems.filter(item => { const meta = betaiTeamTotalMetaV9(item, effectiveSelectedMatch?.home || '', effectiveSelectedMatch?.away || ''); return meta.side === 'away' && meta.direction === 'over' }).sort(teamTotalSortV9),
+                    awayUnder: teamTotalCleanItems.filter(item => { const meta = betaiTeamTotalMetaV9(item, effectiveSelectedMatch?.home || '', effectiveSelectedMatch?.away || ''); return meta.side === 'away' && meta.direction === 'under' }).sort(teamTotalSortV9),
+                    homeOver: teamTotalCleanItems.filter(item => { const meta = betaiTeamTotalMetaV9(item, effectiveSelectedMatch?.home || '', effectiveSelectedMatch?.away || ''); return meta.side === 'home' && meta.direction === 'over' }).sort(teamTotalSortV9),
+                    homeUnder: teamTotalCleanItems.filter(item => { const meta = betaiTeamTotalMetaV9(item, effectiveSelectedMatch?.home || '', effectiveSelectedMatch?.away || ''); return meta.side === 'home' && meta.direction === 'under' }).sort(teamTotalSortV9),
+                  }
+                  const teamTotalVisibleCountV9 = teamTotalCleanItems.length
+                  const underGoalItems = isGoalsGroup && !isTeamTotalGroup ? items.filter(item => {
                     const text = betaiStripAccentsV1663(item?.pick || item?.market || '')
                     return text.includes('ponizej') || text.includes('under')
                   }).slice().sort((a, b) => parseGoalLineValueV1704(a) - parseGoalLineValueV1704(b)) : []
-                  const overGoalItems = isGoalsGroup ? items.filter(item => {
+                  const overGoalItems = isGoalsGroup && !isTeamTotalGroup ? items.filter(item => {
                     const text = betaiStripAccentsV1663(item?.pick || item?.market || '')
                     return text.includes('powyzej') || text.includes('over')
                   }).slice().sort((a, b) => parseGoalLineValueV1704(a) - parseGoalLineValueV1704(b)) : []
-                  const otherGoalItems = isGoalsGroup ? items.filter(item => !underGoalItems.includes(item) && !overGoalItems.includes(item)) : []
+                  const otherGoalItems = isGoalsGroup && !isTeamTotalGroup ? items.filter(item => !underGoalItems.includes(item) && !overGoalItems.includes(item)) : []
                   const renderBoardMarketOptionV1704 = (item, index, keyPrefix = groupLabel) => {
                     const active = couponMode === 'ako' ? akoSelections.some(leg => leg.key === buildAkoLegKey(effectiveSelectedMatch || selectedMatch, item)) : (ticketMarketSelected && String(form.market) === String(item.market) && String(form.betType) === String(item.pick) && String(form.odds) === String(item.odds))
                     const value = `${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`
@@ -14924,14 +14965,44 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                     <div key={groupLabel} className={`betfolio-market-accordion ${expanded ? 'expanded' : ''} ${isGoalsGroup ? 'goals-split-ready-v1704' : ''}`}>
                       <button type="button" className="betfolio-market-accordion-head" onClick={() => setExpandedMarketGroup(expanded ? '' : groupLabel)}>
                         <span>{groupLabel}</span>
-                        <b>{items.length} opcji {expanded ? '⌃' : '⌄'}</b>
+                        <b>{isTeamTotalGroup ? teamTotalVisibleCountV9 : items.length} opcji {expanded ? '⌃' : '⌄'}</b>
                       </button>
                       {expanded && (
-                        isGoalsGroup ? (
+                        isTeamTotalGroup ? (
+                          <div className="betfolio-team-total-v9">
+                            <div className="betfolio-team-total-info-v9">Pokazuję tylko czyste linie 0.5 i 1.5 gola. Linie azjatyckie 1.0/2.0 oraz egzotyczne wysokie kursy są ukryte.</div>
+                            {[
+                              { key: 'away', label: `Goście: ${effectiveSelectedMatch?.away || 'Goście'}`, over: teamTotalBucketsV9.awayOver, under: teamTotalBucketsV9.awayUnder },
+                              { key: 'home', label: `Gospodarze: ${effectiveSelectedMatch?.home || 'Gospodarze'}`, over: teamTotalBucketsV9.homeOver, under: teamTotalBucketsV9.homeUnder },
+                            ].map(section => (
+                              <div key={section.key} className={`betfolio-team-total-row-v9 ${section.key}`}>
+                                <div className="betfolio-team-total-team-v9">{section.label}</div>
+                                <div className="betfolio-goals-column-v1704 over team-total-over-v9">
+                                  <div className="betfolio-goals-column-head-v1704">
+                                    <strong><span className="betfolio-goal-direction-arrow up" aria-hidden="true">↑</span>POWYŻEJ</strong>
+                                    <span>{section.over.length} opcji</span>
+                                  </div>
+                                  <div className="betfolio-market-options board-options goals-column-options-v1704">
+                                    {section.over.length ? section.over.map((item, index) => renderBoardMarketOptionV1704(item, index, `team-total-${section.key}-over`)) : <div className="betfolio-team-total-empty-v9">Brak realnych kursów</div>}
+                                  </div>
+                                </div>
+                                <div className="betfolio-goals-column-v1704 under team-total-under-v9">
+                                  <div className="betfolio-goals-column-head-v1704">
+                                    <strong><span className="betfolio-goal-direction-arrow down" aria-hidden="true">↓</span>PONIŻEJ</strong>
+                                    <span>{section.under.length} opcji</span>
+                                  </div>
+                                  <div className="betfolio-market-options board-options goals-column-options-v1704">
+                                    {section.under.length ? section.under.map((item, index) => renderBoardMarketOptionV1704(item, index, `team-total-${section.key}-under`)) : <div className="betfolio-team-total-empty-v9">Brak realnych kursów</div>}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : isGoalsGroup ? (
                           <div className="betfolio-goals-split-v1704">
                             <div className="betfolio-goals-column-v1704 under">
                               <div className="betfolio-goals-column-head-v1704">
-                                <strong><span className="betfolio-goal-direction-arrow down" aria-hidden="true">↓</span>{groupLabel === 'Team Total Goals' ? 'Team Total PONIŻEJ' : groupLabel === 'Gole w 1. połowie' ? '1. połowa — PONIŻEJ' : 'Gole PONIŻEJ'}</strong>
+                                <strong><span className="betfolio-goal-direction-arrow down" aria-hidden="true">↓</span>{groupLabel === 'Gole w 1. połowie' ? '1. połowa — PONIŻEJ' : 'Gole PONIŻEJ'}</strong>
                                 <span>{underGoalItems.length} opcji</span>
                               </div>
                               <div className="betfolio-market-options board-options goals-column-options-v1704">
@@ -14940,7 +15011,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                             </div>
                             <div className="betfolio-goals-column-v1704 over">
                               <div className="betfolio-goals-column-head-v1704">
-                                <strong><span className="betfolio-goal-direction-arrow up" aria-hidden="true">↑</span>{groupLabel === 'Team Total Goals' ? 'Team Total POWYŻEJ' : groupLabel === 'Gole w 1. połowie' ? '1. połowa — POWYŻEJ' : 'Gole POWYŻEJ'}</strong>
+                                <strong><span className="betfolio-goal-direction-arrow up" aria-hidden="true">↑</span>{groupLabel === 'Gole w 1. połowie' ? '1. połowa — POWYŻEJ' : 'Gole POWYŻEJ'}</strong>
                                 <span>{overGoalItems.length} opcji</span>
                               </div>
                               <div className="betfolio-market-options board-options goals-column-options-v1704">

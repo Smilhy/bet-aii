@@ -80761,3 +80761,66 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
     to{opacity:1;filter:brightness(1.12)}
   }
 }
+
+
+/* WERSJA 9 — Team Total Goals: osobny układ Goście/Gospodarze + filtrowane linie */
+.add-tip-betfolio-page .betfolio-team-total-v9{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:14px!important;
+  padding:0 12px 14px!important;
+}
+.add-tip-betfolio-page .betfolio-team-total-info-v9{
+  padding:10px 12px!important;
+  border-radius:14px!important;
+  color:#9fb8c8!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  background:rgba(6,22,35,.72)!important;
+  border:1px solid rgba(52,234,255,.14)!important;
+}
+.add-tip-betfolio-page .betfolio-team-total-row-v9{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:12px!important;
+  padding:12px!important;
+  border-radius:20px!important;
+  background:linear-gradient(180deg,rgba(5,23,37,.72),rgba(3,16,28,.92))!important;
+  border:1px solid rgba(52,234,255,.16)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 10px 24px rgba(0,0,0,.16)!important;
+}
+.add-tip-betfolio-page .betfolio-team-total-team-v9{
+  grid-column:1/-1!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  color:#e8fbff!important;
+  font-size:15px!important;
+  font-weight:950!important;
+  letter-spacing:.01em!important;
+}
+.add-tip-betfolio-page .betfolio-team-total-team-v9::before{
+  content:'⚽'!important;
+  width:28px!important;
+  height:28px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:999px!important;
+  background:rgba(52,234,255,.10)!important;
+  border:1px solid rgba(52,234,255,.18)!important;
+  box-shadow:0 0 18px rgba(52,234,255,.10)!important;
+}
+.add-tip-betfolio-page .betfolio-team-total-empty-v9{
+  min-height:42px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:11px!important;
+  color:#718da0!important;
+  font-size:12px!important;
+  font-weight:850!important;
+  border:1px dashed rgba(120,160,185,.16)!important;
+  background:rgba(8,25,40,.48)!important;
+}
+@media(max-width:1100px){
+  .add-tip-betfolio-page .betfolio-team-total-row-v9{grid-template-columns:1fr!important;}
+}

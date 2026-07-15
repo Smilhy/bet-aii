@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-8-hero-glow-upgrade",
-  "version": "8.0.0",
+  "name": "betai-wersja-9-team-total-layout-odds-fix",
+  "version": "9.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
