@@ -1,0 +1,24 @@
+WERSJA 11 — LOKALNA PREZENTACJA VIDEO
+
+Co zostało zrobione:
+- Film prezentacji został wgrany bezpośrednio do strony jako plik lokalny:
+  public/betai-presentation-low.mp4
+- Przycisk „Obejrzyj prezentację” na ekranie logowania nie korzysta już z zewnętrznego linku iframe.
+- Modal prezentacji używa tagu <video> z lokalnym plikiem MP4 i kontrolkami odtwarzania.
+- Dodany został poster:
+  public/betai-presentation-poster.jpg
+- Film został skompresowany do wersji lżejszej:
+  854x480, 24 fps, ok. 17.25 MB.
+- Link do prezentacji nie powinien już wygasać, bo plik jest częścią strony.
+- Zachowane są wcześniejsze poprawki: Team Total, Hero Glow, Coach AI, Tip DNA itd.
+
+Testy:
+- npm install --no-audit --no-fund: OK
+- npm run build: OK
+- npm audit --audit-level=moderate: OK, 0 podatności
+- ffprobe lokalnego MP4: OK
+
+Po wdrożeniu:
+- Zrób Ctrl+F5 na stronie logowania.
+- Kliknij „Obejrzyj prezentację”.
+- Film powinien otworzyć się w modalu i odtwarzać bez zewnętrznego linku.

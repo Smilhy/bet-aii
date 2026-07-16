@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-7-team-total-goals",
-  "version": "7.0.0",
+  "name": "betai-wersja-11-lokalna-prezentacja-video",
+  "version": "11.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",

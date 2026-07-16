@@ -25161,15 +25161,19 @@ function AuthView({ onAuth }) {
                 ×
               </button>
             </div>
-            <iframe
-              className="auth1567-video-player"
-              src="https://player.mediadelivery.net/embed/694448/2da497f7-91ba-44de-b57a-e8fbb8f11532?autoplay=true&loop=false&muted=true&preload=true&responsive=true"
+            <video
+              className="auth1567-video-player auth1911-local-video"
+              src="/betai-presentation-low.mp4"
+              poster="/betai-presentation-poster.jpg"
               title={authLang === 'en' ? 'Bet+AI platform presentation' : 'Bet+AI prezentacja platformy'}
-              loading="lazy"
-              fetchPriority="low"
-              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
-              allowFullScreen
-            />
+              controls
+              autoPlay
+              playsInline
+              preload="metadata"
+            >
+              <source src="/betai-presentation-low.mp4" type="video/mp4" />
+              {authLang === 'en' ? 'Your browser does not support video playback.' : 'Twoja przeglądarka nie obsługuje odtwarzania wideo.'}
+            </video>
           </div>
         </div>
       ) : null}
