@@ -25163,17 +25163,21 @@ function AuthView({ onAuth }) {
             </div>
             <video
               className="auth1567-video-player auth1911-local-video"
-              src="/betai-presentation-low.mp4"
+              src="/betai-presentation-stable.mp4"
               poster="/betai-presentation-poster.jpg"
               title={authLang === 'en' ? 'Bet+AI platform presentation' : 'Bet+AI prezentacja platformy'}
               controls
-              autoPlay
               playsInline
               preload="metadata"
             >
-              <source src="/betai-presentation-low.mp4" type="video/mp4" />
+              <source src="/betai-presentation-stable.mp4" type="video/mp4" />
               {authLang === 'en' ? 'Your browser does not support video playback.' : 'Twoja przeglądarka nie obsługuje odtwarzania wideo.'}
             </video>
+            <div className="auth1912-video-fallback">
+              <a href="/betai-presentation-stable.mp4" target="_blank" rel="noreferrer">
+                {authLang === 'en' ? 'Open video in a new tab' : 'Otwórz film w nowej karcie'}
+              </a>
+            </div>
           </div>
         </div>
       ) : null}

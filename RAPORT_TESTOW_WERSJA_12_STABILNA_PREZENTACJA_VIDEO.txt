@@ -1,0 +1,28 @@
+WERSJA 12 — STABILNA PREZENTACJA VIDEO
+
+Problem z Wersji 11:
+- skompresowany plik MP4 zatrzymywał się około 4 sekundy w przeglądarce.
+
+Poprawka:
+- usunięty problematyczny skompresowany plik betai-presentation-low.mp4.
+- dodany stabilny lokalny plik MP4: public/betai-presentation-stable.mp4.
+- plik został przepakowany z oryginału z faststart, bez wygasającego zewnętrznego linku.
+- usunięty autoplay, żeby przeglądarka nie startowała filmu zanim zbuforuje dane.
+- dodany przycisk fallback: „Otwórz film w nowej karcie”.
+- modal nadal działa po kliknięciu „Obejrzyj prezentację”.
+
+Dane pliku:
+- Rozmiar video: 43.78 MB
+- Poster: 60.8 KB
+
+Testy:
+- npm install --no-audit --no-fund: OK
+- npm run build: OK
+- npm audit --audit-level=moderate: OK, 0 podatności
+- ffprobe video: OK, pełna długość filmu zachowana
+
+Po wdrożeniu:
+- zrób Ctrl+F5 na ekranie logowania.
+- kliknij „Obejrzyj prezentację”.
+- film nie powinien już zatrzymywać się na 4 sekundzie.
+- jeśli przeglądarka dalej buforuje, kliknij „Otwórz film w nowej karcie”.

@@ -80536,3 +80536,31 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
 @media(max-width:900px){
   .team-total-columns-v1711{grid-template-columns:1fr!important;}
 }
+
+/* WERSJA 1912 — stabilny lokalny player prezentacji, bez autoplay i z fallbackiem */
+.auth1912-video-fallback{
+  display:flex!important;
+  justify-content:center!important;
+  align-items:center!important;
+  padding:12px 16px 16px!important;
+  background:#02070d!important;
+}
+.auth1912-video-fallback a{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:38px!important;
+  padding:9px 16px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(54,240,199,.34)!important;
+  background:linear-gradient(135deg, rgba(30,231,199,.18), rgba(43,184,255,.14))!important;
+  color:#70fff3!important;
+  font-weight:900!important;
+  font-size:13px!important;
+  text-decoration:none!important;
+  box-shadow:0 0 22px rgba(54,240,199,.10)!important;
+}
+.auth1912-video-fallback a:hover{
+  border-color:rgba(54,240,199,.60)!important;
+  box-shadow:0 0 28px rgba(54,240,199,.18)!important;
+}
