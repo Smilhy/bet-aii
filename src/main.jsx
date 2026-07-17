@@ -25102,6 +25102,7 @@ function AuthView({ onAuth }) {
             </div>
           </section>
 
+          <PublicSeoPanelV17 authLang={authLang} />
 
           <div className="auth617-feature-strip" aria-label={t.benefitsLabel}>
             <div className="auth617-feature-card">
@@ -25187,6 +25188,69 @@ function AuthView({ onAuth }) {
     </div>
   )
 }
+
+function PublicSeoPanelV17({ authLang = 'pl' }) {
+  const isEnglish = authLang === 'en'
+
+  const cards = isEnglish
+    ? [
+        ['AI match analysis', 'Pre-match context, market insights and AI-supported predictions.'],
+        ['Tipster rankings', 'Compare profiles by results, win rate, balance and activity.'],
+        ['Tip DNA', 'See markets, odds ranges, singles and accumulators style.'],
+        ['Trust Score', 'Reliability signals based on history, consistency and community activity.']
+      ]
+    : [
+        ['Analiza meczów AI', 'Kontekst przedmeczowy, rynki i przewidywania wspierane przez AI.'],
+        ['Rankingi typerów', 'Porównuj profile po wynikach, skuteczności, balansie i aktywności.'],
+        ['Tip DNA', 'Sprawdź rynki, zakres kursów, single, AKO i styl gry typera.'],
+        ['Trust Score', 'Sygnały wiarygodności z historii, stabilności i aktywności społeczności.']
+      ]
+
+  return (
+    <section className="auth1701-seo-panel-v17" aria-labelledby="auth1701-seo-title-v17">
+      <div className="auth1701-seo-gridglow-v17" aria-hidden="true" />
+      <div className="auth1701-seo-kicker-v17">
+        {isEnglish ? 'AI SPORTS PICKS PLATFORM' : 'PLATFORMA TYPÓW SPORTOWYCH AI'}
+      </div>
+      <h1 id="auth1701-seo-title-v17">
+        {isEnglish
+          ? 'Bet+AI: sports picks, AI analysis and tipster rankings'
+          : 'Bet+AI: typy sportowe, analiza AI i rankingi typerów'}
+      </h1>
+      <p className="auth1701-seo-lead-v17">
+        {isEnglish
+          ? 'Discover free and premium sports picks, compare tipster profiles, follow live community activity and use AI Coach, Tip DNA and Trust Score before choosing who to trust.'
+          : 'Odkrywaj darmowe i premium typy sportowe, porównuj profile typerów, śledź społeczność live i korzystaj z AI Coach, Tip DNA oraz Trust Score przed wyborem zaufanego profilu.'}
+      </p>
+
+      <div className="auth1701-seo-cards-v17">
+        {cards.map(([title, text]) => (
+          <article className="auth1701-seo-card-v17" key={title}>
+            <span aria-hidden="true" />
+            <strong>{title}</strong>
+            <p>{text}</p>
+          </article>
+        ))}
+      </div>
+
+      <div className="auth1701-seo-footer-v17">
+        <div>
+          <b>{isEnglish ? 'Marketplace' : 'Marketplace'}</b>
+          <small>{isEnglish ? 'free and premium picks' : 'typy free i premium'}</small>
+        </div>
+        <div>
+          <b>AI Coach</b>
+          <small>{isEnglish ? 'profile style analysis' : 'analiza stylu profilu'}</small>
+        </div>
+        <div>
+          <b>{isEnglish ? 'Community' : 'Społeczność'}</b>
+          <small>{isEnglish ? 'live chat and activity' : 'czat live i aktywność'}</small>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 
 function PaymentModal({ tip, user, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false)

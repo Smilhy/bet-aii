@@ -80564,3 +80564,238 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   border-color:rgba(54,240,199,.60)!important;
   box-shadow:0 0 28px rgba(54,240,199,.18)!important;
 }
+
+
+/* =========================================================
+   WERSJA 17 — Public SEO panel w prawym obszarze auth
+   Tylko warstwa wizualna. Nie rusza logiki, statystyk ani danych.
+   ========================================================= */
+html body #root .auth609-screen .auth1701-seo-panel-v17{
+  position:absolute!important;
+  left:674px!important;
+  top:58px!important;
+  width:1068px!important;
+  height:760px!important;
+  z-index:8!important;
+  pointer-events:auto!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  padding:48px 52px 36px!important;
+  border-radius:28px!important;
+  color:#f3fbff!important;
+  border:1px solid rgba(60,225,255,.34)!important;
+  background:
+    radial-gradient(circle at 76% 16%, rgba(39,235,255,.20), transparent 34%),
+    radial-gradient(circle at 20% 78%, rgba(18,255,173,.13), transparent 42%),
+    linear-gradient(135deg, rgba(3,18,33,.965), rgba(2,10,21,.975) 52%, rgba(4,19,30,.95))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 0 0 1px rgba(2,255,255,.045),
+    0 0 55px rgba(0,221,255,.12),
+    0 28px 70px rgba(0,0,0,.44)!important;
+  backdrop-filter:blur(8px)!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-panel-v17::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(90deg, rgba(67,226,255,.055) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(67,226,255,.045) 1px, transparent 1px)!important;
+  background-size:54px 54px!important;
+  mask-image:linear-gradient(90deg, rgba(0,0,0,.88), rgba(0,0,0,.46), transparent 96%)!important;
+  opacity:.62!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-panel-v17::after{
+  content:""!important;
+  position:absolute!important;
+  right:-170px!important;
+  bottom:-175px!important;
+  width:460px!important;
+  height:460px!important;
+  border-radius:999px!important;
+  pointer-events:none!important;
+  background:radial-gradient(circle, rgba(35,236,255,.24), rgba(35,236,255,.07) 42%, transparent 72%)!important;
+  filter:blur(2px)!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-gridglow-v17{
+  position:absolute!important;
+  inset:auto 28px 28px auto!important;
+  width:260px!important;
+  height:260px!important;
+  border-radius:42px!important;
+  border:1px solid rgba(58,225,255,.10)!important;
+  transform:rotate(10deg)!important;
+  opacity:.48!important;
+  background:linear-gradient(135deg, rgba(0,240,255,.12), rgba(19,255,172,.035))!important;
+  box-shadow:0 0 50px rgba(0,210,255,.08)!important;
+  pointer-events:none!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-kicker-v17{
+  position:relative!important;
+  z-index:2!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  max-width:100%!important;
+  padding:10px 14px!important;
+  border-radius:999px!important;
+  color:#69f7ff!important;
+  background:rgba(11,37,55,.70)!important;
+  border:1px solid rgba(78,233,255,.22)!important;
+  box-shadow:0 0 22px rgba(42,225,255,.08)!important;
+  font-size:14px!important;
+  line-height:1!important;
+  font-weight:950!important;
+  letter-spacing:.13em!important;
+  text-transform:uppercase!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-kicker-v17::before{
+  content:""!important;
+  width:9px!important;
+  height:9px!important;
+  flex:0 0 9px!important;
+  border-radius:999px!important;
+  background:#32f6ff!important;
+  box-shadow:0 0 18px rgba(50,246,255,.86)!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-panel-v17 h1{
+  position:relative!important;
+  z-index:2!important;
+  max-width:860px!important;
+  margin:24px 0 18px!important;
+  color:#f7fdff!important;
+  font-size:62px!important;
+  line-height:.98!important;
+  letter-spacing:-.062em!important;
+  font-weight:1000!important;
+  text-shadow:0 0 28px rgba(34,229,255,.22)!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-lead-v17{
+  position:relative!important;
+  z-index:2!important;
+  max-width:830px!important;
+  margin:0!important;
+  color:rgba(211,235,242,.84)!important;
+  font-size:21px!important;
+  line-height:1.55!important;
+  font-weight:650!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-cards-v17{
+  position:relative!important;
+  z-index:2!important;
+  display:grid!important;
+  grid-template-columns:repeat(2, minmax(0, 1fr))!important;
+  gap:16px!important;
+  margin-top:30px!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-card-v17{
+  position:relative!important;
+  min-height:124px!important;
+  padding:20px 20px 18px!important;
+  border-radius:22px!important;
+  box-sizing:border-box!important;
+  border:1px solid rgba(76,225,255,.16)!important;
+  background:
+    radial-gradient(circle at 10% 8%, rgba(42,235,255,.11), transparent 38%),
+    rgba(5,24,42,.66)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    0 16px 32px rgba(0,0,0,.22)!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-card-v17 > span{
+  display:block!important;
+  width:10px!important;
+  height:10px!important;
+  margin-bottom:12px!important;
+  border-radius:999px!important;
+  background:#26f4ff!important;
+  box-shadow:0 0 18px rgba(38,244,255,.80)!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-card-v17 strong{
+  display:block!important;
+  margin:0 0 8px!important;
+  color:#f4fcff!important;
+  font-size:20px!important;
+  line-height:1.08!important;
+  font-weight:950!important;
+  letter-spacing:-.025em!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-card-v17 p{
+  margin:0!important;
+  color:rgba(204,226,235,.74)!important;
+  font-size:15px!important;
+  line-height:1.45!important;
+  font-weight:650!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-footer-v17{
+  position:relative!important;
+  z-index:2!important;
+  display:grid!important;
+  grid-template-columns:repeat(3, minmax(0, 1fr))!important;
+  gap:12px!important;
+  margin-top:20px!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-footer-v17 > div{
+  padding:15px 16px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(19,255,173,.15)!important;
+  background:linear-gradient(135deg, rgba(17,255,174,.08), rgba(42,225,255,.045))!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-footer-v17 b{
+  display:block!important;
+  color:#ffffff!important;
+  font-size:17px!important;
+  line-height:1.15!important;
+  font-weight:950!important;
+}
+
+html body #root .auth609-screen .auth1701-seo-footer-v17 small{
+  display:block!important;
+  margin-top:4px!important;
+  color:rgba(200,224,233,.72)!important;
+  font-size:13px!important;
+  line-height:1.25!important;
+  font-weight:700!important;
+}
+
+@media (max-width:1700px){
+  html body #root .auth609-screen .auth1701-seo-panel-v17{
+    left:674px!important;
+    top:58px!important;
+    width:1020px!important;
+    height:738px!important;
+    padding:42px 44px 32px!important;
+  }
+  html body #root .auth609-screen .auth1701-seo-panel-v17 h1{
+    font-size:55px!important;
+  }
+  html body #root .auth609-screen .auth1701-seo-lead-v17{
+    font-size:19px!important;
+  }
+  html body #root .auth609-screen .auth1701-seo-card-v17{
+    min-height:118px!important;
+  }
+}
+
+@media (max-width:1100px){
+  html body #root .auth609-screen .auth1701-seo-panel-v17{
+    display:none!important;
+  }
+}
