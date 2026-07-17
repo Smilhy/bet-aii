@@ -25102,7 +25102,7 @@ function AuthView({ onAuth }) {
             </div>
           </section>
 
-          <PublicSeoPanelV17 authLang={authLang} />
+          <PublicSeoPanelV18 authLang={authLang} />
 
           <div className="auth617-feature-strip" aria-label={t.benefitsLabel}>
             <div className="auth617-feature-card">
@@ -25189,43 +25189,87 @@ function AuthView({ onAuth }) {
   )
 }
 
-function PublicSeoPanelV17({ authLang = 'pl' }) {
+
+function PublicSeoPanelV18({ authLang = 'pl' }) {
   const isEnglish = authLang === 'en'
 
   const cards = isEnglish
     ? [
-        ['AI match analysis', 'Pre-match context, market insights and AI-supported predictions.'],
-        ['Tipster rankings', 'Compare profiles by results, win rate, balance and activity.'],
-        ['Tip DNA', 'See markets, odds ranges, singles and accumulators style.'],
-        ['Trust Score', 'Reliability signals based on history, consistency and community activity.']
+        ['Buy premium picks', 'Unlock single picks and premium marketplace offers before the match starts.'],
+        ['Sell your own picks', 'Tipsters can build a profile, publish picks, grow trust and monetize their analysis.'],
+        ['Marketplace', 'A central place for free picks, premium singles, profiles, stats and transparent history.'],
+        ['AI match analysis', 'Pre-match context, market signals, prediction summaries and AI-supported insights.'],
+        ['News & live scores', 'Follow sports news, live scores, match context and key information before games.'],
+        ['Rewards & rankings', 'Compete in rankings, build reputation, earn visibility and track profile progress.'],
+        ['AI Coach', 'Understand tipster style, strengths, weak points, favourite markets and consistency.'],
+        ['Tip DNA & Trust Score', 'Check markets, odds ranges, singles, accumulators, activity and reliability signals.'],
+        ['Community live', 'Join active users, follow tipsters, discuss picks and watch the platform grow.']
       ]
     : [
-        ['Analiza meczów AI', 'Kontekst przedmeczowy, rynki i przewidywania wspierane przez AI.'],
-        ['Rankingi typerów', 'Porównuj profile po wynikach, skuteczności, balansie i aktywności.'],
-        ['Tip DNA', 'Sprawdź rynki, zakres kursów, single, AKO i styl gry typera.'],
-        ['Trust Score', 'Sygnały wiarygodności z historii, stabilności i aktywności społeczności.']
+        ['Kup typy premium', 'Odblokuj single premium i oferty marketplace przed rozpoczęciem meczu.'],
+        ['Sprzedawaj własne typy', 'Typer może budować profil, publikować typy, zwiększać zaufanie i monetyzować analizę.'],
+        ['Marketplace', 'Jedno miejsce na typy free, single premium, profile, statystyki i przejrzystą historię.'],
+        ['Analizy meczów AI', 'Kontekst przedmeczowy, sygnały rynku, przewidywania i podsumowania wspierane przez AI.'],
+        ['Newsy i wyniki live', 'Śledź newsy sportowe, wyniki live, kontekst meczu i kluczowe informacje przed grą.'],
+        ['Nagrody i rankingi', 'Rywalizuj w rankingach, buduj reputację, zdobywaj widoczność i rozwijaj profil.'],
+        ['AI Coach', 'Poznaj styl typera, mocne strony, słabsze punkty, ulubione rynki i stabilność.'],
+        ['Tip DNA i Trust Score', 'Sprawdź rynki, kursy, single, AKO, aktywność i sygnały wiarygodności profilu.'],
+        ['Społeczność live', 'Dołącz do aktywnych użytkowników, obserwuj typerów, dyskutuj i rozwijaj platformę.']
+      ]
+
+  const badges = isEnglish
+    ? [
+        ['Free picks', 'daily value'],
+        ['Premium singles', 'paid access'],
+        ['Profile stats', 'transparent history'],
+        ['Live community', 'chat & activity']
+      ]
+    : [
+        ['Typy free', 'codzienna wartość'],
+        ['Single premium', 'płatny dostęp'],
+        ['Statystyki profilu', 'przejrzysta historia'],
+        ['Społeczność live', 'czat i aktywność']
       ]
 
   return (
-    <section className="auth1701-seo-panel-v17" aria-labelledby="auth1701-seo-title-v17">
-      <div className="auth1701-seo-gridglow-v17" aria-hidden="true" />
-      <div className="auth1701-seo-kicker-v17">
-        {isEnglish ? 'AI SPORTS PICKS PLATFORM' : 'PLATFORMA TYPÓW SPORTOWYCH AI'}
+    <section className="auth1801-premium-seo-panel-v18" aria-labelledby="auth1801-seo-title-v18">
+      <div className="auth1801-premium-orb-v18 auth1801-premium-orb-a-v18" aria-hidden="true" />
+      <div className="auth1801-premium-orb-v18 auth1801-premium-orb-b-v18" aria-hidden="true" />
+
+      <div className="auth1801-premium-head-v18">
+        <div className="auth1801-premium-kicker-v18">
+          {isEnglish ? 'AI SPORTS PICKS MARKETPLACE' : 'MARKETPLACE TYPÓW SPORTOWYCH AI'}
+        </div>
+        <div className="auth1801-premium-status-v18">
+          <span />
+          {isEnglish ? 'Live platform' : 'Platforma live'}
+        </div>
       </div>
-      <h1 id="auth1701-seo-title-v17">
+
+      <h1 id="auth1801-seo-title-v18">
         {isEnglish
-          ? 'Bet+AI: sports picks, AI analysis and tipster rankings'
-          : 'Bet+AI: typy sportowe, analiza AI i rankingi typerów'}
+          ? 'Bet+AI: buy, sell and analyse sports picks with AI'
+          : 'Bet+AI: kupuj, sprzedawaj i analizuj typy sportowe z AI'}
       </h1>
-      <p className="auth1701-seo-lead-v17">
+
+      <p className="auth1801-premium-lead-v18">
         {isEnglish
-          ? 'Discover free and premium sports picks, compare tipster profiles, follow live community activity and use AI Coach, Tip DNA and Trust Score before choosing who to trust.'
-          : 'Odkrywaj darmowe i premium typy sportowe, porównuj profile typerów, śledź społeczność live i korzystaj z AI Coach, Tip DNA oraz Trust Score przed wyborem zaufanego profilu.'}
+          ? 'A premium sports prediction platform for users and tipsters: marketplace, AI analysis, rankings, rewards, news, live scores, community, AI Coach, Tip DNA and Trust Score in one place.'
+          : 'Premium platforma dla graczy i typerów: marketplace, analizy AI, rankingi, nagrody, newsy, wyniki live, społeczność, AI Coach, Tip DNA oraz Trust Score w jednym miejscu.'}
       </p>
 
-      <div className="auth1701-seo-cards-v17">
+      <div className="auth1801-premium-badges-v18" aria-label={isEnglish ? 'Platform features' : 'Funkcje platformy'}>
+        {badges.map(([title, text]) => (
+          <div key={title}>
+            <strong>{title}</strong>
+            <small>{text}</small>
+          </div>
+        ))}
+      </div>
+
+      <div className="auth1801-premium-cards-v18">
         {cards.map(([title, text]) => (
-          <article className="auth1701-seo-card-v17" key={title}>
+          <article className="auth1801-premium-card-v18" key={title}>
             <span aria-hidden="true" />
             <strong>{title}</strong>
             <p>{text}</p>
@@ -25233,23 +25277,24 @@ function PublicSeoPanelV17({ authLang = 'pl' }) {
         ))}
       </div>
 
-      <div className="auth1701-seo-footer-v17">
+      <div className="auth1801-premium-bottom-v18">
         <div>
-          <b>{isEnglish ? 'Marketplace' : 'Marketplace'}</b>
-          <small>{isEnglish ? 'free and premium picks' : 'typy free i premium'}</small>
+          <b>{isEnglish ? 'For users' : 'Dla użytkowników'}</b>
+          <small>{isEnglish ? 'Find picks, compare tipsters and follow AI insights.' : 'Znajduj typy, porównuj typerów i korzystaj z analiz AI.'}</small>
         </div>
         <div>
-          <b>AI Coach</b>
-          <small>{isEnglish ? 'profile style analysis' : 'analiza stylu profilu'}</small>
+          <b>{isEnglish ? 'For tipsters' : 'Dla typerów'}</b>
+          <small>{isEnglish ? 'Publish picks, build reputation and sell premium value.' : 'Publikuj typy, buduj reputację i sprzedawaj premium wartość.'}</small>
         </div>
         <div>
-          <b>{isEnglish ? 'Community' : 'Społeczność'}</b>
-          <small>{isEnglish ? 'live chat and activity' : 'czat live i aktywność'}</small>
+          <b>{isEnglish ? 'For community' : 'Dla społeczności'}</b>
+          <small>{isEnglish ? 'Chat, rankings, rewards and transparent profile history.' : 'Czat, rankingi, nagrody i przejrzysta historia profilu.'}</small>
         </div>
       </div>
     </section>
   )
 }
+
 
 
 function PaymentModal({ tip, user, onClose, onSuccess }) {
