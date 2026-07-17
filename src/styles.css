@@ -80920,3 +80920,171 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   .tipster-showcase-stage-v16{animation:none!important;}
   .tipster-showcase-card-v16,.tipster-showcase-tabs-v16 button,.tipster-showcase-dots-v16 button{transition:none!important;}
 }
+
+/* ============================================================
+   WERSJA 17 — SLIDER TYPERÓW / BADGE ULTRA PRO
+   - koniec z „uciętymi/kwadratowymi” znaczkami przy avatarach
+   - czytelne SVG zamiast znaków fontowych
+   - cyan = standardowy profil, gold = Premium / płatne typy
+   - badge ma własny ring, glow i bezpieczny odstęp od flagi
+   ============================================================ */
+.tipster-showcase-stage-v16{
+  overflow:visible!important;
+  padding:24px 24px 14px!important;
+}
+.tipster-showcase-grid-v16{
+  gap:28px 24px!important;
+  overflow:visible!important;
+}
+.tipster-showcase-card-v16{
+  overflow:visible!important;
+  min-height:132px!important;
+  padding:4px 8px 7px!important;
+}
+.tipster-showcase-avatar-wrap-v16{
+  width:76px!important;
+  height:76px!important;
+  margin-bottom:11px!important;
+  overflow:visible!important;
+}
+.tipster-showcase-avatar-v16{
+  overflow:hidden!important;
+  border:2px solid rgba(37,224,239,.72)!important;
+  box-shadow:
+    0 0 0 4px rgba(3,15,25,.96),
+    0 0 0 5px rgba(39,226,240,.08),
+    0 10px 25px rgba(0,0,0,.22),
+    0 0 24px rgba(28,222,239,.15),
+    inset 0 0 16px rgba(255,255,255,.045)!important;
+}
+.tipster-showcase-avatar-wrap-v16::after{
+  content:""!important;
+  position:absolute!important;
+  inset:-5px!important;
+  z-index:0!important;
+  border-radius:50%!important;
+  background:radial-gradient(circle at 50% 60%,rgba(28,224,239,.075),transparent 67%)!important;
+  pointer-events:none!important;
+}
+.tipster-showcase-avatar-v16,
+.tipster-showcase-badge-v16,
+.tipster-showcase-flag-v16{
+  z-index:2!important;
+}
+.tipster-showcase-badge-v16.badge-v17{
+  left:-4px!important;
+  bottom:-3px!important;
+  width:28px!important;
+  height:28px!important;
+  box-sizing:border-box!important;
+  overflow:visible!important;
+  border:3px solid #03121d!important;
+  border-radius:999px!important;
+  color:#fff!important;
+  font-size:0!important;
+  line-height:0!important;
+  transform:translateZ(0)!important;
+  isolation:isolate!important;
+  background:linear-gradient(145deg,#20d7ff 0%,#0799df 56%,#0872c6 100%)!important;
+  box-shadow:
+    0 0 0 1px rgba(72,226,255,.23),
+    0 7px 17px rgba(0,139,218,.33),
+    inset 0 1px 0 rgba(255,255,255,.34)!important;
+}
+.tipster-showcase-badge-v16.badge-v17::before{
+  content:""!important;
+  position:absolute!important;
+  inset:2px!important;
+  border-radius:50%!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.19),transparent 52%)!important;
+  pointer-events:none!important;
+  z-index:-1!important;
+}
+.tipster-showcase-badge-v16.badge-v17 svg{
+  width:15px!important;
+  height:15px!important;
+  display:block!important;
+  overflow:visible!important;
+}
+.tipster-showcase-badge-v16.badge-v17.standard svg path{
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:2.9!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+.tipster-showcase-badge-v16.badge-v17.premium{
+  color:#fff9dc!important;
+  background:linear-gradient(145deg,#ffd34d 0%,#f5a80b 56%,#df7900 100%)!important;
+  box-shadow:
+    0 0 0 1px rgba(255,213,76,.27),
+    0 7px 18px rgba(225,135,0,.34),
+    0 0 18px rgba(255,185,28,.10),
+    inset 0 1px 0 rgba(255,255,255,.38)!important;
+}
+.tipster-showcase-badge-v16.badge-v17.premium svg path:first-child{
+  fill:currentColor!important;
+  stroke:none!important;
+}
+.tipster-showcase-badge-v16.badge-v17.premium svg path:last-child{
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:2!important;
+  stroke-linecap:round!important;
+}
+.tipster-showcase-badge-v16.badge-v17.streak{
+  color:#fff6e8!important;
+  background:linear-gradient(145deg,#ffbf35 0%,#ff7922 55%,#e94c19 100%)!important;
+  box-shadow:
+    0 0 0 1px rgba(255,159,53,.26),
+    0 7px 18px rgba(239,95,20,.33),
+    inset 0 1px 0 rgba(255,255,255,.34)!important;
+}
+.tipster-showcase-badge-v16.badge-v17.streak svg path{
+  fill:currentColor!important;
+  stroke:none!important;
+}
+.tipster-showcase-flag-v16{
+  right:-5px!important;
+  bottom:0!important;
+  width:27px!important;
+  height:19px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  border:2px solid #03121d!important;
+  border-radius:6px!important;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.055),
+    0 6px 13px rgba(0,0,0,.35)!important;
+}
+.tipster-showcase-name-v16{
+  color:#f4fbff!important;
+  text-shadow:0 1px 12px rgba(0,0,0,.22)!important;
+}
+.tipster-showcase-meta-v16 b{
+  color:#e7f7fb!important;
+}
+.tipster-showcase-card-v16:hover .tipster-showcase-avatar-v16,
+.tipster-showcase-card-v16:focus-visible .tipster-showcase-avatar-v16{
+  border-color:rgba(65,238,248,.92)!important;
+  box-shadow:
+    0 0 0 4px rgba(3,15,25,.97),
+    0 0 0 5px rgba(42,230,242,.14),
+    0 12px 28px rgba(0,0,0,.26),
+    0 0 30px rgba(31,225,239,.22)!important;
+}
+.tipster-showcase-card-v16:hover .tipster-showcase-badge-v16.badge-v17,
+.tipster-showcase-card-v16:focus-visible .tipster-showcase-badge-v16.badge-v17{
+  transform:translateY(-1px) scale(1.06)!important;
+}
+.tipster-showcase-badge-v16.badge-v17{
+  transition:transform .2s ease,filter .2s ease!important;
+}
+
+@media(max-width:520px){
+  .tipster-showcase-stage-v16{padding:22px 17px 12px!important;}
+  .tipster-showcase-grid-v16{gap:25px 15px!important;}
+  .tipster-showcase-avatar-wrap-v16{width:70px!important;height:70px!important;}
+  .tipster-showcase-badge-v16.badge-v17{width:27px!important;height:27px!important;left:-3px!important;bottom:-3px!important;}
+  .tipster-showcase-flag-v16{right:-4px!important;width:26px!important;height:18px!important;}
+}

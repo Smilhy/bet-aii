@@ -7570,6 +7570,29 @@ function buildBetaiRightShowcaseFormV16(row = {}, tips = []) {
   }
 }
 
+function renderBetaiShowcaseBadgeIconV17(kind = 'standard') {
+  if (kind === 'premium') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4.4 8.1 8.2 11l3.8-6 3.8 6 3.8-2.9-1.25 9.15H5.65L4.4 8.1Z" />
+        <path d="M6.2 19h11.6" />
+      </svg>
+    )
+  }
+  if (kind === 'streak') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M13.35 2.9c.35 3.35-1.35 4.7-2.8 6.2-1.4 1.45-2.6 2.75-2.6 5.05 0 2.35 1.8 4.25 4.05 4.25s4.05-1.9 4.05-4.25c0-1.55-.65-2.8-1.75-4 .05 2.05-.7 3.05-1.7 3.85.15-2.9-1.2-4.85.75-11.1Z" />
+      </svg>
+    )
+  }
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="m6.7 12.2 3.15 3.15L17.6 7.6" />
+    </svg>
+  )
+}
+
 function DashboardTipsterShowcaseV16({ rows = [], tips = [], onOpenTipster = null }) {
   const lang = useBetaiLanguageState()
   const [activeIndex, setActiveIndex] = useState(0)
@@ -7736,6 +7759,12 @@ function DashboardTipsterShowcaseV16({ rows = [], tips = [], onOpenTipster = nul
               const isPaidView = activeCategory?.key === 'paid'
               const isStreakView = activeCategory?.key === 'streak'
               const isPopularView = activeCategory?.key === 'popular'
+              const badgeKind = isPaidView || row._showcasePremium ? 'premium' : isStreakView ? 'streak' : 'standard'
+              const badgeLabel = badgeKind === 'premium'
+                ? (lang === 'en' ? 'Premium tipster / offers paid picks' : 'Typer Premium / oferuje płatne typy')
+                : badgeKind === 'streak'
+                  ? (lang === 'en' ? 'Winning streak' : 'Seria zwycięstw')
+                  : (lang === 'en' ? 'Standard public tipster' : 'Standardowy profil typera')
               return (
                 <button
                   type="button"
@@ -7748,8 +7777,12 @@ function DashboardTipsterShowcaseV16({ rows = [], tips = [], onOpenTipster = nul
                     <span className={`tipster-showcase-avatar-v16 ${avatar ? 'has-avatar' : ''}`}>
                       {avatar ? <img src={avatar} alt="" loading="lazy" /> : <span>{String(name || '?').slice(0, 2).toUpperCase()}</span>}
                     </span>
-                    <em className={`tipster-showcase-badge-v16 ${isPaidView || row._showcasePremium ? 'premium' : isStreakView ? 'streak' : 'verified'}`} aria-hidden="true">
-                      {isPaidView || row._showcasePremium ? '◆' : isStreakView ? '🔥' : '✓'}
+                    <em
+                      className={`tipster-showcase-badge-v16 ${badgeKind} badge-v17`}
+                      title={badgeLabel}
+                      aria-label={badgeLabel}
+                    >
+                      {renderBetaiShowcaseBadgeIconV17(badgeKind)}
                     </em>
                     <span className="tipster-showcase-flag-v16">{renderBetaiWorldFlagV35(countryCode, getBetaiWorldCountryNameV30(countryCode))}</span>
                   </span>
