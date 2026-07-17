@@ -1,0 +1,45 @@
+WERSJA 22 — FULL MOCKUP AUTH REDESIGN
+
+Cel:
+- Przełożenie wygenerowanego mockupu na realny ekran strony.
+- Nie jako jedno zdjęcie, tylko jako prawdziwy, żywy layout HTML/CSS:
+  menu,
+  wyszukiwarka,
+  CTA,
+  hero,
+  top typerzy,
+  AI Trust Score,
+  AI Probability,
+  Tip DNA,
+  marketplace,
+  kafle funkcji,
+  live wyniki,
+  statystyki,
+  VIP/nagrody,
+  HOT TIP ticker.
+
+Zakres zmian:
+- Nie ruszano logiki aplikacji.
+- Nie ruszano Supabase.
+- Nie ruszano Netlify Functions.
+- Nie ruszano typów, płatności, profili, statystyk, Coach AI, Tip DNA, Trust Score ani Team Total.
+- Zmieniono publiczny ekran AUTH/login po prawej stronie.
+- Lewy panel logowania, social dock i statystyki zostają.
+- Zachowano Google verification:
+  public/googlea601831ff84cc508.html
+- Zachowano robots.txt i sitemap.xml.
+
+Ważne:
+- To jest realny layout HTML/CSS, nie wklejone jedno zdjęcie.
+- Elementy są statycznym landingiem publicznym, czyli nie ingerują w dane i logikę aplikacji.
+- Wygląd jest na sztywno pod desktop, zgodnie z prośbą.
+- Na mniejszych ekranach ukrywa się, żeby nie psuć mobile.
+
+Testy:
+- npm ci --no-audit --no-fund: OK.
+- npm run build: OK.
+- npm audit --audit-level=moderate: OK, 0 podatności.
+- dist/index.html: OK.
+- dist/robots.txt: OK.
+- dist/sitemap.xml: OK.
+- dist/googlea601831ff84cc508.html: OK.

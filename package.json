@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-20-premium-auth-redesign",
-  "version": "20.0.0",
+  "name": "betai-wersja-22-full-mockup-auth-redesign",
+  "version": "22.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
