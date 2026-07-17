@@ -1,0 +1,25 @@
+WERSJA 14 — GOOGLE HTML FILE VERIFICATION
+
+Zakres zmian:
+- Nie ruszano logiki aplikacji.
+- Nie ruszano Supabase.
+- Nie ruszano funkcji Netlify.
+- Nie ruszano widoków, typów, Coach AI, Tip DNA ani Team Total.
+- Dodano wyłącznie plik weryfikacyjny Google Search Console.
+
+Dodany plik:
+- public/googlea601831ff84cc508.html
+
+Zawartość pliku:
+google-site-verification: googlea601831ff84cc508.html
+
+Testy:
+- npm ci --no-audit --no-fund: OK.
+- npm run build: OK.
+- npm audit --audit-level=moderate: OK, 0 podatności.
+- dist/googlea601831ff84cc508.html istnieje po buildzie: OK.
+
+Po wdrożeniu:
+1. Otwórz https://bet-ai.app/googlea601831ff84cc508.html
+2. Jeśli widzisz tekst google-site-verification: googlea601831ff84cc508.html, wróć do Google Search Console.
+3. Kliknij WERYFIKUJ.
