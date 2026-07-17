@@ -25136,6 +25136,8 @@ function AuthView({ onAuth }) {
         </div>
       </div>
 
+      <PublicLandingSeoV15 authLang={authLang} />
+
       {presentationOpen ? (
         <div
           className="auth1567-video-backdrop"
@@ -25187,6 +25189,124 @@ function AuthView({ onAuth }) {
     </div>
   )
 }
+
+function PublicLandingSeoV15({ authLang = 'pl' }) {
+  const isEnglish = authLang === 'en'
+
+  const highlights = isEnglish
+    ? [
+        ['AI match analysis', 'Use AI-supported match insights, market context, team data and prediction summaries before games.'],
+        ['Tipster rankings', 'Compare tipsters by results, win rate, balance, activity and long-term performance.'],
+        ['AI Coach', 'Every tipster profile can be analysed by AI Coach to show playing style, strengths, weak points and market tendencies.'],
+        ['Tip DNA', 'Tip DNA shows what a user usually plays: sports, markets, odds ranges, singles, accumulators and behavioural patterns.'],
+        ['Trust Score', 'Trust Score helps users judge profile reliability using activity, consistency, history and community signals.'],
+        ['Free and premium picks', 'Discover free picks, premium singles, marketplace offers and transparent statistics in one platform.']
+      ]
+    : [
+        ['Analiza meczów AI', 'Korzystaj z analiz wspieranych przez AI: kontekst rynku, dane drużyn, przewidywania i podsumowania przed meczem.'],
+        ['Ranking typerów', 'Porównuj typerów według wyników, skuteczności, balansu, aktywności i długoterminowej formy.'],
+        ['AI Coach', 'Każdy profil typera może być analizowany przez AI Coach: styl gry, mocne strony, słabe punkty i ulubione rynki.'],
+        ['Tip DNA', 'Tip DNA pokazuje, co dany użytkownik najczęściej gra: sporty, rynki, kursy, single, AKO i schematy typowania.'],
+        ['Trust Score', 'Trust Score pomaga ocenić wiarygodność profilu przez aktywność, historię, stabilność i sygnały społeczności.'],
+        ['Free i premium typy', 'Odkrywaj darmowe typy, single premium, marketplace i przejrzyste statystyki w jednej platformie.']
+      ]
+
+  const faq = isEnglish
+    ? [
+        ['What is Bet+AI?', 'Bet+AI is a sports prediction and match analysis platform combining AI tools, tipster profiles, rankings, marketplace picks and community features.'],
+        ['Can I compare tipsters?', 'Yes. You can check rankings, profile statistics, win rate, balance, history and AI-generated style analysis.'],
+        ['What is AI Coach?', 'AI Coach analyses a tipster profile and explains playing style, market choices, strengths, weak points and consistency.'],
+        ['Does Bet+AI show free picks?', 'Yes. The platform supports free picks and premium picks, with statistics and profile history.']
+      ]
+    : [
+        ['Co to jest Bet+AI?', 'Bet+AI to platforma do typów sportowych i analizy meczów, która łączy AI, profile typerów, rankingi, marketplace i społeczność.'],
+        ['Czy mogę porównywać typerów?', 'Tak. Możesz sprawdzać rankingi, statystyki profilu, skuteczność, balans, historię oraz analizę stylu gry przez AI.'],
+        ['Czym jest AI Coach?', 'AI Coach analizuje profil typera i opisuje styl gry, wybór rynków, mocne strony, słabe punkty oraz stabilność.'],
+        ['Czy Bet+AI ma darmowe typy?', 'Tak. Platforma obsługuje typy darmowe i premium, razem ze statystykami i historią profili.']
+      ]
+
+  return (
+    <section className="public-landing-seo-v15" aria-labelledby="public-landing-seo-title-v15">
+      <div className="public-landing-seo-v15__glow" aria-hidden="true" />
+      <div className="public-landing-seo-v15__inner">
+        <div className="public-landing-seo-v15__eyebrow">
+          {isEnglish ? 'AI SPORTS PREDICTION PLATFORM' : 'PLATFORMA TYPÓW SPORTOWYCH AI'}
+        </div>
+
+        <h1 id="public-landing-seo-title-v15">
+          {isEnglish
+            ? 'Bet+AI: sports picks, AI match analysis and verified tipster rankings'
+            : 'Bet+AI: typy sportowe, analiza meczów AI i rankingi typerów'}
+        </h1>
+
+        <p className="public-landing-seo-v15__lead">
+          {isEnglish
+            ? 'Bet+AI helps users discover sports picks, compare tipster profiles, read AI-powered match analysis and follow performance with transparent statistics, AI Coach, Tip DNA and Trust Score.'
+            : 'Bet+AI pomaga odkrywać typy sportowe, porównywać profile typerów, analizować mecze z pomocą AI i śledzić wyniki przez przejrzyste statystyki, AI Coach, Tip DNA oraz Trust Score.'}
+        </p>
+
+        <div className="public-landing-seo-v15__stats" aria-label={isEnglish ? 'Platform highlights' : 'Najważniejsze elementy platformy'}>
+          <div>
+            <strong>AI Coach</strong>
+            <span>{isEnglish ? 'profile style analysis' : 'analiza stylu profilu'}</span>
+          </div>
+          <div>
+            <strong>Tip DNA</strong>
+            <span>{isEnglish ? 'market and odds patterns' : 'schematy rynków i kursów'}</span>
+          </div>
+          <div>
+            <strong>Trust Score</strong>
+            <span>{isEnglish ? 'reliability signals' : 'sygnały wiarygodności'}</span>
+          </div>
+          <div>
+            <strong>{isEnglish ? 'Marketplace' : 'Marketplace'}</strong>
+            <span>{isEnglish ? 'free and premium picks' : 'typy free i premium'}</span>
+          </div>
+        </div>
+
+        <div className="public-landing-seo-v15__grid">
+          {highlights.map(([title, text]) => (
+            <article className="public-landing-seo-v15__card" key={title}>
+              <span className="public-landing-seo-v15__dot" aria-hidden="true" />
+              <h2>{title}</h2>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="public-landing-seo-v15__split">
+          <div>
+            <h2>{isEnglish ? 'Built for sports analysis and community trust' : 'Stworzone pod analizę sportu i zaufanie społeczności'}</h2>
+            <p>
+              {isEnglish
+                ? 'The platform combines match insights, tipster statistics, rankings, profile history, live community chat and marketplace picks. New users can follow other tipsters, compare results and use AI features before choosing which profile to trust.'
+                : 'Platforma łączy analizę meczów, statystyki typerów, rankingi, historię profili, czat społeczności i marketplace z typami. Nowi użytkownicy mogą obserwować innych typerów, porównywać wyniki i używać funkcji AI przed wyborem profilu.'}
+            </p>
+          </div>
+          <div>
+            <h2>{isEnglish ? 'Why Google can understand Bet+AI better now' : 'Dlaczego Google lepiej zrozumie Bet+AI'}</h2>
+            <p>
+              {isEnglish
+                ? 'This public landing section describes the core product in normal readable text: sports predictions, AI analysis, rankings, tipster profiles, premium picks, Trust Score and Tip DNA.'
+                : 'Ta publiczna sekcja opisuje produkt normalnym, czytelnym tekstem: typy sportowe, analizę AI, rankingi, profile typerów, premium typy, Trust Score i Tip DNA.'}
+            </p>
+          </div>
+        </div>
+
+        <div className="public-landing-seo-v15__faq" aria-label={isEnglish ? 'Frequently asked questions' : 'Najczęstsze pytania'}>
+          <h2>{isEnglish ? 'Frequently asked questions' : 'Najczęstsze pytania'}</h2>
+          {faq.map(([question, answer]) => (
+            <details key={question}>
+              <summary>{question}</summary>
+              <p>{answer}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 
 function PaymentModal({ tip, user, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false)
