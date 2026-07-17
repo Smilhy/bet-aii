@@ -7714,12 +7714,25 @@ function DashboardTipsterShowcaseV16({ rows = [], tips = [], onOpenTipster = nul
   }
 
   const renderForm = (row) => {
-    const form = Array.isArray(row._showcaseForm) ? row._showcaseForm : []
-    const filled = [...form, ...Array.from({ length: Math.max(0, 5 - form.length) }, () => 'pending')].slice(0, 5)
+    const rawForm = Array.isArray(row._showcaseForm) ? row._showcaseForm : []
+    const filled = [...rawForm, ...Array.from({ length: Math.max(0, 5 - rawForm.length) }, () => 'empty')].slice(0, 5)
+    const normalized = filled.map((status, idx) => {
+      if (status === 'won') return { key: `won-${idx}`, tone: 'won', label: 'W', title: lang === 'en' ? 'Won pick' : 'Wygrany typ' }
+      if (status === 'lost') return { key: `lost-${idx}`, tone: 'lost', label: 'L', title: lang === 'en' ? 'Lost pick' : 'Przegrany typ' }
+      if (status === 'void') return { key: `void-${idx}`, tone: 'void', label: 'V', title: lang === 'en' ? 'Void / refund' : 'Zwrot / void' }
+      return { key: `empty-${idx}`, tone: 'empty', label: '•', title: lang === 'en' ? 'No settled pick yet' : 'Brak rozliczonego typu' }
+    })
     return (
-      <span className="tipster-showcase-form-v16" aria-label={lang === 'en' ? 'Recent form' : 'Ostatnia forma'}>
-        {filled.map((status, idx) => (
-          <i key={`${status}-${idx}`} className={status}>{status === 'won' ? '✓' : status === 'lost' ? '×' : status === 'void' ? '–' : '•'}</i>
+      <span className="tipster-showcase-form-v16 ticket-form-strip-dots-v1811" aria-label={lang === 'en' ? 'Recent form' : 'Ostatnia forma'}>
+        {normalized.map((entry, idx) => (
+          <span
+            key={`${entry.key}-${idx}`}
+            className={`ticket-form-chip-v1811 ${entry.tone}`}
+            title={entry.title}
+            aria-label={entry.title}
+          >
+            {entry.label}
+          </span>
         ))}
       </span>
     )
@@ -23309,6 +23322,41 @@ function getAccountPlanBadgeClass(row = {}) {
   return getAccountPlanBadgeLabel(row) === 'PREMIUM' ? 'pro' : 'free'
 }
 
+function renderRankingOverviewIconV19(kind = 'users') {
+  if (kind === 'coupons') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M7 3.5h8l3 3V20.5H7z" />
+        <path d="M15 3.5v4h4M10 11h5M10 14.5h5M10 18h3.5" />
+      </svg>
+    )
+  }
+  if (kind === 'bets') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="8" />
+        <circle cx="12" cy="12" r="4.2" />
+        <circle cx="12" cy="12" r="1.2" />
+      </svg>
+    )
+  }
+  if (kind === 'yield') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 17 9 12l3.4 3.4L20 7.8" />
+        <path d="M14.5 7.8H20v5.5" />
+      </svg>
+    )
+  }
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="9" cy="8" r="3" />
+      <circle cx="17" cy="9" r="2.2" />
+      <path d="M3.5 19c.4-4.1 2.4-6 5.5-6s5.1 1.9 5.5 6M14.7 14c2.9-.2 4.8 1.4 5.3 4.5" />
+    </svg>
+  )
+}
+
 function LeaderboardView({
   tips = [],
   ranking = [],
@@ -23648,6 +23696,97 @@ function LeaderboardView({
   const heroLeaderProfit = heroLeaderRow ? `${heroLeaderProfitValue >= 0 ? '+' : ''}${formatRankingAmount(heroLeaderProfitValue)}` : '0.00'
   const heroLeaderWinrate = heroLeaderRow ? `${Number(heroLeaderRow?.winrate || 0).toFixed(1)}%` : '0.0%'
 
+  // WERSJA 19 — realny blok statystyk społeczności + podium YIELD pomiędzy hero a tabelą.
+  // Dane pochodzą z tego samego kanonu co główny ranking, dzięki czemu liczby aktualizują się razem z tabelą.
+  const rankingOverviewV19 = useMemo(() => {
+    const rows = Array.isArray(leaderboardRows) ? leaderboardRows : []
+    const totalTipsters = rows.length
+    const totalCoupons = rows.reduce((sum, row) => sum + Math.max(0, Number(row.totalTips ?? row.total_tips ?? 0) || 0), 0)
+
+    const dedupedTipMap = new Map()
+    ;(Array.isArray(tips) ? tips : []).forEach((rawTip, index) => {
+      const tip = normalizeTipRow(rawTip)
+      const tipName = formatRankingName({
+        username: tip.author_name || tip.username,
+        author_name: tip.author_name || tip.username,
+        email: tip.author_email || tip.email || tip.user_email,
+      })
+      if (isBlockedTestProfile(tip) || isHiddenDemoProfileV1712(tip) || isHiddenDemoUserV1712(tipName) || isBetaiMultisportPublicTipHiddenV28(tip)) return
+      const key = String(tip.id || rawTip?.id || `${tip.author_id || tip.user_id || tipName}|${tip.team_home || tip.home_team || ''}|${tip.team_away || tip.away_team || ''}|${tip.created_at || tip.match_time || index}`)
+      if (!dedupedTipMap.has(key)) dedupedTipMap.set(key, tip)
+    })
+
+    const parseLegCount = (tip = {}) => {
+      const sources = [tip.legs_json, tip.legs, tip.ako_legs, tip.coupon_legs]
+      for (const source of sources) {
+        if (Array.isArray(source) && source.length) return source.length
+        if (typeof source === 'string' && source.trim()) {
+          try {
+            const parsed = JSON.parse(source)
+            if (Array.isArray(parsed) && parsed.length) return parsed.length
+          } catch (_) {}
+        }
+      }
+      const stored = Number(tip.legs_count || tip.selections_count || tip.events_count || 0) || 0
+      if (stored > 0) return stored
+      const isAko = Boolean(tip.is_ako || String(tip.coupon_type || '').toLowerCase() === 'ako' || String(tip.market || tip.bet_type || '').toLowerCase() === 'ako')
+      return isAko ? 2 : 1
+    }
+
+    const liveCouponsWithDetails = dedupedTipMap.size
+    const liveSelections = [...dedupedTipMap.values()].reduce((sum, tip) => sum + Math.max(1, parseLegCount(tip)), 0)
+    const knownExtraSelections = Math.max(0, liveSelections - liveCouponsWithDetails)
+    const totalBets = totalCoupons + knownExtraSelections
+
+    let totalProfit = 0
+    let totalStake = 0
+    let weightedYieldSum = 0
+    let weightedYieldWeight = 0
+    rows.forEach(row => {
+      const profit = Number(row.profit ?? row.earnings ?? row.total_earnings ?? 0) || 0
+      const stake = Number(row.total_staked ?? row.totalStaked ?? row.imported_total_staked ?? 0) || 0
+      const rowYield = Number(row.roi ?? row.yield ?? 0) || 0
+      const settled = Math.max(0, Number(row.wins || 0) + Number(row.losses || 0) + Number(row.voids || row.voidTips || 0))
+      totalProfit += profit
+      if (stake > 0) totalStake += stake
+      if (settled > 0) {
+        weightedYieldSum += rowYield * settled
+        weightedYieldWeight += settled
+      }
+    })
+    const communityYield = totalStake > 0
+      ? (totalProfit / totalStake) * 100
+      : weightedYieldWeight > 0
+        ? weightedYieldSum / weightedYieldWeight
+        : 0
+
+    const podiumRows = [...rows]
+      .filter(row => Number(row.totalTips ?? row.total_tips ?? 0) > 0)
+      .sort((a, b) => {
+        const yieldDiff = Number(b.roi ?? b.yield ?? 0) - Number(a.roi ?? a.yield ?? 0)
+        if (yieldDiff !== 0) return yieldDiff
+        const tipsDiff = Number(b.totalTips ?? b.total_tips ?? 0) - Number(a.totalTips ?? a.total_tips ?? 0)
+        if (tipsDiff !== 0) return tipsDiff
+        return Number(b.profit ?? b.earnings ?? 0) - Number(a.profit ?? a.earnings ?? 0)
+      })
+      .slice(0, 3)
+      .map((row, index) => ({ ...row, yieldPlaceV19: index + 1 }))
+
+    return {
+      totalTipsters,
+      totalCoupons,
+      totalBets,
+      communityYield,
+      podiumRows,
+    }
+  }, [leaderboardRows, tips])
+
+  const rankingPodiumDisplayV19 = [
+    rankingOverviewV19.podiumRows[1],
+    rankingOverviewV19.podiumRows[0],
+    rankingOverviewV19.podiumRows[2],
+  ].filter(Boolean)
+
   const mainRows = leaderboardRows.slice(0, rankingVisibleCount)
 
   return (
@@ -23716,6 +23855,80 @@ function LeaderboardView({
               </div>
             </div>
           </div>
+
+          <section className="ranking-live-overview-v19" aria-label={lang === 'en' ? 'Live community ranking statistics' : 'Statystyki rankingu na żywo'}>
+            <div className="ranking-live-kpis-v19">
+              <article className="ranking-live-kpi-v19 is-tipsters">
+                <i>{renderRankingOverviewIconV19('users')}</i>
+                <div>
+                  <strong>{rankingOverviewV19.totalTipsters.toLocaleString(lang === 'en' ? 'en-US' : 'pl-PL')}</strong>
+                  <span>{lang === 'en' ? 'TIPSTERS' : 'TYPERZY'}</span>
+                </div>
+              </article>
+              <article className="ranking-live-kpi-v19 is-coupons">
+                <i>{renderRankingOverviewIconV19('coupons')}</i>
+                <div>
+                  <strong>{rankingOverviewV19.totalCoupons.toLocaleString(lang === 'en' ? 'en-US' : 'pl-PL')}</strong>
+                  <span>{lang === 'en' ? 'COUPONS' : 'KUPONY'}</span>
+                </div>
+              </article>
+              <article className="ranking-live-kpi-v19 is-bets">
+                <i>{renderRankingOverviewIconV19('bets')}</i>
+                <div>
+                  <strong>{rankingOverviewV19.totalBets.toLocaleString(lang === 'en' ? 'en-US' : 'pl-PL')}</strong>
+                  <span>{lang === 'en' ? 'BETS' : 'ZAKŁADY'}</span>
+                </div>
+              </article>
+              <article className={`ranking-live-kpi-v19 is-yield ${rankingOverviewV19.communityYield < 0 ? 'is-negative' : ''}`}>
+                <i>{renderRankingOverviewIconV19('yield')}</i>
+                <div>
+                  <strong>{rankingOverviewV19.communityYield.toFixed(2)}%</strong>
+                  <span>{lang === 'en' ? 'COMMUNITY YIELD' : 'YIELD WSZYSTKICH'}</span>
+                </div>
+              </article>
+            </div>
+
+            <div className="ranking-yield-podium-v19">
+              <div className="ranking-yield-podium-head-v19">
+                <div>
+                  <span>LIVE</span>
+                  <strong>{lang === 'en' ? 'Best yield right now' : 'Najlepszy yield teraz'}</strong>
+                </div>
+                <small>{lang === 'en' ? 'Calculated from the same live ranking data' : 'Liczone z tych samych realnych danych co tabela'}</small>
+              </div>
+              <div className="ranking-yield-podium-stage-v19">
+                {rankingPodiumDisplayV19.map((row) => {
+                  const place = Number(row.yieldPlaceV19 || 0)
+                  const name = row.rowName || formatRankingName(row)
+                  const avatarUrl = row.avatarUrl || getProfileAvatarUrl(row)
+                  const yieldValue = Number(row.roi ?? row.yield ?? 0) || 0
+                  const totalTipsValue = Number(row.totalTips ?? row.total_tips ?? 0) || 0
+                  return (
+                    <button
+                      type="button"
+                      key={`yield-podium-${row.rowRef || row.id || name}-${place}`}
+                      className={`ranking-yield-podium-person-v19 place-${place}`}
+                      onClick={() => openRow(row)}
+                      title={lang === 'en' ? `Open ${name}'s profile` : `Otwórz profil typera ${name}`}
+                    >
+                      <span className="ranking-yield-avatar-shell-v19">
+                        <span className={`ranking-yield-avatar-v19 ${avatarUrl ? 'has-avatar' : ''}`}>
+                          {avatarUrl ? <img src={avatarUrl} alt="" loading="lazy" /> : String(name || '?').slice(0, 2).toUpperCase()}
+                        </span>
+                        <b className="ranking-yield-place-v19">{place}</b>
+                      </span>
+                      <strong className="ranking-yield-name-v19">{name}</strong>
+                      <span className={`ranking-yield-value-v19 ${yieldValue < 0 ? 'negative' : ''}`}>{yieldValue.toFixed(2)}%</span>
+                      <small>{totalTipsValue.toLocaleString(lang === 'en' ? 'en-US' : 'pl-PL')} {lang === 'en' ? 'coupons' : 'kuponów'}</small>
+                    </button>
+                  )
+                })}
+                {!rankingPodiumDisplayV19.length ? (
+                  <div className="ranking-yield-podium-empty-v19">{lang === 'en' ? 'Podium will appear after the first ranked picks.' : 'Podium pojawi się po dodaniu pierwszych typów do rankingu.'}</div>
+                ) : null}
+              </div>
+            </div>
+          </section>
 
           {renderRankingTable(mainRows)}
 
@@ -29666,9 +29879,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       // FIX 1792: karta typu bota nie może brać starego snapshotu 0% / 17 / +0.00
       // zapisanego kiedyś w author_visible_stats. W profilu zawsze podajemy aktualny,
       // wspólny kanon policzony z tips + ai_bets.
-      author_visible_stats: isBetaiMultisportProfileV1766
-        ? canonicalProfileAuthorStatsV1792
-        : (raw.author_visible_stats || canonicalProfileAuthorStatsV1792),
+      // WERSJA 18: w profilu każdy kupon ma pokazywać dokładnie te same statystyki,
+      // co górne kafelki „Twoje statystyki”. Nie używamy starych snapshotów z pojedynczych
+      // rekordów typu, bo to powodowało rozjazd np. profit na kuponie ≠ profit w statystykach.
+      author_visible_stats: canonicalProfileAuthorStatsV1792,
     })
     return merged
   }

@@ -80803,26 +80803,21 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   display:flex!important;
   align-items:center!important;
   justify-content:center!important;
-  gap:3px!important;
-  margin:6px 0 0!important;
+  gap:6px!important;
+  margin:8px 0 0!important;
+  width:100%!important;
 }
-.tipster-showcase-form-v16 i{
-  width:17px!important;
-  height:17px!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  border-radius:3px!important;
-  background:#28404e!important;
-  color:#9eb6c1!important;
+.tipster-showcase-form-v16.ticket-form-strip-dots-v1811{
+  overflow:visible!important;
+}
+.tipster-showcase-form-v16 .ticket-form-chip-v1811{
+  width:20px!important;
+  height:20px!important;
+  min-width:20px!important;
+  border-radius:6px!important;
   font-size:10px!important;
   line-height:1!important;
-  font-style:normal!important;
-  font-weight:1000!important;
 }
-.tipster-showcase-form-v16 i.won{background:#2aa568!important;color:#fff!important;box-shadow:0 0 10px rgba(42,165,104,.13)!important;}
-.tipster-showcase-form-v16 i.lost{background:#c84a57!important;color:#fff!important;}
-.tipster-showcase-form-v16 i.void{background:#758b96!important;color:#fff!important;}
 .tipster-showcase-empty-v16{
   min-height:260px!important;
   display:flex!important;
@@ -81087,4 +81082,341 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   .tipster-showcase-avatar-wrap-v16{width:70px!important;height:70px!important;}
   .tipster-showcase-badge-v16.badge-v17{width:27px!important;height:27px!important;left:-3px!important;bottom:-3px!important;}
   .tipster-showcase-flag-v16{right:-4px!important;width:26px!important;height:18px!important;}
+}
+
+/* ============================================================
+   WERSJA 19 — RANKING: LIVE KPI + REALNE PODIUM YIELD
+   Blok pomiędzy hero a główną tabelą. Wszystkie dane są live.
+   ============================================================ */
+.ranking-live-overview-v19{
+  position:relative!important;
+  overflow:hidden!important;
+  display:grid!important;
+  gap:18px!important;
+  padding:18px!important;
+  border-radius:22px!important;
+  border:1px solid rgba(35,221,221,.14)!important;
+  background:
+    radial-gradient(circle at 50% 115%,rgba(58,92,255,.12),transparent 42%),
+    linear-gradient(180deg,rgba(10,29,43,.94),rgba(5,20,31,.98))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 18px 46px rgba(0,0,0,.16)!important;
+}
+.ranking-live-overview-v19::before{
+  content:"";
+  position:absolute;
+  inset:0!important;
+  pointer-events:none!important;
+  background-image:
+    linear-gradient(rgba(64,182,205,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(64,182,205,.025) 1px,transparent 1px)!important;
+  background-size:56px 56px!important;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.55),transparent 78%)!important;
+}
+.ranking-live-kpis-v19{
+  position:relative!important;
+  z-index:1!important;
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:12px!important;
+}
+.ranking-live-kpi-v19{
+  --kpi-accent:#7b6cff;
+  position:relative!important;
+  min-width:0!important;
+  min-height:84px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:14px!important;
+  padding:14px 16px!important;
+  border-radius:16px!important;
+  overflow:hidden!important;
+  border:1px solid color-mix(in srgb,var(--kpi-accent) 24%,rgba(255,255,255,.04))!important;
+  border-top:2px solid color-mix(in srgb,var(--kpi-accent) 78%,white 4%)!important;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--kpi-accent) 12%,rgba(20,38,54,.96)),rgba(19,34,49,.92))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+.ranking-live-kpi-v19::after{
+  content:"";
+  position:absolute!important;
+  width:92px!important;
+  height:92px!important;
+  right:-34px!important;
+  bottom:-54px!important;
+  border-radius:50%!important;
+  background:var(--kpi-accent)!important;
+  filter:blur(30px)!important;
+  opacity:.11!important;
+}
+.ranking-live-kpi-v19.is-tipsters{--kpi-accent:#7769ff}
+.ranking-live-kpi-v19.is-coupons{--kpi-accent:#04ccec}
+.ranking-live-kpi-v19.is-bets{--kpi-accent:#ff9c3d}
+.ranking-live-kpi-v19.is-yield{--kpi-accent:#29e293}
+.ranking-live-kpi-v19.is-yield.is-negative{--kpi-accent:#ff5d74}
+.ranking-live-kpi-v19 > i{
+  position:relative!important;
+  z-index:1!important;
+  flex:0 0 46px!important;
+  width:46px!important;
+  height:46px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:13px!important;
+  background:color-mix(in srgb,var(--kpi-accent) 18%,rgba(255,255,255,.02))!important;
+  color:var(--kpi-accent)!important;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kpi-accent) 15%,transparent)!important;
+  font-style:normal!important;
+}
+.ranking-live-kpi-v19 > i svg{
+  width:25px!important;
+  height:25px!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:1.8!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+.ranking-live-kpi-v19 > div{
+  position:relative!important;
+  z-index:1!important;
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:2px!important;
+}
+.ranking-live-kpi-v19 strong{
+  color:var(--kpi-accent)!important;
+  font-size:25px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:-.045em!important;
+  text-shadow:0 0 18px color-mix(in srgb,var(--kpi-accent) 24%,transparent)!important;
+}
+.ranking-live-kpi-v19 span{
+  color:#a7baca!important;
+  font-size:9.5px!important;
+  line-height:1.1!important;
+  font-weight:1000!important;
+  letter-spacing:.09em!important;
+  white-space:nowrap!important;
+}
+.ranking-yield-podium-v19{
+  position:relative!important;
+  z-index:1!important;
+  min-height:210px!important;
+  padding:14px 16px 8px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(89,176,208,.09)!important;
+  background:linear-gradient(180deg,rgba(6,22,34,.34),rgba(3,16,25,.56))!important;
+}
+.ranking-yield-podium-head-v19{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  padding:0 2px 8px!important;
+}
+.ranking-yield-podium-head-v19 > div{
+  display:flex!important;
+  align-items:center!important;
+  gap:9px!important;
+}
+.ranking-yield-podium-head-v19 > div > span{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  height:20px!important;
+  padding:0 8px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(31,232,203,.28)!important;
+  background:rgba(31,232,203,.08)!important;
+  color:#35efca!important;
+  font-size:9px!important;
+  font-weight:1000!important;
+  letter-spacing:.12em!important;
+  box-shadow:0 0 14px rgba(31,232,203,.08)!important;
+}
+.ranking-yield-podium-head-v19 strong{
+  color:#eaf8ff!important;
+  font-size:13px!important;
+  font-weight:950!important;
+}
+.ranking-yield-podium-head-v19 small{
+  max-width:360px!important;
+  color:#718c9b!important;
+  font-size:10.5px!important;
+  font-weight:700!important;
+  text-align:right!important;
+}
+.ranking-yield-podium-stage-v19{
+  position:relative!important;
+  min-height:168px!important;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(120px,180px))!important;
+  align-items:end!important;
+  justify-content:center!important;
+  gap:36px!important;
+  padding:18px 0 4px!important;
+}
+.ranking-yield-podium-stage-v19::before{
+  content:"";
+  position:absolute!important;
+  left:50%!important;
+  bottom:4px!important;
+  width:min(620px,82%)!important;
+  height:70px!important;
+  transform:translateX(-50%)!important;
+  border-radius:50%!important;
+  background:radial-gradient(ellipse,rgba(45,222,195,.075),transparent 68%)!important;
+  filter:blur(4px)!important;
+  pointer-events:none!important;
+}
+.ranking-yield-podium-person-v19{
+  position:relative!important;
+  z-index:1!important;
+  min-width:0!important;
+  appearance:none!important;
+  border:0!important;
+  background:none!important;
+  padding:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  color:inherit!important;
+  cursor:pointer!important;
+  transition:transform .22s ease,filter .22s ease!important;
+}
+.ranking-yield-podium-person-v19:hover,
+.ranking-yield-podium-person-v19:focus-visible{
+  transform:translateY(-5px)!important;
+  filter:brightness(1.12)!important;
+  outline:none!important;
+}
+.ranking-yield-podium-person-v19.place-1{
+  transform:translateY(-13px) scale(1.08)!important;
+}
+.ranking-yield-podium-person-v19.place-1:hover,
+.ranking-yield-podium-person-v19.place-1:focus-visible{
+  transform:translateY(-18px) scale(1.08)!important;
+}
+.ranking-yield-avatar-shell-v19{
+  --podium-accent:#d7e2ec;
+  position:relative!important;
+  width:78px!important;
+  height:78px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:50%!important;
+}
+.ranking-yield-podium-person-v19.place-1 .ranking-yield-avatar-shell-v19{--podium-accent:#ffd100;width:88px!important;height:88px!important}
+.ranking-yield-podium-person-v19.place-2 .ranking-yield-avatar-shell-v19{--podium-accent:#dbe7f1}
+.ranking-yield-podium-person-v19.place-3 .ranking-yield-avatar-shell-v19{--podium-accent:#f09a3f}
+.ranking-yield-avatar-shell-v19::before{
+  content:"";
+  position:absolute!important;
+  inset:-4px!important;
+  border-radius:50%!important;
+  border:3px solid var(--podium-accent)!important;
+  box-shadow:0 0 18px color-mix(in srgb,var(--podium-accent) 28%,transparent),inset 0 0 12px rgba(255,255,255,.05)!important;
+}
+.ranking-yield-avatar-v19{
+  width:100%!important;
+  height:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  border-radius:50%!important;
+  background:radial-gradient(circle at 50% 35%,#203345,#07141f 72%)!important;
+  color:#dceaf3!important;
+  font-size:22px!important;
+  font-weight:1000!important;
+  letter-spacing:.03em!important;
+}
+.ranking-yield-avatar-v19 img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important}
+.ranking-yield-place-v19{
+  position:absolute!important;
+  left:50%!important;
+  bottom:-12px!important;
+  transform:translateX(-50%)!important;
+  min-width:25px!important;
+  height:25px!important;
+  padding:0 6px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:999px!important;
+  background:var(--podium-accent)!important;
+  color:#101820!important;
+  font-size:11px!important;
+  font-weight:1000!important;
+  border:2px solid #071722!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.24)!important;
+}
+.ranking-yield-name-v19{
+  max-width:150px!important;
+  margin-top:17px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  color:#dce9f2!important;
+  font-size:13px!important;
+  font-weight:950!important;
+}
+.ranking-yield-value-v19{
+  margin-top:4px!important;
+  color:#28e593!important;
+  font-size:18px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:-.025em!important;
+  text-shadow:0 0 15px rgba(40,229,147,.22)!important;
+}
+.ranking-yield-value-v19.negative{color:#ff667c!important;text-shadow:0 0 15px rgba(255,102,124,.2)!important}
+.ranking-yield-podium-person-v19 small{
+  margin-top:5px!important;
+  color:#6f8898!important;
+  font-size:10px!important;
+  font-weight:800!important;
+}
+.ranking-yield-podium-empty-v19{
+  grid-column:1/-1!important;
+  align-self:center!important;
+  justify-self:center!important;
+  color:#718c9b!important;
+  font-size:12px!important;
+  font-weight:800!important;
+}
+
+@media(max-width:1200px){
+  .ranking-live-kpis-v19{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:760px){
+  .ranking-live-overview-v19{padding:12px!important;border-radius:18px!important;gap:12px!important}
+  .ranking-live-kpis-v19{gap:8px!important}
+  .ranking-live-kpi-v19{min-height:72px!important;padding:10px 11px!important;gap:10px!important;border-radius:13px!important}
+  .ranking-live-kpi-v19 > i{flex-basis:38px!important;width:38px!important;height:38px!important;border-radius:10px!important}
+  .ranking-live-kpi-v19 > i svg{width:21px!important;height:21px!important}
+  .ranking-live-kpi-v19 strong{font-size:20px!important}
+  .ranking-live-kpi-v19 span{font-size:8.2px!important;letter-spacing:.06em!important}
+  .ranking-yield-podium-v19{padding:12px 8px 6px!important}
+  .ranking-yield-podium-head-v19{display:block!important;text-align:center!important}
+  .ranking-yield-podium-head-v19 > div{justify-content:center!important}
+  .ranking-yield-podium-head-v19 small{display:block!important;max-width:none!important;margin-top:6px!important;text-align:center!important}
+  .ranking-yield-podium-stage-v19{grid-template-columns:repeat(3,minmax(78px,1fr))!important;gap:8px!important;min-height:150px!important}
+  .ranking-yield-avatar-shell-v19{width:62px!important;height:62px!important}
+  .ranking-yield-podium-person-v19.place-1 .ranking-yield-avatar-shell-v19{width:72px!important;height:72px!important}
+  .ranking-yield-name-v19{max-width:96px!important;font-size:11px!important}
+  .ranking-yield-value-v19{font-size:15px!important}
+  .ranking-yield-podium-person-v19 small{font-size:9px!important}
+}
+@media(max-width:440px){
+  .ranking-live-kpis-v19{grid-template-columns:1fr 1fr!important}
+  .ranking-live-kpi-v19{padding:9px!important}
+  .ranking-live-kpi-v19 > i{display:none!important}
+  .ranking-yield-podium-stage-v19{gap:3px!important}
+  .ranking-yield-avatar-shell-v19{width:55px!important;height:55px!important}
+  .ranking-yield-podium-person-v19.place-1 .ranking-yield-avatar-shell-v19{width:64px!important;height:64px!important}
+  .ranking-yield-name-v19{max-width:82px!important;font-size:10px!important}
 }
