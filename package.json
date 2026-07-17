@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-15-google-bet-ai-seo",
-  "version": "15.0.0",
+  "name": "betai-wersja-16-dashboard-tipster-slider",
+  "version": "16.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",

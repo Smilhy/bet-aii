@@ -80564,3 +80564,359 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   border-color:rgba(54,240,199,.60)!important;
   box-shadow:0 0 28px rgba(54,240,199,.18)!important;
 }
+
+/* ============================================================
+   WERSJA 16 — DASHBOARD / PRAWA KOLUMNA
+   Automatyczny slider: Najlepsi / Płatni / Seria / Popularni.
+   Umieszczony pomiędzy Live Chat a Top typerzy. Bez zmian SQL.
+   ============================================================ */
+.app-shell:not(.no-rightbar-page) .rightbar .tipster-showcase-v16{
+  position:relative!important;
+  overflow:hidden!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid rgba(42,226,224,.20)!important;
+  border-radius:24px!important;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(28,226,255,.105), transparent 34%),
+    radial-gradient(circle at 96% 8%, rgba(42,255,180,.075), transparent 30%),
+    linear-gradient(180deg, rgba(5,23,36,.99), rgba(3,14,24,.995))!important;
+  box-shadow:
+    0 22px 62px rgba(0,0,0,.31),
+    inset 0 1px 0 rgba(255,255,255,.045),
+    0 0 34px rgba(23,220,214,.045)!important;
+  isolation:isolate!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .tipster-showcase-v16::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0 0 auto 0!important;
+  height:1px!important;
+  background:linear-gradient(90deg,transparent,rgba(57,244,239,.46),transparent)!important;
+  pointer-events:none!important;
+  z-index:3!important;
+}
+.tipster-showcase-tabs-v16{
+  position:relative!important;
+  z-index:2!important;
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  align-items:end!important;
+  min-height:58px!important;
+  padding:0 12px!important;
+  border-bottom:1px solid rgba(83,190,205,.10)!important;
+  background:linear-gradient(180deg,rgba(10,31,46,.72),rgba(5,20,32,.18))!important;
+}
+.tipster-showcase-tabs-v16 button{
+  position:relative!important;
+  appearance:none!important;
+  border:0!important;
+  outline:0!important;
+  min-width:0!important;
+  min-height:58px!important;
+  padding:0 5px 2px!important;
+  background:transparent!important;
+  color:#91aebb!important;
+  font-size:13px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:-.01em!important;
+  cursor:pointer!important;
+  transition:color .22s ease,transform .22s ease!important;
+}
+.tipster-showcase-tabs-v16 button:hover{
+  color:#d9f8ff!important;
+}
+.tipster-showcase-tabs-v16 button.active{
+  color:#ffbd19!important;
+  text-shadow:0 0 18px rgba(255,187,23,.20)!important;
+}
+.tipster-showcase-tabs-v16 button.active::after{
+  content:""!important;
+  position:absolute!important;
+  left:11%!important;
+  right:11%!important;
+  bottom:-1px!important;
+  height:3px!important;
+  border-radius:4px 4px 0 0!important;
+  background:linear-gradient(90deg,#ffbb15,#e7a800)!important;
+  box-shadow:0 0 14px rgba(255,187,21,.28)!important;
+}
+.tipster-showcase-stage-v16{
+  position:relative!important;
+  z-index:1!important;
+  min-height:300px!important;
+  padding:22px 20px 12px!important;
+  animation:betaiShowcaseSlideInV16 .42s cubic-bezier(.2,.8,.2,1) both!important;
+}
+@keyframes betaiShowcaseSlideInV16{
+  from{opacity:.25;transform:translateX(18px) scale(.992)}
+  to{opacity:1;transform:translateX(0) scale(1)}
+}
+.tipster-showcase-grid-v16{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:24px 18px!important;
+  align-items:start!important;
+}
+.tipster-showcase-card-v16{
+  appearance:none!important;
+  border:0!important;
+  outline:0!important;
+  min-width:0!important;
+  padding:2px 6px 5px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  background:transparent!important;
+  color:inherit!important;
+  text-align:center!important;
+  cursor:pointer!important;
+  border-radius:18px!important;
+  transition:transform .22s ease,background .22s ease,box-shadow .22s ease!important;
+}
+.tipster-showcase-card-v16:hover,
+.tipster-showcase-card-v16:focus-visible{
+  transform:translateY(-3px)!important;
+  background:rgba(25,210,212,.045)!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.15)!important;
+}
+.tipster-showcase-avatar-wrap-v16{
+  position:relative!important;
+  display:block!important;
+  width:72px!important;
+  height:72px!important;
+  margin-bottom:9px!important;
+}
+.tipster-showcase-avatar-v16{
+  position:absolute!important;
+  inset:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  border-radius:50%!important;
+  border:2px solid rgba(30,222,239,.62)!important;
+  background:
+    radial-gradient(circle at 38% 30%,rgba(255,255,255,.16),transparent 25%),
+    linear-gradient(145deg,#14273b,#091421)!important;
+  color:#f4fbff!important;
+  font-size:20px!important;
+  font-weight:1000!important;
+  box-shadow:
+    0 0 0 4px rgba(4,16,27,.92),
+    0 0 22px rgba(28,222,239,.17),
+    inset 0 0 15px rgba(255,255,255,.04)!important;
+}
+.tipster-showcase-avatar-v16 img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  display:block!important;
+}
+.tipster-showcase-badge-v16{
+  position:absolute!important;
+  left:-7px!important;
+  bottom:0!important;
+  z-index:3!important;
+  width:27px!important;
+  height:27px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border:3px solid #061522!important;
+  border-radius:50%!important;
+  color:#fff!important;
+  font-size:12px!important;
+  line-height:1!important;
+  font-style:normal!important;
+  font-weight:1000!important;
+  background:linear-gradient(145deg,#10c6ff,#087fd1)!important;
+  box-shadow:0 6px 16px rgba(0,150,235,.28)!important;
+}
+.tipster-showcase-badge-v16.premium{
+  background:linear-gradient(145deg,#ff5f69,#d73749)!important;
+  box-shadow:0 6px 16px rgba(229,55,72,.25)!important;
+}
+.tipster-showcase-badge-v16.streak{
+  background:linear-gradient(145deg,#ffbd20,#ef6b16)!important;
+  box-shadow:0 6px 16px rgba(255,141,24,.25)!important;
+  font-size:13px!important;
+}
+.tipster-showcase-flag-v16{
+  position:absolute!important;
+  right:-7px!important;
+  bottom:3px!important;
+  z-index:3!important;
+  width:24px!important;
+  height:17px!important;
+  overflow:hidden!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border:2px solid #061522!important;
+  border-radius:4px!important;
+  background:#091827!important;
+  box-shadow:0 4px 10px rgba(0,0,0,.28)!important;
+}
+.tipster-showcase-flag-v16 .world-map-flag-img-v35{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  border-radius:1px!important;
+}
+.tipster-showcase-flag-v16 .world-map-flag-fallback-v35{
+  font-size:12px!important;
+  line-height:1!important;
+}
+.tipster-showcase-name-v16{
+  width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  color:#f0f8fb!important;
+  font-size:14px!important;
+  line-height:1.2!important;
+  font-weight:950!important;
+  letter-spacing:-.015em!important;
+}
+.tipster-showcase-meta-v16{
+  display:block!important;
+  margin-top:5px!important;
+  color:#8da9b6!important;
+  font-size:11.5px!important;
+  line-height:1.25!important;
+  font-weight:750!important;
+}
+.tipster-showcase-meta-v16 b{
+  color:#dcecf2!important;
+  font-weight:950!important;
+}
+.tipster-showcase-meta-v16.secondary{
+  margin-top:3px!important;
+  color:#6f929f!important;
+}
+.tipster-showcase-form-v16{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:3px!important;
+  margin:6px 0 0!important;
+}
+.tipster-showcase-form-v16 i{
+  width:17px!important;
+  height:17px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:3px!important;
+  background:#28404e!important;
+  color:#9eb6c1!important;
+  font-size:10px!important;
+  line-height:1!important;
+  font-style:normal!important;
+  font-weight:1000!important;
+}
+.tipster-showcase-form-v16 i.won{background:#2aa568!important;color:#fff!important;box-shadow:0 0 10px rgba(42,165,104,.13)!important;}
+.tipster-showcase-form-v16 i.lost{background:#c84a57!important;color:#fff!important;}
+.tipster-showcase-form-v16 i.void{background:#758b96!important;color:#fff!important;}
+.tipster-showcase-empty-v16{
+  min-height:260px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  padding:20px!important;
+  color:#7795a2!important;
+  text-align:center!important;
+}
+.tipster-showcase-empty-v16 > span{
+  width:48px!important;
+  height:48px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border:1px solid rgba(41,230,224,.20)!important;
+  border-radius:50%!important;
+  background:rgba(24,201,205,.055)!important;
+  color:#38ddd8!important;
+  font-size:22px!important;
+}
+.tipster-showcase-empty-v16 strong{color:#dceaf0!important;font-size:13px!important;}
+.tipster-showcase-empty-v16 small{max-width:280px!important;color:#6f8f9d!important;font-size:11px!important;line-height:1.4!important;}
+.tipster-showcase-dots-v16{
+  position:relative!important;
+  z-index:2!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  min-height:29px!important;
+  padding:0 12px 7px!important;
+}
+.tipster-showcase-dots-v16 button{
+  appearance:none!important;
+  border:0!important;
+  width:7px!important;
+  height:7px!important;
+  min-width:7px!important;
+  padding:0!important;
+  border-radius:50%!important;
+  background:#d6e6eb!important;
+  opacity:.72!important;
+  cursor:pointer!important;
+  transition:width .22s ease,background .22s ease,opacity .22s ease,box-shadow .22s ease!important;
+}
+.tipster-showcase-dots-v16 button.active{
+  width:20px!important;
+  border-radius:999px!important;
+  background:#f5b915!important;
+  opacity:1!important;
+  box-shadow:0 0 12px rgba(245,185,21,.24)!important;
+}
+.tipster-showcase-footer-v16{
+  position:relative!important;
+  z-index:2!important;
+  min-height:58px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  padding:13px 18px!important;
+  border-top:1px solid rgba(74,173,193,.12)!important;
+  background:linear-gradient(180deg,rgba(10,29,43,.50),rgba(7,22,34,.72))!important;
+  color:#7899a7!important;
+  font-size:11.5px!important;
+  line-height:1.35!important;
+  font-weight:750!important;
+}
+.tipster-showcase-footer-v16 span{min-width:0!important;}
+.tipster-showcase-footer-v16 i{font-style:normal!important;color:#8ca8b3!important;font-size:12px!important;}
+
+/* Nowy slider jest bezpośrednio pod czatem i przed rankingiem. */
+.app-shell:not(.no-rightbar-page) .rightbar .live-chat-panel + .tipster-showcase-v16,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-card + .tipster-showcase-v16,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-right-chat-final + .tipster-showcase-v16{
+  margin-top:0!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .tipster-showcase-v16 + .real-ranking-panel.real-ranking-panel-v19{
+  margin-top:0!important;
+}
+
+@media(max-width:520px){
+  .tipster-showcase-tabs-v16{padding:0 7px!important;}
+  .tipster-showcase-tabs-v16 button{font-size:12px!important;padding-left:2px!important;padding-right:2px!important;}
+  .tipster-showcase-stage-v16{padding:20px 12px 10px!important;}
+  .tipster-showcase-grid-v16{gap:22px 10px!important;}
+  .tipster-showcase-avatar-wrap-v16{width:66px!important;height:66px!important;}
+  .tipster-showcase-name-v16{font-size:13px!important;}
+  .tipster-showcase-meta-v16{font-size:10.8px!important;}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .tipster-showcase-stage-v16{animation:none!important;}
+  .tipster-showcase-card-v16,.tipster-showcase-tabs-v16 button,.tipster-showcase-dots-v16 button{transition:none!important;}
+}

@@ -7496,6 +7496,312 @@ function DailyAiPicksRightPanelV1156() {
     </section>
   )
 }
+
+// WERSJA 16 — automatyczny slider typerów w prawej kolumnie Dashboardu.
+// Kategorie: Najlepsi / Płatni / Seria / Popularni. Dane są liczone wyłącznie
+// z już pobranych profili, rankingu i typów — bez nowego SQL i bez dodatkowych requestów.
+function getBetaiRightShowcaseIdentityTokensV16(entity = {}) {
+  const rawValues = [
+    entity.id,
+    entity.tipster_id,
+    entity.user_id,
+    entity.author_id,
+    entity.owner_id,
+    entity.created_by,
+    entity.email,
+    entity.author_email,
+    entity.user_email,
+    entity.username,
+    entity.author_name,
+    entity.user_name,
+    entity.public_slug,
+    entity.author_slug,
+    entity.profile_slug,
+  ]
+  const tokens = new Set()
+  rawValues.forEach(value => {
+    const raw = String(value || '').trim().toLowerCase()
+    if (!raw) return
+    tokens.add(raw)
+    if (raw.includes('@')) tokens.add(raw.split('@')[0])
+    const slug = normalizePublicSlug(raw)
+    if (slug) tokens.add(slug)
+  })
+  return [...tokens]
+}
+
+function getBetaiRightShowcaseTipStatusV16(tip = {}) {
+  const raw = String(tip.result || tip.status || tip.result_status || tip.live_status || tip.outcome || '').trim().toLowerCase()
+  if (!raw) return 'pending'
+  if (['won', 'win', 'w', 'wygrany', 'wygrana', 'green', 'success'].includes(raw) || raw.includes('won') || raw.includes('win')) return 'won'
+  if (['lost', 'loss', 'lose', 'l', 'przegrany', 'przegrana', 'red', 'failed'].includes(raw) || raw.includes('lost') || raw.includes('loss') || raw.includes('lose')) return 'lost'
+  if (['void', 'push', 'return', 'refund', 'zwrot', 'cancelled', 'canceled'].includes(raw)) return 'void'
+  return 'pending'
+}
+
+function getBetaiRightShowcaseTipTimeV16(tip = {}) {
+  const raw = tip.settled_at || tip.result_at || tip.updated_at || tip.event_time || tip.match_time || tip.created_at || ''
+  const value = raw ? new Date(raw).getTime() : 0
+  return Number.isFinite(value) ? value : 0
+}
+
+function buildBetaiRightShowcaseFormV16(row = {}, tips = []) {
+  const rowTokens = new Set(getBetaiRightShowcaseIdentityTokensV16(row))
+  if (!rowTokens.size) return { items: [], streak: 0, recentWins: 0 }
+  const matched = (tips || [])
+    .filter(tip => getBetaiRightShowcaseIdentityTokensV16(tip).some(token => rowTokens.has(token)))
+    .sort((a, b) => getBetaiRightShowcaseTipTimeV16(b) - getBetaiRightShowcaseTipTimeV16(a))
+
+  const settled = matched
+    .map(tip => getBetaiRightShowcaseTipStatusV16(tip))
+    .filter(status => status !== 'pending')
+
+  let streak = 0
+  for (const status of settled) {
+    if (status !== 'won') break
+    streak += 1
+  }
+
+  const items = settled.slice(0, 5)
+  return {
+    items,
+    streak,
+    recentWins: settled.slice(0, 5).filter(status => status === 'won').length,
+  }
+}
+
+function DashboardTipsterShowcaseV16({ rows = [], tips = [], onOpenTipster = null }) {
+  const lang = useBetaiLanguageState()
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
+
+  const categories = useMemo(() => {
+    const premiumTipTokens = new Set()
+    ;(tips || []).forEach(tip => {
+      if (!isTipPremium(tip)) return
+      getBetaiRightShowcaseIdentityTokensV16(tip).forEach(token => premiumTipTokens.add(token))
+    })
+
+    const enriched = (rows || []).map((row, index) => {
+      const totalTips = Number(row.totalTips || row.total_tips || row.tips_count || 0) || 0
+      const yieldValue = Number(row.roi ?? row.yield ?? row.imported_yield ?? 0) || 0
+      const profitValue = Number(row.profit ?? row.earnings ?? row.total_earnings ?? row.imported_profit ?? 0) || 0
+      const followers = Number(row.followers ?? row.followers_count ?? 0) || 0
+      const form = buildBetaiRightShowcaseFormV16(row, tips)
+      const rowTokens = getBetaiRightShowcaseIdentityTokensV16(row)
+      const hasPremiumTip = rowTokens.some(token => premiumTipTokens.has(token))
+      const premium = Boolean(
+        hasPremiumTip ||
+        isPremiumProfile(row) ||
+        isPremiumSellerProfile(row, row.plan || row.subscription_status || row.status || row.account_type || '')
+      )
+      const countryCode = getBetaiWorldCountryCodeV30(row)
+      const name = formatRankingName(row)
+      return {
+        ...row,
+        _showcaseKey: row.tipster_id || row.user_id || row.author_id || row.id || row.email || row.username || `${name}-${index}`,
+        _showcaseName: name,
+        _showcaseTotalTips: totalTips,
+        _showcaseYield: yieldValue,
+        _showcaseProfit: profitValue,
+        _showcaseFollowers: followers,
+        _showcasePremium: premium,
+        _showcaseCountryCode: countryCode,
+        _showcaseForm: form.items,
+        _showcaseStreak: form.streak,
+        _showcaseRecentWins: form.recentWins,
+        _showcaseAvatar: getProfileAvatarUrl(row),
+      }
+    }).filter(row => row._showcaseName && !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(row._showcaseName))
+
+    const uniqueTop = (list = []) => {
+      const seen = new Set()
+      return list.filter(item => {
+        const key = normalizeEmail(item.email || item.author_email || item._showcaseName) || String(item._showcaseKey || '')
+        if (!key || seen.has(key)) return false
+        seen.add(key)
+        return true
+      }).slice(0, 4)
+    }
+
+    const best = uniqueTop([...enriched]
+      .filter(item => item._showcaseTotalTips > 0)
+      .sort((a, b) => (b._showcaseYield - a._showcaseYield) || (b._showcaseProfit - a._showcaseProfit) || (b._showcaseTotalTips - a._showcaseTotalTips)))
+
+    const paid = uniqueTop([...enriched]
+      .filter(item => item._showcasePremium)
+      .sort((a, b) => (b._showcaseYield - a._showcaseYield) || (b._showcaseProfit - a._showcaseProfit) || (b._showcaseTotalTips - a._showcaseTotalTips)))
+
+    const streakPool = [...enriched].sort((a, b) =>
+      (b._showcaseStreak - a._showcaseStreak) ||
+      (b._showcaseRecentWins - a._showcaseRecentWins) ||
+      (b._showcaseYield - a._showcaseYield) ||
+      (b._showcaseTotalTips - a._showcaseTotalTips)
+    )
+    const streak = uniqueTop(streakPool)
+
+    const popular = uniqueTop([...enriched]
+      .sort((a, b) => (b._showcaseFollowers - a._showcaseFollowers) || (b._showcaseYield - a._showcaseYield) || (b._showcaseTotalTips - a._showcaseTotalTips)))
+
+    return [
+      {
+        key: 'best',
+        label: lang === 'en' ? 'Best' : 'Najlepsi',
+        rows: best,
+        description: lang === 'en' ? 'Top tipsters ranked by yield.' : 'Wyświetlani są najlepsi typerzy pod względem yieldu.',
+      },
+      {
+        key: 'paid',
+        label: lang === 'en' ? 'Paid' : 'Płatni',
+        rows: paid,
+        description: lang === 'en' ? 'Tipsters offering premium or paid picks.' : 'Typerzy oferujący płatne lub premium typy.',
+      },
+      {
+        key: 'streak',
+        label: lang === 'en' ? 'Streak' : 'Seria',
+        rows: streak,
+        description: lang === 'en' ? 'Tipsters with the strongest recent winning streak.' : 'Wyświetlani są typerzy z najlepszą aktualną serią zwycięstw.',
+      },
+      {
+        key: 'popular',
+        label: lang === 'en' ? 'Popular' : 'Popularni',
+        rows: popular,
+        description: lang === 'en' ? 'The most followed tipsters in the community.' : 'Wyświetlani są najpopularniejsi typerzy.',
+      },
+    ]
+  }, [rows, tips, lang])
+
+  useEffect(() => {
+    if (paused || categories.length <= 1) return undefined
+    const timer = window.setInterval(() => setActiveIndex(prev => (prev + 1) % categories.length), 5500)
+    return () => window.clearInterval(timer)
+  }, [paused, categories.length])
+
+  useEffect(() => {
+    if (activeIndex >= categories.length) setActiveIndex(0)
+  }, [activeIndex, categories.length])
+
+  const activeCategory = categories[activeIndex] || categories[0]
+  const visibleRows = activeCategory?.rows || []
+
+  const openProfile = (row) => {
+    const rowName = row._showcaseName || formatRankingName(row)
+    const rowRef = row.tipster_id || row.user_id || row.author_id || row.id || row.email || row.username || rowName
+    onOpenTipster?.(rowRef, rowName)
+  }
+
+  const renderForm = (row) => {
+    const form = Array.isArray(row._showcaseForm) ? row._showcaseForm : []
+    const filled = [...form, ...Array.from({ length: Math.max(0, 5 - form.length) }, () => 'pending')].slice(0, 5)
+    return (
+      <span className="tipster-showcase-form-v16" aria-label={lang === 'en' ? 'Recent form' : 'Ostatnia forma'}>
+        {filled.map((status, idx) => (
+          <i key={`${status}-${idx}`} className={status}>{status === 'won' ? '✓' : status === 'lost' ? '×' : status === 'void' ? '–' : '•'}</i>
+        ))}
+      </span>
+    )
+  }
+
+  return (
+    <section
+      className="panel tipster-showcase-v16"
+      aria-label={lang === 'en' ? 'Tipster highlights' : 'Wyróżnieni typerzy'}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false) }}
+    >
+      <div className="tipster-showcase-tabs-v16" role="tablist" aria-label={lang === 'en' ? 'Tipster categories' : 'Kategorie typerów'}>
+        {categories.map((category, index) => (
+          <button
+            key={category.key}
+            type="button"
+            role="tab"
+            aria-selected={activeIndex === index}
+            className={activeIndex === index ? 'active' : ''}
+            onClick={() => setActiveIndex(index)}
+          >
+            {category.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="tipster-showcase-stage-v16" key={activeCategory?.key || activeIndex}>
+        {visibleRows.length ? (
+          <div className="tipster-showcase-grid-v16">
+            {visibleRows.map((row, index) => {
+              const name = row._showcaseName || formatRankingName(row)
+              const avatar = row._showcaseAvatar
+              const countryCode = row._showcaseCountryCode || 'ZZ'
+              const isPaidView = activeCategory?.key === 'paid'
+              const isStreakView = activeCategory?.key === 'streak'
+              const isPopularView = activeCategory?.key === 'popular'
+              return (
+                <button
+                  type="button"
+                  className="tipster-showcase-card-v16"
+                  key={row._showcaseKey || `${name}-${index}`}
+                  onClick={() => openProfile(row)}
+                  title={lang === 'en' ? `Open ${name}'s profile` : `Otwórz profil typera ${name}`}
+                >
+                  <span className="tipster-showcase-avatar-wrap-v16">
+                    <span className={`tipster-showcase-avatar-v16 ${avatar ? 'has-avatar' : ''}`}>
+                      {avatar ? <img src={avatar} alt="" loading="lazy" /> : <span>{String(name || '?').slice(0, 2).toUpperCase()}</span>}
+                    </span>
+                    <em className={`tipster-showcase-badge-v16 ${isPaidView || row._showcasePremium ? 'premium' : isStreakView ? 'streak' : 'verified'}`} aria-hidden="true">
+                      {isPaidView || row._showcasePremium ? '◆' : isStreakView ? '🔥' : '✓'}
+                    </em>
+                    <span className="tipster-showcase-flag-v16">{renderBetaiWorldFlagV35(countryCode, getBetaiWorldCountryNameV30(countryCode))}</span>
+                  </span>
+                  <strong className="tipster-showcase-name-v16" data-no-translate="true">{name}</strong>
+
+                  {isStreakView ? renderForm(row) : null}
+
+                  <span className="tipster-showcase-meta-v16">
+                    {isPopularView ? (
+                      <><b>{Number(row._showcaseFollowers || 0).toLocaleString(lang === 'en' ? 'en-US' : 'pl-PL')}</b> {lang === 'en' ? 'followers' : 'obserwujących'}</>
+                    ) : isStreakView ? (
+                      <><b>{Math.max(0, Number(row._showcaseStreak || 0))}</b> {lang === 'en' ? 'wins in a row' : 'wygranych z rzędu'}</>
+                    ) : (
+                      <><b>{Number(row._showcaseYield || 0).toFixed(2)}%</b> yield</>
+                    )}
+                  </span>
+                  <span className="tipster-showcase-meta-v16 secondary">
+                    {Number(row._showcaseTotalTips || 0).toLocaleString(lang === 'en' ? 'en-US' : 'pl-PL')} {lang === 'en' ? 'picks' : 'kuponach'}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="tipster-showcase-empty-v16">
+            <span>◈</span>
+            <strong>{lang === 'en' ? 'No data yet' : 'Brak danych w tej kategorii'}</strong>
+            <small>{lang === 'en' ? 'The list will fill automatically as tipsters become active.' : 'Lista uzupełni się automatycznie wraz z aktywnością typerów.'}</small>
+          </div>
+        )}
+      </div>
+
+      <div className="tipster-showcase-dots-v16" aria-label={lang === 'en' ? 'Slider navigation' : 'Nawigacja slidera'}>
+        {categories.map((category, index) => (
+          <button
+            key={category.key}
+            type="button"
+            className={activeIndex === index ? 'active' : ''}
+            aria-label={category.label}
+            onClick={() => setActiveIndex(index)}
+          />
+        ))}
+      </div>
+
+      <div className="tipster-showcase-footer-v16">
+        <span>{activeCategory?.description}</span>
+        <i aria-hidden="true">ⓘ</i>
+      </div>
+    </section>
+  )
+}
+
 function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }) {
   const lang = useBetaiLanguageState()
   const t = (value) => translateBetaiTextValue(value, lang)
@@ -7600,6 +7906,7 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
   return (
     <aside className="rightbar">
       <LiveChatPanel user={user} />
+      <DashboardTipsterShowcaseV16 rows={realRanking} tips={tips} onOpenTipster={onOpenTipster} />
       <section className="panel real-ranking-panel real-ranking-panel-v19">
         <div className="panel-head"><h2>🏆 {t('Top typerzy')}</h2><a>{t('Ranking real')}</a></div>
         {rightRankingRows.length ? rightRankingRows.slice(0, 4).map((row, index) => {
