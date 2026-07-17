@@ -25102,7 +25102,7 @@ function AuthView({ onAuth }) {
             </div>
           </section>
 
-          <PublicSeoPanelV18 authLang={authLang} />
+          <PublicSeoPanelV19 authLang={authLang} />
 
           <div className="auth617-feature-strip" aria-label={t.benefitsLabel}>
             <div className="auth617-feature-card">
@@ -25190,76 +25190,58 @@ function AuthView({ onAuth }) {
 }
 
 
-function PublicSeoPanelV18({ authLang = 'pl' }) {
+
+function PublicSeoPanelV19({ authLang = 'pl' }) {
   const isEnglish = authLang === 'en'
 
-  const cards = isEnglish
+  const primary = isEnglish
     ? [
-        ['Buy premium picks', 'Unlock single picks and premium marketplace offers before the match starts.'],
-        ['Sell your own picks', 'Tipsters can build a profile, publish picks, grow trust and monetize their analysis.'],
-        ['Marketplace', 'A central place for free picks, premium singles, profiles, stats and transparent history.'],
-        ['AI match analysis', 'Pre-match context, market signals, prediction summaries and AI-supported insights.'],
-        ['News & live scores', 'Follow sports news, live scores, match context and key information before games.'],
-        ['Rewards & rankings', 'Compete in rankings, build reputation, earn visibility and track profile progress.'],
-        ['AI Coach', 'Understand tipster style, strengths, weak points, favourite markets and consistency.'],
-        ['Tip DNA & Trust Score', 'Check markets, odds ranges, singles, accumulators, activity and reliability signals.'],
-        ['Community live', 'Join active users, follow tipsters, discuss picks and watch the platform grow.']
+        ['Marketplace', 'buy and sell picks'],
+        ['AI Coach', 'profile style analysis'],
+        ['Tip DNA', 'markets and odds patterns'],
+        ['Trust Score', 'reliability signals']
       ]
     : [
-        ['Kup typy premium', 'Odblokuj single premium i oferty marketplace przed rozpoczęciem meczu.'],
-        ['Sprzedawaj własne typy', 'Typer może budować profil, publikować typy, zwiększać zaufanie i monetyzować analizę.'],
-        ['Marketplace', 'Jedno miejsce na typy free, single premium, profile, statystyki i przejrzystą historię.'],
-        ['Analizy meczów AI', 'Kontekst przedmeczowy, sygnały rynku, przewidywania i podsumowania wspierane przez AI.'],
-        ['Newsy i wyniki live', 'Śledź newsy sportowe, wyniki live, kontekst meczu i kluczowe informacje przed grą.'],
-        ['Nagrody i rankingi', 'Rywalizuj w rankingach, buduj reputację, zdobywaj widoczność i rozwijaj profil.'],
-        ['AI Coach', 'Poznaj styl typera, mocne strony, słabsze punkty, ulubione rynki i stabilność.'],
-        ['Tip DNA i Trust Score', 'Sprawdź rynki, kursy, single, AKO, aktywność i sygnały wiarygodności profilu.'],
-        ['Społeczność live', 'Dołącz do aktywnych użytkowników, obserwuj typerów, dyskutuj i rozwijaj platformę.']
+        ['Marketplace', 'kupno i sprzedaż typów'],
+        ['AI Coach', 'analiza stylu profilu'],
+        ['Tip DNA', 'rynki i schematy kursów'],
+        ['Trust Score', 'sygnały wiarygodności']
       ]
 
-  const badges = isEnglish
+  const flow = isEnglish
     ? [
-        ['Free picks', 'daily value'],
-        ['Premium singles', 'paid access'],
-        ['Profile stats', 'transparent history'],
-        ['Live community', 'chat & activity']
+        ['01', 'Find picks', 'Free picks, premium singles, news and live match context.'],
+        ['02', 'Compare tipsters', 'Rankings, balance, activity, win rate and profile history.'],
+        ['03', 'Use AI insight', 'AI analysis, Coach, Tip DNA and Trust Score before you trust a profile.']
       ]
     : [
-        ['Typy free', 'codzienna wartość'],
-        ['Single premium', 'płatny dostęp'],
-        ['Statystyki profilu', 'przejrzysta historia'],
-        ['Społeczność live', 'czat i aktywność']
+        ['01', 'Znajdź typy', 'Typy free, single premium, newsy i kontekst meczów live.'],
+        ['02', 'Porównaj typerów', 'Rankingi, balans, aktywność, skuteczność i historia profilu.'],
+        ['03', 'Użyj AI', 'Analiza AI, Coach, Tip DNA i Trust Score przed wyborem profilu.']
       ]
 
   return (
-    <section className="auth1801-premium-seo-panel-v18" aria-labelledby="auth1801-seo-title-v18">
-      <div className="auth1801-premium-orb-v18 auth1801-premium-orb-a-v18" aria-hidden="true" />
-      <div className="auth1801-premium-orb-v18 auth1801-premium-orb-b-v18" aria-hidden="true" />
-
-      <div className="auth1801-premium-head-v18">
-        <div className="auth1801-premium-kicker-v18">
-          {isEnglish ? 'AI SPORTS PICKS MARKETPLACE' : 'MARKETPLACE TYPÓW SPORTOWYCH AI'}
-        </div>
-        <div className="auth1801-premium-status-v18">
-          <span />
-          {isEnglish ? 'Live platform' : 'Platforma live'}
-        </div>
+    <section className="auth1901-integrated-seo-v19" aria-labelledby="auth1901-title-v19">
+      <div className="auth1901-orb-v19" aria-hidden="true" />
+      <div className="auth1901-topline-v19">
+        <span>{isEnglish ? 'PUBLIC PREVIEW' : 'PODGLĄD PLATFORMY'}</span>
+        <b>{isEnglish ? 'Bet+AI live' : 'Bet+AI live'}</b>
       </div>
 
-      <h1 id="auth1801-seo-title-v18">
+      <h1 id="auth1901-title-v19">
         {isEnglish
-          ? 'Bet+AI: buy, sell and analyse sports picks with AI'
-          : 'Bet+AI: kupuj, sprzedawaj i analizuj typy sportowe z AI'}
+          ? 'Sports picks marketplace powered by AI'
+          : 'Marketplace typów sportowych wspierany przez AI'}
       </h1>
 
-      <p className="auth1801-premium-lead-v18">
+      <p className="auth1901-lead-v19">
         {isEnglish
-          ? 'A premium sports prediction platform for users and tipsters: marketplace, AI analysis, rankings, rewards, news, live scores, community, AI Coach, Tip DNA and Trust Score in one place.'
-          : 'Premium platforma dla graczy i typerów: marketplace, analizy AI, rankingi, nagrody, newsy, wyniki live, społeczność, AI Coach, Tip DNA oraz Trust Score w jednym miejscu.'}
+          ? 'Buy premium picks, sell your own analysis, compare tipsters and use AI tools before choosing who to trust.'
+          : 'Kupuj typy premium, sprzedawaj własne analizy, porównuj typerów i korzystaj z narzędzi AI przed wyborem zaufanego profilu.'}
       </p>
 
-      <div className="auth1801-premium-badges-v18" aria-label={isEnglish ? 'Platform features' : 'Funkcje platformy'}>
-        {badges.map(([title, text]) => (
+      <div className="auth1901-primary-v19">
+        {primary.map(([title, text]) => (
           <div key={title}>
             <strong>{title}</strong>
             <small>{text}</small>
@@ -25267,29 +25249,24 @@ function PublicSeoPanelV18({ authLang = 'pl' }) {
         ))}
       </div>
 
-      <div className="auth1801-premium-cards-v18">
-        {cards.map(([title, text]) => (
-          <article className="auth1801-premium-card-v18" key={title}>
-            <span aria-hidden="true" />
-            <strong>{title}</strong>
-            <p>{text}</p>
+      <div className="auth1901-flow-v19">
+        {flow.map(([number, title, text]) => (
+          <article key={number}>
+            <span>{number}</span>
+            <div>
+              <strong>{title}</strong>
+              <p>{text}</p>
+            </div>
           </article>
         ))}
       </div>
 
-      <div className="auth1801-premium-bottom-v18">
-        <div>
-          <b>{isEnglish ? 'For users' : 'Dla użytkowników'}</b>
-          <small>{isEnglish ? 'Find picks, compare tipsters and follow AI insights.' : 'Znajduj typy, porównuj typerów i korzystaj z analiz AI.'}</small>
-        </div>
-        <div>
-          <b>{isEnglish ? 'For tipsters' : 'Dla typerów'}</b>
-          <small>{isEnglish ? 'Publish picks, build reputation and sell premium value.' : 'Publikuj typy, buduj reputację i sprzedawaj premium wartość.'}</small>
-        </div>
-        <div>
-          <b>{isEnglish ? 'For community' : 'Dla społeczności'}</b>
-          <small>{isEnglish ? 'Chat, rankings, rewards and transparent profile history.' : 'Czat, rankingi, nagrody i przejrzysta historia profilu.'}</small>
-        </div>
+      <div className="auth1901-tags-v19" aria-label={isEnglish ? 'More features' : 'Więcej funkcji'}>
+        <span>{isEnglish ? 'Rewards' : 'Nagrody'}</span>
+        <span>{isEnglish ? 'Rankings' : 'Rankingi'}</span>
+        <span>{isEnglish ? 'News' : 'Newsy'}</span>
+        <span>{isEnglish ? 'Live scores' : 'Wyniki live'}</span>
+        <span>{isEnglish ? 'Community' : 'Społeczność'}</span>
       </div>
     </section>
   )
