@@ -80566,1452 +80566,406 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
 }
 
 
-/* =========================================================
-   WERSJA 17 — Public SEO panel w prawym obszarze auth
-   Tylko warstwa wizualna. Nie rusza logiki, statystyk ani danych.
-   ========================================================= */
-html body #root .auth609-screen .auth1701-seo-panel-v17{
+/* WERSJA 23 — AUTH OD ZERA Z MOCKUPU: usunięty stary dashboard/reference, realny HTML/CSS */
+html body #root .auth609-screen{
+  min-height:100vh!important;
+  height:100vh!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 74% 8%, rgba(0,224,255,.18), transparent 28%),
+    radial-gradient(circle at 11% 19%, rgba(0,255,196,.12), transparent 24%),
+    linear-gradient(135deg, #030b15 0%, #010711 58%, #020b13 100%)!important;
+}
+
+html body #root .auth609-screen .auth620-language-corner{
+  right:18px!important;
+  top:16px!important;
+  z-index:90!important;
+}
+
+html body #root .auth609-screen .auth627-social-dock,
+html body #root .auth609-screen .auth623-side-live,
+html body #root .auth609-screen .auth1179-left-stats-outside,
+html body #root .auth609-screen .auth609-reference,
+html body #root .auth609-screen .auth617-feature-strip{
+  display:none!important;
+}
+
+html body #root .auth609-screen .auth609-artboard{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100vh!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  border-radius:0!important;
+  transform:none!important;
+  background:transparent!important;
+  overflow:hidden!important;
+}
+
+html body #root .auth609-screen .auth609-overlay{
   position:absolute!important;
-  left:674px!important;
-  top:58px!important;
-  width:1068px!important;
-  height:760px!important;
-  z-index:8!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  transform:none!important;
   pointer-events:auto!important;
-  box-sizing:border-box!important;
+}
+
+html body #root .auth609-screen .auth609-left-panel{
+  position:absolute!important;
+  left:0!important;
+  top:0!important;
+  bottom:0!important;
+  width:340px!important;
+  height:100vh!important;
+  z-index:80!important;
+  padding:0!important;
+  transform:none!important;
+  background:
+    radial-gradient(circle at 50% 9%, rgba(0,239,255,.14), transparent 28%),
+    linear-gradient(180deg, rgba(4,19,33,.96), rgba(2,10,18,.98))!important;
+  border-right:1px solid rgba(58,231,255,.34)!important;
+  box-shadow:16px 0 70px rgba(0,0,0,.42), inset -1px 0 0 rgba(255,255,255,.05)!important;
+}
+
+html body #root .auth609-screen .auth609-panel-shell,
+html body #root .auth609-screen .auth609-panel-shell-fixed{
+  position:relative!important;
+  inset:auto!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:28px 28px 20px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
   overflow:hidden!important;
-  padding:48px 52px 36px!important;
-  border-radius:28px!important;
-  color:#f3fbff!important;
-  border:1px solid rgba(60,225,255,.34)!important;
-  background:
-    radial-gradient(circle at 76% 16%, rgba(39,235,255,.20), transparent 34%),
-    radial-gradient(circle at 20% 78%, rgba(18,255,173,.13), transparent 42%),
-    linear-gradient(135deg, rgba(3,18,33,.965), rgba(2,10,21,.975) 52%, rgba(4,19,30,.95))!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.09),
-    inset 0 0 0 1px rgba(2,255,255,.045),
-    0 0 55px rgba(0,221,255,.12),
-    0 28px 70px rgba(0,0,0,.44)!important;
-  backdrop-filter:blur(8px)!important;
 }
 
-html body #root .auth609-screen .auth1701-seo-panel-v17::before{
-  content:""!important;
-  position:absolute!important;
-  inset:0!important;
-  pointer-events:none!important;
-  background:
-    linear-gradient(90deg, rgba(67,226,255,.055) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(67,226,255,.045) 1px, transparent 1px)!important;
-  background-size:54px 54px!important;
-  mask-image:linear-gradient(90deg, rgba(0,0,0,.88), rgba(0,0,0,.46), transparent 96%)!important;
-  opacity:.62!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-panel-v17::after{
-  content:""!important;
-  position:absolute!important;
-  right:-170px!important;
-  bottom:-175px!important;
-  width:460px!important;
-  height:460px!important;
-  border-radius:999px!important;
-  pointer-events:none!important;
-  background:radial-gradient(circle, rgba(35,236,255,.24), rgba(35,236,255,.07) 42%, transparent 72%)!important;
-  filter:blur(2px)!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-gridglow-v17{
-  position:absolute!important;
-  inset:auto 28px 28px auto!important;
-  width:260px!important;
-  height:260px!important;
-  border-radius:42px!important;
-  border:1px solid rgba(58,225,255,.10)!important;
-  transform:rotate(10deg)!important;
-  opacity:.48!important;
-  background:linear-gradient(135deg, rgba(0,240,255,.12), rgba(19,255,172,.035))!important;
-  box-shadow:0 0 50px rgba(0,210,255,.08)!important;
-  pointer-events:none!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-kicker-v17{
-  position:relative!important;
-  z-index:2!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  gap:10px!important;
-  max-width:100%!important;
-  padding:10px 14px!important;
-  border-radius:999px!important;
-  color:#69f7ff!important;
-  background:rgba(11,37,55,.70)!important;
-  border:1px solid rgba(78,233,255,.22)!important;
-  box-shadow:0 0 22px rgba(42,225,255,.08)!important;
-  font-size:14px!important;
-  line-height:1!important;
-  font-weight:950!important;
-  letter-spacing:.13em!important;
-  text-transform:uppercase!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-kicker-v17::before{
-  content:""!important;
-  width:9px!important;
-  height:9px!important;
-  flex:0 0 9px!important;
-  border-radius:999px!important;
-  background:#32f6ff!important;
-  box-shadow:0 0 18px rgba(50,246,255,.86)!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-panel-v17 h1{
-  position:relative!important;
-  z-index:2!important;
-  max-width:860px!important;
-  margin:24px 0 18px!important;
-  color:#f7fdff!important;
-  font-size:62px!important;
-  line-height:.98!important;
-  letter-spacing:-.062em!important;
-  font-weight:1000!important;
-  text-shadow:0 0 28px rgba(34,229,255,.22)!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-lead-v17{
-  position:relative!important;
-  z-index:2!important;
-  max-width:830px!important;
-  margin:0!important;
-  color:rgba(211,235,242,.84)!important;
-  font-size:21px!important;
-  line-height:1.55!important;
-  font-weight:650!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-cards-v17{
-  position:relative!important;
-  z-index:2!important;
-  display:grid!important;
-  grid-template-columns:repeat(2, minmax(0, 1fr))!important;
-  gap:16px!important;
-  margin-top:30px!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-card-v17{
-  position:relative!important;
-  min-height:124px!important;
-  padding:20px 20px 18px!important;
-  border-radius:22px!important;
-  box-sizing:border-box!important;
-  border:1px solid rgba(76,225,255,.16)!important;
-  background:
-    radial-gradient(circle at 10% 8%, rgba(42,235,255,.11), transparent 38%),
-    rgba(5,24,42,.66)!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.07),
-    0 16px 32px rgba(0,0,0,.22)!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-card-v17 > span{
-  display:block!important;
-  width:10px!important;
-  height:10px!important;
-  margin-bottom:12px!important;
-  border-radius:999px!important;
-  background:#26f4ff!important;
-  box-shadow:0 0 18px rgba(38,244,255,.80)!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-card-v17 strong{
-  display:block!important;
-  margin:0 0 8px!important;
-  color:#f4fcff!important;
-  font-size:20px!important;
-  line-height:1.08!important;
-  font-weight:950!important;
-  letter-spacing:-.025em!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-card-v17 p{
-  margin:0!important;
-  color:rgba(204,226,235,.74)!important;
-  font-size:15px!important;
-  line-height:1.45!important;
-  font-weight:650!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-footer-v17{
-  position:relative!important;
-  z-index:2!important;
-  display:grid!important;
-  grid-template-columns:repeat(3, minmax(0, 1fr))!important;
-  gap:12px!important;
-  margin-top:20px!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-footer-v17 > div{
-  padding:15px 16px!important;
-  border-radius:18px!important;
-  border:1px solid rgba(19,255,173,.15)!important;
-  background:linear-gradient(135deg, rgba(17,255,174,.08), rgba(42,225,255,.045))!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-footer-v17 b{
-  display:block!important;
-  color:#ffffff!important;
-  font-size:17px!important;
-  line-height:1.15!important;
-  font-weight:950!important;
-}
-
-html body #root .auth609-screen .auth1701-seo-footer-v17 small{
-  display:block!important;
-  margin-top:4px!important;
-  color:rgba(200,224,233,.72)!important;
-  font-size:13px!important;
-  line-height:1.25!important;
-  font-weight:700!important;
-}
-
-@media (max-width:1700px){
-  html body #root .auth609-screen .auth1701-seo-panel-v17{
-    left:674px!important;
-    top:58px!important;
-    width:1020px!important;
-    height:738px!important;
-    padding:42px 44px 32px!important;
-  }
-  html body #root .auth609-screen .auth1701-seo-panel-v17 h1{
-    font-size:55px!important;
-  }
-  html body #root .auth609-screen .auth1701-seo-lead-v17{
-    font-size:19px!important;
-  }
-  html body #root .auth609-screen .auth1701-seo-card-v17{
-    min-height:118px!important;
-  }
-}
-
-@media (max-width:1100px){
-  html body #root .auth609-screen .auth1701-seo-panel-v17{
-    display:none!important;
-  }
-}
-
-
-/* WERSJA 18 — Premium Public SEO Panel AUTH, bez ruszania logiki */
-html body #root .auth609-screen .auth1801-premium-seo-panel-v18{
-  position:absolute!important;
-  left:638px!important;
-  right:34px!important;
-  top:28px!important;
-  min-height:835px!important;
-  z-index:8!important;
-  box-sizing:border-box!important;
-  overflow:hidden!important;
-  padding:40px 44px 34px!important;
-  border-radius:34px!important;
-  color:#f3fbff!important;
-  border:1px solid rgba(55,225,255,.34)!important;
-  background:
-    radial-gradient(circle at 78% 10%, rgba(40,235,255,.22), transparent 32%),
-    radial-gradient(circle at 18% 86%, rgba(18,255,176,.16), transparent 44%),
-    linear-gradient(135deg, rgba(3,18,33,.965), rgba(2,11,21,.982) 56%, rgba(4,23,32,.965))!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.09),
-    inset 0 0 0 1px rgba(2,255,255,.045),
-    0 0 60px rgba(0,221,255,.16),
-    0 30px 82px rgba(0,0,0,.50)!important;
-  backdrop-filter:blur(10px)!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-seo-panel-v18::before{
-  content:""!important;
-  position:absolute!important;
-  inset:0!important;
-  pointer-events:none!important;
-  background:
-    linear-gradient(90deg, rgba(67,226,255,.055) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(67,226,255,.045) 1px, transparent 1px),
-    linear-gradient(135deg, rgba(255,255,255,.035), transparent 42%, rgba(0,255,214,.035))!important;
-  background-size:56px 56px, 56px 56px, auto!important;
-  mask-image:linear-gradient(90deg, rgba(0,0,0,.90), rgba(0,0,0,.70), transparent 98%)!important;
-  opacity:.72!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-seo-panel-v18::after{
-  content:""!important;
-  position:absolute!important;
-  right:-180px!important;
-  bottom:-210px!important;
-  width:560px!important;
-  height:560px!important;
-  border-radius:999px!important;
-  pointer-events:none!important;
-  background:
-    radial-gradient(circle, rgba(35,236,255,.25), rgba(35,236,255,.08) 42%, transparent 72%)!important;
-  filter:blur(2px)!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-orb-v18{
-  position:absolute!important;
-  pointer-events:none!important;
-  border-radius:999px!important;
-  filter:blur(3px)!important;
-  opacity:.75!important;
-  z-index:0!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-orb-a-v18{
-  width:320px!important;
-  height:320px!important;
-  right:22px!important;
-  top:18px!important;
-  background:radial-gradient(circle, rgba(0,214,255,.18), rgba(0,214,255,.045) 48%, transparent 72%)!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-orb-b-v18{
-  width:360px!important;
-  height:360px!important;
-  left:-130px!important;
-  bottom:40px!important;
-  background:radial-gradient(circle, rgba(16,255,178,.14), rgba(16,255,178,.04) 46%, transparent 74%)!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-head-v18{
-  position:relative!important;
-  z-index:2!important;
+html body #root .auth609-screen .auth609-center-wrap{
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
   display:flex!important;
-  align-items:center!important;
-  justify-content:space-between!important;
-  gap:18px!important;
-  margin-bottom:20px!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  gap:0!important;
 }
 
-html body #root .auth609-screen .auth1801-premium-kicker-v18{
-  display:inline-flex!important;
-  align-items:center!important;
-  gap:10px!important;
-  max-width:100%!important;
-  padding:10px 15px!important;
-  border-radius:999px!important;
-  color:#69f7ff!important;
-  background:rgba(11,37,55,.72)!important;
-  border:1px solid rgba(78,233,255,.25)!important;
-  box-shadow:0 0 22px rgba(42,225,255,.10)!important;
-  font-size:13px!important;
-  line-height:1!important;
-  font-weight:1000!important;
-  letter-spacing:.14em!important;
-  text-transform:uppercase!important;
+html body #root .auth609-screen .auth609-top-spacer,
+html body #root .auth609-screen .auth609-beta-banner,
+html body #root .auth609-screen .auth609-status-line,
+html body #root .auth609-screen .auth609-secure-note{
+  display:none!important;
 }
 
-html body #root .auth609-screen .auth1801-premium-kicker-v18::before{
-  content:""!important;
-  width:9px!important;
-  height:9px!important;
-  flex:0 0 9px!important;
-  border-radius:999px!important;
-  background:#32f6ff!important;
-  box-shadow:0 0 18px rgba(50,246,255,.88)!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-status-v18{
-  display:inline-flex!important;
-  align-items:center!important;
-  gap:8px!important;
-  padding:9px 12px!important;
-  border-radius:999px!important;
-  border:1px solid rgba(18,255,173,.18)!important;
-  background:rgba(18,255,173,.07)!important;
-  color:rgba(209,255,242,.86)!important;
-  font-size:12px!important;
-  font-weight:900!important;
-  letter-spacing:.04em!important;
-  text-transform:uppercase!important;
-  white-space:nowrap!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-status-v18 span{
-  width:8px!important;
-  height:8px!important;
-  border-radius:999px!important;
-  background:#18ffb5!important;
-  box-shadow:0 0 18px rgba(24,255,181,.72)!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-seo-panel-v18 h1{
-  position:relative!important;
-  z-index:2!important;
-  max-width:1000px!important;
-  margin:0 0 18px!important;
-  color:#f7fdff!important;
-  font-size:58px!important;
-  line-height:.98!important;
-  letter-spacing:-.06em!important;
-  font-weight:1000!important;
-  text-shadow:0 0 30px rgba(34,229,255,.20)!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-lead-v18{
-  position:relative!important;
-  z-index:2!important;
-  max-width:1060px!important;
-  margin:0!important;
-  color:rgba(213,235,243,.84)!important;
-  font-size:19px!important;
-  line-height:1.52!important;
-  font-weight:700!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-badges-v18{
-  position:relative!important;
-  z-index:2!important;
-  display:grid!important;
-  grid-template-columns:repeat(4, minmax(0, 1fr))!important;
-  gap:12px!important;
-  margin:24px 0 18px!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-badges-v18 > div{
-  padding:14px 15px!important;
-  border-radius:18px!important;
-  border:1px solid rgba(42,225,255,.14)!important;
-  background:
-    radial-gradient(circle at 8% 0%, rgba(42,235,255,.12), transparent 44%),
-    rgba(3,24,42,.62)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-badges-v18 strong{
-  display:block!important;
-  color:#ffffff!important;
-  font-size:16px!important;
-  line-height:1.12!important;
-  font-weight:1000!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-badges-v18 small{
-  display:block!important;
-  margin-top:4px!important;
-  color:rgba(200,224,233,.74)!important;
-  font-size:12px!important;
-  line-height:1.25!important;
-  font-weight:750!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-cards-v18{
-  position:relative!important;
-  z-index:2!important;
-  display:grid!important;
-  grid-template-columns:repeat(3, minmax(0, 1fr))!important;
-  gap:13px!important;
-  margin-top:0!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-card-v18{
-  position:relative!important;
-  min-height:128px!important;
-  padding:18px 18px 16px!important;
-  border-radius:22px!important;
-  box-sizing:border-box!important;
-  border:1px solid rgba(76,225,255,.15)!important;
-  background:
-    radial-gradient(circle at 10% 8%, rgba(42,235,255,.13), transparent 38%),
-    linear-gradient(135deg, rgba(5,29,47,.72), rgba(2,15,29,.68))!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.07),
-    0 14px 32px rgba(0,0,0,.24)!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-card-v18:nth-child(2),
-html body #root .auth609-screen .auth1801-premium-card-v18:nth-child(3),
-html body #root .auth609-screen .auth1801-premium-card-v18:nth-child(6){
-  border-color:rgba(18,255,173,.18)!important;
-  background:
-    radial-gradient(circle at 10% 8%, rgba(18,255,173,.13), transparent 38%),
-    linear-gradient(135deg, rgba(4,35,41,.72), rgba(2,15,29,.68))!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-card-v18 > span{
-  display:block!important;
-  width:10px!important;
-  height:10px!important;
-  margin-bottom:12px!important;
-  border-radius:999px!important;
-  background:#26f4ff!important;
-  box-shadow:0 0 18px rgba(38,244,255,.82)!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-card-v18 strong{
-  display:block!important;
-  margin:0 0 7px!important;
-  color:#f5fcff!important;
-  font-size:18px!important;
-  line-height:1.08!important;
-  font-weight:1000!important;
-  letter-spacing:-.028em!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-card-v18 p{
-  margin:0!important;
-  color:rgba(204,226,235,.76)!important;
-  font-size:13.5px!important;
-  line-height:1.42!important;
-  font-weight:700!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-bottom-v18{
-  position:relative!important;
-  z-index:2!important;
-  display:grid!important;
-  grid-template-columns:repeat(3, minmax(0, 1fr))!important;
-  gap:12px!important;
-  margin-top:18px!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-bottom-v18 > div{
-  padding:16px 18px!important;
-  border-radius:20px!important;
-  border:1px solid rgba(19,255,173,.16)!important;
-  background:linear-gradient(135deg, rgba(17,255,174,.09), rgba(42,225,255,.045))!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-bottom-v18 b{
-  display:block!important;
-  color:#ffffff!important;
-  font-size:18px!important;
-  line-height:1.15!important;
-  font-weight:1000!important;
-}
-
-html body #root .auth609-screen .auth1801-premium-bottom-v18 small{
-  display:block!important;
-  margin-top:5px!important;
-  color:rgba(200,224,233,.75)!important;
-  font-size:13px!important;
-  line-height:1.32!important;
-  font-weight:750!important;
-}
-
-@media (max-width:1700px){
-  html body #root .auth609-screen .auth1801-premium-seo-panel-v18{
-    left:616px!important;
-    right:20px!important;
-    top:28px!important;
-    min-height:790px!important;
-    padding:34px 36px 28px!important;
-  }
-
-  html body #root .auth609-screen .auth1801-premium-seo-panel-v18 h1{
-    font-size:47px!important;
-  }
-
-  html body #root .auth609-screen .auth1801-premium-lead-v18{
-    font-size:16px!important;
-    line-height:1.45!important;
-  }
-
-  html body #root .auth609-screen .auth1801-premium-badges-v18{
-    gap:10px!important;
-    margin:18px 0 14px!important;
-  }
-
-  html body #root .auth609-screen .auth1801-premium-card-v18{
-    min-height:116px!important;
-    padding:15px 15px 14px!important;
-  }
-
-  html body #root .auth609-screen .auth1801-premium-card-v18 strong{
-    font-size:16px!important;
-  }
-
-  html body #root .auth609-screen .auth1801-premium-card-v18 p{
-    font-size:12.4px!important;
-  }
-}
-
-@media (max-width:1380px){
-  html body #root .auth609-screen .auth1801-premium-seo-panel-v18{
-    left:600px!important;
-    right:18px!important;
-    min-height:720px!important;
-    padding:28px 28px 24px!important;
-  }
-
-  html body #root .auth609-screen .auth1801-premium-seo-panel-v18 h1{
-    font-size:38px!important;
-  }
-
-  html body #root .auth609-screen .auth1801-premium-badges-v18,
-  html body #root .auth609-screen .auth1801-premium-cards-v18{
-    grid-template-columns:repeat(2, minmax(0, 1fr))!important;
-  }
-
-  html body #root .auth609-screen .auth1801-premium-card-v18:nth-child(n+7){
-    display:none!important;
-  }
-}
-
-@media (max-width:1100px){
-  html body #root .auth609-screen .auth1801-premium-seo-panel-v18{
-    display:none!important;
-  }
-}
-
-
-
-/* WERSJA 19 — zintegrowany panel SEO AUTH: mniej nachalny, nie przykrywa całego dashboardu */
-html body #root .auth609-screen .auth1901-integrated-seo-v19{
-  position:absolute!important;
-  right:46px!important;
-  top:66px!important;
-  width:520px!important;
-  min-height:680px!important;
-  z-index:9!important;
-  box-sizing:border-box!important;
-  overflow:hidden!important;
-  padding:30px 30px 26px!important;
-  border-radius:30px!important;
-  color:#f3fbff!important;
-  border:1px solid rgba(55,225,255,.32)!important;
-  background:
-    radial-gradient(circle at 84% 8%, rgba(40,235,255,.20), transparent 34%),
-    radial-gradient(circle at 12% 92%, rgba(18,255,176,.12), transparent 42%),
-    linear-gradient(145deg, rgba(3,18,33,.90), rgba(2,11,21,.94) 58%, rgba(3,23,32,.90))!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.09),
-    inset 0 0 0 1px rgba(2,255,255,.04),
-    0 0 42px rgba(0,221,255,.12),
-    0 24px 68px rgba(0,0,0,.42)!important;
-  backdrop-filter:blur(9px)!important;
-}
-
-html body #root .auth609-screen .auth1901-integrated-seo-v19::before{
-  content:""!important;
-  position:absolute!important;
-  inset:0!important;
-  pointer-events:none!important;
-  background:
-    linear-gradient(90deg, rgba(67,226,255,.048) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(67,226,255,.040) 1px, transparent 1px)!important;
-  background-size:48px 48px!important;
-  mask-image:linear-gradient(90deg, rgba(0,0,0,.72), rgba(0,0,0,.42), transparent 96%)!important;
-  opacity:.58!important;
-}
-
-html body #root .auth609-screen .auth1901-orb-v19{
-  position:absolute!important;
-  right:-125px!important;
-  bottom:-130px!important;
-  width:310px!important;
-  height:310px!important;
-  border-radius:999px!important;
-  background:radial-gradient(circle, rgba(35,236,255,.24), rgba(35,236,255,.07) 42%, transparent 74%)!important;
-  filter:blur(2px)!important;
-  pointer-events:none!important;
-}
-
-html body #root .auth609-screen .auth1901-topline-v19{
-  position:relative!important;
-  z-index:2!important;
+html body #root .auth609-screen .auth609-heading-copy{
   display:flex!important;
-  justify-content:space-between!important;
-  align-items:center!important;
-  gap:12px!important;
-  margin-bottom:18px!important;
-}
-
-html body #root .auth609-screen .auth1901-topline-v19 span{
-  display:inline-flex!important;
-  align-items:center!important;
-  gap:9px!important;
-  padding:9px 12px!important;
-  border-radius:999px!important;
-  border:1px solid rgba(78,233,255,.24)!important;
-  background:rgba(11,37,55,.62)!important;
-  color:#6df7ff!important;
-  font-size:11px!important;
-  font-weight:1000!important;
-  letter-spacing:.12em!important;
-  text-transform:uppercase!important;
-  white-space:nowrap!important;
-}
-
-html body #root .auth609-screen .auth1901-topline-v19 span::before{
-  content:""!important;
-  width:8px!important;
-  height:8px!important;
-  border-radius:999px!important;
-  background:#32f6ff!important;
-  box-shadow:0 0 16px rgba(50,246,255,.86)!important;
-}
-
-html body #root .auth609-screen .auth1901-topline-v19 b{
-  display:inline-flex!important;
-  align-items:center!important;
-  gap:8px!important;
-  padding:8px 11px!important;
-  border-radius:999px!important;
-  border:1px solid rgba(18,255,173,.15)!important;
-  background:rgba(18,255,173,.07)!important;
-  color:rgba(209,255,242,.86)!important;
-  font-size:11px!important;
-  font-weight:950!important;
-  text-transform:uppercase!important;
-  white-space:nowrap!important;
-}
-
-html body #root .auth609-screen .auth1901-integrated-seo-v19 h1{
-  position:relative!important;
-  z-index:2!important;
-  margin:0 0 14px!important;
-  color:#f7fdff!important;
-  font-size:39px!important;
-  line-height:1.02!important;
-  letter-spacing:-.055em!important;
-  font-weight:1000!important;
-  text-shadow:0 0 26px rgba(34,229,255,.18)!important;
-}
-
-html body #root .auth609-screen .auth1901-lead-v19{
-  position:relative!important;
-  z-index:2!important;
-  margin:0 0 18px!important;
-  color:rgba(213,235,243,.82)!important;
-  font-size:15.5px!important;
-  line-height:1.48!important;
-  font-weight:700!important;
-}
-
-html body #root .auth609-screen .auth1901-primary-v19{
-  position:relative!important;
-  z-index:2!important;
-  display:grid!important;
-  grid-template-columns:repeat(2, minmax(0, 1fr))!important;
-  gap:10px!important;
-  margin-bottom:17px!important;
-}
-
-html body #root .auth609-screen .auth1901-primary-v19 > div{
-  padding:13px 13px!important;
-  border-radius:17px!important;
-  border:1px solid rgba(42,225,255,.13)!important;
-  background:
-    radial-gradient(circle at 8% 0%, rgba(42,235,255,.11), transparent 42%),
-    rgba(3,24,42,.52)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.055)!important;
-}
-
-html body #root .auth609-screen .auth1901-primary-v19 strong{
-  display:block!important;
-  color:#fff!important;
-  font-size:14.5px!important;
-  line-height:1.1!important;
-  font-weight:1000!important;
-}
-
-html body #root .auth609-screen .auth1901-primary-v19 small{
-  display:block!important;
-  margin-top:4px!important;
-  color:rgba(200,224,233,.72)!important;
-  font-size:11.5px!important;
-  line-height:1.25!important;
-  font-weight:750!important;
-}
-
-html body #root .auth609-screen .auth1901-flow-v19{
-  position:relative!important;
-  z-index:2!important;
-  display:grid!important;
-  gap:10px!important;
-}
-
-html body #root .auth609-screen .auth1901-flow-v19 article{
-  display:flex!important;
-  gap:13px!important;
+  flex-direction:column!important;
   align-items:flex-start!important;
-  padding:14px 14px!important;
-  border-radius:19px!important;
-  border:1px solid rgba(76,225,255,.14)!important;
-  background:linear-gradient(135deg, rgba(5,29,47,.63), rgba(2,15,29,.58))!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.055)!important;
+  margin:0 0 24px!important;
+  padding:0!important;
 }
 
-html body #root .auth609-screen .auth1901-flow-v19 article > span{
+html body #root .auth609-screen .auth619-fused-logo,
+html body #root .auth609-screen .auth620-fused-logo{
+  width:240px!important;
+  max-width:240px!important;
+  height:auto!important;
+  margin:0!important;
+  object-fit:contain!important;
+  filter:drop-shadow(0 0 24px rgba(42,245,255,.25))!important;
+}
+
+html body #root .auth609-screen .auth609-subtitle-main{
+  display:none!important;
+}
+
+html body #root .auth609-screen .auth481-tabs,
+html body #root .auth609-screen .auth609-tabs{
+  width:100%!important;
+  height:44px!important;
+  min-height:44px!important;
+  margin:4px 0 18px!important;
+  padding:3px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(55,221,255,.18)!important;
+  background:rgba(2,14,27,.78)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+
+html body #root .auth609-screen .auth481-tab{
+  height:38px!important;
+  border-radius:10px!important;
+  color:#fff!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+}
+
+html body #root .auth609-screen .auth481-tab.is-active{
+  color:#04111b!important;
+  background:linear-gradient(135deg, #35f7ff, #2eb7ff)!important;
+  box-shadow:0 11px 28px rgba(46,210,255,.24)!important;
+}
+
+html body #root .auth609-screen .auth481-form,
+html body #root .auth609-screen .auth609-form,
+html body #root .auth609-screen .auth609-form-fixed{
+  width:100%!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:13px!important;
+  margin:0!important;
+  padding:0!important;
+}
+
+html body #root .auth609-screen .auth481-field{
+  gap:7px!important;
+}
+
+html body #root .auth609-screen .auth481-label{
+  color:#f5fbff!important;
+  font-size:12px!important;
+  font-weight:950!important;
+}
+
+html body #root .auth609-screen .auth481-input-shell{
+  height:42px!important;
+  min-height:42px!important;
+  border-radius:11px!important;
+  border:1px solid rgba(61,225,255,.18)!important;
+  background:rgba(2,14,27,.73)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045)!important;
+}
+
+html body #root .auth609-screen .auth481-field-icon{
+  display:none!important;
+}
+
+html body #root .auth609-screen .auth481-input{
+  height:42px!important;
+  padding:0 14px!important;
+  color:#eafdff!important;
+  font-size:13px!important;
+  font-weight:750!important;
+}
+
+html body #root .auth609-screen .auth481-input::placeholder{
+  color:rgba(210,231,240,.48)!important;
+}
+
+html body #root .auth609-screen .auth481-eye{
+  color:#2ef4ff!important;
+}
+
+html body #root .auth609-screen .auth609-remember-row{
+  margin:1px 0 6px!important;
+  height:20px!important;
+}
+
+html body #root .auth609-screen .auth609-remember-toggle span:last-child,
+html body #root .auth609-screen .auth609-forgot-link{
+  font-size:11px!important;
+  font-weight:850!important;
+}
+
+html body #root .auth609-screen .auth609-forgot-link{
+  color:#32f4ff!important;
+}
+
+html body #root .auth609-screen .auth609-submit,
+html body #root .auth609-screen .auth609-submit-fixed{
+  height:46px!important;
+  min-height:46px!important;
+  margin:0!important;
+  border-radius:12px!important;
+  color:#04111b!important;
+  background:linear-gradient(135deg, #33f7ff, #31b7ff)!important;
+  box-shadow:0 14px 34px rgba(49,209,255,.27)!important;
+  font-size:14px!important;
+  font-weight:1000!important;
+}
+
+html body #root .auth609-screen .auth1567-presentation-button{
+  width:100%!important;
+  height:48px!important;
+  min-height:48px!important;
+  margin:14px 0 12px!important;
+  border-radius:13px!important;
+  border:1px solid rgba(55,221,255,.20)!important;
+  background:rgba(4,22,35,.72)!important;
+  color:#eefbff!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+
+html body #root .auth609-screen .auth1567-play-orb{
+  width:30px!important;
+  height:30px!important;
+  background:linear-gradient(135deg, #2efff0, #2bb9ff)!important;
+  color:#04202b!important;
+}
+
+html body #root .auth609-screen .auth1567-presentation-button b{
+  font-size:12px!important;
+}
+
+html body #root .auth609-screen .auth1567-presentation-button small{
+  font-size:9.5px!important;
+}
+
+html body #root .auth609-screen .auth2301-left-socials{
+  width:100%!important;
+  margin:6px 0 12px!important;
+  text-align:center!important;
+}
+
+html body #root .auth609-screen .auth2301-left-socials > span{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  color:rgba(190,214,224,.55)!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+
+html body #root .auth609-screen .auth2301-left-socials > span::before,
+html body #root .auth609-screen .auth2301-left-socials > span::after{
+  content:""!important;
+  flex:1!important;
+  height:1px!important;
+  background:rgba(64,225,255,.13)!important;
+}
+
+html body #root .auth609-screen .auth2301-left-socials > div{
+  display:grid!important;
+  grid-template-columns:repeat(6, 1fr)!important;
+  gap:9px!important;
+  margin-top:12px!important;
+}
+
+html body #root .auth609-screen .auth2301-left-socials i{
   display:grid!important;
   place-items:center!important;
-  flex:0 0 36px!important;
   width:36px!important;
   height:36px!important;
-  border-radius:14px!important;
-  color:#071824!important;
-  background:linear-gradient(135deg, #36f7ff, #28b7ff)!important;
-  box-shadow:0 0 18px rgba(42,225,255,.24)!important;
-  font-size:12px!important;
-  font-weight:1000!important;
-}
-
-html body #root .auth609-screen .auth1901-flow-v19 strong{
-  display:block!important;
-  color:#f5fcff!important;
-  font-size:15.5px!important;
-  line-height:1.12!important;
-  font-weight:1000!important;
-  letter-spacing:-.02em!important;
-}
-
-html body #root .auth609-screen .auth1901-flow-v19 p{
-  margin:5px 0 0!important;
-  color:rgba(204,226,235,.73)!important;
-  font-size:12.2px!important;
-  line-height:1.38!important;
-  font-weight:700!important;
-}
-
-html body #root .auth609-screen .auth1901-tags-v19{
-  position:relative!important;
-  z-index:2!important;
-  display:flex!important;
-  flex-wrap:wrap!important;
-  gap:8px!important;
-  margin-top:17px!important;
-}
-
-html body #root .auth609-screen .auth1901-tags-v19 span{
-  display:inline-flex!important;
-  padding:8px 10px!important;
-  border-radius:999px!important;
-  border:1px solid rgba(18,255,173,.15)!important;
-  background:rgba(18,255,173,.06)!important;
-  color:rgba(216,255,244,.78)!important;
-  font-size:11.5px!important;
-  font-weight:900!important;
-}
-
-@media (max-width:1700px){
-  html body #root .auth609-screen .auth1901-integrated-seo-v19{
-    right:36px!important;
-    top:58px!important;
-    width:485px!important;
-    min-height:642px!important;
-    padding:26px 26px 22px!important;
-  }
-  html body #root .auth609-screen .auth1901-integrated-seo-v19 h1{
-    font-size:34px!important;
-  }
-  html body #root .auth609-screen .auth1901-lead-v19{
-    font-size:14px!important;
-  }
-  html body #root .auth609-screen .auth1901-flow-v19 article{
-    padding:12px 12px!important;
-  }
-}
-
-@media (max-width:1380px){
-  html body #root .auth609-screen .auth1901-integrated-seo-v19{
-    display:none!important;
-  }
-}
-
-
-
-/* WERSJA 21 — Clean Premium Landing: pełny hero jak Blogabet/Betfolio, bez naklejonych paneli */
-html body #root .auth609-screen .auth2101-scene-v21{
-  position:absolute!important;
-  left:632px!important;
-  right:34px!important;
-  top:24px!important;
-  height:770px!important;
-  z-index:14!important;
-  box-sizing:border-box!important;
-  overflow:hidden!important;
-  padding:28px 34px 30px!important;
-  border-radius:34px!important;
-  color:#f6fbff!important;
-  border:1px solid rgba(54, 231, 255, .34)!important;
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.42)),
-    radial-gradient(circle at 30% 8%, rgba(255,255,255,.24), rgba(58,220,255,.13) 4%, transparent 15%),
-    radial-gradient(circle at 52% 7%, rgba(255,255,255,.30), rgba(58,220,255,.13) 4%, transparent 16%),
-    radial-gradient(circle at 80% 8%, rgba(255,255,255,.24), rgba(58,220,255,.10) 4%, transparent 15%),
-    radial-gradient(circle at 58% 46%, rgba(57,231,255,.18), transparent 32%),
-    linear-gradient(135deg, rgba(3,15,26,1), rgba(2,8,16,1) 58%, rgba(5,20,28,1))!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.11),
-    inset 0 0 0 1px rgba(0,255,255,.045),
-    0 0 70px rgba(0,223,255,.16),
-    0 32px 92px rgba(0,0,0,.55)!important;
-  isolation:isolate!important;
-}
-
-html body #root .auth609-screen .auth2101-scene-v21::before{
-  content:""!important;
-  position:absolute!important;
-  inset:0!important;
-  z-index:0!important;
-  pointer-events:none!important;
-  background:
-    linear-gradient(100deg, transparent 0%, rgba(255,255,255,.10) 20%, transparent 39%),
-    linear-gradient(75deg, transparent 0%, rgba(255,255,255,.08) 50%, transparent 70%),
-    linear-gradient(90deg, rgba(63,220,255,.05) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(63,220,255,.035) 1px, transparent 1px)!important;
-  background-size:auto, auto, 58px 58px, 58px 58px!important;
-  opacity:.70!important;
-  mask-image:linear-gradient(180deg, rgba(0,0,0,.92), rgba(0,0,0,.72) 62%, rgba(0,0,0,.35))!important;
-}
-
-html body #root .auth609-screen .auth2101-scene-v21::after{
-  content:""!important;
-  position:absolute!important;
-  left:-6%!important;
-  right:-6%!important;
-  bottom:-44px!important;
-  height:270px!important;
-  z-index:0!important;
-  pointer-events:none!important;
-  background:
-    linear-gradient(180deg, transparent, rgba(0,255,170,.07) 43%, rgba(0,0,0,.58)),
-    repeating-linear-gradient(90deg, rgba(70,255,190,.14) 0 2px, transparent 2px 82px),
-    repeating-linear-gradient(0deg, rgba(70,255,190,.08) 0 2px, transparent 2px 58px),
-    linear-gradient(90deg, transparent, rgba(49,235,255,.23), transparent)!important;
-  transform:perspective(560px) rotateX(68deg)!important;
-  transform-origin:bottom!important;
-}
-
-html body #root .auth609-screen .auth2101-light{
-  position:absolute!important;
-  z-index:1!important;
-  pointer-events:none!important;
-  border-radius:999px!important;
-  filter:blur(2px)!important;
-  background:radial-gradient(circle, rgba(160,250,255,.26), rgba(64,226,255,.09) 28%, transparent 68%)!important;
-}
-
-html body #root .auth609-screen .auth2101-light-a{
-  width:430px!important;
-  height:430px!important;
-  left:160px!important;
-  top:-230px!important;
-}
-
-html body #root .auth609-screen .auth2101-light-b{
-  width:520px!important;
-  height:520px!important;
-  left:430px!important;
-  top:-285px!important;
-}
-
-html body #root .auth609-screen .auth2101-light-c{
-  width:420px!important;
-  height:420px!important;
-  right:40px!important;
-  top:-225px!important;
-}
-
-html body #root .auth609-screen .auth2101-smoke{
-  position:absolute!important;
-  z-index:1!important;
-  left:150px!important;
-  top:205px!important;
-  width:650px!important;
-  height:280px!important;
-  pointer-events:none!important;
-  border-radius:50%!important;
-  background:radial-gradient(ellipse, rgba(210,235,255,.10), rgba(64,218,255,.06) 42%, transparent 73%)!important;
-  filter:blur(10px)!important;
-}
-
-html body #root .auth609-screen .auth2101-pitch{
-  position:absolute!important;
-  z-index:1!important;
-  left:250px!important;
-  right:170px!important;
-  bottom:150px!important;
-  height:120px!important;
-  pointer-events:none!important;
-  border-radius:50%!important;
-  background:radial-gradient(ellipse, rgba(44,240,255,.22), rgba(44,240,255,.065) 40%, transparent 72%)!important;
-  filter:blur(1px)!important;
-}
-
-html body #root .auth609-screen .auth2101-nav{
-  position:relative!important;
-  z-index:5!important;
-  display:flex!important;
-  justify-content:space-between!important;
-  align-items:center!important;
-  gap:20px!important;
-  margin-bottom:64px!important;
-}
-
-html body #root .auth609-screen .auth2101-nav > strong{
-  display:inline-flex!important;
-  align-items:center!important;
-  gap:9px!important;
-  color:#78f7ff!important;
-  font-size:20px!important;
-  line-height:1!important;
-  font-weight:1000!important;
-  text-shadow:0 0 18px rgba(35,235,255,.36)!important;
-}
-
-html body #root .auth609-screen .auth2101-nav > strong::before{
-  content:""!important;
-  width:32px!important;
-  height:32px!important;
-  border-radius:12px!important;
-  border:1px solid rgba(62,233,255,.45)!important;
-  background:linear-gradient(135deg, rgba(22,246,255,.26), rgba(23,255,179,.10))!important;
-  box-shadow:0 0 24px rgba(35,235,255,.16)!important;
-}
-
-html body #root .auth609-screen .auth2101-nav nav{
-  display:flex!important;
-  align-items:center!important;
-  gap:22px!important;
-}
-
-html body #root .auth609-screen .auth2101-nav nav span{
-  color:rgba(232,247,255,.84)!important;
-  font-size:12px!important;
-  font-weight:950!important;
-  text-transform:uppercase!important;
-  letter-spacing:.055em!important;
-}
-
-html body #root .auth609-screen .auth2101-hero-copy{
-  position:relative!important;
-  z-index:5!important;
-  max-width:610px!important;
-  margin-left:58px!important;
-}
-
-html body #root .auth609-screen .auth2101-kicker{
-  display:inline-flex!important;
-  align-items:center!important;
-  gap:9px!important;
-  padding:10px 14px!important;
-  border-radius:999px!important;
-  border:1px solid rgba(78,233,255,.26)!important;
-  background:rgba(11,37,55,.68)!important;
-  color:#75f7ff!important;
-  font-size:12px!important;
-  font-weight:1000!important;
-  letter-spacing:.13em!important;
-  text-transform:uppercase!important;
-  box-shadow:0 0 22px rgba(42,225,255,.10)!important;
-}
-
-html body #root .auth609-screen .auth2101-kicker span{
-  width:8px!important;
-  height:8px!important;
-  border-radius:999px!important;
-  background:#27f4ff!important;
-  box-shadow:0 0 16px rgba(39,244,255,.82)!important;
-}
-
-html body #root .auth609-screen .auth2101-hero-copy h1{
-  margin:24px 0 18px!important;
-  color:#fff!important;
-  font-size:62px!important;
-  line-height:.98!important;
-  letter-spacing:-.06em!important;
-  font-weight:1000!important;
-  text-shadow:0 0 34px rgba(36,229,255,.22)!important;
-}
-
-html body #root .auth609-screen .auth2101-hero-copy h1 em{
-  color:#1effb2!important;
+  border-radius:10px!important;
+  border:1px solid rgba(55,221,255,.15)!important;
+  background:rgba(7,24,40,.78)!important;
+  color:#38f5ff!important;
   font-style:normal!important;
-  text-shadow:0 0 30px rgba(30,255,178,.38)!important;
-}
-
-html body #root .auth609-screen .auth2101-hero-copy p{
-  max-width:590px!important;
-  margin:0!important;
-  color:rgba(216,235,244,.82)!important;
-  font-size:17px!important;
-  line-height:1.55!important;
-  font-weight:720!important;
-}
-
-html body #root .auth609-screen .auth2101-cta-row{
-  display:flex!important;
-  align-items:center!important;
-  gap:16px!important;
-  margin-top:24px!important;
-}
-
-html body #root .auth609-screen .auth2101-cta-row button{
-  border:0!important;
-  border-radius:14px!important;
-  padding:14px 25px!important;
-  color:#04111b!important;
-  background:linear-gradient(135deg, #2ff7ff, #22ffb4)!important;
-  box-shadow:0 16px 42px rgba(39,217,255,.24)!important;
-  font-weight:1000!important;
-  cursor:default!important;
-}
-
-html body #root .auth609-screen .auth2101-cta-row b{
-  color:rgba(209,231,239,.78)!important;
-  font-size:13px!important;
-  font-weight:850!important;
-}
-
-html body #root .auth609-screen .auth2101-top-tipsters{
-  position:absolute!important;
-  z-index:5!important;
-  right:70px!important;
-  top:185px!important;
-  width:280px!important;
-  padding:20px!important;
-  border-radius:26px!important;
-  border:1px solid rgba(62,235,255,.23)!important;
-  background:rgba(3,18,32,.76)!important;
-  box-shadow:0 22px 50px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.07)!important;
-  backdrop-filter:blur(8px)!important;
-}
-
-html body #root .auth609-screen .auth2101-panel-head{
-  display:flex!important;
-  justify-content:space-between!important;
-  align-items:flex-end!important;
-  margin-bottom:14px!important;
-}
-
-html body #root .auth609-screen .auth2101-panel-head strong{
-  color:#34f6ff!important;
   font-size:15px!important;
-  font-weight:1000!important;
-  text-transform:uppercase!important;
-  letter-spacing:.08em!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;
 }
 
-html body #root .auth609-screen .auth2101-panel-head small{
-  color:rgba(28,255,181,.78)!important;
-  font-size:10px!important;
-  font-weight:900!important;
-  text-transform:uppercase!important;
-}
-
-html body #root .auth609-screen .auth2101-tipster{
+html body #root .auth609-screen .auth2301-left-stats{
   display:grid!important;
-  grid-template-columns:30px 1fr auto!important;
-  align-items:center!important;
-  gap:10px!important;
-  padding:11px 0!important;
-  border-top:1px solid rgba(255,255,255,.07)!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:8px!important;
+  margin:4px 0 12px!important;
 }
 
-html body #root .auth609-screen .auth2101-tipster > span{
-  display:grid!important;
-  place-items:center!important;
-  width:28px!important;
-  height:28px!important;
-  border-radius:50%!important;
-  background:linear-gradient(135deg, #ffe15d, #ff9f2e)!important;
-  color:#07131c!important;
-  font-size:12px!important;
-  font-weight:1000!important;
+html body #root .auth609-screen .auth2301-left-stats div{
+  min-height:50px!important;
+  padding:9px 10px!important;
+  border-radius:11px!important;
+  border:1px solid rgba(55,221,255,.14)!important;
+  background:rgba(5,24,39,.70)!important;
 }
 
-html body #root .auth609-screen .auth2101-tipster b{
-  display:block!important;
-  color:#f4fbff!important;
-  font-size:13px!important;
-  line-height:1!important;
-  font-weight:950!important;
-}
-
-html body #root .auth609-screen .auth2101-tipster small{
-  color:rgba(211,229,237,.65)!important;
-  font-size:10px!important;
-  font-weight:800!important;
-}
-
-html body #root .auth609-screen .auth2101-tipster strong{
-  color:#22ffae!important;
-  font-size:12px!important;
-  font-weight:1000!important;
-}
-
-html body #root .auth609-screen .auth2101-trust{
-  position:absolute!important;
-  z-index:5!important;
-  right:385px!important;
-  top:250px!important;
-  width:170px!important;
-  padding:16px!important;
-  border-radius:22px!important;
-  border:1px solid rgba(70,235,255,.23)!important;
-  background:rgba(3,22,36,.70)!important;
-  box-shadow:0 18px 42px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.07)!important;
-  backdrop-filter:blur(8px)!important;
-}
-
-html body #root .auth609-screen .auth2101-trust small{
-  display:block!important;
-  color:#65f7ff!important;
-  font-size:10px!important;
-  font-weight:1000!important;
-  text-transform:uppercase!important;
-  letter-spacing:.08em!important;
-}
-
-html body #root .auth609-screen .auth2101-trust strong{
-  display:block!important;
-  color:#ffffff!important;
-  font-size:32px!important;
-  line-height:1!important;
-  margin:8px 0 4px!important;
-  font-weight:1000!important;
-}
-
-html body #root .auth609-screen .auth2101-trust span{
-  display:block!important;
-  color:rgba(205,228,237,.72)!important;
-  font-size:11px!important;
-  font-weight:800!important;
-}
-
-html body #root .auth609-screen .auth2101-ball{
-  position:absolute!important;
-  z-index:4!important;
-  right:330px!important;
-  bottom:205px!important;
-  width:150px!important;
-  height:150px!important;
-  border-radius:50%!important;
-  background:
-    radial-gradient(circle at 32% 28%, rgba(255,255,255,.95), rgba(54,232,255,.35) 28%, rgba(3,26,43,.98) 66%, rgba(2,10,18,1))!important;
-  border:1px solid rgba(72,232,255,.46)!important;
-  box-shadow:0 0 54px rgba(31,235,255,.42), inset 0 0 32px rgba(45,239,255,.22)!important;
-}
-
-html body #root .auth609-screen .auth2101-ball i{
-  position:absolute!important;
-  inset:24px!important;
-  border-radius:50%!important;
-  border:2px solid rgba(50,236,255,.48)!important;
-  box-shadow:inset 0 0 20px rgba(48,236,255,.28)!important;
-}
-
-html body #root .auth609-screen .auth2101-features{
-  position:absolute!important;
-  z-index:5!important;
-  left:92px!important;
-  right:70px!important;
-  bottom:190px!important;
-  display:grid!important;
-  grid-template-columns:repeat(6, minmax(0, 1fr))!important;
-  gap:10px!important;
-}
-
-html body #root .auth609-screen .auth2101-features span{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  min-height:58px!important;
-  padding:10px!important;
-  border-radius:18px!important;
-  border:1px solid rgba(75,235,255,.16)!important;
-  background:rgba(3,20,35,.72)!important;
-  color:rgba(238,250,255,.90)!important;
-  font-size:12px!important;
-  font-weight:950!important;
-  text-align:center!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.065), 0 12px 32px rgba(0,0,0,.22)!important;
-}
-
-html body #root .auth609-screen .auth2101-ticker{
-  position:absolute!important;
-  z-index:5!important;
-  left:92px!important;
-  right:70px!important;
-  bottom:108px!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:16px!important;
-  min-width:0!important;
-  padding:14px 18px!important;
-  border-radius:18px!important;
-  border:1px solid rgba(62,235,255,.18)!important;
-  background:rgba(2,16,29,.74)!important;
-  overflow:hidden!important;
-  white-space:nowrap!important;
-}
-
-html body #root .auth609-screen .auth2101-ticker b{
-  flex:0 0 auto!important;
-  color:#1fffb1!important;
-  font-size:12px!important;
-  font-weight:1000!important;
-  text-transform:uppercase!important;
-}
-
-html body #root .auth609-screen .auth2101-ticker span{
-  color:rgba(220,239,246,.78)!important;
-  font-size:12px!important;
-  font-weight:850!important;
-}
-
-html body #root .auth609-screen .auth2101-stats{
-  position:absolute!important;
-  z-index:5!important;
-  left:92px!important;
-  right:70px!important;
-  bottom:30px!important;
-  display:grid!important;
-  grid-template-columns:repeat(4, minmax(0, 1fr))!important;
-  gap:0!important;
-  border-radius:22px!important;
-  border:1px solid rgba(62,235,255,.18)!important;
-  background:rgba(2,16,29,.70)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.055)!important;
-  overflow:hidden!important;
-}
-
-html body #root .auth609-screen .auth2101-stats div{
-  padding:18px 16px!important;
-  border-right:1px solid rgba(255,255,255,.08)!important;
-  text-align:center!important;
-}
-
-html body #root .auth609-screen .auth2101-stats div:last-child{
-  border-right:0!important;
-}
-
-html body #root .auth609-screen .auth2101-stats strong{
+html body #root .auth609-screen .auth2301-left-stats b{
   display:block!important;
   color:#fff!important;
-  font-size:27px!important;
+  font-size:17px!important;
   line-height:1!important;
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2101-stats span{
+html body #root .auth609-screen .auth2301-left-stats small{
   display:block!important;
-  margin-top:7px!important;
-  color:rgba(201,225,234,.66)!important;
+  margin-top:4px!important;
+  color:rgba(211,229,237,.68)!important;
+  font-size:9.5px!important;
+  line-height:1.12!important;
+  font-weight:800!important;
+}
+
+html body #root .auth609-screen .auth2301-left-safe{
+  margin-top:auto!important;
+  padding:15px 16px!important;
+  border-radius:15px!important;
+  border:1px solid rgba(55,221,255,.15)!important;
+  background:rgba(5,24,39,.72)!important;
+}
+
+html body #root .auth609-screen .auth2301-left-safe strong{
+  display:block!important;
+  color:#fff!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+}
+
+html body #root .auth609-screen .auth2301-left-safe p{
+  margin:5px 0 0!important;
+  color:rgba(210,230,238,.70)!important;
   font-size:10px!important;
-  text-transform:uppercase!important;
-  letter-spacing:.08em!important;
-  font-weight:900!important;
+  font-weight:750!important;
 }
 
-@media (max-width:1700px){
-  html body #root .auth609-screen .auth2101-scene-v21{
-    left:612px!important;
-    right:24px!important;
-    top:24px!important;
-    height:735px!important;
-    padding:24px 28px 24px!important;
-  }
-
-  html body #root .auth609-screen .auth2101-nav{
-    margin-bottom:48px!important;
-  }
-
-  html body #root .auth609-screen .auth2101-hero-copy{
-    margin-left:34px!important;
-    max-width:530px!important;
-  }
-
-  html body #root .auth609-screen .auth2101-hero-copy h1{
-    font-size:49px!important;
-  }
-
-  html body #root .auth609-screen .auth2101-hero-copy p{
-    font-size:14.5px!important;
-    max-width:500px!important;
-  }
-
-  html body #root .auth609-screen .auth2101-top-tipsters{
-    width:240px!important;
-    right:36px!important;
-    top:170px!important;
-  }
-
-  html body #root .auth609-screen .auth2101-trust{
-    right:310px!important;
-    top:250px!important;
-  }
-
-  html body #root .auth609-screen .auth2101-ball{
-    right:255px!important;
-    bottom:195px!important;
-    width:125px!important;
-    height:125px!important;
-  }
-
-  html body #root .auth609-screen .auth2101-features{
-    left:56px!important;
-    right:40px!important;
-    bottom:180px!important;
-  }
-
-  html body #root .auth609-screen .auth2101-ticker{
-    left:56px!important;
-    right:40px!important;
-    bottom:102px!important;
-  }
-
-  html body #root .auth609-screen .auth2101-stats{
-    left:56px!important;
-    right:40px!important;
-    bottom:28px!important;
-  }
+html body #root .auth609-screen .auth2301-left-footer{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  gap:6px!important;
+  margin-top:14px!important;
+  color:rgba(200,220,228,.58)!important;
+  font-size:10px!important;
 }
 
-@media (max-width:1380px){
-  html body #root .auth609-screen .auth2101-scene-v21{
-    display:none!important;
-  }
+html body #root .auth609-screen .auth2301-left-footer small{
+  color:rgba(200,220,228,.50)!important;
 }
 
-
-
-/* WERSJA 22 — FULL MOCKUP AUTH 1:1-LIKE: realny HTML/CSS, nie jedno zdjęcie */
-html body #root .auth609-screen .auth2201-full-mockup{
+/* Prawa strona: nowy layout 1:1-like z obrazka */
+html body #root .auth609-screen .auth2301-auth-redesign{
   position:absolute!important;
   left:340px!important;
-  right:28px!important;
+  right:0!important;
   top:0!important;
-  height:968px!important;
-  z-index:30!important;
-  box-sizing:border-box!important;
+  bottom:0!important;
+  z-index:70!important;
+  padding:22px 28px 18px!important;
   overflow:hidden!important;
-  padding:22px 26px 18px!important;
-  border-radius:0 0 32px 0!important;
+  box-sizing:border-box!important;
   color:#f6fbff!important;
   background:
-    linear-gradient(180deg, rgba(1,7,14,.20), rgba(1,7,14,.60)),
-    radial-gradient(circle at 53% 8%, rgba(56,230,255,.26), transparent 25%),
-    radial-gradient(circle at 58% 43%, rgba(0,186,255,.26), transparent 24%),
+    radial-gradient(circle at 53% 8%, rgba(56,230,255,.25), transparent 25%),
+    radial-gradient(circle at 58% 43%, rgba(0,186,255,.25), transparent 24%),
     radial-gradient(circle at 88% 40%, rgba(0,255,190,.08), transparent 28%),
-    linear-gradient(135deg, rgba(3,12,23,1), rgba(1,7,14,1) 56%, rgba(3,15,23,1))!important;
+    linear-gradient(135deg, #020a14, #010711 56%, #03101a)!important;
   border-left:1px solid rgba(49,235,255,.34)!important;
-  box-shadow:
-    inset 1px 0 0 rgba(255,255,255,.08),
-    0 0 80px rgba(0, 219, 255, .14)!important;
+  box-shadow:inset 1px 0 0 rgba(255,255,255,.08), 0 0 80px rgba(0,219,255,.14)!important;
   isolation:isolate!important;
 }
 
-html body #root .auth609-screen .auth2201-full-mockup::before{
+html body #root .auth609-screen .auth2301-auth-redesign::before{
   content:""!important;
   position:absolute!important;
   inset:0!important;
   z-index:0!important;
   pointer-events:none!important;
   background:
-    radial-gradient(circle at 48% 10%, rgba(255,255,255,.55), rgba(101,236,255,.13) 2.5%, transparent 11%),
+    radial-gradient(circle at 47% 11%, rgba(255,255,255,.55), rgba(101,236,255,.13) 2.5%, transparent 11%),
     radial-gradient(circle at 62% 12%, rgba(255,255,255,.48), rgba(101,236,255,.12) 2.4%, transparent 10%),
-    radial-gradient(circle at 72% 15%, rgba(255,255,255,.38), rgba(101,236,255,.10) 2.2%, transparent 10%),
+    radial-gradient(circle at 74% 15%, rgba(255,255,255,.38), rgba(101,236,255,.10) 2.2%, transparent 10%),
     linear-gradient(90deg, rgba(52,217,255,.05) 1px, transparent 1px),
     linear-gradient(180deg, rgba(52,217,255,.035) 1px, transparent 1px)!important;
   background-size:auto, auto, auto, 70px 70px, 70px 70px!important;
@@ -82019,7 +80973,7 @@ html body #root .auth609-screen .auth2201-full-mockup::before{
   mask-image:linear-gradient(180deg, rgba(0,0,0,.95), rgba(0,0,0,.68) 62%, rgba(0,0,0,.18))!important;
 }
 
-html body #root .auth609-screen .auth2201-full-mockup::after{
+html body #root .auth609-screen .auth2301-auth-redesign::after{
   content:""!important;
   position:absolute!important;
   left:-4%!important;
@@ -82037,36 +80991,35 @@ html body #root .auth609-screen .auth2201-full-mockup::after{
   transform-origin:bottom!important;
 }
 
-html body #root .auth609-screen .auth2201-stadium-bg,
-html body #root .auth609-screen .auth2201-particles,
-html body #root .auth609-screen .auth2201-grid-floor{
+html body #root .auth609-screen .auth2301-stadium,
+html body #root .auth609-screen .auth2301-energy,
+html body #root .auth609-screen .auth2301-pitch{
   position:absolute!important;
   inset:0!important;
-  pointer-events:none!important;
   z-index:0!important;
+  pointer-events:none!important;
 }
 
-html body #root .auth609-screen .auth2201-stadium-bg{
+html body #root .auth609-screen .auth2301-stadium{
   background:
     linear-gradient(110deg, rgba(255,255,255,.08), transparent 17%),
     linear-gradient(250deg, rgba(255,255,255,.08), transparent 18%),
     radial-gradient(ellipse at 55% 63%, rgba(35,239,255,.13), transparent 42%),
     radial-gradient(ellipse at 45% 84%, rgba(0,255,185,.06), transparent 50%)!important;
-  opacity:.86!important;
+  opacity:.88!important;
 }
 
-html body #root .auth609-screen .auth2201-particles{
+html body #root .auth609-screen .auth2301-energy{
   background:
     radial-gradient(circle at 48% 21%, rgba(49,235,255,.9) 0 1px, transparent 2px),
     radial-gradient(circle at 52% 25%, rgba(49,235,255,.7) 0 1px, transparent 2px),
     radial-gradient(circle at 60% 18%, rgba(255,255,255,.55) 0 1px, transparent 2px),
     radial-gradient(circle at 67% 28%, rgba(49,235,255,.65) 0 1px, transparent 2px),
-    radial-gradient(circle at 73% 21%, rgba(255,255,255,.5) 0 1px, transparent 2px),
-    radial-gradient(circle at 78% 29%, rgba(49,235,255,.55) 0 1px, transparent 2px)!important;
+    radial-gradient(circle at 73% 21%, rgba(255,255,255,.5) 0 1px, transparent 2px)!important;
   opacity:.75!important;
 }
 
-html body #root .auth609-screen .auth2201-light{
+html body #root .auth609-screen .auth2301-light{
   position:absolute!important;
   border-radius:999px!important;
   pointer-events:none!important;
@@ -82075,17 +81028,11 @@ html body #root .auth609-screen .auth2201-light{
   background:radial-gradient(circle, rgba(210,253,255,.32), rgba(77,231,255,.105) 28%, transparent 68%)!important;
 }
 
-html body #root .auth609-screen .auth2201-light-left{
-  width:430px!important; height:430px!important; left:270px!important; top:-218px!important;
-}
-html body #root .auth609-screen .auth2201-light-center{
-  width:520px!important; height:520px!important; left:590px!important; top:-282px!important;
-}
-html body #root .auth609-screen .auth2201-light-right{
-  width:430px!important; height:430px!important; right:160px!important; top:-222px!important;
-}
+html body #root .auth609-screen .auth2301-light-a{width:430px!important;height:430px!important;left:270px!important;top:-218px!important;}
+html body #root .auth609-screen .auth2301-light-b{width:520px!important;height:520px!important;left:590px!important;top:-282px!important;}
+html body #root .auth609-screen .auth2301-light-c{width:430px!important;height:430px!important;right:160px!important;top:-222px!important;}
 
-html body #root .auth609-screen .auth2201-topbar{
+html body #root .auth609-screen .auth2301-topbar{
   position:relative!important;
   z-index:8!important;
   display:grid!important;
@@ -82095,22 +81042,22 @@ html body #root .auth609-screen .auth2201-topbar{
   height:48px!important;
 }
 
-html body #root .auth609-screen .auth2201-topbar nav{
+html body #root .auth609-screen .auth2301-topbar nav{
   display:flex!important;
   gap:28px!important;
   align-items:center!important;
   padding-left:24px!important;
 }
 
-html body #root .auth609-screen .auth2201-topbar nav span{
+html body #root .auth609-screen .auth2301-topbar nav span{
   color:rgba(235,248,255,.88)!important;
   font-size:12px!important;
   font-weight:950!important;
   letter-spacing:.035em!important;
 }
 
-html body #root .auth609-screen .auth2201-search,
-html body #root .auth609-screen .auth2201-lang{
+html body #root .auth609-screen .auth2301-search,
+html body #root .auth609-screen .auth2301-language{
   display:flex!important;
   align-items:center!important;
   height:38px!important;
@@ -82124,12 +81071,12 @@ html body #root .auth609-screen .auth2201-lang{
   box-shadow:inset 0 1px 0 rgba(255,255,255,.045)!important;
 }
 
-html body #root .auth609-screen .auth2201-lang{
+html body #root .auth609-screen .auth2301-language{
   justify-content:center!important;
   color:#f2fbff!important;
 }
 
-html body #root .auth609-screen .auth2201-topbar button{
+html body #root .auth609-screen .auth2301-topbar button{
   height:42px!important;
   border:0!important;
   border-radius:12px!important;
@@ -82139,13 +81086,13 @@ html body #root .auth609-screen .auth2201-topbar button{
   box-shadow:0 12px 34px rgba(45,216,255,.25)!important;
 }
 
-html body #root .auth609-screen .auth2201-hero{
+html body #root .auth609-screen .auth2301-hero{
   position:relative!important;
   z-index:5!important;
   min-height:390px!important;
 }
 
-html body #root .auth609-screen .auth2201-copy{
+html body #root .auth609-screen .auth2301-copy{
   position:absolute!important;
   z-index:5!important;
   left:24px!important;
@@ -82153,7 +81100,7 @@ html body #root .auth609-screen .auth2201-copy{
   width:590px!important;
 }
 
-html body #root .auth609-screen .auth2201-kicker{
+html body #root .auth609-screen .auth2301-kicker{
   display:inline-flex!important;
   align-items:center!important;
   gap:10px!important;
@@ -82168,13 +81115,15 @@ html body #root .auth609-screen .auth2201-kicker{
   text-transform:uppercase!important;
 }
 
-html body #root .auth609-screen .auth2201-kicker i{
-  width:9px!important; height:9px!important; border-radius:999px!important;
+html body #root .auth609-screen .auth2301-kicker i{
+  width:9px!important;
+  height:9px!important;
+  border-radius:999px!important;
   background:#2effb5!important;
   box-shadow:0 0 18px rgba(46,255,181,.75)!important;
 }
 
-html body #root .auth609-screen .auth2201-copy h1{
+html body #root .auth609-screen .auth2301-copy h1{
   margin:22px 0 18px!important;
   color:#fff!important;
   font-size:52px!important;
@@ -82184,13 +81133,13 @@ html body #root .auth609-screen .auth2201-copy h1{
   text-shadow:0 0 34px rgba(36,229,255,.21)!important;
 }
 
-html body #root .auth609-screen .auth2201-copy h1 em{
+html body #root .auth609-screen .auth2301-copy h1 em{
   color:#1cf1e3!important;
   font-style:normal!important;
   text-shadow:0 0 30px rgba(28,241,227,.35)!important;
 }
 
-html body #root .auth609-screen .auth2201-copy p{
+html body #root .auth609-screen .auth2301-copy p{
   margin:0!important;
   max-width:550px!important;
   color:rgba(214,235,244,.85)!important;
@@ -82199,7 +81148,7 @@ html body #root .auth609-screen .auth2201-copy p{
   font-weight:760!important;
 }
 
-html body #root .auth609-screen .auth2201-mini-trust{
+html body #root .auth609-screen .auth2301-mini-row{
   display:flex!important;
   align-items:stretch!important;
   gap:0!important;
@@ -82212,7 +81161,7 @@ html body #root .auth609-screen .auth2201-mini-trust{
   overflow:hidden!important;
 }
 
-html body #root .auth609-screen .auth2201-mini-trust span{
+html body #root .auth609-screen .auth2301-mini-row span{
   flex:1!important;
   display:flex!important;
   flex-direction:column!important;
@@ -82224,23 +81173,11 @@ html body #root .auth609-screen .auth2201-mini-trust span{
   font-size:14px!important;
 }
 
-html body #root .auth609-screen .auth2201-mini-trust span:last-child{
-  border-right:0!important;
-}
+html body #root .auth609-screen .auth2301-mini-row span:last-child{border-right:0!important;}
+html body #root .auth609-screen .auth2301-mini-row b{color:#f8fdff!important;font-size:12px!important;font-weight:1000!important;}
+html body #root .auth609-screen .auth2301-mini-row small{color:rgba(205,225,235,.70)!important;font-size:10.5px!important;font-weight:800!important;}
 
-html body #root .auth609-screen .auth2201-mini-trust b{
-  color:#f8fdff!important;
-  font-size:12px!important;
-  font-weight:1000!important;
-}
-
-html body #root .auth609-screen .auth2201-mini-trust small{
-  color:rgba(205,225,235,.70)!important;
-  font-size:10.5px!important;
-  font-weight:800!important;
-}
-
-html body #root .auth609-screen .auth2201-player{
+html body #root .auth609-screen .auth2301-player{
   position:absolute!important;
   z-index:4!important;
   left:705px!important;
@@ -82251,7 +81188,7 @@ html body #root .auth609-screen .auth2201-player{
   filter:drop-shadow(0 0 55px rgba(35,235,255,.35))!important;
 }
 
-html body #root .auth609-screen .auth2201-player-glow{
+html body #root .auth609-screen .auth2301-player-glow{
   position:absolute!important;
   inset:46px 20px 10px!important;
   border-radius:50%!important;
@@ -82259,7 +81196,7 @@ html body #root .auth609-screen .auth2201-player-glow{
   filter:blur(8px)!important;
 }
 
-html body #root .auth609-screen .auth2201-player-head{
+html body #root .auth609-screen .auth2301-player-head{
   position:absolute!important;
   left:142px!important;
   top:6px!important;
@@ -82270,22 +81207,20 @@ html body #root .auth609-screen .auth2201-player-head{
   box-shadow:inset 0 -12px 18px rgba(0,0,0,.30), 0 0 20px rgba(60,235,255,.22)!important;
 }
 
-html body #root .auth609-screen .auth2201-player-body{
+html body #root .auth609-screen .auth2301-player-body{
   position:absolute!important;
   left:112px!important;
   top:70px!important;
   width:122px!important;
   height:168px!important;
   border-radius:38px 42px 34px 34px!important;
-  background:
-    radial-gradient(circle at 42% 20%, rgba(44,238,255,.18), transparent 45%),
-    linear-gradient(135deg, rgba(10,28,45,.98), rgba(3,11,22,.99))!important;
+  background:radial-gradient(circle at 42% 20%, rgba(44,238,255,.18), transparent 45%), linear-gradient(135deg, rgba(10,28,45,.98), rgba(3,11,22,.99))!important;
   border:1px solid rgba(54,232,255,.34)!important;
   transform:skewX(-7deg) rotate(8deg)!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 20px 48px rgba(0,0,0,.46)!important;
 }
 
-html body #root .auth609-screen .auth2201-player-body span{
+html body #root .auth609-screen .auth2301-player-body b{
   position:absolute!important;
   left:19px!important;
   top:34px!important;
@@ -82294,7 +81229,7 @@ html body #root .auth609-screen .auth2201-player-body span{
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-player-body b{
+html body #root .auth609-screen .auth2301-player-body span{
   position:absolute!important;
   right:18px!important;
   bottom:20px!important;
@@ -82303,8 +81238,8 @@ html body #root .auth609-screen .auth2201-player-body b{
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-player-arm,
-html body #root .auth609-screen .auth2201-player-leg{
+html body #root .auth609-screen .auth2301-arm,
+html body #root .auth609-screen .auth2301-leg{
   position:absolute!important;
   border-radius:999px!important;
   background:linear-gradient(135deg, rgba(8,24,40,.99), rgba(3,11,22,.99))!important;
@@ -82312,20 +81247,12 @@ html body #root .auth609-screen .auth2201-player-leg{
   box-shadow:0 12px 30px rgba(0,0,0,.38)!important;
 }
 
-html body #root .auth609-screen .auth2201-player-arm-l{
-  width:35px!important; height:162px!important; left:80px!important; top:92px!important; transform:rotate(42deg)!important;
-}
-html body #root .auth609-screen .auth2201-player-arm-r{
-  width:35px!important; height:160px!important; left:235px!important; top:84px!important; transform:rotate(-48deg)!important;
-}
-html body #root .auth609-screen .auth2201-player-leg-l{
-  width:39px!important; height:190px!important; left:132px!important; top:218px!important; transform:rotate(19deg)!important;
-}
-html body #root .auth609-screen .auth2201-player-leg-r{
-  width:39px!important; height:198px!important; left:208px!important; top:210px!important; transform:rotate(-37deg)!important;
-}
+html body #root .auth609-screen .auth2301-arm-left{width:35px!important;height:162px!important;left:80px!important;top:92px!important;transform:rotate(42deg)!important;}
+html body #root .auth609-screen .auth2301-arm-right{width:35px!important;height:160px!important;left:235px!important;top:84px!important;transform:rotate(-48deg)!important;}
+html body #root .auth609-screen .auth2301-leg-left{width:39px!important;height:190px!important;left:132px!important;top:218px!important;transform:rotate(19deg)!important;}
+html body #root .auth609-screen .auth2301-leg-right{width:39px!important;height:198px!important;left:208px!important;top:210px!important;transform:rotate(-37deg)!important;}
 
-html body #root .auth609-screen .auth2201-ball{
+html body #root .auth609-screen .auth2301-ball{
   position:absolute!important;
   z-index:5!important;
   left:690px!important;
@@ -82333,13 +81260,12 @@ html body #root .auth609-screen .auth2201-ball{
   width:118px!important;
   height:118px!important;
   border-radius:50%!important;
-  background:
-    radial-gradient(circle at 32% 28%, rgba(255,255,255,.96), rgba(54,232,255,.38) 28%, rgba(3,26,43,.98) 66%, rgba(2,10,18,1))!important;
+  background:radial-gradient(circle at 32% 28%, rgba(255,255,255,.96), rgba(54,232,255,.38) 28%, rgba(3,26,43,.98) 66%, rgba(2,10,18,1))!important;
   border:1px solid rgba(72,232,255,.46)!important;
   box-shadow:0 0 54px rgba(31,235,255,.42), inset 0 0 32px rgba(45,239,255,.22)!important;
 }
 
-html body #root .auth609-screen .auth2201-ball i{
+html body #root .auth609-screen .auth2301-ball i{
   position:absolute!important;
   inset:20px!important;
   border-radius:50%!important;
@@ -82347,8 +81273,8 @@ html body #root .auth609-screen .auth2201-ball i{
   box-shadow:inset 0 0 20px rgba(48,236,255,.28)!important;
 }
 
-html body #root .auth609-screen .auth2201-floating-card,
-html body #root .auth609-screen .auth2201-top-tipsters{
+html body #root .auth609-screen .auth2301-float,
+html body #root .auth609-screen .auth2301-top-tipsters{
   z-index:7!important;
   border:1px solid rgba(62,235,255,.23)!important;
   background:rgba(3,18,32,.78)!important;
@@ -82356,24 +81282,18 @@ html body #root .auth609-screen .auth2201-top-tipsters{
   backdrop-filter:blur(8px)!important;
 }
 
-html body #root .auth609-screen .auth2201-floating-card{
+html body #root .auth609-screen .auth2301-float{
   position:absolute!important;
   width:142px!important;
   padding:14px 15px!important;
   border-radius:18px!important;
 }
 
-html body #root .auth609-screen .auth2201-ai-score{
-  left:940px!important; top:120px!important;
-}
-html body #root .auth609-screen .auth2201-ai-prob{
-  left:600px!important; top:258px!important;
-}
-html body #root .auth609-screen .auth2201-tipdna{
-  left:950px!important; top:278px!important;
-}
+html body #root .auth609-screen .auth2301-score{left:940px!important;top:120px!important;}
+html body #root .auth609-screen .auth2301-probability{left:600px!important;top:258px!important;}
+html body #root .auth609-screen .auth2301-tipdna{left:950px!important;top:278px!important;}
 
-html body #root .auth609-screen .auth2201-floating-card small{
+html body #root .auth609-screen .auth2301-float small{
   display:block!important;
   color:#65f7ff!important;
   font-size:10px!important;
@@ -82382,7 +81302,7 @@ html body #root .auth609-screen .auth2201-floating-card small{
   letter-spacing:.08em!important;
 }
 
-html body #root .auth609-screen .auth2201-floating-card strong{
+html body #root .auth609-screen .auth2301-float strong{
   display:block!important;
   color:#fff!important;
   font-size:28px!important;
@@ -82391,14 +81311,14 @@ html body #root .auth609-screen .auth2201-floating-card strong{
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-floating-card span{
+html body #root .auth609-screen .auth2301-float span{
   display:block!important;
   color:rgba(205,228,237,.72)!important;
   font-size:10px!important;
   font-weight:850!important;
 }
 
-html body #root .auth609-screen .auth2201-top-tipsters{
+html body #root .auth609-screen .auth2301-top-tipsters{
   position:absolute!important;
   right:18px!important;
   top:88px!important;
@@ -82407,14 +81327,14 @@ html body #root .auth609-screen .auth2201-top-tipsters{
   border-radius:22px!important;
 }
 
-html body #root .auth609-screen .auth2201-panel-head{
+html body #root .auth609-screen .auth2301-panel-head{
   display:flex!important;
   justify-content:space-between!important;
   align-items:center!important;
   margin-bottom:14px!important;
 }
 
-html body #root .auth609-screen .auth2201-panel-head strong{
+html body #root .auth609-screen .auth2301-panel-head strong{
   color:#34f6ff!important;
   font-size:15px!important;
   font-weight:1000!important;
@@ -82422,13 +81342,13 @@ html body #root .auth609-screen .auth2201-panel-head strong{
   letter-spacing:.08em!important;
 }
 
-html body #root .auth609-screen .auth2201-panel-head small{
+html body #root .auth609-screen .auth2301-panel-head small{
   color:#17ffb2!important;
   font-size:10px!important;
   font-weight:900!important;
 }
 
-html body #root .auth609-screen .auth2201-tipster-row{
+html body #root .auth609-screen .auth2301-tipster{
   display:grid!important;
   grid-template-columns:24px 34px 1fr auto 26px!important;
   align-items:center!important;
@@ -82437,7 +81357,7 @@ html body #root .auth609-screen .auth2201-tipster-row{
   border-top:1px solid rgba(255,255,255,.08)!important;
 }
 
-html body #root .auth609-screen .auth2201-tipster-row > span{
+html body #root .auth609-screen .auth2301-tipster > span{
   display:grid!important;
   place-items:center!important;
   width:22px!important;
@@ -82449,7 +81369,7 @@ html body #root .auth609-screen .auth2201-tipster-row > span{
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-avatar{
+html body #root .auth609-screen .auth2301-tipster i{
   width:32px!important;
   height:32px!important;
   border-radius:50%!important;
@@ -82457,7 +81377,7 @@ html body #root .auth609-screen .auth2201-avatar{
   border:1px solid rgba(255,255,255,.22)!important;
 }
 
-html body #root .auth609-screen .auth2201-tipster-row b{
+html body #root .auth609-screen .auth2301-tipster b{
   display:block!important;
   color:#f4fbff!important;
   font-size:12px!important;
@@ -82465,19 +81385,19 @@ html body #root .auth609-screen .auth2201-tipster-row b{
   font-weight:950!important;
 }
 
-html body #root .auth609-screen .auth2201-tipster-row small{
+html body #root .auth609-screen .auth2301-tipster small{
   color:rgba(211,229,237,.65)!important;
   font-size:10px!important;
   font-weight:800!important;
 }
 
-html body #root .auth609-screen .auth2201-tipster-row strong{
+html body #root .auth609-screen .auth2301-tipster strong{
   color:#22ffae!important;
   font-size:12px!important;
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-tipster-row em{
+html body #root .auth609-screen .auth2301-tipster em{
   display:grid!important;
   place-items:center!important;
   width:24px!important;
@@ -82490,7 +81410,7 @@ html body #root .auth609-screen .auth2201-tipster-row em{
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-top-tipsters button{
+html body #root .auth609-screen .auth2301-top-tipsters button{
   width:100%!important;
   height:36px!important;
   margin-top:10px!important;
@@ -82502,17 +81422,16 @@ html body #root .auth609-screen .auth2201-top-tipsters button{
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-features{
+html body #root .auth609-screen .auth2301-features{
   position:relative!important;
   z-index:6!important;
   display:grid!important;
   grid-template-columns:repeat(5, minmax(0, 1fr))!important;
   gap:12px!important;
   margin:22px 0 0!important;
-  padding:0 0!important;
 }
 
-html body #root .auth609-screen .auth2201-features article{
+html body #root .auth609-screen .auth2301-features article{
   min-height:82px!important;
   display:grid!important;
   grid-template-columns:54px 1fr!important;
@@ -82525,12 +81444,12 @@ html body #root .auth609-screen .auth2201-features article{
   box-shadow:inset 0 1px 0 rgba(255,255,255,.065), 0 12px 32px rgba(0,0,0,.22)!important;
 }
 
-html body #root .auth609-screen .auth2201-features article:nth-child(n+6){
+html body #root .auth609-screen .auth2301-features article:nth-child(n+6){
   grid-template-columns:46px 1fr!important;
   min-height:70px!important;
 }
 
-html body #root .auth609-screen .auth2201-features article > span{
+html body #root .auth609-screen .auth2301-features article > span{
   display:grid!important;
   place-items:center!important;
   width:48px!important;
@@ -82542,13 +81461,13 @@ html body #root .auth609-screen .auth2201-features article > span{
   box-shadow:0 0 20px rgba(42,235,255,.08), inset 0 1px 0 rgba(255,255,255,.07)!important;
 }
 
-html body #root .auth609-screen .auth2201-features article > span.is-live{
+html body #root .auth609-screen .auth2301-features article > span.is-live{
   color:#ff4ca7!important;
   font-size:13px!important;
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-features strong{
+html body #root .auth609-screen .auth2301-features strong{
   display:block!important;
   color:#fff!important;
   font-size:14px!important;
@@ -82556,7 +81475,7 @@ html body #root .auth609-screen .auth2201-features strong{
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-features p{
+html body #root .auth609-screen .auth2301-features p{
   margin:5px 0 0!important;
   color:rgba(200,223,232,.72)!important;
   font-size:11px!important;
@@ -82564,7 +81483,7 @@ html body #root .auth609-screen .auth2201-features p{
   font-weight:750!important;
 }
 
-html body #root .auth609-screen .auth2201-live-row{
+html body #root .auth609-screen .auth2301-live{
   position:relative!important;
   z-index:6!important;
   display:grid!important;
@@ -82574,36 +81493,36 @@ html body #root .auth609-screen .auth2201-live-row{
   align-items:stretch!important;
 }
 
-html body #root .auth609-screen .auth2201-live-label,
-html body #root .auth609-screen .auth2201-match-card,
-html body #root .auth609-screen .auth2201-live-row > button{
+html body #root .auth609-screen .auth2301-live-title,
+html body #root .auth609-screen .auth2301-match,
+html body #root .auth609-screen .auth2301-live > button{
   border:1px solid rgba(62,235,255,.16)!important;
   background:rgba(3,17,30,.76)!important;
   border-radius:16px!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.055)!important;
 }
 
-html body #root .auth609-screen .auth2201-live-label{
+html body #root .auth609-screen .auth2301-live-title{
   display:flex!important;
   flex-direction:column!important;
   justify-content:center!important;
   padding:12px!important;
 }
 
-html body #root .auth609-screen .auth2201-live-label b{
+html body #root .auth609-screen .auth2301-live-title b{
   color:#27f5ff!important;
   font-size:13px!important;
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-live-label small{
+html body #root .auth609-screen .auth2301-live-title small{
   color:#18ffb5!important;
   font-size:10px!important;
   font-weight:900!important;
   margin-top:4px!important;
 }
 
-html body #root .auth609-screen .auth2201-match-card{
+html body #root .auth609-screen .auth2301-match{
   display:grid!important;
   grid-template-columns:1fr auto!important;
   grid-template-rows:auto auto auto!important;
@@ -82612,33 +81531,30 @@ html body #root .auth609-screen .auth2201-match-card{
   min-height:74px!important;
 }
 
-html body #root .auth609-screen .auth2201-match-card div{
-  grid-row:1 / span 2!important;
-}
-
-html body #root .auth609-screen .auth2201-match-card b,
-html body #root .auth609-screen .auth2201-match-card span{
+html body #root .auth609-screen .auth2301-match div{grid-row:1 / span 2!important;}
+html body #root .auth609-screen .auth2301-match b,
+html body #root .auth609-screen .auth2301-match span{
   display:block!important;
   color:#f4fbff!important;
   font-size:11px!important;
   font-weight:850!important;
 }
 
-html body #root .auth609-screen .auth2201-match-card strong{
+html body #root .auth609-screen .auth2301-match strong{
   color:#fff!important;
   font-size:17px!important;
   font-weight:1000!important;
   text-align:right!important;
 }
 
-html body #root .auth609-screen .auth2201-match-card small{
+html body #root .auth609-screen .auth2301-match small{
   color:#31f6ff!important;
   font-size:10px!important;
   text-align:right!important;
   font-weight:900!important;
 }
 
-html body #root .auth609-screen .auth2201-match-card em{
+html body #root .auth609-screen .auth2301-match em{
   grid-column:1 / -1!important;
   color:rgba(223,242,248,.72)!important;
   font-size:10px!important;
@@ -82647,13 +81563,13 @@ html body #root .auth609-screen .auth2201-match-card em{
   white-space:pre!important;
 }
 
-html body #root .auth609-screen .auth2201-live-row > button{
+html body #root .auth609-screen .auth2301-live > button{
   color:#2af5ff!important;
   font-size:12px!important;
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-bottom{
+html body #root .auth609-screen .auth2301-bottom{
   position:relative!important;
   z-index:6!important;
   display:grid!important;
@@ -82662,7 +81578,7 @@ html body #root .auth609-screen .auth2201-bottom{
   margin-top:14px!important;
 }
 
-html body #root .auth609-screen .auth2201-stats{
+html body #root .auth609-screen .auth2301-stats{
   display:grid!important;
   grid-template-columns:repeat(4, minmax(0, 1fr))!important;
   border-radius:18px!important;
@@ -82671,16 +81587,14 @@ html body #root .auth609-screen .auth2201-stats{
   overflow:hidden!important;
 }
 
-html body #root .auth609-screen .auth2201-stats div{
+html body #root .auth609-screen .auth2301-stats div{
   padding:22px 16px!important;
   border-right:1px solid rgba(255,255,255,.08)!important;
 }
 
-html body #root .auth609-screen .auth2201-stats div:last-child{
-  border-right:0!important;
-}
+html body #root .auth609-screen .auth2301-stats div:last-child{border-right:0!important;}
 
-html body #root .auth609-screen .auth2201-stats strong{
+html body #root .auth609-screen .auth2301-stats strong{
   display:block!important;
   color:#fff!important;
   font-size:28px!important;
@@ -82688,7 +81602,7 @@ html body #root .auth609-screen .auth2201-stats strong{
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-stats span{
+html body #root .auth609-screen .auth2301-stats span{
   display:block!important;
   margin-top:8px!important;
   color:rgba(201,225,234,.68)!important;
@@ -82698,7 +81612,7 @@ html body #root .auth609-screen .auth2201-stats span{
   font-weight:900!important;
 }
 
-html body #root .auth609-screen .auth2201-vip{
+html body #root .auth609-screen .auth2301-vip{
   display:grid!important;
   grid-template-columns:1fr 190px!important;
   align-items:center!important;
@@ -82709,13 +81623,13 @@ html body #root .auth609-screen .auth2201-vip{
   background:linear-gradient(135deg, rgba(3,20,35,.82), rgba(27,17,55,.68))!important;
 }
 
-html body #root .auth609-screen .auth2201-vip b{
+html body #root .auth609-screen .auth2301-vip b{
   color:#fff!important;
   font-size:15px!important;
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-vip p{
+html body #root .auth609-screen .auth2301-vip p{
   margin:6px 0 10px!important;
   color:rgba(212,232,240,.70)!important;
   font-size:11.5px!important;
@@ -82723,7 +81637,7 @@ html body #root .auth609-screen .auth2201-vip p{
   font-weight:750!important;
 }
 
-html body #root .auth609-screen .auth2201-vip button{
+html body #root .auth609-screen .auth2301-vip button{
   border:0!important;
   border-radius:10px!important;
   padding:9px 15px!important;
@@ -82733,14 +81647,14 @@ html body #root .auth609-screen .auth2201-vip button{
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-vip > span{
+html body #root .auth609-screen .auth2301-vip > span{
   font-size:54px!important;
   letter-spacing:6px!important;
   filter:drop-shadow(0 0 16px rgba(255,203,75,.3))!important;
   text-align:right!important;
 }
 
-html body #root .auth609-screen .auth2201-hot-strip{
+html body #root .auth609-screen .auth2301-hot{
   position:relative!important;
   z-index:6!important;
   display:flex!important;
@@ -82756,19 +81670,19 @@ html body #root .auth609-screen .auth2201-hot-strip{
   white-space:nowrap!important;
 }
 
-html body #root .auth609-screen .auth2201-hot-strip b{
+html body #root .auth609-screen .auth2301-hot b{
   color:#1fffb1!important;
   font-size:12px!important;
   font-weight:1000!important;
 }
 
-html body #root .auth609-screen .auth2201-hot-strip span{
+html body #root .auth609-screen .auth2301-hot span{
   color:rgba(220,239,246,.78)!important;
   font-size:12px!important;
   font-weight:850!important;
 }
 
-html body #root .auth609-screen .auth2201-hot-strip i{
+html body #root .auth609-screen .auth2301-hot i{
   width:4px!important;
   height:4px!important;
   border-radius:50%!important;
@@ -82777,208 +81691,64 @@ html body #root .auth609-screen .auth2201-hot-strip i{
 }
 
 @media (max-width:1700px){
-  html body #root .auth609-screen .auth2201-full-mockup{
-    left:612px!important;
-    right:24px!important;
-    height:735px!important;
-    padding:18px 20px 14px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-topbar{
-    grid-template-columns:1fr 260px 72px 115px!important;
-    height:42px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-topbar nav{
-    gap:16px!important;
-    padding-left:8px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-topbar nav span{
-    font-size:10.5px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-search,
-  html body #root .auth609-screen .auth2201-lang,
-  html body #root .auth609-screen .auth2201-topbar button{
-    height:36px!important;
-    font-size:11px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-hero{
-    min-height:330px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-copy{
-    left:8px!important;
-    top:34px!important;
-    width:500px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-copy h1{
-    font-size:40px!important;
-    margin:16px 0 12px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-copy p{
-    font-size:13px!important;
-    max-width:470px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-mini-trust{
-    width:430px!important;
-    min-height:54px!important;
-    margin-top:15px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-player{
-    left:560px!important;
-    top:6px!important;
-    transform:scale(.78)!important;
-    transform-origin:top center!important;
-  }
-
-  html body #root .auth609-screen .auth2201-ball{
-    left:560px!important;
-    top:278px!important;
-    width:92px!important;
-    height:92px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-top-tipsters{
-    right:12px!important;
-    top:76px!important;
-    width:226px!important;
-    padding:16px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-tipster-row{
-    grid-template-columns:22px 28px 1fr auto 22px!important;
-    gap:7px!important;
-    padding:8px 0!important;
-  }
-
-  html body #root .auth609-screen .auth2201-avatar{
-    width:28px!important;
-    height:28px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-ai-score{
-    left:760px!important;
-    top:106px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-ai-prob{
-    left:500px!important;
-    top:230px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-tipdna{
-    left:770px!important;
-    top:244px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-floating-card{
-    width:118px!important;
-    padding:11px 12px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-floating-card strong{
-    font-size:22px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-features{
-    grid-template-columns:repeat(5, minmax(0, 1fr))!important;
-    gap:8px!important;
-    margin-top:12px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-features article{
-    min-height:64px!important;
-    grid-template-columns:38px 1fr!important;
-    padding:10px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-features article:nth-child(n+6){
-    min-height:58px!important;
-    grid-template-columns:34px 1fr!important;
-  }
-
-  html body #root .auth609-screen .auth2201-features article > span{
-    width:34px!important;
-    height:34px!important;
-    font-size:18px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-features strong{
-    font-size:12px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-features p{
-    font-size:9.5px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-live-row{
-    grid-template-columns:68px repeat(5, minmax(0, 1fr)) 104px!important;
-    gap:7px!important;
-    margin-top:10px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-match-card{
-    min-height:58px!important;
-    padding:8px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-match-card b,
-  html body #root .auth609-screen .auth2201-match-card span,
-  html body #root .auth609-screen .auth2201-match-card em{
-    font-size:9px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-match-card strong{
-    font-size:14px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-bottom{
-    grid-template-columns:1fr 420px!important;
-    gap:8px!important;
-    margin-top:10px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-stats div{
-    padding:15px 12px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-stats strong{
-    font-size:22px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-stats span{
-    font-size:8.5px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-vip{
-    grid-template-columns:1fr 130px!important;
-    padding:14px 16px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-vip > span{
-    font-size:38px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-hot-strip{
-    height:32px!important;
-    margin-top:8px!important;
-  }
-
-  html body #root .auth609-screen .auth2201-hot-strip span,
-  html body #root .auth609-screen .auth2201-hot-strip b{
-    font-size:10px!important;
-  }
+  html body #root .auth609-screen .auth609-left-panel{width:320px!important;}
+  html body #root .auth609-screen .auth609-panel-shell{padding:24px 24px 18px!important;}
+  html body #root .auth609-screen .auth619-fused-logo{width:218px!important;max-width:218px!important;}
+  html body #root .auth609-screen .auth2301-auth-redesign{left:320px!important;padding:18px 20px 14px!important;}
+  html body #root .auth609-screen .auth2301-topbar{grid-template-columns:1fr 260px 72px 115px!important;height:42px!important;}
+  html body #root .auth609-screen .auth2301-topbar nav{gap:16px!important;padding-left:8px!important;}
+  html body #root .auth609-screen .auth2301-topbar nav span{font-size:10.5px!important;}
+  html body #root .auth609-screen .auth2301-search,
+  html body #root .auth609-screen .auth2301-language,
+  html body #root .auth609-screen .auth2301-topbar button{height:36px!important;font-size:11px!important;}
+  html body #root .auth609-screen .auth2301-hero{min-height:330px!important;}
+  html body #root .auth609-screen .auth2301-copy{left:8px!important;top:34px!important;width:500px!important;}
+  html body #root .auth609-screen .auth2301-copy h1{font-size:40px!important;margin:16px 0 12px!important;}
+  html body #root .auth609-screen .auth2301-copy p{font-size:13px!important;max-width:470px!important;}
+  html body #root .auth609-screen .auth2301-mini-row{width:430px!important;min-height:54px!important;margin-top:15px!important;}
+  html body #root .auth609-screen .auth2301-player{left:560px!important;top:6px!important;transform:scale(.78)!important;transform-origin:top center!important;}
+  html body #root .auth609-screen .auth2301-ball{left:560px!important;top:278px!important;width:92px!important;height:92px!important;}
+  html body #root .auth609-screen .auth2301-top-tipsters{right:12px!important;top:76px!important;width:226px!important;padding:16px!important;}
+  html body #root .auth609-screen .auth2301-tipster{grid-template-columns:22px 28px 1fr auto 22px!important;gap:7px!important;padding:8px 0!important;}
+  html body #root .auth609-screen .auth2301-tipster i{width:28px!important;height:28px!important;}
+  html body #root .auth609-screen .auth2301-score{left:760px!important;top:106px!important;}
+  html body #root .auth609-screen .auth2301-probability{left:500px!important;top:230px!important;}
+  html body #root .auth609-screen .auth2301-tipdna{left:770px!important;top:244px!important;}
+  html body #root .auth609-screen .auth2301-float{width:118px!important;padding:11px 12px!important;}
+  html body #root .auth609-screen .auth2301-float strong{font-size:22px!important;}
+  html body #root .auth609-screen .auth2301-features{grid-template-columns:repeat(5, minmax(0, 1fr))!important;gap:8px!important;margin-top:12px!important;}
+  html body #root .auth609-screen .auth2301-features article{min-height:64px!important;grid-template-columns:38px 1fr!important;padding:10px!important;}
+  html body #root .auth609-screen .auth2301-features article:nth-child(n+6){min-height:58px!important;grid-template-columns:34px 1fr!important;}
+  html body #root .auth609-screen .auth2301-features article > span{width:34px!important;height:34px!important;font-size:18px!important;}
+  html body #root .auth609-screen .auth2301-features strong{font-size:12px!important;}
+  html body #root .auth609-screen .auth2301-features p{font-size:9.5px!important;}
+  html body #root .auth609-screen .auth2301-live{grid-template-columns:68px repeat(5, minmax(0, 1fr)) 104px!important;gap:7px!important;margin-top:10px!important;}
+  html body #root .auth609-screen .auth2301-match{min-height:58px!important;padding:8px!important;}
+  html body #root .auth609-screen .auth2301-match b,
+  html body #root .auth609-screen .auth2301-match span,
+  html body #root .auth609-screen .auth2301-match em{font-size:9px!important;}
+  html body #root .auth609-screen .auth2301-match strong{font-size:14px!important;}
+  html body #root .auth609-screen .auth2301-bottom{grid-template-columns:1fr 420px!important;gap:8px!important;margin-top:10px!important;}
+  html body #root .auth609-screen .auth2301-stats div{padding:15px 12px!important;}
+  html body #root .auth609-screen .auth2301-stats strong{font-size:22px!important;}
+  html body #root .auth609-screen .auth2301-stats span{font-size:8.5px!important;}
+  html body #root .auth609-screen .auth2301-vip{grid-template-columns:1fr 130px!important;padding:14px 16px!important;}
+  html body #root .auth609-screen .auth2301-vip > span{font-size:38px!important;}
+  html body #root .auth609-screen .auth2301-hot{height:32px!important;margin-top:8px!important;}
+  html body #root .auth609-screen .auth2301-hot span,
+  html body #root .auth609-screen .auth2301-hot b{font-size:10px!important;}
 }
 
-@media (max-width:1380px){
-  html body #root .auth609-screen .auth2201-full-mockup{
+@media (max-width:1180px){
+  html body #root .auth609-screen{
+    overflow:auto!important;
+  }
+  html body #root .auth609-screen .auth609-left-panel{
+    position:relative!important;
+    width:100%!important;
+    min-height:100vh!important;
+  }
+  html body #root .auth609-screen .auth2301-auth-redesign{
     display:none!important;
   }
 }

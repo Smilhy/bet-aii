@@ -25093,6 +25093,32 @@ function AuthView({ onAuth }) {
                   </span>
                 </button>
 
+                <div className="auth2301-left-socials" aria-label={authLang === 'en' ? 'Social login preview' : 'Social logowanie — podgląd'}>
+                  <span>{authLang === 'en' ? 'OR LOG IN WITH' : 'LUB ZALOGUJ SIĘ PRZEZ'}</span>
+                  <div>
+                    <i>✈</i><i>🎮</i><i>◎</i><i>𝕏</i><i>f</i><i>♪</i>
+                  </div>
+                </div>
+
+                <div className="auth2301-left-stats" aria-label={authLang === 'en' ? 'Platform stats' : 'Statystyki platformy'}>
+                  <div><b>22 847</b><small>{authLang === 'en' ? 'Active users' : 'Aktywnych użytkowników'}</small></div>
+                  <div><b>6.4k</b><small>{authLang === 'en' ? 'Picks today' : 'Typów dzisiaj'}</small></div>
+                  <div><b>42%</b><small>{authLang === 'en' ? 'AI accuracy' : 'Skuteczność AI'}</small></div>
+                  <div><b>3 842</b><small>{authLang === 'en' ? 'Premium picks' : 'Typów premium'}</small></div>
+                  <div><b>1 256</b><small>{authLang === 'en' ? 'Matches today' : 'Meczów dzisiaj'}</small></div>
+                  <div><b>+18.6%</b><small>ROI 30 dni</small></div>
+                </div>
+
+                <div className="auth2301-left-safe">
+                  <strong>🛡️ {authLang === 'en' ? 'Safe and trusted' : 'Bezpieczne i zaufane'}</strong>
+                  <p>{authLang === 'en' ? 'Your data is protected 100%.' : 'Twoje dane są chronione w 100%.'}</p>
+                </div>
+
+                <footer className="auth2301-left-footer">
+                  <span>© 2025 Bet+AI</span>
+                  <small>Regulamin · Prywatność · Kontakt</small>
+                </footer>
+
                 {authMessage ? (
                   <div className={`auth481-message ${authMessageType} auth609-message`} role="status" aria-live="polite">
                     {authMessage}
@@ -25102,7 +25128,8 @@ function AuthView({ onAuth }) {
             </div>
           </section>
 
-          <FullMockupAuthV22 authLang={authLang} />
+
+          <AuthFromScratchLandingV23 authLang={authLang} />
 
           <div className="auth617-feature-strip" aria-label={t.benefitsLabel}>
             <div className="auth617-feature-card">
@@ -25190,13 +25217,10 @@ function AuthView({ onAuth }) {
 }
 
 
-
-
-
-function FullMockupAuthV22({ authLang = 'pl' }) {
+function AuthFromScratchLandingV23({ authLang = 'pl' }) {
   const isEnglish = authLang === 'en'
 
-  const topTipsters = [
+  const tipsters = [
     ['1', 'gimbizi', '95 bets', '+49.6%', '9.8'],
     ['2', 'Smilyhtv', '914 bets', '+32.8%', '9.5'],
     ['3', 'Recuris', '716 bets', '+32.0%', '9.3'],
@@ -25207,63 +25231,53 @@ function FullMockupAuthV22({ authLang = 'pl' }) {
   const featureCards = isEnglish
     ? [
         ['🛒', 'Marketplace', 'Buy and sell premium and free picks'],
-        ['⭐', 'Free & Premium Picks', 'Daily free picks and premium tipster offers'],
-        ['🧠', 'AI Analysis', 'AI models analyse every match'],
+        ['⭐', 'Free & Premium Picks', 'Daily free picks and premium offers'],
+        ['🧠', 'AI Analysis', 'AI analyses match context and markets'],
         ['🏆', 'Tipster Rankings', 'Find the best tipsters and results'],
-        ['👤', 'Profiles & Stats', 'Profile history, balance and ROI'],
-        ['🤖', 'AI Coach', 'Your personal betting assistant 24/7'],
-        ['🧬', 'Tip DNA', 'Match picks to your style and strategy'],
-        ['🛡️', 'Trust Score', 'Reliability and trust indicators'],
-        ['📰', 'Sports News', 'Latest news, transfers and match context'],
-        ['LIVE', 'Live Scores', 'Live scores, stats and match flow'],
-        ['👥', 'Community', 'Live chat, discussions and pick sharing']
+        ['👤', 'Profiles & Stats', 'Profile history, statistics and ROI'],
+        ['🤖', 'AI Coach', 'Personal betting assistant 24/7'],
+        ['🧬', 'Tip DNA', 'Match picks to your strategy'],
+        ['🛡️', 'Trust Score', 'Reliability and trust indicator'],
+        ['📰', 'Sports News', 'Latest news and pre-match context'],
+        ['LIVE', 'Live Scores', 'Live scores, statistics and match flow'],
+        ['👥', 'Community', 'Chat, discussions and pick sharing']
       ]
     : [
         ['🛒', 'Marketplace', 'Kupuj i sprzedawaj typy premium i free'],
-        ['⭐', 'Typy Free & Premium', 'Darmowe typy każdego dnia oraz premium od typerów'],
-        ['🧠', 'Analizy AI', 'Sztuczna inteligencja analizuje każdy mecz'],
-        ['🏆', 'Rankingi Typerów', 'Sprawdź najlepszych i śledź ich wyniki'],
-        ['👤', 'Profile i Statystyki', 'Szczegółowe profile, statystyki i historia'],
-        ['🤖', 'AI Coach', 'Twój osobisty asystent typowania 24/7'],
-        ['🧬', 'Tip DNA', 'Dopasuj typy do swojego stylu gry i strategii'],
+        ['⭐', 'Typy Free & Premium', 'Darmowe typy każdego dnia oraz oferty premium'],
+        ['🧠', 'Analizy AI', 'AI analizuje kontekst meczu i rynki'],
+        ['🏆', 'Rankingi Typerów', 'Sprawdź najlepszych i śledź wyniki'],
+        ['👤', 'Profile i Statystyki', 'Historia profilu, statystyki i ROI'],
+        ['🤖', 'AI Coach', 'Osobisty asystent typowania 24/7'],
+        ['🧬', 'Tip DNA', 'Dopasowanie typów do strategii'],
         ['🛡️', 'Trust Score', 'Wskaźnik zaufania i wiarygodności'],
-        ['📰', 'Newsy Sportowe', 'Najnowsze informacje, transfery i analizy'],
-        ['LIVE', 'Wyniki Live', 'Wyniki na żywo, statystyki i przebieg meczów'],
-        ['👥', 'Społeczność', 'Czat na żywo, dyskusje i wymiana typów']
+        ['📰', 'Newsy Sportowe', 'Informacje i kontekst przedmeczowy'],
+        ['LIVE', 'Wyniki Live', 'Wyniki na żywo, statystyki i przebieg'],
+        ['👥', 'Społeczność', 'Czat, dyskusje i wymiana typów']
       ]
 
-  const liveMatches = [
-    ['Man City', 'Arsenal', '1:1', '62’', ['2.15', '3.40', '3.20']],
-    ['Real Madryt', 'Barcelona', '0:2', '48’', ['2.45', '3.60', '2.65']],
-    ['Bayern', 'Dortmund', '1:0', '55’', ['1.72', '3.80', '4.20']],
-    ['PSG', 'Marselle', '2:1', '76’', ['1.55', '4.10', '5.40']],
-    ['Liverpool', 'Chelsea', isEnglish ? 'TOMORROW 17:30' : 'JUTRO 17:30', '', ['2.20', '3.30', '3.10']]
+  const matches = [
+    ['Man City', 'Arsenal', '1:1', '62’', '2.15   3.40   3.20'],
+    ['Real Madryt', 'Barcelona', '0:2', '48’', '2.45   3.60   2.65'],
+    ['Bayern', 'Dortmund', '1:0', '55’', '1.72   3.80   4.20'],
+    ['PSG', 'Marselle', '2:1', '76’', '1.55   4.10   5.40'],
+    ['Liverpool', 'Chelsea', isEnglish ? 'TOMORROW 17:30' : 'JUTRO 17:30', '', '2.20   3.30   3.10']
   ]
 
   const stats = isEnglish
-    ? [
-        ['15 000+', 'ACTIVE USERS'],
-        ['50 000+', 'PUBLISHED PICKS'],
-        ['€250K+', 'PAID WINNINGS'],
-        ['92%', 'SATISFIED USERS']
-      ]
-    : [
-        ['15 000+', 'AKTYWNYCH UŻYTKOWNIKÓW'],
-        ['50 000+', 'OPUBLIKOWANYCH TYPÓW'],
-        ['€250K+', 'WYPŁACONYCH WYGRANYCH'],
-        ['92%', 'ZADOWOLONYCH UŻYTKOWNIKÓW']
-      ]
+    ? [['15 000+', 'ACTIVE USERS'], ['50 000+', 'PUBLISHED PICKS'], ['€250K+', 'PAID WINNINGS'], ['92%', 'HAPPY USERS']]
+    : [['15 000+', 'AKTYWNYCH UŻYTKOWNIKÓW'], ['50 000+', 'OPUBLIKOWANYCH TYPÓW'], ['€250K+', 'WYPŁACONYCH WYGRANYCH'], ['92%', 'ZADOWOLONYCH UŻYTKOWNIKÓW']]
 
   return (
-    <section className="auth2201-full-mockup" aria-labelledby="auth2201-title">
-      <div className="auth2201-stadium-bg" aria-hidden="true" />
-      <div className="auth2201-light auth2201-light-left" aria-hidden="true" />
-      <div className="auth2201-light auth2201-light-center" aria-hidden="true" />
-      <div className="auth2201-light auth2201-light-right" aria-hidden="true" />
-      <div className="auth2201-particles" aria-hidden="true" />
-      <div className="auth2201-grid-floor" aria-hidden="true" />
+    <section className="auth2301-auth-redesign" aria-labelledby="auth2301-title">
+      <div className="auth2301-stadium" aria-hidden="true" />
+      <div className="auth2301-light auth2301-light-a" aria-hidden="true" />
+      <div className="auth2301-light auth2301-light-b" aria-hidden="true" />
+      <div className="auth2301-light auth2301-light-c" aria-hidden="true" />
+      <div className="auth2301-energy" aria-hidden="true" />
+      <div className="auth2301-pitch" aria-hidden="true" />
 
-      <header className="auth2201-topbar">
+      <header className="auth2301-topbar">
         <nav>
           <span>Marketplace</span>
           <span>{isEnglish ? 'Picks' : 'Typy'}</span>
@@ -25273,15 +25287,15 @@ function FullMockupAuthV22({ authLang = 'pl' }) {
           <span>{isEnglish ? 'Live Scores' : 'Wyniki Live'}</span>
           <span>{isEnglish ? 'Rewards' : 'Nagrody'}</span>
         </nav>
-        <div className="auth2201-search">⌕ {isEnglish ? 'Search matches, tipsters, leagues...' : 'Szukaj meczów, typerów, lig...'}</div>
-        <div className="auth2201-lang">◎ PL</div>
+        <div className="auth2301-search">⌕ {isEnglish ? 'Search matches, tipsters, leagues...' : 'Szukaj meczów, typerów, lig...'}</div>
+        <div className="auth2301-language">◎ PL</div>
         <button type="button">{isEnglish ? 'Join now' : 'Dołącz teraz'}</button>
       </header>
 
-      <main className="auth2201-hero">
-        <div className="auth2201-copy">
-          <div className="auth2201-kicker"><i />{isEnglish ? 'NEW GENERATION PLATFORM' : 'PLATFORMA NOWEJ GENERACJI'}</div>
-          <h1 id="auth2201-title">
+      <main className="auth2301-hero">
+        <div className="auth2301-copy">
+          <div className="auth2301-kicker"><i />{isEnglish ? 'NEW GENERATION PLATFORM' : 'PLATFORMA NOWEJ GENERACJI'}</div>
+          <h1 id="auth2301-title">
             {isEnglish ? (
               <>Bet+AI — premium<br /><em>sports picks marketplace</em>, AI analysis<br />and tipster community</>
             ) : (
@@ -25290,118 +25304,96 @@ function FullMockupAuthV22({ authLang = 'pl' }) {
           </h1>
           <p>
             {isEnglish
-              ? 'Buy and sell picks, use AI analysis, follow tipster rankings, live scores and build your edge with Bet+AI.'
+              ? 'Buy and sell picks, use AI analysis, follow rankings and live scores, and build your edge with Bet+AI.'
               : 'Kupuj i sprzedawaj typy, korzystaj z analiz AI, śledź rankingi typerów, wyniki na żywo i buduj przewagę z Bet+AI.'}
           </p>
-          <div className="auth2201-mini-trust">
-            <span>🛡️ <b>{isEnglish ? 'AI Analysis' : 'AI Analizy'}</b><small>{isEnglish ? 'data edge' : 'przewaga danych'}</small></span>
-            <span>👥 <b>{isEnglish ? 'Community' : 'Społeczność'}</b><small>{isEnglish ? 'active tipsters' : 'aktywni typerzy'}</small></span>
-            <span>✦ <b>{isEnglish ? 'Trust' : 'Zaufanie'}</b><small>Trust Score</small></span>
+          <div className="auth2301-mini-row">
+            <span>🛡️ <b>AI Analizy</b><small>Przewaga danych</small></span>
+            <span>👥 <b>Społeczność</b><small>Tysiące aktywnych typerów</small></span>
+            <span>✦ <b>Zaufanie</b><small>Trust Score & weryfikacja</small></span>
           </div>
         </div>
 
-        <div className="auth2201-player" aria-hidden="true">
-          <div className="auth2201-player-glow" />
-          <div className="auth2201-player-head" />
-          <div className="auth2201-player-body"><span>Bet+AI</span><b>10</b></div>
-          <div className="auth2201-player-arm auth2201-player-arm-l" />
-          <div className="auth2201-player-arm auth2201-player-arm-r" />
-          <div className="auth2201-player-leg auth2201-player-leg-l" />
-          <div className="auth2201-player-leg auth2201-player-leg-r" />
+        <div className="auth2301-player" aria-hidden="true">
+          <div className="auth2301-player-glow" />
+          <div className="auth2301-player-head" />
+          <div className="auth2301-player-body"><b>Bet+AI</b><span>10</span></div>
+          <div className="auth2301-arm auth2301-arm-left" />
+          <div className="auth2301-arm auth2301-arm-right" />
+          <div className="auth2301-leg auth2301-leg-left" />
+          <div className="auth2301-leg auth2301-leg-right" />
         </div>
 
-        <div className="auth2201-ball" aria-hidden="true"><i /></div>
+        <div className="auth2301-ball" aria-hidden="true"><i /></div>
 
-        <aside className="auth2201-floating-card auth2201-ai-score">
+        <aside className="auth2301-float auth2301-score">
           <small>AI TRUST SCORE</small>
           <strong>9.3/10</strong>
           <span>{isEnglish ? 'HIGH RELIABILITY' : 'WYSOKA WIARYGODNOŚĆ'}</span>
         </aside>
 
-        <aside className="auth2201-floating-card auth2201-ai-prob">
+        <aside className="auth2301-float auth2301-probability">
           <small>AI PROBABILITY</small>
           <strong>87%</strong>
           <span>{isEnglish ? 'WIN CHANCE' : 'SZANSA NA WYGRANĄ'}</span>
         </aside>
 
-        <aside className="auth2201-floating-card auth2201-tipdna">
+        <aside className="auth2301-float auth2301-tipdna">
           <small>TIP DNA MATCH</small>
           <strong>92%</strong>
           <span>{isEnglish ? 'MATCHED' : 'DOPASOWANIE'}</span>
         </aside>
 
-        <aside className="auth2201-top-tipsters" aria-label={isEnglish ? 'Top tipsters' : 'Top typerzy'}>
-          <div className="auth2201-panel-head">
-            <strong>{isEnglish ? 'TOP TIPSTERS' : 'TOP TYPERZY'}</strong>
-            <small>{isEnglish ? 'SEE RANKING' : 'ZOBACZ RANKING'} ›</small>
-          </div>
-          {topTipsters.map(([rank, name, bets, roi, rating]) => (
-            <div className="auth2201-tipster-row" key={name}>
+        <aside className="auth2301-top-tipsters">
+          <div className="auth2301-panel-head"><strong>{isEnglish ? 'TOP TIPSTERS' : 'TOP TYPERZY'}</strong><small>{isEnglish ? 'SEE RANKING' : 'ZOBACZ RANKING'} ›</small></div>
+          {tipsters.map(([rank, name, bets, roi, score]) => (
+            <div className="auth2301-tipster" key={name}>
               <span>{rank}</span>
-              <div className="auth2201-avatar" />
-              <div>
-                <b>{name}</b>
-                <small>{bets}</small>
-              </div>
+              <i />
+              <div><b>{name}</b><small>{bets}</small></div>
               <strong>{roi}</strong>
-              <em>{rating}</em>
+              <em>{score}</em>
             </div>
           ))}
           <button type="button">{isEnglish ? 'See full ranking' : 'Zobacz pełny ranking'}</button>
         </aside>
       </main>
 
-      <section className="auth2201-features" aria-label={isEnglish ? 'Platform features' : 'Funkcje platformy'}>
+      <section className="auth2301-features">
         {featureCards.map(([icon, title, text]) => (
           <article key={title}>
             <span className={icon === 'LIVE' ? 'is-live' : ''}>{icon}</span>
-            <div>
-              <strong>{title}</strong>
-              <p>{text}</p>
-            </div>
+            <div><strong>{title}</strong><p>{text}</p></div>
           </article>
         ))}
       </section>
 
-      <section className="auth2201-live-row" aria-label={isEnglish ? 'Live match odds' : 'Kursy live'}>
-        <div className="auth2201-live-label">
-          <b>{isEnglish ? 'LIVE NOW' : 'NA ŻYWO'}</b>
-          <small>12 {isEnglish ? 'matches' : 'meczów'}</small>
-        </div>
-        {liveMatches.map(([home, away, score, minute, odds]) => (
-          <div className="auth2201-match-card" key={`${home}-${away}`}>
-            <div>
-              <b>{home}</b>
-              <span>{away}</span>
-            </div>
+      <section className="auth2301-live">
+        <div className="auth2301-live-title"><b>{isEnglish ? 'LIVE NOW' : 'NA ŻYWO'}</b><small>12 {isEnglish ? 'matches' : 'meczów'}</small></div>
+        {matches.map(([home, away, score, minute, odds]) => (
+          <div className="auth2301-match" key={`${home}-${away}`}>
+            <div><b>{home}</b><span>{away}</span></div>
             <strong>{score}</strong>
-            {minute ? <small>{minute}</small> : <small>&nbsp;</small>}
-            <em>{odds.join('   ')}</em>
+            <small>{minute || ' '}</small>
+            <em>{odds}</em>
           </div>
         ))}
         <button type="button">{isEnglish ? 'See all' : 'Zobacz wszystkie'}</button>
       </section>
 
-      <section className="auth2201-bottom">
-        <div className="auth2201-stats">
+      <section className="auth2301-bottom">
+        <div className="auth2301-stats">
           {stats.map(([value, label]) => (
-            <div key={label}>
-              <strong>{value}</strong>
-              <span>{label}</span>
-            </div>
+            <div key={label}><strong>{value}</strong><span>{label}</span></div>
           ))}
         </div>
-        <div className="auth2201-vip">
-          <div>
-            <b>👑 {isEnglish ? 'VIP Rewards Program' : 'Program VIP & Nagrody'}</b>
-            <p>{isEnglish ? 'Earn badges, rank up and win exclusive rewards.' : 'Zdobywaj odznaki, awansuj w rankingach i wygrywaj ekskluzywne nagrody!'}</p>
-            <button type="button">{isEnglish ? 'Check rewards' : 'Sprawdź nagrody'}</button>
-          </div>
+        <div className="auth2301-vip">
+          <div><b>👑 {isEnglish ? 'VIP Rewards Program' : 'Program VIP & Nagrody'}</b><p>{isEnglish ? 'Earn badges, rank up and win exclusive rewards.' : 'Zdobywaj odznaki, awansuj w rankingach i wygrywaj ekskluzywne nagrody!'}</p><button type="button">{isEnglish ? 'Check rewards' : 'Sprawdź nagrody'}</button></div>
           <span>🏅 💎 🏆</span>
         </div>
       </section>
 
-      <footer className="auth2201-hot-strip">
+      <footer className="auth2301-hot">
         <b>🔥 HOT TIP</b>
         <span>gimbizi wygrał 9.8% na typie Man City — Arsenal @2.15</span>
         <i />
