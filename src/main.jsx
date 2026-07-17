@@ -3438,7 +3438,14 @@ function normalizeRankingYield(row = {}) {
 // WERSJA 1817 — jeden kanon statystyk profilu dla Mój profil, kart kuponów,
 // prawego Top typerzy i pełnej zakładki Ranking.
 function buildCanonicalProfileStatsV1817(profile = {}, tips = []) {
-  const imported = getImportedProfileStats(profile)
+  // WERSJA 20: najpierw bierzemy realny import profilu podpięty do rekordu typu.
+  // `author_visible_stats` może być starym snapshotem z chwili publikacji kuponu,
+  // dlatego nie może być źródłem prawdy dla aktualnego Dashboardu / Rankingu.
+  const directImported = getImportedProfileStats(profile)
+  const embeddedImported = profile?.author_imported_stats && Number(profile.author_imported_stats?.totalTips || 0) > 0
+    ? profile.author_imported_stats
+    : null
+  const imported = directImported || embeddedImported
   const profileIds = new Set([
     profile?.id,
     profile?.user_id,
@@ -3493,10 +3500,16 @@ function buildCanonicalProfileStatsV1817(profile = {}, tips = []) {
 
 function buildRankingRowsFromTipCards(tips = []) {
   const rows = new Map()
+  const canonicalStatsCacheV20 = new Map()
   ;(tips || []).forEach(tipRaw => {
     const tip = normalizeTipRow(tipRaw)
-    const stats = tip.author_visible_stats || getImportedProfileStats(tip) || getTipFallbackAuthorStats(tip)
     const key = getRankingIdentityKey(tip)
+    const cacheKey = key || getTipAuthorStatsKey(tip)
+    let stats = canonicalStatsCacheV20.get(cacheKey)
+    if (!stats) {
+      stats = buildCanonicalProfileStatsV1817(tip, tips) || tip.author_visible_stats || getTipFallbackAuthorStats(tip)
+      if (cacheKey) canonicalStatsCacheV20.set(cacheKey, stats)
+    }
     if (!key) return
     const previous = rows.get(key) || {}
     const profit = Number(stats?.profit ?? tip.imported_profit ?? tip.profit ?? 0) || 0
@@ -15872,9 +15885,11 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const createdAgo = formatRelativeAddedTime(tip?.created_at, lang)
   const dashboardBotStatsV1794 = useBetaiBotDashboardStatsV1794(tip)
   const isDashboardBotV1794 = isBetaiMultisportRecordV1794(tip)
-  const dashboardAuthorStats = getAuthorStatsLabels(
-    dashboardBotStatsV1794 || tip.author_visible_stats || getTipFallbackAuthorStats(tip)
-  )
+  const dashboardCanonicalAuthorStatsV20 = useMemo(() => {
+    if (dashboardBotStatsV1794) return dashboardBotStatsV1794
+    return buildCanonicalProfileStatsV1817(tip, allTips) || tip.author_visible_stats || getTipFallbackAuthorStats(tip)
+  }, [dashboardBotStatsV1794, tip, allTips])
+  const dashboardAuthorStats = getAuthorStatsLabels(dashboardCanonicalAuthorStatsV20)
   const dashboardBotStatsLoadingV1794 = false
   const showFollowButton = !isOwnTip
   const tipsterRecentForm = useMemo(() => buildRecentFormForTipster(allTips, tip, 5), [allTips, tip])
@@ -23907,7 +23922,7 @@ function LeaderboardView({
                     <button
                       type="button"
                       key={`yield-podium-${row.rowRef || row.id || name}-${place}`}
-                      className={`ranking-yield-podium-person-v19 place-${place}`}
+                      className={`ranking-yield-podium-person-v19 podium-place-${place}`}
                       onClick={() => openRow(row)}
                       title={lang === 'en' ? `Open ${name}'s profile` : `Otwórz profil typera ${name}`}
                     >

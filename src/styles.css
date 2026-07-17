@@ -81292,11 +81292,11 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   filter:brightness(1.12)!important;
   outline:none!important;
 }
-.ranking-yield-podium-person-v19.place-1{
+.ranking-yield-podium-person-v19.podium-place-1{
   transform:translateY(-13px) scale(1.08)!important;
 }
-.ranking-yield-podium-person-v19.place-1:hover,
-.ranking-yield-podium-person-v19.place-1:focus-visible{
+.ranking-yield-podium-person-v19.podium-place-1:hover,
+.ranking-yield-podium-person-v19.podium-place-1:focus-visible{
   transform:translateY(-18px) scale(1.08)!important;
 }
 .ranking-yield-avatar-shell-v19{
@@ -81309,9 +81309,9 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   justify-content:center!important;
   border-radius:50%!important;
 }
-.ranking-yield-podium-person-v19.place-1 .ranking-yield-avatar-shell-v19{--podium-accent:#ffd100;width:88px!important;height:88px!important}
-.ranking-yield-podium-person-v19.place-2 .ranking-yield-avatar-shell-v19{--podium-accent:#dbe7f1}
-.ranking-yield-podium-person-v19.place-3 .ranking-yield-avatar-shell-v19{--podium-accent:#f09a3f}
+.ranking-yield-podium-person-v19.podium-place-1 .ranking-yield-avatar-shell-v19{--podium-accent:#ffd100;width:88px!important;height:88px!important}
+.ranking-yield-podium-person-v19.podium-place-2 .ranking-yield-avatar-shell-v19{--podium-accent:#dbe7f1}
+.ranking-yield-podium-person-v19.podium-place-3 .ranking-yield-avatar-shell-v19{--podium-accent:#f09a3f}
 .ranking-yield-avatar-shell-v19::before{
   content:"";
   position:absolute!important;
@@ -81406,7 +81406,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   .ranking-yield-podium-head-v19 small{display:block!important;max-width:none!important;margin-top:6px!important;text-align:center!important}
   .ranking-yield-podium-stage-v19{grid-template-columns:repeat(3,minmax(78px,1fr))!important;gap:8px!important;min-height:150px!important}
   .ranking-yield-avatar-shell-v19{width:62px!important;height:62px!important}
-  .ranking-yield-podium-person-v19.place-1 .ranking-yield-avatar-shell-v19{width:72px!important;height:72px!important}
+  .ranking-yield-podium-person-v19.podium-place-1 .ranking-yield-avatar-shell-v19{width:72px!important;height:72px!important}
   .ranking-yield-name-v19{max-width:96px!important;font-size:11px!important}
   .ranking-yield-value-v19{font-size:15px!important}
   .ranking-yield-podium-person-v19 small{font-size:9px!important}
@@ -81417,6 +81417,6 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   .ranking-live-kpi-v19 > i{display:none!important}
   .ranking-yield-podium-stage-v19{gap:3px!important}
   .ranking-yield-avatar-shell-v19{width:55px!important;height:55px!important}
-  .ranking-yield-podium-person-v19.place-1 .ranking-yield-avatar-shell-v19{width:64px!important;height:64px!important}
+  .ranking-yield-podium-person-v19.podium-place-1 .ranking-yield-avatar-shell-v19{width:64px!important;height:64px!important}
   .ranking-yield-name-v19{max-width:82px!important;font-size:10px!important}
 }
