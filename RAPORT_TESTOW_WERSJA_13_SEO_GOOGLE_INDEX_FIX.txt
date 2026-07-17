@@ -1,0 +1,33 @@
+WERSJA 13 — SEO GOOGLE INDEX FIX
+
+Zakres zmian:
+- Nie ruszano logiki aplikacji React.
+- Nie ruszano Supabase.
+- Nie ruszano funkcji Netlify.
+- Nie ruszano typów, Team Total, Coach AI, Tip DNA ani marketplace.
+- Zmienione zostały tylko statyczne elementy SEO.
+
+Dodano / poprawiono:
+- index.html: title, meta description, keywords, robots, googlebot.
+- index.html: canonical dla https://bet-ai.app/.
+- index.html: Open Graph dla Facebook/WhatsApp.
+- index.html: Twitter/X Card.
+- index.html: Schema.org JSON-LD: WebSite, Organization, SoftwareApplication.
+- index.html: noscript z publicznym opisem strony dla robotów i użytkowników bez JS.
+- public/robots.txt.
+- public/sitemap.xml.
+- public/seo-betai.txt.
+
+Testy:
+- npm ci --no-audit --no-fund: OK.
+- npm run build: OK.
+- npm audit --audit-level=moderate: OK, 0 podatności.
+- dist/robots.txt: OK.
+- dist/sitemap.xml: OK.
+- dist/index.html zawiera meta title i Schema.org: OK.
+
+Po wdrożeniu:
+- Sprawdź https://bet-ai.app/robots.txt
+- Sprawdź https://bet-ai.app/sitemap.xml
+- W Google Search Console dodaj sitemap.xml.
+- Potem użyj URL Inspection dla https://bet-ai.app/ i kliknij Request indexing.
