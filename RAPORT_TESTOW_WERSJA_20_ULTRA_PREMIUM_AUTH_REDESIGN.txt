@@ -1,0 +1,60 @@
+WERSJA 20 — ULTRA PREMIUM AUTH REDESIGN
+
+Cel:
+- Pełny premium redesign ekranu wejściowego/login.
+- Połączenie stylu Bet+AI, Blogabet i Betfolio w jeden wygląd:
+  stadion,
+  światła,
+  hero sportowy,
+  marketplace,
+  top typerzy,
+  karty AI,
+  live pasek typów,
+  statystyki,
+  nagrody,
+  społeczność.
+- Efekt ma wyglądać jak mocny landing premium, nie jak zwykły panel naklejony na dashboard.
+
+Zakres zmian:
+- Nie ruszano logiki aplikacji.
+- Nie ruszano Supabase.
+- Nie ruszano Netlify Functions.
+- Nie ruszano typów, płatności, profili, statystyk, Coach AI, Tip DNA, Trust Score ani Team Total.
+- Zmieniono wyłącznie publiczny wygląd ekranu AUTH/login oraz statyczne meta title/description.
+- Zachowano Google verification:
+  public/googlea601831ff84cc508.html
+- Zachowano robots.txt i sitemap.xml.
+
+Nowy wygląd AUTH:
+- Premium hero po prawej stronie.
+- Stadionowe światła i ciemne sportowe tło.
+- Wizualny piłkarz/hero z Bet+AI.
+- Karta Top typerów.
+- Karta AI Trust Score.
+- Karta AI Probability.
+- Kafelki funkcji:
+  Marketplace,
+  Analizy AI,
+  Typerzy,
+  Nagrody,
+  Newsy,
+  Społeczność.
+- Pasek live typów.
+- Statystyki społeczności i platformy.
+
+Responsywność:
+- Na dużych ekranach pokazuje pełny ultra premium hero.
+- Na mniejszych ekranach hero ukrywa się, żeby nie psuć mobile/tablet.
+
+Testy:
+- npm ci --no-audit --no-fund: OK.
+- npm run build: OK.
+- dist/index.html: OK.
+- dist/robots.txt: OK.
+- dist/sitemap.xml: OK.
+- dist/googlea601831ff84cc508.html: OK.
+- npm audit --audit-level=moderate: OK, 0 podatności
+
+Uwaga:
+- Test build przeszedł poprawnie.
+- Warning Vite o dużych chunkach był już wcześniej i nie blokuje deploya.

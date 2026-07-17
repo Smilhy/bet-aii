@@ -25102,7 +25102,7 @@ function AuthView({ onAuth }) {
             </div>
           </section>
 
-          <PublicSeoPanelV19 authLang={authLang} />
+          <PremiumAuthHeroV20 authLang={authLang} />
 
           <div className="auth617-feature-strip" aria-label={t.benefitsLabel}>
             <div className="auth617-feature-card">
@@ -25191,82 +25191,141 @@ function AuthView({ onAuth }) {
 
 
 
-function PublicSeoPanelV19({ authLang = 'pl' }) {
+
+function PremiumAuthHeroV20({ authLang = 'pl' }) {
   const isEnglish = authLang === 'en'
 
-  const primary = isEnglish
+  const features = isEnglish
     ? [
-        ['Marketplace', 'buy and sell picks'],
-        ['AI Coach', 'profile style analysis'],
-        ['Tip DNA', 'markets and odds patterns'],
-        ['Trust Score', 'reliability signals']
+        ['Marketplace', 'Buy and sell premium sports picks'],
+        ['AI Analysis', 'Pre-match models, context and probability'],
+        ['Tipsters', 'Profiles, results, ROI and transparent history'],
+        ['Rewards', 'Rankings, achievements and VIP challenges'],
+        ['News', 'Sports news, match info and live context'],
+        ['Community', 'Live chat, follows and active users']
       ]
     : [
-        ['Marketplace', 'kupno i sprzedaż typów'],
-        ['AI Coach', 'analiza stylu profilu'],
-        ['Tip DNA', 'rynki i schematy kursów'],
-        ['Trust Score', 'sygnały wiarygodności']
+        ['Marketplace', 'Kupuj i sprzedawaj typy premium'],
+        ['Analizy AI', 'Modele przedmeczowe, kontekst i prawdopodobieństwo'],
+        ['Typerzy', 'Profile, wyniki, ROI i przejrzysta historia'],
+        ['Nagrody', 'Rankingi, osiągnięcia i wyzwania VIP'],
+        ['Newsy', 'Informacje sportowe, zapowiedzi i kontekst live'],
+        ['Społeczność', 'Czat live, obserwacje i aktywni użytkownicy']
       ]
 
-  const flow = isEnglish
-    ? [
-        ['01', 'Find picks', 'Free picks, premium singles, news and live match context.'],
-        ['02', 'Compare tipsters', 'Rankings, balance, activity, win rate and profile history.'],
-        ['03', 'Use AI insight', 'AI analysis, Coach, Tip DNA and Trust Score before you trust a profile.']
-      ]
-    : [
-        ['01', 'Znajdź typy', 'Typy free, single premium, newsy i kontekst meczów live.'],
-        ['02', 'Porównaj typerów', 'Rankingi, balans, aktywność, skuteczność i historia profilu.'],
-        ['03', 'Użyj AI', 'Analiza AI, Coach, Tip DNA i Trust Score przed wyborem profilu.']
-      ]
+  const tipsters = [
+    ['1', 'Smilyhtv', '+32.8%', '914 bets'],
+    ['2', 'gimbizi', '+49.6%', '95 bets'],
+    ['3', 'Recuris', '+32.0%', '716 bets']
+  ]
 
   return (
-    <section className="auth1901-integrated-seo-v19" aria-labelledby="auth1901-title-v19">
-      <div className="auth1901-orb-v19" aria-hidden="true" />
-      <div className="auth1901-topline-v19">
-        <span>{isEnglish ? 'PUBLIC PREVIEW' : 'PODGLĄD PLATFORMY'}</span>
-        <b>{isEnglish ? 'Bet+AI live' : 'Bet+AI live'}</b>
+    <section className="auth2001-premium-hero-v20" aria-labelledby="auth2001-title-v20">
+      <div className="auth2001-stadium-light-v20 auth2001-stadium-light-a-v20" aria-hidden="true" />
+      <div className="auth2001-stadium-light-v20 auth2001-stadium-light-b-v20" aria-hidden="true" />
+      <div className="auth2001-pitch-glow-v20" aria-hidden="true" />
+
+      <header className="auth2001-nav-v20" aria-label={isEnglish ? 'Bet+AI public navigation' : 'Publiczna nawigacja Bet+AI'}>
+        <span>Bet+AI</span>
+        <nav>
+          <b>{isEnglish ? 'Marketplace' : 'Marketplace'}</b>
+          <b>{isEnglish ? 'Picks' : 'Typy'}</b>
+          <b>{isEnglish ? 'AI' : 'AI'}</b>
+          <b>{isEnglish ? 'Rankings' : 'Rankingi'}</b>
+          <b>{isEnglish ? 'Live' : 'Live'}</b>
+        </nav>
+      </header>
+
+      <div className="auth2001-copy-v20">
+        <div className="auth2001-kicker-v20">
+          <span />
+          {isEnglish ? 'Premium sports AI platform' : 'Premium platforma sportowa AI'}
+        </div>
+
+        <h1 id="auth2001-title-v20">
+          {isEnglish
+            ? 'Bet like a pro. Buy, sell and analyse picks with AI.'
+            : 'Graj jak pro. Kupuj, sprzedawaj i analizuj typy z AI.'}
+        </h1>
+
+        <p>
+          {isEnglish
+            ? 'One platform for premium sports picks, tipster rankings, AI match analysis, live scores, news, rewards, community and trust tools.'
+            : 'Jedna platforma dla typów premium, rankingów typerów, analiz meczów AI, wyników live, newsów, nagród, społeczności i narzędzi zaufania.'}
+        </p>
+
+        <div className="auth2001-actions-v20">
+          <button type="button">{isEnglish ? 'Join for free' : 'Dołącz za darmo'}</button>
+          <span>{isEnglish ? 'AI Coach • Tip DNA • Trust Score' : 'AI Coach • Tip DNA • Trust Score'}</span>
+        </div>
       </div>
 
-      <h1 id="auth1901-title-v19">
-        {isEnglish
-          ? 'Sports picks marketplace powered by AI'
-          : 'Marketplace typów sportowych wspierany przez AI'}
-      </h1>
+      <div className="auth2001-player-v20" aria-hidden="true">
+        <div className="auth2001-player-head-v20" />
+        <div className="auth2001-player-body-v20">
+          <span>BA</span>
+          <b>10</b>
+        </div>
+        <div className="auth2001-player-arm-v20 auth2001-player-arm-left-v20" />
+        <div className="auth2001-player-arm-v20 auth2001-player-arm-right-v20" />
+        <div className="auth2001-player-leg-v20 auth2001-player-leg-left-v20" />
+        <div className="auth2001-player-leg-v20 auth2001-player-leg-right-v20" />
+      </div>
 
-      <p className="auth1901-lead-v19">
-        {isEnglish
-          ? 'Buy premium picks, sell your own analysis, compare tipsters and use AI tools before choosing who to trust.'
-          : 'Kupuj typy premium, sprzedawaj własne analizy, porównuj typerów i korzystaj z narzędzi AI przed wyborem zaufanego profilu.'}
-      </p>
+      <div className="auth2001-ball-v20" aria-hidden="true">
+        <span />
+      </div>
 
-      <div className="auth1901-primary-v19">
-        {primary.map(([title, text]) => (
-          <div key={title}>
-            <strong>{title}</strong>
-            <small>{text}</small>
+      <aside className="auth2001-top-tipsters-v20" aria-label={isEnglish ? 'Top tipsters' : 'Top typerzy'}>
+        <div className="auth2001-panel-title-v20">
+          <strong>{isEnglish ? 'Top Tipsters' : 'Top typerzy'}</strong>
+          <small>{isEnglish ? 'live ranking' : 'ranking live'}</small>
+        </div>
+        {tipsters.map(([rank, name, roi, bets]) => (
+          <div className="auth2001-tipster-row-v20" key={name}>
+            <span>{rank}</span>
+            <div>
+              <b>{name}</b>
+              <small>{bets}</small>
+            </div>
+            <strong>{roi}</strong>
           </div>
         ))}
+      </aside>
+
+      <div className="auth2001-trust-card-v20">
+        <span>{isEnglish ? 'AI Trust Score' : 'AI Trust Score'}</span>
+        <strong>9.3/10</strong>
+        <small>{isEnglish ? 'high reliability' : 'wysoka wiarygodność'}</small>
       </div>
 
-      <div className="auth1901-flow-v19">
-        {flow.map(([number, title, text]) => (
-          <article key={number}>
-            <span>{number}</span>
-            <div>
-              <strong>{title}</strong>
-              <p>{text}</p>
-            </div>
+      <div className="auth2001-prob-card-v20">
+        <span>{isEnglish ? 'AI probability' : 'Prawdopodobieństwo AI'}</span>
+        <strong>87%</strong>
+        <small>{isEnglish ? 'model confidence' : 'pewność modelu'}</small>
+      </div>
+
+      <div className="auth2001-feature-grid-v20">
+        {features.map(([title, text]) => (
+          <article key={title}>
+            <span />
+            <strong>{title}</strong>
+            <p>{text}</p>
           </article>
         ))}
       </div>
 
-      <div className="auth1901-tags-v19" aria-label={isEnglish ? 'More features' : 'Więcej funkcji'}>
-        <span>{isEnglish ? 'Rewards' : 'Nagrody'}</span>
-        <span>{isEnglish ? 'Rankings' : 'Rankingi'}</span>
-        <span>{isEnglish ? 'News' : 'Newsy'}</span>
-        <span>{isEnglish ? 'Live scores' : 'Wyniki live'}</span>
-        <span>{isEnglish ? 'Community' : 'Społeczność'}</span>
+      <div className="auth2001-live-strip-v20" aria-label={isEnglish ? 'Live picks ticker' : 'Pasek typów live'}>
+        <b>{isEnglish ? 'Hot tip' : 'Hot typ'}</b>
+        <span>Man City — Arsenal @2.15</span>
+        <span>Real Madrid — Barcelona @2.45</span>
+        <span>PSG — Marseille @1.85</span>
+      </div>
+
+      <div className="auth2001-stats-v20">
+        <div><strong>15 000+</strong><span>{isEnglish ? 'active users' : 'aktywnych użytkowników'}</span></div>
+        <div><strong>50 000+</strong><span>{isEnglish ? 'published picks' : 'opublikowanych typów'}</span></div>
+        <div><strong>€250K+</strong><span>{isEnglish ? 'paid winnings' : 'wypłaconych wygranych'}</span></div>
       </div>
     </section>
   )

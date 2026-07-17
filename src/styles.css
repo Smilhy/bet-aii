@@ -81417,3 +81417,648 @@ html body #root .auth609-screen .auth1901-tags-v19 span{
   }
 }
 
+
+
+/* WERSJA 20 — Premium AUTH Redesign: Bet+AI x Blogabet x Betfolio look, bez zmian logiki */
+html body #root .auth609-screen .auth2001-premium-hero-v20{
+  position:absolute!important;
+  left:630px!important;
+  right:38px!important;
+  top:24px!important;
+  height:770px!important;
+  z-index:12!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  padding:28px 34px 26px!important;
+  border-radius:34px!important;
+  color:#f4fbff!important;
+  border:1px solid rgba(54, 231, 255, .34)!important;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.20), rgba(0,0,0,.44)),
+    radial-gradient(circle at 55% 15%, rgba(46,231,255,.24), transparent 28%),
+    radial-gradient(circle at 72% 72%, rgba(18,255,185,.15), transparent 34%),
+    linear-gradient(135deg, rgba(4,18,33,.97), rgba(2,10,20,.985) 58%, rgba(4,22,31,.97))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 0 0 1px rgba(0,255,255,.045),
+    0 0 70px rgba(0, 223, 255, .16),
+    0 32px 92px rgba(0,0,0,.52)!important;
+  backdrop-filter: blur(10px)!important;
+  isolation:isolate!important;
+}
+
+html body #root .auth609-screen .auth2001-premium-hero-v20::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  z-index:0!important;
+  background:
+    radial-gradient(circle at 19% 14%, rgba(255,255,255,.34), rgba(90,230,255,.10) 2.5%, transparent 8%),
+    radial-gradient(circle at 31% 13%, rgba(255,255,255,.30), rgba(90,230,255,.09) 2.3%, transparent 8%),
+    radial-gradient(circle at 83% 16%, rgba(255,255,255,.30), rgba(90,230,255,.09) 2.2%, transparent 8%),
+    linear-gradient(90deg, rgba(63,220,255,.055) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(63,220,255,.045) 1px, transparent 1px)!important;
+  background-size:auto, auto, auto, 56px 56px, 56px 56px!important;
+  opacity:.72!important;
+  mask-image:linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,.66) 62%, rgba(0,0,0,.25))!important;
+}
+
+html body #root .auth609-screen .auth2001-premium-hero-v20::after{
+  content:""!important;
+  position:absolute!important;
+  left:-8%!important;
+  right:-8%!important;
+  bottom:-30px!important;
+  height:255px!important;
+  pointer-events:none!important;
+  z-index:0!important;
+  background:
+    linear-gradient(180deg, transparent, rgba(0,255,170,.07) 45%, rgba(0,0,0,.50)),
+    repeating-linear-gradient(90deg, rgba(70,255,190,.13) 0 2px, transparent 2px 78px),
+    linear-gradient(90deg, transparent, rgba(49,235,255,.28), transparent)!important;
+  transform:perspective(520px) rotateX(68deg)!important;
+  transform-origin:bottom!important;
+  filter:blur(.1px)!important;
+}
+
+html body #root .auth609-screen .auth2001-stadium-light-v20{
+  position:absolute!important;
+  width:420px!important;
+  height:420px!important;
+  border-radius:50%!important;
+  pointer-events:none!important;
+  z-index:1!important;
+  background:radial-gradient(circle, rgba(120,245,255,.20), rgba(58,220,255,.075) 30%, transparent 68%)!important;
+  filter:blur(2px)!important;
+}
+
+html body #root .auth609-screen .auth2001-stadium-light-a-v20{
+  left:28%!important;
+  top:-210px!important;
+}
+
+html body #root .auth609-screen .auth2001-stadium-light-b-v20{
+  right:4%!important;
+  top:-190px!important;
+}
+
+html body #root .auth609-screen .auth2001-pitch-glow-v20{
+  position:absolute!important;
+  left:43%!important;
+  bottom:88px!important;
+  width:520px!important;
+  height:175px!important;
+  border-radius:50%!important;
+  pointer-events:none!important;
+  z-index:1!important;
+  background:radial-gradient(ellipse, rgba(30,237,255,.24), rgba(30,237,255,.07) 42%, transparent 73%)!important;
+  filter:blur(2px)!important;
+}
+
+html body #root .auth609-screen .auth2001-nav-v20{
+  position:relative!important;
+  z-index:5!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+  margin-bottom:20px!important;
+}
+
+html body #root .auth609-screen .auth2001-nav-v20 > span{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  color:#6ff7ff!important;
+  font-size:18px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:.02em!important;
+  text-shadow:0 0 18px rgba(35,235,255,.35)!important;
+}
+
+html body #root .auth609-screen .auth2001-nav-v20 > span::before{
+  content:""!important;
+  width:29px!important;
+  height:29px!important;
+  border-radius:10px!important;
+  border:1px solid rgba(62,233,255,.45)!important;
+  background:linear-gradient(135deg, rgba(22,246,255,.26), rgba(23,255,179,.10))!important;
+  box-shadow:0 0 22px rgba(35,235,255,.16)!important;
+}
+
+html body #root .auth609-screen .auth2001-nav-v20 nav{
+  display:flex!important;
+  align-items:center!important;
+  gap:18px!important;
+}
+
+html body #root .auth609-screen .auth2001-nav-v20 nav b{
+  color:rgba(229,247,255,.82)!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  text-transform:uppercase!important;
+  letter-spacing:.055em!important;
+}
+
+html body #root .auth609-screen .auth2001-copy-v20{
+  position:relative!important;
+  z-index:5!important;
+  max-width:560px!important;
+}
+
+html body #root .auth609-screen .auth2001-kicker-v20{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  padding:9px 13px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(78,233,255,.25)!important;
+  background:rgba(11,37,55,.64)!important;
+  color:#72f7ff!important;
+  font-size:11px!important;
+  font-weight:1000!important;
+  letter-spacing:.13em!important;
+  text-transform:uppercase!important;
+  box-shadow:0 0 22px rgba(42,225,255,.09)!important;
+}
+
+html body #root .auth609-screen .auth2001-kicker-v20 span{
+  width:8px!important;
+  height:8px!important;
+  border-radius:999px!important;
+  background:#27f4ff!important;
+  box-shadow:0 0 16px rgba(39,244,255,.82)!important;
+}
+
+html body #root .auth609-screen .auth2001-copy-v20 h1{
+  margin:19px 0 14px!important;
+  max-width:620px!important;
+  color:#f7fdff!important;
+  font-size:54px!important;
+  line-height:.98!important;
+  letter-spacing:-.06em!important;
+  font-weight:1000!important;
+  text-shadow:0 0 32px rgba(36,229,255,.20)!important;
+}
+
+html body #root .auth609-screen .auth2001-copy-v20 p{
+  margin:0!important;
+  max-width:560px!important;
+  color:rgba(215,236,244,.82)!important;
+  font-size:17px!important;
+  line-height:1.52!important;
+  font-weight:720!important;
+}
+
+html body #root .auth609-screen .auth2001-actions-v20{
+  display:flex!important;
+  align-items:center!important;
+  gap:14px!important;
+  margin-top:20px!important;
+}
+
+html body #root .auth609-screen .auth2001-actions-v20 button{
+  border:0!important;
+  border-radius:14px!important;
+  padding:13px 22px!important;
+  color:#04111b!important;
+  background:linear-gradient(135deg, #2ff7ff, #29b9ff)!important;
+  box-shadow:0 16px 42px rgba(39,217,255,.24)!important;
+  font-weight:1000!important;
+  cursor:default!important;
+}
+
+html body #root .auth609-screen .auth2001-actions-v20 span{
+  color:rgba(200,229,238,.78)!important;
+  font-size:13px!important;
+  font-weight:850!important;
+}
+
+html body #root .auth609-screen .auth2001-player-v20{
+  position:absolute!important;
+  right:210px!important;
+  top:108px!important;
+  width:300px!important;
+  height:360px!important;
+  z-index:3!important;
+  pointer-events:none!important;
+  filter:drop-shadow(0 0 42px rgba(30,235,255,.28))!important;
+}
+
+html body #root .auth609-screen .auth2001-player-head-v20{
+  position:absolute!important;
+  left:120px!important;
+  top:0!important;
+  width:52px!important;
+  height:58px!important;
+  border-radius:50% 50% 45% 45%!important;
+  background:linear-gradient(180deg, rgba(225,246,255,.92), rgba(73,143,168,.86))!important;
+  box-shadow:inset 0 -12px 18px rgba(0,0,0,.28), 0 0 18px rgba(60,235,255,.20)!important;
+}
+
+html body #root .auth609-screen .auth2001-player-body-v20{
+  position:absolute!important;
+  left:88px!important;
+  top:56px!important;
+  width:120px!important;
+  height:155px!important;
+  border-radius:42px 44px 36px 36px!important;
+  background:
+    linear-gradient(135deg, rgba(11,30,48,.98), rgba(5,13,24,.98)),
+    radial-gradient(circle at 35% 18%, rgba(49,242,255,.18), transparent 50%)!important;
+  border:1px solid rgba(54,232,255,.35)!important;
+  transform:skewX(-7deg) rotate(6deg)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 18px 46px rgba(0,0,0,.45)!important;
+}
+
+html body #root .auth609-screen .auth2001-player-body-v20 span{
+  position:absolute!important;
+  left:18px!important;
+  top:28px!important;
+  color:#32f6ff!important;
+  font-size:21px!important;
+  font-weight:1000!important;
+}
+
+html body #root .auth609-screen .auth2001-player-body-v20 b{
+  position:absolute!important;
+  right:18px!important;
+  bottom:22px!important;
+  color:#31f6ff!important;
+  font-size:38px!important;
+  font-weight:1000!important;
+}
+
+html body #root .auth609-screen .auth2001-player-arm-v20,
+html body #root .auth609-screen .auth2001-player-leg-v20{
+  position:absolute!important;
+  border-radius:999px!important;
+  background:linear-gradient(135deg, rgba(10,26,42,.98), rgba(5,13,24,.98))!important;
+  border:1px solid rgba(54,232,255,.20)!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.36)!important;
+}
+
+html body #root .auth609-screen .auth2001-player-arm-left-v20{
+  width:34px!important; height:150px!important; left:58px!important; top:74px!important; transform:rotate(38deg)!important;
+}
+
+html body #root .auth609-screen .auth2001-player-arm-right-v20{
+  width:34px!important; height:145px!important; right:55px!important; top:72px!important; transform:rotate(-44deg)!important;
+}
+
+html body #root .auth609-screen .auth2001-player-leg-left-v20{
+  width:38px!important; height:170px!important; left:108px!important; top:198px!important; transform:rotate(20deg)!important;
+}
+
+html body #root .auth609-screen .auth2001-player-leg-right-v20{
+  width:38px!important; height:176px!important; left:178px!important; top:192px!important; transform:rotate(-35deg)!important;
+}
+
+html body #root .auth609-screen .auth2001-ball-v20{
+  position:absolute!important;
+  right:245px!important;
+  bottom:170px!important;
+  width:118px!important;
+  height:118px!important;
+  z-index:4!important;
+  border-radius:50%!important;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255,255,255,.92), rgba(54,232,255,.32) 28%, rgba(3,26,43,.98) 66%, rgba(2,10,18,1))!important;
+  border:1px solid rgba(72,232,255,.42)!important;
+  box-shadow:0 0 42px rgba(31,235,255,.38), inset 0 0 28px rgba(45,239,255,.20)!important;
+}
+
+html body #root .auth609-screen .auth2001-ball-v20 span{
+  position:absolute!important;
+  inset:20px!important;
+  border-radius:50%!important;
+  border:2px solid rgba(50,236,255,.45)!important;
+  box-shadow:inset 0 0 18px rgba(48,236,255,.26)!important;
+}
+
+html body #root .auth609-screen .auth2001-top-tipsters-v20{
+  position:absolute!important;
+  right:34px!important;
+  top:126px!important;
+  width:250px!important;
+  z-index:5!important;
+  padding:18px!important;
+  border-radius:24px!important;
+  border:1px solid rgba(62,235,255,.22)!important;
+  background:rgba(3,18,32,.72)!important;
+  box-shadow:0 22px 48px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.07)!important;
+  backdrop-filter:blur(8px)!important;
+}
+
+html body #root .auth609-screen .auth2001-panel-title-v20{
+  display:flex!important;
+  justify-content:space-between!important;
+  align-items:flex-end!important;
+  margin-bottom:13px!important;
+}
+
+html body #root .auth609-screen .auth2001-panel-title-v20 strong{
+  color:#34f6ff!important;
+  font-size:14px!important;
+  font-weight:1000!important;
+  text-transform:uppercase!important;
+  letter-spacing:.08em!important;
+}
+
+html body #root .auth609-screen .auth2001-panel-title-v20 small{
+  color:rgba(28,255,181,.76)!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  text-transform:uppercase!important;
+}
+
+html body #root .auth609-screen .auth2001-tipster-row-v20{
+  display:grid!important;
+  grid-template-columns:27px 1fr auto!important;
+  align-items:center!important;
+  gap:10px!important;
+  padding:10px 0!important;
+  border-top:1px solid rgba(255,255,255,.07)!important;
+}
+
+html body #root .auth609-screen .auth2001-tipster-row-v20 > span{
+  display:grid!important;
+  place-items:center!important;
+  width:26px!important;
+  height:26px!important;
+  border-radius:50%!important;
+  background:linear-gradient(135deg, #ffe15d, #ff9f2e)!important;
+  color:#07131c!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+}
+
+html body #root .auth609-screen .auth2001-tipster-row-v20 b{
+  display:block!important;
+  color:#f4fbff!important;
+  font-size:13px!important;
+  line-height:1!important;
+  font-weight:950!important;
+}
+
+html body #root .auth609-screen .auth2001-tipster-row-v20 small{
+  color:rgba(211,229,237,.65)!important;
+  font-size:10px!important;
+  font-weight:800!important;
+}
+
+html body #root .auth609-screen .auth2001-tipster-row-v20 strong{
+  color:#22ffae!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+}
+
+html body #root .auth609-screen .auth2001-trust-card-v20,
+html body #root .auth609-screen .auth2001-prob-card-v20{
+  position:absolute!important;
+  z-index:5!important;
+  width:148px!important;
+  padding:14px 15px!important;
+  border-radius:20px!important;
+  border:1px solid rgba(70,235,255,.24)!important;
+  background:rgba(3,22,36,.68)!important;
+  box-shadow:0 18px 42px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.07)!important;
+  backdrop-filter:blur(8px)!important;
+}
+
+html body #root .auth609-screen .auth2001-trust-card-v20{
+  right:285px!important;
+  top:152px!important;
+}
+
+html body #root .auth609-screen .auth2001-prob-card-v20{
+  right:485px!important;
+  top:270px!important;
+}
+
+html body #root .auth609-screen .auth2001-trust-card-v20 span,
+html body #root .auth609-screen .auth2001-prob-card-v20 span{
+  display:block!important;
+  color:#65f7ff!important;
+  font-size:10px!important;
+  font-weight:1000!important;
+  text-transform:uppercase!important;
+  letter-spacing:.08em!important;
+}
+
+html body #root .auth609-screen .auth2001-trust-card-v20 strong,
+html body #root .auth609-screen .auth2001-prob-card-v20 strong{
+  display:block!important;
+  color:#ffffff!important;
+  font-size:29px!important;
+  line-height:1!important;
+  margin:8px 0 3px!important;
+  font-weight:1000!important;
+}
+
+html body #root .auth609-screen .auth2001-trust-card-v20 small,
+html body #root .auth609-screen .auth2001-prob-card-v20 small{
+  display:block!important;
+  color:rgba(205,228,237,.72)!important;
+  font-size:10.5px!important;
+  font-weight:800!important;
+}
+
+html body #root .auth609-screen .auth2001-feature-grid-v20{
+  position:absolute!important;
+  left:34px!important;
+  right:34px!important;
+  bottom:128px!important;
+  z-index:5!important;
+  display:grid!important;
+  grid-template-columns:repeat(3, minmax(0, 1fr))!important;
+  gap:12px!important;
+}
+
+html body #root .auth609-screen .auth2001-feature-grid-v20 article{
+  min-height:92px!important;
+  padding:16px 16px 14px!important;
+  border-radius:20px!important;
+  border:1px solid rgba(75,235,255,.16)!important;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(42,235,255,.12), transparent 40%),
+    rgba(3,20,35,.72)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.065), 0 12px 32px rgba(0,0,0,.22)!important;
+}
+
+html body #root .auth609-screen .auth2001-feature-grid-v20 article > span{
+  display:block!important;
+  width:8px!important;
+  height:8px!important;
+  border-radius:50%!important;
+  margin-bottom:10px!important;
+  background:#2ff7ff!important;
+  box-shadow:0 0 16px rgba(47,247,255,.75)!important;
+}
+
+html body #root .auth609-screen .auth2001-feature-grid-v20 strong{
+  display:block!important;
+  color:#fff!important;
+  font-size:15px!important;
+  line-height:1.12!important;
+  font-weight:1000!important;
+}
+
+html body #root .auth609-screen .auth2001-feature-grid-v20 p{
+  margin:5px 0 0!important;
+  color:rgba(200,223,232,.72)!important;
+  font-size:11.5px!important;
+  line-height:1.34!important;
+  font-weight:750!important;
+}
+
+html body #root .auth609-screen .auth2001-stats-v20{
+  position:absolute!important;
+  left:34px!important;
+  bottom:38px!important;
+  width:520px!important;
+  z-index:5!important;
+  display:grid!important;
+  grid-template-columns:repeat(3, minmax(0, 1fr))!important;
+  border-radius:22px!important;
+  border:1px solid rgba(62,235,255,.18)!important;
+  background:rgba(2,16,29,.68)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055)!important;
+  overflow:hidden!important;
+}
+
+html body #root .auth609-screen .auth2001-stats-v20 div{
+  padding:17px 16px!important;
+  border-right:1px solid rgba(255,255,255,.08)!important;
+}
+
+html body #root .auth609-screen .auth2001-stats-v20 div:last-child{
+  border-right:0!important;
+}
+
+html body #root .auth609-screen .auth2001-stats-v20 strong{
+  display:block!important;
+  color:#fff!important;
+  font-size:26px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+}
+
+html body #root .auth609-screen .auth2001-stats-v20 span{
+  display:block!important;
+  margin-top:6px!important;
+  color:rgba(201,225,234,.65)!important;
+  font-size:10px!important;
+  text-transform:uppercase!important;
+  letter-spacing:.08em!important;
+  font-weight:900!important;
+}
+
+html body #root .auth609-screen .auth2001-live-strip-v20{
+  position:absolute!important;
+  left:575px!important;
+  right:34px!important;
+  bottom:42px!important;
+  z-index:5!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:13px!important;
+  min-width:0!important;
+  padding:14px 16px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(62,235,255,.18)!important;
+  background:rgba(2,16,29,.72)!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+}
+
+html body #root .auth609-screen .auth2001-live-strip-v20 b{
+  flex:0 0 auto!important;
+  color:#1fffb1!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  text-transform:uppercase!important;
+}
+
+html body #root .auth609-screen .auth2001-live-strip-v20 span{
+  color:rgba(220,239,246,.78)!important;
+  font-size:12px!important;
+  font-weight:850!important;
+}
+
+@media (max-width:1700px){
+  html body #root .auth609-screen .auth2001-premium-hero-v20{
+    left:612px!important;
+    right:24px!important;
+    top:24px!important;
+    height:735px!important;
+    padding:24px 28px 22px!important;
+  }
+
+  html body #root .auth609-screen .auth2001-copy-v20 h1{
+    font-size:43px!important;
+  }
+
+  html body #root .auth609-screen .auth2001-copy-v20 p{
+    font-size:14.5px!important;
+    max-width:520px!important;
+  }
+
+  html body #root .auth609-screen .auth2001-nav-v20 nav{
+    gap:12px!important;
+  }
+
+  html body #root .auth609-screen .auth2001-player-v20{
+    right:180px!important;
+    top:110px!important;
+    transform:scale(.88)!important;
+    transform-origin:top right!important;
+  }
+
+  html body #root .auth609-screen .auth2001-top-tipsters-v20{
+    width:220px!important;
+    right:24px!important;
+    top:116px!important;
+  }
+
+  html body #root .auth609-screen .auth2001-trust-card-v20{
+    right:235px!important;
+    top:142px!important;
+  }
+
+  html body #root .auth609-screen .auth2001-prob-card-v20{
+    right:402px!important;
+    top:250px!important;
+  }
+
+  html body #root .auth609-screen .auth2001-feature-grid-v20{
+    bottom:126px!important;
+    grid-template-columns:repeat(3, minmax(0, 1fr))!important;
+  }
+
+  html body #root .auth609-screen .auth2001-feature-grid-v20 article{
+    min-height:86px!important;
+    padding:13px!important;
+  }
+
+  html body #root .auth609-screen .auth2001-feature-grid-v20 p{
+    font-size:10.5px!important;
+  }
+
+  html body #root .auth609-screen .auth2001-stats-v20{
+    width:470px!important;
+  }
+
+  html body #root .auth609-screen .auth2001-live-strip-v20{
+    left:522px!important;
+  }
+}
+
+@media (max-width:1380px){
+  html body #root .auth609-screen .auth2001-premium-hero-v20{
+    display:none!important;
+  }
+}
+
