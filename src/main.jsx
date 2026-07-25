@@ -8638,6 +8638,53 @@ function betaiIsAllowedFootballMarketV1663(market = '', pick = '') {
   return BETAI_ALLOWED_FOOTBALL_MARKETS_V1663.has(betaiCanonicalMarketLabelV1663(market, pick))
 }
 
+// WERSJA 22: dodatkowa ochrona UI przed starym cache i złożonymi rynkami BTTS.
+// Standardowy BTTS pełnego meczu nie może być mieszany z BTTS 1. połowy,
+// BTTS w obu połowach ani kombinacjami BTTS + over/under.
+function betaiIsPureFullTimeBttsSourceV22(item = {}) {
+  const raw = [
+    item.__rawOriginalMarketV22,
+    item.rawBetName,
+    item.rawMarket,
+    item.betName,
+    item.market_name,
+    item.title,
+  ].filter(Boolean).join(' ')
+  const text = betaiStripAccentsV1663(raw).replace(/\s+/g, ' ').trim()
+  const rawBetId = Number(item.rawBetId ?? item.betId ?? item.bet_id)
+  // Dane z poprawionego backendu mogą mieć już tylko market=BTTS bez surowej nazwy.
+  if (!text) return String(item.market || '').trim() === 'BTTS'
+
+  const forbiddenTokens = [
+    'first half', '1st half', 'second half', '2nd half', 'half time', 'halftime',
+    'both halves', 'each half', 'either half', 'period',
+    'over/under', 'over under', 'and over', 'and under', 'total goals', 'goal line',
+    'match result', 'double chance', 'correct score', 'exact score', 'combo', 'combined',
+    'home team', 'away team', 'corners', 'cards'
+  ]
+  if (forbiddenTokens.some(token => text.includes(token))) return false
+  if (/\b(?:over|under)?\s*\d+(?:[.,]\d+)?\b/.test(text)) return false
+
+  const normalized = text
+    .replace(/[()\[\]{}:_-]+/g, ' ')
+    .replace(/yes\s*\/?\s*no/g, ' ')
+    .replace(/tak\s*\/?\s*nie/g, ' ')
+    .replace(/full time/g, ' ')
+    .replace(/90 min(?:utes)?/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  const exactNames = new Set([
+    'both teams score',
+    'both teams to score',
+    'both team to score',
+    'both teams will score',
+    'btts',
+    'gg ng',
+    'obie druzyny strzela',
+  ])
+  return rawBetId === 8 || exactNames.has(normalized)
+}
+
 function betaiIsSafePopularFootballPickV1664(market = '', pick = '', home = '', away = '') {
   const label = betaiCanonicalMarketLabelV1663(market, pick)
   const raw = String(pick || '').trim()
@@ -13239,11 +13286,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         const rawMarketTextV6 = [item.market, item.rawBetName, item.rawMarket, item.betName, item.title, item.name].filter(Boolean).join(' ')
         const market = betaiCanonicalMarketLabelV1663(rawMarketTextV6 || item.market || '', rawPick)
         const pick = betaiCanonicalPickV1663(market, rawPick, home, away)
-        return { ...item, market, pick }
+        return { ...item, market, pick, __rawMarketTextV22: rawMarketTextV6, __rawOriginalMarketV22: item.market }
       })
       .filter(item => {
         const marketName = String(item.market || '')
         if (isFootball) {
+          if (marketName === 'BTTS' && !betaiIsPureFullTimeBttsSourceV22(item)) return false
           return betaiIsAllowedFootballMarketV1663(marketName, item.pick)
             && betaiIsSafePopularFootballPickV1664(marketName, item.pick, home, away)
         }
@@ -13399,6 +13447,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     groups[label].push({ ...item, __index: index })
     return groups
   }, {})
+  if (Array.isArray(groupedMarketOptions.BTTS)) {
+    groupedMarketOptions.BTTS.sort((a, b) => {
+      const order = value => betaiStripAccentsV1663(value).includes('tak') ? 0 : betaiStripAccentsV1663(value).includes('nie') ? 1 : 2
+      return order(a.pick) - order(b.pick)
+    })
+  }
   const marketGroupOrder = ['1X2', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Podwójna szansa', 'Gole', 'Gole w 1. połowie', 'Team Total Goals', 'BTTS', 'Handicap', 'DNB / Remis nie ma zakładu', 'Dokładny wynik', 'Rogi', 'Kartki']
   const orderedMarketGroups = Object.entries(groupedMarketOptions).sort(([a], [b]) => {
     const ai = marketGroupOrder.indexOf(a)

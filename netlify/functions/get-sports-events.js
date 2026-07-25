@@ -41,7 +41,7 @@ exports.handler = async function(event) {
   // WERSJA 6: marker schematu kursów. Stare cache z błędnie wrzuconymi kursami
   // 1. połowy do grupy "Gole" ignorujemy, żeby po deployu UI dostało świeże,
   // poprawnie rozdzielone rynki.
-  const ODDS_SCHEMA_VERSION = 'team-total-goals-v7'
+  const ODDS_SCHEMA_VERSION = 'btts-full-match-strict-v8'
   const getSupabaseAdmin = () => {
     const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -1133,6 +1133,51 @@ exports.handler = async function(event) {
   }
 
 
+  // WERSJA 22: API-FOOTBALL zwraca kilka rynków zawierających słowa
+  // "Both Teams Score" (np. 1. połowa, obie połowy, kombinacje z over/under).
+  // Poprzednio wszystkie wpadały do jednego BTTS i mediana mieszała kursy, dlatego
+  // standardowe TAK/NIE potrafiło dostać kursy z rynku 3.5 gola (np. 3.14 / 1.33).
+  // Do BTTS dopuszczamy wyłącznie czysty rynek pełnego meczu.
+  const isPureFullTimeBttsBetV22 = (rawName = '', rawId = null) => {
+    const lower = String(rawName || '').trim().toLowerCase().replace(/\s+/g, ' ')
+    const betId = Number(rawId)
+    const hasBttsPhrase =
+      lower.includes('both teams score') ||
+      lower.includes('both teams to score') ||
+      lower.includes('both team to score') ||
+      lower === 'btts' ||
+      lower === 'gg/ng'
+    if (!hasBttsPhrase && betId !== 8) return false
+
+    const forbiddenTokens = [
+      'first half', '1st half', 'second half', '2nd half', 'half time', 'halftime',
+      'both halves', 'each half', 'either half', 'period',
+      'over/under', 'over under', 'over 0.5', 'over 1.5', 'over 2.5', 'over 3.5',
+      'under 0.5', 'under 1.5', 'under 2.5', 'under 3.5',
+      'and over', 'and under', 'total goals', 'goal line', 'combo', 'combined', 'match result', 'double chance', 'correct score',
+      'exact score', 'home team', 'away team', 'corners', 'cards'
+    ]
+    if (forbiddenTokens.some(token => lower.includes(token))) return false
+    if (/\b(?:over|under)?\s*\d+(?:[.,]\d+)?\b/.test(lower)) return false
+
+    const normalized = lower
+      .replace(/[()]/g, ' ')
+      .replace(/yes\s*\/?\s*no/g, ' ')
+      .replace(/tak\s*\/?\s*nie/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    const exactNames = new Set([
+      'both teams score',
+      'both teams to score',
+      'both team to score',
+      'both teams will score',
+      'btts',
+      'gg/ng'
+    ])
+    return betId === 8 || exactNames.has(normalized)
+  }
+
   const apiFootballBetLabel = (rawName, rawId) => {
     const name = String(rawName || '').trim()
     const lower = name.toLowerCase()
@@ -1187,7 +1232,10 @@ exports.handler = async function(event) {
 
     if (lower === 'match winner' || lower === 'winner') return '1X2'
     if (lower.includes('double chance')) return 'Podwójna szansa'
-    if (lower.includes('both teams score') || lower.includes('both teams to score')) return 'BTTS'
+    if (isPureFullTimeBttsBetV22(name, betId)) return 'BTTS'
+    // Złożone/połowowe warianty BTTS zostają pod oryginalną nazwą i są odrzucane
+    // przez listę dozwolonych rynków. Nie wolno ich scalać ze standardowym BTTS.
+    if (lower.includes('both teams score') || lower.includes('both teams to score') || lower.includes('btts')) return name || 'Rynek'
     if (lower.includes('goals over/under') || lower.includes('over/under')) return 'Gole'
     if (lower.includes('draw no bet')) return 'DNB / Remis nie ma zakładu'
     if (lower.includes('handicap')) return 'Handicap'
@@ -1338,6 +1386,11 @@ exports.handler = async function(event) {
       const mb = marketOrder.indexOf(b.market)
       const marketDiff = (ma === -1 ? 999 : ma) - (mb === -1 ? 999 : mb)
       if (marketDiff) return marketDiff
+      if (a.market === 'BTTS' && b.market === 'BTTS') {
+        const bttsOrder = value => String(value || '').toLowerCase().includes('tak') ? 0 : String(value || '').toLowerCase().includes('nie') ? 1 : 2
+        const diff = bttsOrder(a.pick) - bttsOrder(b.pick)
+        if (diff) return diff
+      }
       const la = getGoalLineNumberV6(a.pick)
       const lb = getGoalLineNumberV6(b.pick)
       if (la !== null && lb !== null && la !== lb) return la - lb
@@ -1353,6 +1406,7 @@ exports.handler = async function(event) {
       ;(Array.isArray(row?.bookmakers) ? row.bookmakers : []).forEach(bookmaker => {
         ;(Array.isArray(bookmaker?.bets) ? bookmaker.bets : []).forEach(bet => {
           const market = apiFootballBetLabel(bet?.name, bet?.id)
+          if (market === 'BTTS' && !isPureFullTimeBttsBetV22(bet?.name, bet?.id)) return
           if (!isAllowedFootballMarketV1663(market)) return
           ;(Array.isArray(bet?.values) ? bet.values : []).forEach(value => {
             const rawOdd = Number(value?.odd)
