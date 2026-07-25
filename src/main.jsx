@@ -6074,7 +6074,7 @@ function AnimatedDashboardHero() {
   }, [dashboardNewsSource])
 
   const staticHeroSlides = [
-    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/worldcup-2026-hero.jpg', lang), alt: 'Zaczynamy Mistrzostwa Świata 2026 — typy AI, emocje na żywo i mundialowe analizy' },
+    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/you-vs-ai-hero.png', lang), alt: 'TY vs AI — przewiduj, kopiuj i rywalizuj z inteligencją Bet+AI' },
     { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-1.png', lang), alt: 'Bet+AI platforma — typy, analiza i społeczność' },
     { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-2.png', lang), alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
     { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-3.png', lang), alt: 'Bet+AI rewards — coiny, dropy, typy i nagrody' },
