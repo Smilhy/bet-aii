@@ -6132,7 +6132,7 @@ function AnimatedDashboardHero() {
 
   return (
     <section
-      className="betai-dashboard-hero-v551"
+      className={`betai-dashboard-hero-v551 ${String(heroSlides[panel]?.src || '').includes('you-vs-ai-hero') ? 'you-vs-ai-active-v25' : ''}`}
       aria-label={translateBetaiTextValue('Nowy hero dashboardu Bet+AI', lang)}
       onMouseEnter={() => setIsHeroPaused(true)}
       onMouseLeave={() => setIsHeroPaused(false)}
@@ -6146,7 +6146,7 @@ function AnimatedDashboardHero() {
           const shouldLoad = index === panel || index === previous || index === next
           const slideKey = slide.key || slide.src || `${slide.type}-${index}`
           return (
-            <div key={slideKey} className={`betai-dashboard-slide-v551 ${panel === index ? 'active' : ''} ${slide.type === 'news' ? 'news-slide-v40' : ''}`}>
+            <div key={slideKey} className={`betai-dashboard-slide-v551 ${panel === index ? 'active' : ''} ${slide.type === 'news' ? 'news-slide-v40' : ''} ${String(slide.src || '').includes('you-vs-ai-hero') ? 'you-vs-ai-slide-v25' : ''}`}>
               {shouldLoad && slide.type === 'news' ? (
                 <button type="button" className={`betai-dashboard-news-v40 ${slide.image ? 'has-image-v40' : ''}`} onClick={() => openDashboardNews(slide)}>
                   {slide.image ? (

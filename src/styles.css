@@ -81420,3 +81420,42 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   .ranking-yield-podium-person-v19.podium-place-1 .ranking-yield-avatar-shell-v19{width:64px!important;height:64px!important}
   .ranking-yield-name-v19{max-width:82px!important;font-size:10px!important}
 }
+
+/* WERSJA 25 — TY vs AI jest faktycznie wgrany do hero i wypełnia cały slot */
+.betai-dashboard-hero-v551.you-vs-ai-active-v25{
+  aspect-ratio:4 / 1!important;
+  min-height:0!important;
+}
+.betai-dashboard-hero-v551.you-vs-ai-active-v25 .betai-dashboard-stage-v551{
+  inset:10px!important;
+}
+.betai-dashboard-hero-v551 .betai-dashboard-slide-v551.you-vs-ai-slide-v25{
+  padding:0!important;
+  overflow:hidden!important;
+}
+.betai-dashboard-hero-v551 .betai-dashboard-slide-v551.you-vs-ai-slide-v25 img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+  border-radius:26px!important;
+  background:transparent!important;
+  filter:saturate(1.04) contrast(1.02)!important;
+}
+@media(max-width:900px){
+  .betai-dashboard-hero-v551.you-vs-ai-active-v25{
+    min-height:220px!important;
+    aspect-ratio:auto!important;
+  }
+  .betai-dashboard-hero-v551 .betai-dashboard-slide-v551.you-vs-ai-slide-v25 img{
+    object-position:center center!important;
+  }
+}
+@media(max-width:640px){
+  .betai-dashboard-hero-v551.you-vs-ai-active-v25{
+    min-height:180px!important;
+  }
+  .betai-dashboard-hero-v551 .betai-dashboard-slide-v551.you-vs-ai-slide-v25 img{
+    border-radius:18px!important;
+  }
+}
