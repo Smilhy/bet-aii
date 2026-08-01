@@ -170,6 +170,130 @@ function readProfitV1759(tip = {}) {
   return 0
 }
 
+
+function roundMoneyV26(value) {
+  return Math.round((Number(value) || 0) * 100) / 100
+}
+
+function isTyperExpertTipV26(tip = {}) {
+  const identity = String([
+    tip.author_name, tip.username, tip.user_name, tip.display_name, tip.public_slug,
+    tip.email, tip.author_email, tip.source, tip.tip_source, tip.ai_source
+  ].filter(Boolean).join(' '))
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '')
+  return identity.includes('typerexpert') || identity.includes('typerexpertprogression')
+}
+
+function typerExpertProfitV26(tip = {}) {
+  const status = normalizeSettlementV1759(tip)
+  if (status === 'pending' || status === 'void') return 0
+  const stake = Math.max(0, readStakeV1759(tip))
+  const odds = Math.max(1, Number(tip.odds ?? tip.course ?? 1) || 1)
+  const explicit = Number(tip.profit)
+  if (status === 'lost') {
+    if (Number.isFinite(explicit) && explicit < -0.005) return roundMoneyV26(explicit)
+    return roundMoneyV26(-stake)
+  }
+  if (status === 'won') {
+    if (Number.isFinite(explicit) && explicit > 0.005) return roundMoneyV26(explicit)
+    return roundMoneyV26(stake * Math.max(odds - 1, 0))
+  }
+  return 0
+}
+
+function typerExpertExpectedStakeV26(cycleNet, odds, settings = {}) {
+  const baseStake = Math.max(1, Number(settings.baseStake || 1) || 1)
+  const maxStake = Math.max(baseStake, Number(settings.maxStake || 1000) || 1000)
+  const targetProfit = Math.max(0.01, Number(settings.targetProfit || 0.4) || 0.4)
+  const price = Math.max(1.01, Number(odds || 1.01) || 1.01)
+  const remaining = Math.max(0, targetProfit - Number(cycleNet || 0))
+  const raw = Math.max(baseStake, remaining / Math.max(0.01, price - 1))
+  const stake = Math.ceil(raw * 100) / 100
+  return Math.min(maxStake, Math.max(baseStake, roundMoneyV26(stake)))
+}
+
+async function repairTyperExpertPendingStakeV26(supabase, rows = []) {
+  const typerRows = (Array.isArray(rows) ? rows : [])
+    .filter(isTyperExpertTipV26)
+    .sort((a, b) => Date.parse(a.created_at || 0) - Date.parse(b.created_at || 0))
+
+  let cycleNet = 0
+  let cycleStep = 0
+  let pendingSeen = 0
+  const repairs = []
+  const skipped = []
+
+  for (const tip of typerRows) {
+    const status = normalizeSettlementV1759(tip)
+    if (status !== 'pending') {
+      if (status === 'void') continue
+      cycleStep += 1
+      cycleNet = roundMoneyV26(cycleNet + typerExpertProfitV26(tip))
+      if (cycleNet >= 0.395) {
+        cycleNet = 0
+        cycleStep = 0
+      }
+      continue
+    }
+
+    pendingSeen += 1
+    const odds = Math.max(1.01, Number(tip.odds ?? tip.course ?? 1.01) || 1.01)
+    const expectedStake = typerExpertExpectedStakeV26(cycleNet, odds)
+    const currentStake = Math.max(0, readStakeV1759(tip))
+
+    // Progresja nie może policzyć drugiego pendingu bez wyniku pierwszego.
+    if (pendingSeen > 1) {
+      skipped.push({ id: tip.id, reason: 'multiple_pending_wait_for_previous_result', current_stake: currentStake })
+      continue
+    }
+
+    // Najpierw poprawiamy dane zwracane do aplikacji, więc dashboard/profil od razu
+    // pokazują prawdziwą stawkę. Następnie utrwalamy tę samą wartość w Supabase.
+    tip.stake = expectedStake
+    tip.progression_stake = expectedStake
+    tip.progression_step = cycleStep + 1
+    tip.progression_cycle_net_before = cycleNet
+
+    if (Math.abs(expectedStake - currentStake) < 0.01) {
+      skipped.push({ id: tip.id, reason: 'stake_already_correct', current_stake: currentStake })
+      continue
+    }
+
+    const payload = {
+      stake: expectedStake,
+      updated_at: new Date().toISOString()
+    }
+    const { error } = await supabase.from('tips').update(payload).eq('id', tip.id)
+    if (error) {
+      skipped.push({ id: tip.id, reason: error.message || String(error), current_stake: currentStake, expected_stake: expectedStake })
+      continue
+    }
+    repairs.push({
+      id: tip.id,
+      previous_stake: roundMoneyV26(currentStake),
+      new_stake: expectedStake,
+      odds: roundMoneyV26(odds),
+      cycle_net_before: cycleNet,
+      step: cycleStep + 1
+    })
+  }
+
+  return {
+    ok: true,
+    version: 'v26-typer-expert-pending-stake-canonical',
+    checked: typerRows.length,
+    pending: pendingSeen,
+    repaired: repairs.length,
+    repairs,
+    skipped: skipped.slice(0, 10),
+    cycle_net_before_pending: roundMoneyV26(cycleNet),
+    next_step: cycleStep + 1
+  }
+}
+
 function buildAuthorStatsMapV1759(rows = []) {
   const canonicalByAlias = new Map()
   const statsByKey = new Map()
@@ -295,6 +419,10 @@ exports.handler = async (event) => {
     if (error) throw error
 
     const rows = Array.isArray(data) ? data : []
+    // WERSJA 26: przed zwróceniem feedu naprawiamy aktywną stawkę progresji
+    // Typer Expert. Dzięki temu pending nie pokazuje już sztucznego 1.00, a
+    // ta sama prawidłowa stawka jest od razu zapisywana do Supabase.
+    const typerProgressionRepair = await repairTyperExpertPendingStakeV26(supabase, rows)
     const rowsWithStats = attachAuthorStatsV1759(rows)
     const activeRows = rowsWithStats.filter(row => !isBetaiMultisportAiTipV28(row)).filter(isActivePublicTipV1751)
 
@@ -302,14 +430,17 @@ exports.handler = async (event) => {
       tips: activeRows,
       count: activeRows.length,
       rawCount: rows.length,
-      source: 'service-role-public-tips-v1759-author-stats-on-cards',
+      source: 'service-role-public-tips-v26-typer-progression-stake-fix',
+      typerProgressionRepair,
       updatedAt: new Date().toISOString()
     })
   } catch (error) {
     return json(500, {
       error: error?.message || String(error),
       tips: [],
-      source: 'service-role-public-tips-v1759-author-stats-on-cards'
+      source: 'service-role-public-tips-v26-typer-progression-stake-fix'
     })
   }
 }
+
+exports._testV26 = { isTyperExpertTipV26, typerExpertProfitV26, typerExpertExpectedStakeV26, repairTyperExpertPendingStakeV26 }

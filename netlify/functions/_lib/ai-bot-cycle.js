@@ -6,7 +6,7 @@ const AUTHORS = {
   ograc: { name: 'Ograć Buka', username: 'ograc-buka', source: 'ograc_buka_independent_v1867_9', mirrorAiBets: false }
 }
 
-const VERSION = '1895.0-typer-progression-zero-profit-fix'
+const VERSION = '1896.0-typer-pending-stake-canonical-fix'
 const DEFAULT_BOTS = ['betai', 'typer', 'ograc']
 
 // Każdy bot działa niezależnie. Nie ma wspólnej rotacji.
@@ -864,6 +864,18 @@ function duplicateKey(row) {
   return String(row?.fixture_id || row?.external_fixture_id || row?.api_fixture_id || '').trim()
 }
 
+function isTyperExpertRowV26(row = {}) {
+  const identity = String([
+    row.author_name, row.username, row.user_name, row.display_name, row.public_slug,
+    row.email, row.author_email, row.source, row.tip_source, row.ai_source
+  ].filter(Boolean).join(' '))
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '')
+  return identity.includes('typerexpert') || identity.includes('typerexpertprogression')
+}
+
 function normalizeTipStatus(value) {
   const status = String(value == null ? '' : value).trim().toLowerCase()
   if (/(won|win|wygran)/.test(status)) return 'won'
@@ -958,12 +970,15 @@ async function repairTyperPendingProgression(supabase, settings = {}, options = 
   const { data, error } = await supabase
     .from('tips')
     .select('*')
-    .eq('author_name', AUTHORS.typer.name)
     .order('created_at', { ascending: true })
     .limit(1500)
   if (error) throw error
 
-  const rows = Array.isArray(data) ? data : []
+  // WERSJA 26: historia progresji musi objąć wszystkie rekordy Typer Expert,
+  // również starsze wpisy zapisane tylko przez username/public_slug/source.
+  // Poprzednie .eq('author_name', 'Typer Expert') mogło pominąć część strat,
+  // przez co świeży pending był zapisywany błędnie ze stawką 1.00.
+  const rows = (Array.isArray(data) ? data : []).filter(isTyperExpertRowV26)
   let state = { cycleNet: 0, cycleStep: 0, completedCycles: 0, totalNet: 0 }
   let pendingCount = 0
   const repairs = []
@@ -1037,12 +1052,15 @@ async function readTyperProgressionState(supabase, targetProfit = 0.4) {
   const { data, error } = await supabase
     .from('tips')
     .select('*')
-    .eq('author_name', AUTHORS.typer.name)
     .order('created_at', { ascending: true })
     .limit(1500)
   if (error) throw error
 
-  const rows = Array.isArray(data) ? data : []
+  // WERSJA 26: historia progresji musi objąć wszystkie rekordy Typer Expert,
+  // również starsze wpisy zapisane tylko przez username/public_slug/source.
+  // Poprzednie .eq('author_name', 'Typer Expert') mogło pominąć część strat,
+  // przez co świeży pending był zapisywany błędnie ze stawką 1.00.
+  const rows = (Array.isArray(data) ? data : []).filter(isTyperExpertRowV26)
   const pending = rows.filter(row => rowTipStatus(row) === 'pending')
 
   let cycleNet = 0
@@ -1449,4 +1467,4 @@ function createHandler(options = {}) {
   }
 }
 
-module.exports = { AUTHORS, VERSION, BOT_POLICIES, runAiBotCycle, repairTyperPendingProgression, createHandler, json, _test: { parseMarket, buildCandidates, scoreCandidate, labelFor, candidateTier, rankBotCandidates, apiStrategyPass, getBotPolicy, normalizeTipStatus, rowTipStatus, profitFromTip, progressionForOdds, repairTyperPendingProgression } }
+module.exports = { AUTHORS, VERSION, BOT_POLICIES, runAiBotCycle, repairTyperPendingProgression, createHandler, json, _test: { parseMarket, buildCandidates, scoreCandidate, labelFor, candidateTier, rankBotCandidates, apiStrategyPass, getBotPolicy, normalizeTipStatus, rowTipStatus, profitFromTip, progressionForOdds, repairTyperPendingProgression, isTyperExpertRowV26 } }
