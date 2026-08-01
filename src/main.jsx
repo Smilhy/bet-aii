@@ -22647,10 +22647,16 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     // BetAI MultiSport AI. Generator zapisuje równolegle do tips i ai_bets,
     // dzięki czemu typ od razu pojawia się na tej stronie i w profilu systemowym.
     const params = new URLSearchParams({
-      days: mode === 'tomorrow' ? '2' : '2',
-      min_minutes_before_start: '60',
-      max_hours_ahead: '72',
-      cooldown_hours: '6',
+      // WERSJA 27: ten endpoint jest wywoływany dopiero wtedy, gdy dla dnia
+      // nie ma żadnego zapisanego typu. Włączamy więc dokładnie ten sam
+      // awaryjny tryb minimum dziennego, którego używa watchdog Netlify.
+      // Dzięki temu kliknięcie „Odśwież dziś” nie kończy się pustą zakładką
+      // tylko dlatego, że ścisły value scan chwilowo nie znalazł kandydata.
+      days: '7',
+      min_minutes_before_start: '5',
+      max_hours_ahead: '168',
+      daily_force: '1',
+      force_daily: '1',
       min_books: '2',
       min_odds: '1.50',
       max_odds: '5.00',

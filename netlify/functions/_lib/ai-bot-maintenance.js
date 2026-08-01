@@ -3,7 +3,7 @@ const { AUTHORS, VERSION, runAiBotCycle, repairTyperPendingProgression, BOT_POLI
 const settleTyper = require('../settle-typer-expert')
 const settleOgrac = require('../settle-ograc-buka')
 
-const MAINTENANCE_VERSION = `${VERSION}-maintenance-v28-betai-ai-bets-only`
+const MAINTENANCE_VERSION = `${VERSION}-maintenance-v29-betai-daily-watchdog-fix`
 
 function env(name) { return process.env[name] || '' }
 function num(value, fallback = 0) {
@@ -20,12 +20,16 @@ function getSupabase() {
   return createClient(url, key, { auth: { persistSession: false } })
 }
 function parseBots(value) {
-  const requested = String(value || 'typer,ograc')
+  // WERSJA 27: watchdog obejmuje także BetAI MultiSport AI.
+  // Poprzednio parser usuwał `betai`, więc harmonogram pilnował wyłącznie
+  // Typer Expert i Ograć Buka. Gdy zwykły skan BetAI nie znalazł value,
+  // zakładka Typy AI mogła pozostać pusta przez wiele dni.
+  const requested = String(value || 'betai,typer,ograc')
     .split(',')
     .map(v => v.trim().toLowerCase())
     .filter(Boolean)
-  const allowed = requested.filter(bot => bot === 'typer' || bot === 'ograc')
-  return [...new Set(allowed.length ? allowed : ['typer', 'ograc'])]
+  const allowed = requested.filter(bot => bot === 'betai' || bot === 'typer' || bot === 'ograc')
+  return [...new Set(allowed.length ? allowed : ['betai', 'typer', 'ograc'])]
 }
 async function latestByBot(supabase, bots) {
   const latest = {}

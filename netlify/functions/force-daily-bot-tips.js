@@ -1,6 +1,6 @@
 const { runMaintenance, json, MAINTENANCE_VERSION } = require('./_lib/ai-bot-maintenance')
 
-// WERSJA 24: ręczny i frontendowy twardy trigger.
+// WERSJA 27: ręczny i frontendowy twardy trigger obejmuje także BetAI MultiSport AI.
 // Używany gdy boty nie dodały dzisiaj typu, bez czekania na cron Netlify.
 exports.handler = async function handler(event = {}) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
@@ -10,8 +10,8 @@ exports.handler = async function handler(event = {}) {
       ...event,
       queryStringParameters: {
         ...query,
-        source: query.source || 'force-daily-bot-tips-v24',
-        bots: query.bots || 'typer,ograc',
+        source: query.source || 'force-daily-bot-tips-v27-betai',
+        bots: query.bots || 'betai,typer,ograc',
         force_daily: '1',
         daily_force: '1',
         days: query.days || '7',
