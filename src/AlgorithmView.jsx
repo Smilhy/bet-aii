@@ -27,7 +27,7 @@ const TEXT = {
     noBetReason: 'Powód braku zakładu', reasonProbability: 'Prawdopodobieństwo {value}% — wymagane minimum 51%', reasonOdds: 'Kurs {value} — wymagane minimum 2.00', reasonMissingOdds: 'Brak kursu O/U 2.5 dla wybranego kierunku', reasonNoData: 'Brak pełnych statystyk strzałów i rożnych', reasonStarted: 'Mecz rozpoczęty — pominięty', reasonCompetition: 'Mecz poza listą topowych rozgrywek', reasonUnknown: 'Warunki zakładu nie zostały spełnione',
     lockedPick: 'ZAMROŻONE PRE-MATCH', pickSaved: 'Typ zapisano', oddsSaved: 'Kurs zapisano', noPostKickoffChanges: 'Bez zmian po rozpoczęciu',
     forecastHitRate: 'Trafność wszystkich prognoz', financialRoi: 'ROI zakładów z kursem ≥ 2.00', forecastsSettled: 'Wszystkie rozliczone prognozy', financialSettled: 'Rozliczone finansowo',
-    overviewMore: 'Więcej statystyk', progressMore: 'Szczegóły skanu', statsSortLabel: 'Sortowanie', sortByProfit: 'Największy profit', sortByCount: 'Najwięcej typów', filters: { bets: 'Zakłady', queue: 'W kolejce', no_bet: 'Bez zakładu', results: 'Wyniki', all: 'Wszystkie', stats: 'Statystyki' }
+    overviewMore: 'Więcej statystyk', progressMore: 'Szczegóły skanu', statsSortLabel: 'Sortowanie', sortByProfit: 'Profit od największego', sortByProfitAsc: 'Profit od najmniejszego', sortByCount: 'Najwięcej typów', filters: { bets: 'Zakłady', queue: 'W kolejce', no_bet: 'Bez zakładu', results: 'Wyniki', all: 'Wszystkie', stats: 'Statystyki' }
   },
   en: {
     title: 'Over / Under 2.5 Algorithm',
@@ -45,7 +45,7 @@ const TEXT = {
     noBetReason: 'No-bet reason', reasonProbability: 'Probability {value}% — minimum 51% required', reasonOdds: 'Odds {value} — minimum 2.00 required', reasonMissingOdds: 'No O/U 2.5 odds for the selected side', reasonNoData: 'Missing complete shots and corners data', reasonStarted: 'Match started — skipped', reasonCompetition: 'Outside the top competitions list', reasonUnknown: 'Bet conditions were not met',
     lockedPick: 'PRE-MATCH LOCKED', pickSaved: 'Pick saved', oddsSaved: 'Odds saved', noPostKickoffChanges: 'No changes after kick-off',
     forecastHitRate: 'Hit rate of all forecasts', financialRoi: 'ROI for bets with odds ≥ 2.00', forecastsSettled: 'All settled forecasts', financialSettled: 'Financially settled',
-    overviewMore: 'More statistics', progressMore: 'Scan details', statsSortLabel: 'Sort', sortByProfit: 'Highest profit', sortByCount: 'Most bets', filters: { bets: 'Bets', queue: 'In queue', no_bet: 'No bet', results: 'Results', all: 'All', stats: 'Statistics' }
+    overviewMore: 'More statistics', progressMore: 'Scan details', statsSortLabel: 'Sort', sortByProfit: 'Highest profit', sortByProfitAsc: 'Lowest profit', sortByCount: 'Most bets', filters: { bets: 'Bets', queue: 'In queue', no_bet: 'No bet', results: 'Results', all: 'All', stats: 'Statistics' }
   }
 }
 
@@ -402,6 +402,7 @@ function groupStats(rows, keyGetter) {
 function sortStatsRows(rows, mode = 'profit_desc') {
   const list = Array.isArray(rows) ? [...rows] : []
   if (mode === 'count_desc') return list.sort((a, b) => b.bets - a.bets || b.profit - a.profit || b.yieldValue - a.yieldValue)
+  if (mode === 'profit_asc') return list.sort((a, b) => a.profit - b.profit || a.yieldValue - b.yieldValue || a.bets - b.bets)
   return list.sort((a, b) => b.profit - a.profit || b.yieldValue - a.yieldValue || b.bets - a.bets)
 }
 
@@ -411,8 +412,13 @@ function StatsTable({ title, firstLabel, rows, t }) {
       <h3>{title}</h3>
       <div className="algorithm-stats-head-v1882"><b>{firstLabel}</b><b>{t.count}</b><b>{t.balance}</b><b>{t.yield}</b><b>{t.avgOdds}</b><b>W/L</b></div>
       {rows.length ? rows.map(row => (
-        <div className="algorithm-stats-row-v1882" key={row.key}>
-          <span>{row.key}</span><span>{row.bets}</span><span className={row.profit >= 0 ? 'pos' : 'neg'}>{signed(row.profit, 2, ' j.')}</span><span className={row.yieldValue >= 0 ? 'pos' : 'neg'}>{signed(row.yieldValue, 2, '%')}</span><span>{number(row.avgOdds, 2)}</span><span>{row.won}/{row.lost}</span>
+        <div className={`algorithm-stats-row-v1882 ${row.profit > 0 ? 'is-profit-positive' : row.profit < 0 ? 'is-profit-negative' : 'is-profit-neutral'}`} key={row.key}>
+          <span>{row.key}</span>
+          <span>{row.bets}</span>
+          <span className={row.profit > 0 ? 'pos' : row.profit < 0 ? 'neg' : 'neutral'}><i aria-hidden="true">{row.profit > 0 ? '▲' : row.profit < 0 ? '▼' : '•'}</i>{signed(row.profit, 2, ' j.')}</span>
+          <span className={row.yieldValue > 0 ? 'pos' : row.yieldValue < 0 ? 'neg' : 'neutral'}><i aria-hidden="true">{row.yieldValue > 0 ? '▲' : row.yieldValue < 0 ? '▼' : '•'}</i>{signed(row.yieldValue, 2, '%')}</span>
+          <span>{number(row.avgOdds, 2)}</span>
+          <span>{row.won}/{row.lost}</span>
         </div>
       )) : <div className="algorithm-stats-empty-v1882">{t.noStats}</div>}
     </section>
@@ -515,8 +521,9 @@ function AlgorithmStats({ rows, summary, t }) {
       <div className="algorithm-stats-toolbar-v1901">
         <span>{t.statsSortLabel}</span>
         <div className="algorithm-stats-sort-buttons-v1901">
-          <button type="button" className={statsSortMode === 'profit_desc' ? 'is-active' : ''} onClick={() => setStatsSortMode('profit_desc')}>{t.sortByProfit}</button>
-          <button type="button" className={statsSortMode === 'count_desc' ? 'is-active' : ''} onClick={() => setStatsSortMode('count_desc')}>{t.sortByCount}</button>
+          <button type="button" className={statsSortMode === 'profit_desc' ? 'is-active' : ''} onClick={() => setStatsSortMode('profit_desc')}><b aria-hidden="true">↓</b>{t.sortByProfit}</button>
+          <button type="button" className={statsSortMode === 'profit_asc' ? 'is-active' : ''} onClick={() => setStatsSortMode('profit_asc')}><b aria-hidden="true">↑</b>{t.sortByProfitAsc}</button>
+          <button type="button" className={statsSortMode === 'count_desc' ? 'is-active' : ''} onClick={() => setStatsSortMode('count_desc')}><b aria-hidden="true">#</b>{t.sortByCount}</button>
         </div>
       </div>
       <div className="algorithm-stats-split-v1897">
