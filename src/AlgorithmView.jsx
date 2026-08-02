@@ -555,16 +555,29 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
     }
   }
 
-  const visibleRows = useMemo(() => rows.filter(row => {
-    const prematch = isPrematchRow(row)
-    const ready = String(row.analysis_state || 'ready') === 'ready'
-    if (filter === 'bets') return prematch && ready && isPlacedBet(row) && String(row.status || '') === 'pending'
-    if (filter === 'queue') return prematch && !ready
-    if (filter === 'no_bet') return prematch && ready && String(row.selected_market || '') === 'no_bet'
-    if (filter === 'results') return ['won', 'lost', 'void'].includes(String(row.status || ''))
-    if (filter === 'stats') return false
-    return true
-  }), [rows, filter, clock])
+  const visibleRows = useMemo(() => rows
+    .filter(row => {
+      const prematch = isPrematchRow(row)
+      const ready = String(row.analysis_state || 'ready') === 'ready'
+      if (filter === 'bets') return prematch && ready && isPlacedBet(row) && String(row.status || '') === 'pending'
+      if (filter === 'queue') return prematch && !ready
+      if (filter === 'no_bet') return prematch && ready && String(row.selected_market || '') === 'no_bet'
+      if (filter === 'results') return ['won', 'lost', 'void'].includes(String(row.status || ''))
+      if (filter === 'stats') return false
+      return true
+    })
+    // WERSJA 32: mecze w dolnej liście Algorytmu zawsze od najbliższego startu
+    // do najpóźniejszego. Nie zmieniamy żadnej logiki wyboru ani oceny typu.
+    .sort((a, b) => {
+      const aKickoff = Date.parse(a?.kickoff || '')
+      const bKickoff = Date.parse(b?.kickoff || '')
+      const aValid = Number.isFinite(aKickoff)
+      const bValid = Number.isFinite(bKickoff)
+      if (aValid && bValid) return aKickoff - bKickoff
+      if (aValid) return -1
+      if (bValid) return 1
+      return 0
+    }), [rows, filter, clock])
 
 
   const topTodayRows = useMemo(() => {
