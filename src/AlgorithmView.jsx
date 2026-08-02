@@ -252,7 +252,7 @@ function TopPickCard({ row, index, lang, t, onOpen }) {
   )
 }
 
-function AlgorithmCard({ row, lang, t, expanded, onToggle }) {
+function AlgorithmCard({ row, lang, t, expanded, onToggle, index = 0 }) {
   const waiting = String(row.analysis_state || 'ready') !== 'ready'
   const status = statusMeta(row, t)
   const isNoBet = !waiting && row.selected_market === 'no_bet'
@@ -262,9 +262,10 @@ function AlgorithmCard({ row, lang, t, expanded, onToggle }) {
   const cardId = `algorithm-match-${row.id || row.fixture_id}`
   const saved = savedAt(row)
   const selectedOddsText = Number(row.selected_odds || 0) > 1 ? number(row.selected_odds, 2) : t.noOdds
+  const cardToneClass = index % 2 === 0 ? 'is-tone-a' : 'is-tone-b'
 
   return (
-    <article id={cardId} className={`algorithm-card-v1880 ${status.className} ${isNoBet ? 'is-no-bet' : ''}`}>
+    <article id={cardId} className={`algorithm-card-v1880 ${cardToneClass} ${status.className} ${isNoBet ? 'is-no-bet' : ''}`}>
       <header>
         <div className="algorithm-card-league-v1880"><span>{row.country || '🌍'}</span><b>{row.league_name || 'Piłka nożna'}</b><small>{dateTime(row.kickoff, lang)}</small></div>
         <span className={`algorithm-status-v1880 ${status.className}`}>{status.label}</span>
@@ -675,7 +676,7 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
 
       {filter === 'stats' ? <AlgorithmStats rows={rows} summary={summary} t={t} /> : loading && !rows.length ? <div className="algorithm-empty-v1880">{t.loading}</div> : !visibleRows.length ? <div className="algorithm-empty-v1880">{rows.length ? t.empty : t.setupEmpty}</div> : (
         <div className="algorithm-list-v1880">
-          {visibleRows.map(row => <AlgorithmCard key={row.id || row.fixture_id} row={row} lang={lang} t={t} expanded={expanded.has(row.id || row.fixture_id)} onToggle={() => toggleExpanded(row.id || row.fixture_id)} />)}
+          {visibleRows.map((row, index) => <AlgorithmCard key={row.id || row.fixture_id} row={row} index={index} lang={lang} t={t} expanded={expanded.has(row.id || row.fixture_id)} onToggle={() => toggleExpanded(row.id || row.fixture_id)} />)}
         </div>
       )}
     </div>

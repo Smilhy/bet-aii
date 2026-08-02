@@ -79674,6 +79674,35 @@ html.betai-opera-stability-v29 .app-shell *::after{
 .algorithm-list-v1880{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
 .algorithm-card-v1880{overflow:hidden;border:1px solid rgba(128,171,191,.16);border-radius:20px;background:linear-gradient(150deg,rgba(11,26,41,.98),rgba(5,15,26,.96));box-shadow:0 16px 48px rgba(0,0,0,.20)}
 .algorithm-card-v1880.is-won{border-color:rgba(77,239,179,.28)}.algorithm-card-v1880.is-lost{border-color:rgba(255,86,111,.25)}.algorithm-card-v1880.is-no-bet{opacity:.78}
+.algorithm-card-v1880.is-tone-a{background:linear-gradient(150deg,rgba(11,26,41,.98),rgba(5,15,26,.96));box-shadow:0 16px 48px rgba(0,0,0,.20),inset 0 1px 0 rgba(92,243,232,.04)}
+.algorithm-card-v1880.is-tone-b{background:linear-gradient(150deg,rgba(18,22,45,.98),rgba(10,14,34,.96));border-color:rgba(138,150,255,.18);box-shadow:0 16px 48px rgba(0,0,0,.22),inset 0 1px 0 rgba(146,153,255,.05)}
+.algorithm-card-v1880.is-tone-b>header{border-bottom-color:rgba(150,160,255,.11)}
+.algorithm-card-v1880.is-tone-b .algorithm-card-league-v1880 b{color:#e6ebff}
+.algorithm-card-v1880.is-tone-b .algorithm-card-league-v1880 small{color:#8390c4}
+.algorithm-card-v1880.is-tone-b .algorithm-team-v1880 i{color:#8f9cff;background:rgba(143,156,255,.12)}
+.algorithm-card-v1880.is-tone-b .algorithm-pick-strip-v1880{border-color:rgba(141,152,255,.16);background:rgba(126,137,255,.10)}
+.algorithm-card-v1880.is-tone-b .algorithm-pick-strip-v1880>div{background:rgba(8,13,31,.90)}
+.algorithm-card-v1880.is-tone-b .algorithm-pick-strip-v1880 small{color:#7f8dc2}
+.algorithm-card-v1880.is-tone-b .algorithm-pick-strip-v1880 strong{color:#f0f4ff}
+.algorithm-card-v1880.is-tone-b .algorithm-prob-bars-v1880>div>span{color:#b2bbe6}
+.algorithm-card-v1880.is-tone-b .algorithm-prob-bars-v1880 i{background:#1a2149}
+.algorithm-card-v1880.is-tone-b .algorithm-prob-bars-v1880 u{background:linear-gradient(90deg,#7b86ff,#9b8cff)}
+.algorithm-card-v1880.is-tone-b .algorithm-prob-bars-v1880>div.is-selected{border-color:rgba(153,138,255,.34);background:rgba(140,112,255,.10);box-shadow:inset 0 0 24px rgba(129,105,255,.08)}
+.algorithm-card-v1880.is-tone-b .algorithm-prob-bars-v1880>div.is-selected b,.algorithm-card-v1880.is-tone-b .algorithm-prob-bars-v1880>div.is-selected em{color:#b8b8ff}
+.algorithm-card-v1880.is-tone-b .algorithm-meta-chip-v1898{border-color:rgba(143,154,255,.14);color:#9ba7d9;background:rgba(10,17,37,.64)}
+.algorithm-card-v1880.is-tone-b .algorithm-meta-chip-v1898 b{color:#eef2ff}
+.algorithm-card-v1880.is-tone-b .algorithm-details-button-v1880{border-top-color:rgba(145,155,255,.11);color:#99a6d6;background:rgba(9,15,34,.84)}
+.algorithm-card-v1880.is-tone-b .algorithm-details-button-v1880 span{color:#9ea7ff}
+.algorithm-card-v1880.is-tone-b .algorithm-details-v1880{border-top-color:rgba(145,155,255,.10);background:rgba(8,12,29,.68)}
+.algorithm-card-v1880.is-tone-b .algorithm-team-formula-v1880{border-color:rgba(141,152,255,.15);background:rgba(11,18,38,.80)}
+.algorithm-card-v1880.is-tone-b .algorithm-team-formula-v1880 dt{color:#91a0d0}
+.algorithm-card-v1880.is-tone-b .algorithm-team-formula-v1880 dd,.algorithm-card-v1880.is-tone-b .algorithm-equation-v1880 code,.algorithm-card-v1880.is-tone-b .algorithm-market-detail-v1880{color:#dfe6ff}
+.algorithm-card-v1880.is-tone-b .algorithm-team-formula-v1880 dl>div.is-highlight{background:rgba(122,131,255,.12)}
+.algorithm-card-v1880.is-tone-b .algorithm-team-formula-v1880 dl>div.is-highlight dt,.algorithm-card-v1880.is-tone-b .algorithm-team-formula-v1880 dl>div.is-highlight dd,.algorithm-card-v1880.is-tone-b .algorithm-equation-v1880 strong{color:#aab3ff}
+.algorithm-card-v1880.is-tone-b .algorithm-equation-v1880{border-color:rgba(141,152,255,.15);background:rgba(9,15,33,.80)}
+.algorithm-card-v1880.is-tone-b .algorithm-no-bet-reason-v1897{border-color:rgba(162,132,255,.26);background:rgba(66,38,112,.22)}
+.algorithm-card-v1880.is-tone-b .algorithm-no-bet-reason-v1897 b{color:#c7b0ff}
+.algorithm-card-v1880.is-tone-b .algorithm-no-bet-reason-v1897 span{color:#ddcffd}
 .algorithm-card-v1880>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(131,168,186,.10)}
 .algorithm-card-league-v1880{display:flex;align-items:center;gap:8px;min-width:0}.algorithm-card-league-v1880 span{font-size:15px}.algorithm-card-league-v1880 b{overflow:hidden;color:#d9e8f0;font-size:12px;text-overflow:ellipsis;white-space:nowrap}.algorithm-card-league-v1880 small{flex:0 0 auto;color:#718799;font-size:11px}
 .algorithm-status-v1880{flex:0 0 auto;padding:6px 9px;border-radius:999px;font-size:10px;font-weight:950;letter-spacing:.05em}.algorithm-status-v1880.is-pending{color:#ffd879;background:rgba(113,78,12,.35)}.algorithm-status-v1880.is-won{color:#69f5bd;background:rgba(15,88,60,.38)}.algorithm-status-v1880.is-lost{color:#ff8998;background:rgba(100,20,37,.38)}.algorithm-status-v1880.is-void{color:#b8d0df;background:rgba(67,91,107,.35)}.algorithm-status-v1880.is-skipped{color:#91a3af;background:rgba(53,67,78,.38)}
