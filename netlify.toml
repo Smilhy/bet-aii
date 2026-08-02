@@ -72,8 +72,10 @@
 [functions."settle-live-ai-picks"]
   schedule = "17 * * * *"
 
-# Typer Expert — rozliczanie własnych typów co godzinę.
-[functions."settle-typer-expert"]
+# Typer Expert — główny endpoint pozostaje zwykłą funkcją HTTP,
+# dzięki czemu działa z przycisku admina i po bezpośrednim wejściu w URL.
+# Harmonogram jest przypięty WYŁĄCZNIE do osobnego wrappera scheduled-settle-typer-expert.
+[functions."scheduled-settle-typer-expert"]
   schedule = "37 * * * *"
 
 # Ograć Buka — rozliczanie własnych typów co godzinę.
