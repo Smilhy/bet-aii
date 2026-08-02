@@ -81998,3 +81998,78 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   .algorithm-pick-strip-v1898 strong{font-size:14px}
   .algorithm-pick-strip-v1898 > div:nth-child(3) strong{font-size:19px}
 }
+
+
+/* ========================================================================== */
+/* WERSJA 1901 — REALNY STATUS ONLINE/OFFLINE PROFILU                         */
+/* Tylko UI obecności; bez zmian logiki typów, rankingu i statystyk.           */
+/* ========================================================================== */
+@keyframes profilePresencePulseV1901{
+  0%,100%{transform:scale(1);box-shadow:0 0 0 4px rgba(84,255,104,.10),0 0 16px rgba(84,255,104,.48)}
+  50%{transform:scale(1.08);box-shadow:0 0 0 7px rgba(84,255,104,.05),0 0 26px rgba(84,255,104,.78)}
+}
+
+.profile-v3-avatar.profile-v3-avatar-editable.profile-presence-online::after{
+  background:linear-gradient(135deg,#68ff72,#10d968)!important;
+  box-shadow:0 0 0 4px rgba(84,255,104,.10),0 0 20px rgba(84,255,104,.72)!important;
+  animation:profilePresencePulseV1901 1.8s ease-in-out infinite!important;
+}
+.profile-v3-avatar.profile-v3-avatar-editable.profile-presence-offline::after{
+  background:linear-gradient(135deg,#ff7681,#d9354d)!important;
+  box-shadow:0 0 0 4px rgba(255,76,94,.08),0 0 15px rgba(255,76,94,.40)!important;
+  animation:none!important;
+}
+.profile-v3-avatar.profile-v3-avatar-editable.profile-presence-loading::after{
+  background:linear-gradient(135deg,#a7b4c0,#637180)!important;
+  box-shadow:0 0 0 4px rgba(143,158,172,.07),0 0 12px rgba(143,158,172,.28)!important;
+  animation:none!important;
+}
+
+.profile-static-v3 .side-card-head-v3 .profile-presence-badge-v1901{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  padding:5px 8px!important;
+  border:1px solid transparent!important;
+  border-radius:999px!important;
+  font-size:10px!important;
+  font-weight:950!important;
+  letter-spacing:.06em!important;
+  line-height:1!important;
+  text-shadow:none!important;
+}
+.profile-presence-badge-v1901 i{
+  display:block!important;
+  width:7px!important;
+  height:7px!important;
+  border-radius:50%!important;
+}
+.profile-static-v3 .side-card-head-v3 .profile-presence-badge-v1901.is-online{
+  color:#52ff8c!important;
+  border-color:rgba(60,237,133,.22)!important;
+  background:rgba(16,103,67,.18)!important;
+  box-shadow:0 0 16px rgba(44,232,126,.08)!important;
+}
+.profile-presence-badge-v1901.is-online i{
+  background:#42f781!important;
+  box-shadow:0 0 10px rgba(66,247,129,.75)!important;
+  animation:profilePresencePulseV1901 1.8s ease-in-out infinite!important;
+}
+.profile-static-v3 .side-card-head-v3 .profile-presence-badge-v1901.is-offline{
+  color:#ff7f8b!important;
+  border-color:rgba(255,91,110,.20)!important;
+  background:rgba(105,26,42,.18)!important;
+}
+.profile-presence-badge-v1901.is-offline i{
+  background:#e44b5f!important;
+  box-shadow:0 0 8px rgba(228,75,95,.40)!important;
+}
+.profile-static-v3 .side-card-head-v3 .profile-presence-badge-v1901.is-loading{
+  color:#a9b8c4!important;
+  border-color:rgba(151,167,181,.16)!important;
+  background:rgba(74,87,99,.16)!important;
+}
+.profile-presence-badge-v1901.is-loading i{
+  background:#8997a4!important;
+  box-shadow:none!important;
+}

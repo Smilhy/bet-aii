@@ -27717,6 +27717,99 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const viewerNameForReview = resolveRealProfileUsername(viewerProfile || {}) || 'Użytkownik'
   const viewerEmailForReview = normalizeEmail(viewerProfile?.email || '')
 
+
+  const [profilePresenceV1901, setProfilePresenceV1901] = useState(() => ({
+    status: profileIsOwnForViewer ? 'online' : 'loading',
+    lastSeen: '',
+  }))
+
+  useEffect(() => {
+    let alive = true
+    let channel = null
+    const targetId = String(viewedIdKey || profile?.id || user?.id || '').trim()
+    const targetEmail = normalizeEmail(email || user?.email || '')
+
+    const applyPresenceRow = (row) => {
+      if (!alive) return
+      const rawLastSeen = String(row?.last_seen || '').trim()
+      const lastSeenMs = rawLastSeen ? Date.parse(rawLastSeen) : 0
+      const isFresh = Number.isFinite(lastSeenMs) && lastSeenMs > 0 && Date.now() - lastSeenMs <= BETAI_PROFILE_PRESENCE_ONLINE_MS_V1901
+      const ownVisibleFallback = profileIsOwnForViewer && typeof document !== 'undefined' && document.visibilityState === 'visible' && !rawLastSeen
+      setProfilePresenceV1901({
+        status: isFresh || ownVisibleFallback ? 'online' : 'offline',
+        lastSeen: rawLastSeen || (ownVisibleFallback ? new Date().toISOString() : ''),
+      })
+    }
+
+    const loadPresence = async () => {
+      if (!isSupabaseConfigured || !supabase || (!targetId && !targetEmail)) {
+        applyPresenceRow(null)
+        return
+      }
+
+      try {
+        let row = null
+        if (targetId) {
+          const { data, error } = await supabase
+            .from('presence_heartbeats')
+            .select('user_id,email,last_seen')
+            .eq('user_id', targetId)
+            .order('last_seen', { ascending: false })
+            .limit(1)
+          if (error) throw error
+          row = Array.isArray(data) ? data[0] : null
+        }
+
+        if (!row && targetEmail) {
+          const { data, error } = await supabase
+            .from('presence_heartbeats')
+            .select('user_id,email,last_seen')
+            .eq('email', targetEmail)
+            .order('last_seen', { ascending: false })
+            .limit(1)
+          if (error) throw error
+          row = Array.isArray(data) ? data[0] : null
+        }
+
+        applyPresenceRow(row)
+      } catch (error) {
+        console.warn('profile presence load skipped', error)
+        if (alive) setProfilePresenceV1901(current => ({ ...current, status: 'offline' }))
+      }
+    }
+
+    loadPresence()
+    const interval = window.setInterval(loadPresence, 15000)
+
+    if (isSupabaseConfigured && supabase && (targetId || targetEmail)) {
+      const safeTopicKey = String(targetId || targetEmail || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 90)
+      const realtimeFilter = targetId ? `user_id=eq.${targetId}` : `email=eq.${targetEmail}`
+      channel = supabase
+        .channel(`betai-profile-presence-v1901-${safeTopicKey}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'presence_heartbeats', filter: realtimeFilter }, payload => {
+          const row = payload?.new || payload?.old || null
+          const rowId = String(row?.user_id || '').trim()
+          const rowEmail = normalizeEmail(row?.email || '')
+          if ((targetId && rowId === targetId) || (targetEmail && rowEmail === targetEmail)) applyPresenceRow(row)
+        })
+        .subscribe()
+    }
+
+    const refreshOnVisible = () => {
+      if (document.visibilityState === 'visible') loadPresence()
+    }
+    document.addEventListener('visibilitychange', refreshOnVisible)
+
+    return () => {
+      alive = false
+      window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', refreshOnVisible)
+      if (channel) {
+        try { supabase.removeChannel(channel) } catch (_) {}
+      }
+    }
+  }, [viewedIdKey, email, profileIsOwnForViewer, user?.id, user?.email])
+
   async function loadProfileReviews() {
     if (!isSupabaseConfigured || !supabase || !targetProfileIdForReviews) {
       setProfileReviews([])
@@ -28471,7 +28564,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const sortedUserTips = [...userTips].sort((a, b) => Date.parse(b.created_at || 0) - Date.parse(a.created_at || 0))
   const latestTip = sortedUserTips[0] || null
   const latestActivityCandidates = [
-    profileIsOwnForViewer ? new Date().toISOString() : '',
+    profilePresenceV1901.lastSeen,
     user?.last_sign_in_at,
     user?.last_login_at,
     user?.updated_at,
@@ -28508,7 +28601,24 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     tip?.event_date ||
     tip?.created_at
   )
-  const lastActivityLabel = profileIsOwnForViewer ? 'Teraz online' : formatProfileDate(latestActivityRaw)
+  const formatPresenceLastSeenV1901 = (value) => {
+    if (!value) return lang === 'en' ? 'Offline' : 'Offline'
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return lang === 'en' ? 'Offline' : 'Offline'
+    const diffMs = Math.max(0, Date.now() - date.getTime())
+    const minutes = Math.floor(diffMs / 60000)
+    if (minutes < 1) return lang === 'en' ? 'A moment ago' : 'Przed chwilą'
+    if (minutes < 60) return lang === 'en' ? `${minutes} min ago` : `${minutes} min temu`
+    const today = new Date()
+    const time = date.toLocaleTimeString(lang === 'en' ? 'en-GB' : 'pl-PL', { hour: '2-digit', minute: '2-digit' })
+    if (date.toDateString() === today.toDateString()) return lang === 'en' ? `Today, ${time}` : `Dzisiaj, ${time}`
+    return `${date.toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL')}, ${time}`
+  }
+  const lastActivityLabel = profilePresenceV1901.status === 'online'
+    ? (lang === 'en' ? 'Online now' : 'Teraz online')
+    : profilePresenceV1901.status === 'loading'
+      ? (lang === 'en' ? 'Checking...' : 'Sprawdzanie...')
+      : formatPresenceLastSeenV1901(profilePresenceV1901.lastSeen || latestActivityRaw)
   const lastTipAt = latestTip?.created_at ? new Date(latestTip.created_at) : null
   const latestActivityAt = latestActivityRaw ? new Date(latestActivityRaw) : null
   const isActive30d = Boolean(
@@ -30078,7 +30188,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             <div className="profile-v3-user-row">
               <button
                 type="button"
-                className={`profile-v3-avatar profile-v3-avatar-editable ${avatarUrl ? 'has-avatar' : ''} ${avatarUploading ? 'is-uploading' : ''}`}
+                className={`profile-v3-avatar profile-v3-avatar-editable profile-presence-${profilePresenceV1901.status} ${avatarUrl ? 'has-avatar' : ''} ${avatarUploading ? 'is-uploading' : ''}`}
                 onClick={chooseAvatar}
                 title={t('Kliknij, aby dodać lub zmienić avatar')}
                 style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}
@@ -30884,7 +30994,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
         {(profileTab === 'overview' || profileTab === 'tips') && <aside className="profile-v3-sidebar profile-v4-shared-sidebar">
           <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>{t('Podsumowanie')}</h3><span>• ONLINE ●</span></div>
+            <div className="side-card-head-v3"><h3>{t('Podsumowanie')}</h3><span className={`profile-presence-badge-v1901 is-${profilePresenceV1901.status}`}><i aria-hidden="true" />{profilePresenceV1901.status === 'online' ? 'ONLINE' : profilePresenceV1901.status === 'loading' ? (lang === 'en' ? 'CHECKING' : 'SPRAWDZAM') : 'OFFLINE'}</span></div>
             <div className="key-list-v3">
               {summaryRows.map((row, idx) => <div key={idx}><span>{t(row[0])}</span><b>{t(row[1])}</b></div>)}
             </div>
@@ -34405,6 +34515,84 @@ function isTipVisibleInActiveFeed(tip, now = Date.now()) {
   return true
 }
 
+
+// WERSJA 1901 — realny status ONLINE/OFFLINE profilu.
+// Heartbeat jest wysyłany tylko dla zalogowanego użytkownika, gdy karta jest widoczna
+// i użytkownik był aktywny w ostatnich 2 minutach. Nie zmienia logiki typów/statystyk.
+const BETAI_PROFILE_PRESENCE_ONLINE_MS_V1901 = 75 * 1000
+const BETAI_PROFILE_PRESENCE_ACTIVE_MS_V1901 = 60 * 1000
+const BETAI_PROFILE_PRESENCE_HEARTBEAT_MS_V1901 = 20 * 1000
+
+function BetaiPresenceHeartbeatV1901({ user }) {
+  const userId = String(user?.id || '').trim()
+  const email = normalizeEmail(user?.email || '')
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return undefined
+    if (!isSupabaseConfigured || !supabase || (!userId && !email)) return undefined
+
+    let stopped = false
+    let writing = false
+    let lastWriteAt = 0
+    let lastActivityAt = Date.now()
+    const presenceKey = userId || email
+
+    const writeHeartbeat = async (force = false) => {
+      if (stopped || writing || document.visibilityState !== 'visible') return
+      const now = Date.now()
+      if (!force && now - lastActivityAt > BETAI_PROFILE_PRESENCE_ACTIVE_MS_V1901) return
+      if (!force && now - lastWriteAt < 10000) return
+
+      writing = true
+      try {
+        const { error } = await supabase
+          .from('presence_heartbeats')
+          .upsert({
+            user_id: presenceKey,
+            email: email || null,
+            last_seen: new Date(now).toISOString(),
+          }, { onConflict: 'user_id' })
+        if (error) throw error
+        lastWriteAt = now
+      } catch (error) {
+        console.warn('profile presence heartbeat skipped', error)
+      } finally {
+        writing = false
+      }
+    }
+
+    const markActive = () => {
+      lastActivityAt = Date.now()
+      writeHeartbeat(false)
+    }
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        lastActivityAt = Date.now()
+        writeHeartbeat(true)
+      }
+    }
+
+    const activityEvents = ['pointerdown', 'keydown', 'touchstart', 'scroll', 'mousemove']
+    activityEvents.forEach(eventName => window.addEventListener(eventName, markActive, { passive: true }))
+    window.addEventListener('focus', markActive)
+    document.addEventListener('visibilitychange', onVisibility)
+
+    writeHeartbeat(true)
+    const interval = window.setInterval(() => writeHeartbeat(false), BETAI_PROFILE_PRESENCE_HEARTBEAT_MS_V1901)
+
+    return () => {
+      stopped = true
+      window.clearInterval(interval)
+      activityEvents.forEach(eventName => window.removeEventListener(eventName, markActive))
+      window.removeEventListener('focus', markActive)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [userId, email])
+
+  return null
+}
+
 function App() {
   const [tips, setTips] = useState([])
   const [lastTipSaveStatus, setLastTipSaveStatus] = useState(readTipDebug())
@@ -37846,6 +38034,7 @@ function App() {
   return (
     <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
+      <BetaiPresenceHeartbeatV1901 user={effectiveAccountProfile || sessionUser} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <LiveTipCenterPopup popup={liveTipPopup} open={liveTipPopupVisible} onClose={hideLiveTipPopup} />
       <ReceivedTipPopup popup={receivedTipPopup} open={receivedTipPopupVisible} onClose={hideReceivedTipPopup} />

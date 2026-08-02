@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-34-algorithm-premium-wide-rows",
-  "version": "34.0.0",
+  "name": "betai-wersja-36-real-profile-online-status",
+  "version": "36.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
