@@ -226,27 +226,61 @@ function TeamFormula({ side, row, t }) {
 
 
 function TopPickCard({ row, index, lang, t, onOpen }) {
-  const pick = pickedDirectionLabel(row, t)
   const quality = getDataQuality(row, t)
+  const selectedMarket = String(row.selected_market || '')
+  const selectedIsUnder = selectedMarket === 'under_2_5'
+  const selectedLabel = selectedIsUnder ? t.under : t.over
+  const oppositeLabel = selectedIsUnder ? t.over : t.under
+  const selectedProbability = Math.max(0, Math.min(100, Number(row.selected_probability || 0)))
+  const rawOppositeProbability = selectedIsUnder ? Number(row.over_probability) : Number(row.under_probability)
+  const oppositeProbability = Number.isFinite(rawOppositeProbability)
+    ? Math.max(0, Math.min(100, rawOppositeProbability))
+    : Math.max(0, Math.min(100, 100 - selectedProbability))
+  const toneClass = index % 2 === 0 ? 'is-row-cyan' : 'is-row-violet'
+
   return (
-    <button type="button" className="algorithm-top-pick-v1897 algorithm-top-pick-v1898" onClick={onOpen}>
-      <div className="algorithm-top-head-v1898">
-        <div className="algorithm-top-league-v1897">{row.league_name || 'Piłka nożna'}</div>
-        <span className="algorithm-top-rank-v1887">#{index + 1}</span>
+    <button
+      type="button"
+      className={`algorithm-top-pick-v1897 algorithm-top-pick-v1898 algorithm-top-wide-row-v34 ${toneClass}`}
+      onClick={onOpen}
+    >
+      <div className="algorithm-top-wide-meta-v34">
+        <span>{row.league_name || 'Piłka nożna'}</span>
+        <small>{dateTime(row.kickoff, lang)}</small>
+        <em>ⓘ {t.details}</em>
       </div>
-      <div className="algorithm-top-match-v1887 algorithm-top-match-v1898">
-        <strong>{row.home_team}</strong><small>vs</small><strong>{row.away_team}</strong>
+
+      <div className="algorithm-top-wide-team-v34 is-home">
+        {row.home_logo ? <img src={row.home_logo} alt="" /> : <i>{String(row.home_team || '?').slice(0, 1)}</i>}
+        <strong>{row.home_team}</strong>
       </div>
-      <div className="algorithm-top-choice-v1898">
-        <b>{pick}</b><strong>{number(row.selected_probability, 1)}%</strong>
+
+      <div className="algorithm-top-wide-prob-v34 is-selected">
+        <small>{selectedLabel}</small>
+        <strong>{number(selectedProbability, 1)}%</strong>
       </div>
-      <div className="algorithm-top-meta-v1887 algorithm-top-meta-v1898">
-        <span>{t.odds}: <b>{Number(row.selected_odds || 0) > 1 ? number(row.selected_odds, 2) : t.noOdds}</b></span>
-        <span>{t.startsAt}: <b>{shortTime(row.kickoff, lang)}</b></span>
+
+      <div className="algorithm-top-wide-vs-v34"><span>VS</span></div>
+
+      <div className="algorithm-top-wide-prob-v34 is-opposite">
+        <small>{oppositeLabel}</small>
+        <strong>{number(oppositeProbability, 1)}%</strong>
       </div>
-      <div className="algorithm-top-footer-v1898">
-        <span>{t.ev}: <b className={Number(row.edge_pct || 0) >= 0 ? 'positive' : 'negative'}>{row.edge_pct == null ? '—' : signed(row.edge_pct, 2, '%')}</b></span>
+
+      <div className="algorithm-top-wide-team-v34 is-away">
+        <strong>{row.away_team}</strong>
+        {row.away_logo ? <img src={row.away_logo} alt="" /> : <i>{String(row.away_team || '?').slice(0, 1)}</i>}
+      </div>
+
+      <div className="algorithm-top-wide-side-v34">
+        <div><small>{t.odds}</small><strong>{Number(row.selected_odds || 0) > 1 ? number(row.selected_odds, 2) : t.noOdds}</strong></div>
+        <div><small>{t.startsAt}</small><strong>{shortTime(row.kickoff, lang)}</strong></div>
         <span className={`algorithm-quality-chip-v1897 ${quality.className}`}>{quality.label} · {quality.used}/{quality.target}</span>
+      </div>
+
+      <div className="algorithm-top-wide-bar-v34" aria-hidden="true">
+        <span className="is-selected" style={{ width: `${selectedProbability}%` }} />
+        <span className="is-opposite" style={{ width: `${oppositeProbability}%` }} />
       </div>
     </button>
   )
