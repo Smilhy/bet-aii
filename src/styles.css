@@ -82207,3 +82207,78 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   .algorithm-stats-sort-buttons-v1901{width:100%!important}
   .algorithm-stats-sort-buttons-v1901 button{flex:1 1 180px!important;justify-content:center!important}
 }
+
+/* Wersja 39 — mobile dashboard: pokaż prawą kolumnę (Live Chat + Top typerzy) także na telefonach */
+@media (max-width: 1000px) {
+  .app-shell:not(.no-rightbar-page){
+    display:block!important;
+    padding:12px!important;
+    gap:0!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .sidebar{
+    position:relative!important;
+    top:auto!important;
+    height:auto!important;
+    max-height:none!important;
+    margin-bottom:12px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .main{
+    padding:12px 0 18px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    display:flex!important;
+    width:100%!important;
+    min-width:0!important;
+    padding:0 0 20px!important;
+    margin-top:8px!important;
+    position:relative!important;
+    top:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+    gap:14px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar .panel,
+  .app-shell:not(.no-rightbar-page) .rightbar .live-chat-panel,
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel,
+  .app-shell:not(.no-rightbar-page) .rightbar .betai-right-chat-final{
+    width:100%!important;
+    min-width:0!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar .live-chat-panel,
+  .app-shell:not(.no-rightbar-page) .rightbar .betai-right-chat-final{
+    display:block!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar .live-chat-messages,
+  .app-shell:not(.no-rightbar-page) .betai-chat-messages-final{
+    height:320px!important;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell:not(.no-rightbar-page){
+    display:block!important;
+    padding:10px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .main{
+    padding:10px 0 16px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    display:flex!important;
+    padding:0 0 16px!important;
+    gap:12px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar .live-chat-panel,
+  .app-shell:not(.no-rightbar-page) .rightbar .betai-right-chat-final,
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel{
+    border-radius:22px!important;
+  }
+}
