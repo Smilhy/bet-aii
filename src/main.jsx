@@ -30332,7 +30332,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                             className="feed-load-less-btn"
                             onClick={() => setProfileTipsVisibleCount(3)}
                           >
-                            {tApp('Zwiń do 3 typów')}
+                            {t('Zwiń do 3 typów')}
                           </button>
                         ) : null}
                       </div>
@@ -30361,7 +30361,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                           className="feed-load-less-btn"
                           onClick={() => setProfileTipsVisibleCount(3)}
                         >
-                          {tApp('Zwiń do 3 typów')}
+                          {t('Zwiń do 3 typów')}
                         </button>
                       ) : null}
                     </div>
