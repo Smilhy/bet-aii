@@ -81930,3 +81930,71 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   .algorithm-top-wide-meta-v34>small{font-size:8px!important}
   .algorithm-top-wide-meta-v34>em{padding:5px 7px!important;font-size:8px!important}
 }
+
+/* V1900 — ALGORYTM: większa czytelność ligi / daty / kursu, bez zmian logiki */
+@keyframes algorithmGoldPulseV1900{
+  0%,100%{color:#f2d47a;text-shadow:0 0 0 rgba(255,211,92,0),0 0 10px rgba(255,205,90,.08)}
+  50%{color:#ffe89d;text-shadow:0 0 10px rgba(255,211,92,.22),0 0 22px rgba(255,211,92,.12)}
+}
+
+.algorithm-card-league-v1880{gap:10px}
+.algorithm-card-league-v1880 span{
+  font-size:18px;
+  filter:drop-shadow(0 0 8px rgba(255,214,92,.12));
+}
+.algorithm-card-league-v1880 b{
+  font-size:18px;
+  font-weight:950;
+  letter-spacing:.01em;
+  color:#ffd86b;
+  text-shadow:0 0 10px rgba(255,210,89,.10);
+  animation:algorithmGoldPulseV1900 2.2s ease-in-out infinite;
+}
+.algorithm-card-league-v1880 small{
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:.02em;
+  color:#ffdf80;
+  text-shadow:0 0 8px rgba(255,208,82,.08);
+  animation:algorithmGoldPulseV1900 2.6s ease-in-out infinite;
+}
+
+.algorithm-pick-strip-v1898 small{
+  font-size:10px;
+  font-weight:900;
+}
+.algorithm-pick-strip-v1898 strong{
+  font-size:15px;
+  font-weight:950;
+}
+.algorithm-pick-strip-v1898 > div:nth-child(3) small{
+  color:#ffda73;
+  font-size:11px;
+  text-shadow:0 0 8px rgba(255,209,85,.08);
+}
+.algorithm-pick-strip-v1898 > div:nth-child(3) strong{
+  font-size:24px;
+  line-height:1;
+  color:#ffe38d;
+  text-shadow:0 0 14px rgba(255,211,92,.16),0 0 26px rgba(255,211,92,.08);
+  animation:algorithmGoldPulseV1900 1.9s ease-in-out infinite;
+}
+.algorithm-pick-strip-v1898 > div:nth-child(1) strong{
+  font-size:16px;
+}
+.algorithm-pick-strip-v1898 > div:nth-child(2) strong,
+.algorithm-pick-strip-v1898 > div:nth-child(4) strong{
+  font-size:16px;
+}
+
+@media(max-width:900px){
+  .algorithm-card-league-v1880 b{font-size:16px}
+  .algorithm-card-league-v1880 small{font-size:13px}
+  .algorithm-pick-strip-v1898 > div:nth-child(3) strong{font-size:21px}
+}
+@media(max-width:640px){
+  .algorithm-card-league-v1880 b{font-size:15px}
+  .algorithm-card-league-v1880 small{font-size:12px}
+  .algorithm-pick-strip-v1898 strong{font-size:14px}
+  .algorithm-pick-strip-v1898 > div:nth-child(3) strong{font-size:19px}
+}
