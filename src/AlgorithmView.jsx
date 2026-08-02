@@ -27,7 +27,7 @@ const TEXT = {
     noBetReason: 'Powód braku zakładu', reasonProbability: 'Prawdopodobieństwo {value}% — wymagane minimum 51%', reasonOdds: 'Kurs {value} — wymagane minimum 2.00', reasonMissingOdds: 'Brak kursu O/U 2.5 dla wybranego kierunku', reasonNoData: 'Brak pełnych statystyk strzałów i rożnych', reasonStarted: 'Mecz rozpoczęty — pominięty', reasonCompetition: 'Mecz poza listą topowych rozgrywek', reasonUnknown: 'Warunki zakładu nie zostały spełnione',
     lockedPick: 'ZAMROŻONE PRE-MATCH', pickSaved: 'Typ zapisano', oddsSaved: 'Kurs zapisano', noPostKickoffChanges: 'Bez zmian po rozpoczęciu',
     forecastHitRate: 'Trafność wszystkich prognoz', financialRoi: 'ROI zakładów z kursem ≥ 2.00', forecastsSettled: 'Wszystkie rozliczone prognozy', financialSettled: 'Rozliczone finansowo',
-    overviewMore: 'Więcej statystyk', progressMore: 'Szczegóły skanu', filters: { bets: 'Zakłady', queue: 'W kolejce', no_bet: 'Bez zakładu', results: 'Wyniki', all: 'Wszystkie', stats: 'Statystyki' }
+    overviewMore: 'Więcej statystyk', progressMore: 'Szczegóły skanu', statsSortLabel: 'Sortowanie', sortByProfit: 'Największy profit', sortByCount: 'Najwięcej typów', filters: { bets: 'Zakłady', queue: 'W kolejce', no_bet: 'Bez zakładu', results: 'Wyniki', all: 'Wszystkie', stats: 'Statystyki' }
   },
   en: {
     title: 'Over / Under 2.5 Algorithm',
@@ -45,7 +45,7 @@ const TEXT = {
     noBetReason: 'No-bet reason', reasonProbability: 'Probability {value}% — minimum 51% required', reasonOdds: 'Odds {value} — minimum 2.00 required', reasonMissingOdds: 'No O/U 2.5 odds for the selected side', reasonNoData: 'Missing complete shots and corners data', reasonStarted: 'Match started — skipped', reasonCompetition: 'Outside the top competitions list', reasonUnknown: 'Bet conditions were not met',
     lockedPick: 'PRE-MATCH LOCKED', pickSaved: 'Pick saved', oddsSaved: 'Odds saved', noPostKickoffChanges: 'No changes after kick-off',
     forecastHitRate: 'Hit rate of all forecasts', financialRoi: 'ROI for bets with odds ≥ 2.00', forecastsSettled: 'All settled forecasts', financialSettled: 'Financially settled',
-    overviewMore: 'More statistics', progressMore: 'Scan details', filters: { bets: 'Bets', queue: 'In queue', no_bet: 'No bet', results: 'Results', all: 'All', stats: 'Statistics' }
+    overviewMore: 'More statistics', progressMore: 'Scan details', statsSortLabel: 'Sort', sortByProfit: 'Highest profit', sortByCount: 'Most bets', filters: { bets: 'Bets', queue: 'In queue', no_bet: 'No bet', results: 'Results', all: 'All', stats: 'Statistics' }
   }
 }
 
@@ -399,6 +399,12 @@ function groupStats(rows, keyGetter) {
   })).sort((a, b) => b.bets - a.bets || b.profit - a.profit)
 }
 
+function sortStatsRows(rows, mode = 'profit_desc') {
+  const list = Array.isArray(rows) ? [...rows] : []
+  if (mode === 'count_desc') return list.sort((a, b) => b.bets - a.bets || b.profit - a.profit || b.yieldValue - a.yieldValue)
+  return list.sort((a, b) => b.profit - a.profit || b.yieldValue - a.yieldValue || b.bets - a.bets)
+}
+
 function StatsTable({ title, firstLabel, rows, t }) {
   return (
     <section className="algorithm-stats-table-v1882">
@@ -460,6 +466,7 @@ function AutomationProgress({ automation, latestScan, clock, t, lang }) {
 }
 
 function AlgorithmStats({ rows, summary, t }) {
+  const [statsSortMode, setStatsSortMode] = useState('profit_desc')
   const forecasts = useMemo(() => rows.filter(row => ['over_2_5', 'under_2_5'].includes(String(row.selected_market || ''))), [rows])
   const settledForecasts = useMemo(() => forecasts.filter(row => ['won', 'lost'].includes(String(row.status || ''))).sort((a, b) => new Date(a.settled_at || a.kickoff) - new Date(b.settled_at || b.kickoff)), [forecasts])
   const financialBets = useMemo(() => forecasts.filter(row => Number(row.selected_odds || 0) >= 2 && Number(row.stake || 0) > 0), [forecasts])
@@ -497,9 +504,21 @@ function AlgorithmStats({ rows, summary, t }) {
     return '55.0%+'
   })
 
+  const sortedLeagueRows = useMemo(() => sortStatsRows(leagueRows, statsSortMode), [leagueRows, statsSortMode])
+  const sortedMarketRows = useMemo(() => sortStatsRows(marketRows, statsSortMode), [marketRows, statsSortMode])
+  const sortedOddsRows = useMemo(() => sortStatsRows(oddsRows, statsSortMode), [oddsRows, statsSortMode])
+  const sortedProbabilityRows = useMemo(() => sortStatsRows(probabilityRows, statsSortMode), [probabilityRows, statsSortMode])
+
   return (
     <section className="algorithm-stats-v1882">
       <div className="algorithm-stats-title-v1882"><div><span>Σ</span><div><h2>{t.statsTitle}</h2></div></div><b>{settledForecasts.length} {t.settledPicks}</b></div>
+      <div className="algorithm-stats-toolbar-v1901">
+        <span>{t.statsSortLabel}</span>
+        <div className="algorithm-stats-sort-buttons-v1901">
+          <button type="button" className={statsSortMode === 'profit_desc' ? 'is-active' : ''} onClick={() => setStatsSortMode('profit_desc')}>{t.sortByProfit}</button>
+          <button type="button" className={statsSortMode === 'count_desc' ? 'is-active' : ''} onClick={() => setStatsSortMode('count_desc')}>{t.sortByCount}</button>
+        </div>
+      </div>
       <div className="algorithm-stats-split-v1897">
         <article><small>{t.forecastHitRate}</small><strong>{number(forecastHitRate, 2)}%</strong><span>{t.forecastsSettled}: {settledForecasts.length} · W/L {forecastWon}/{forecastLost}</span></article>
         <article><small>{t.financialRoi}</small><strong className={financialRoi >= 0 ? 'positive' : 'negative'}>{signed(financialRoi, 2, '%')}</strong><span>{t.financialSettled}: {financialSettled.length} · {signed(financialProfit, 2, ' j.')}</span></article>
@@ -510,8 +529,8 @@ function AlgorithmStats({ rows, summary, t }) {
         <Metric label={t.record} value={`${forecastWon}/${forecastLost}`} />
         <Metric label={t.maxDrawdown} value={`${number(maxDrawdown, 2)} j.`} tone={maxDrawdown > 0 ? 'negative' : ''} />
       </div>
-      <div className="algorithm-stats-grid-v1882"><StatsTable title={t.byLeague} firstLabel={t.league} rows={leagueRows} t={t} /><StatsTable title={t.byMarket} firstLabel={t.market} rows={marketRows} t={t} /></div>
-      <div className="algorithm-stats-grid-v1882"><StatsTable title={t.byOdds} firstLabel={t.range} rows={oddsRows} t={t} /><StatsTable title={t.byProbability} firstLabel={t.range} rows={probabilityRows} t={t} /></div>
+      <div className="algorithm-stats-grid-v1882"><StatsTable title={t.byLeague} firstLabel={t.league} rows={sortedLeagueRows} t={t} /><StatsTable title={t.byMarket} firstLabel={t.market} rows={sortedMarketRows} t={t} /></div>
+      <div className="algorithm-stats-grid-v1882"><StatsTable title={t.byOdds} firstLabel={t.range} rows={sortedOddsRows} t={t} /><StatsTable title={t.byProbability} firstLabel={t.range} rows={sortedProbabilityRows} t={t} /></div>
     </section>
   )
 }

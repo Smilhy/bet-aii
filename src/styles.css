@@ -82073,3 +82073,29 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   background:#8997a4!important;
   box-shadow:none!important;
 }
+
+
+/* V1901 — Algorytm / Statystyki: większa czytelność + sortowanie */
+.algorithm-stats-toolbar-v1901{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin-top:-4px}
+.algorithm-stats-toolbar-v1901>span{color:#8eabba;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.algorithm-stats-sort-buttons-v1901{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.algorithm-stats-sort-buttons-v1901 button{padding:10px 14px;border-radius:12px;border:1px solid rgba(109,162,187,.16);background:rgba(7,22,36,.92);color:#c6d7e1;font-size:13px;font-weight:850;cursor:pointer;transition:.18s ease}
+.algorithm-stats-sort-buttons-v1901 button:hover{border-color:rgba(93,243,231,.32);color:#f4fcff;transform:translateY(-1px)}
+.algorithm-stats-sort-buttons-v1901 button.is-active{border-color:rgba(92,243,232,.48);background:linear-gradient(135deg,rgba(69,243,230,.18),rgba(67,157,255,.16));color:#ecfeff;box-shadow:0 0 0 1px rgba(92,243,232,.12) inset,0 12px 28px rgba(17,108,121,.14)}
+
+.algorithm-stats-table-v1882 h3{font-size:16px;padding:18px 18px}
+.algorithm-stats-head-v1882,.algorithm-stats-row-v1882{padding:13px 16px;gap:10px}
+.algorithm-stats-head-v1882{font-size:10px}
+.algorithm-stats-row-v1882{font-size:13px}
+.algorithm-stats-row-v1882>span:first-child{font-size:13px;font-weight:900}
+.algorithm-stats-row-v1882 .pos{color:#57f0b1;font-weight:900;text-shadow:0 0 10px rgba(63,237,159,.10)}
+.algorithm-stats-row-v1882 .neg{color:#ff6f86;font-weight:900;text-shadow:0 0 10px rgba(255,87,111,.10)}
+.algorithm-stats-row-v1882>span:nth-child(2),
+.algorithm-stats-row-v1882>span:nth-child(5),
+.algorithm-stats-row-v1882>span:nth-child(6){color:#e8f6fc;font-weight:800}
+.algorithm-stats-empty-v1882{font-size:13px}
+
+@media(max-width:700px){
+  .algorithm-stats-toolbar-v1901{align-items:flex-start;justify-content:flex-start}
+  .algorithm-stats-sort-buttons-v1901 button{font-size:12px;padding:9px 12px}
+}
