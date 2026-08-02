@@ -1,10 +1,11 @@
 const { createClient } = require('@supabase/supabase-js')
 
 const AUTHOR_NAME = 'Typer Expert'
-const VERSION = '1885.0-typer-expert-goals-2-5-settlement-v26'
+const VERSION = '1885.1-typer-expert-pst-void-repair-v28'
 
 const FINISHED = ['FT', 'AET', 'PEN']
-const VOIDED = ['CANC', 'ABD', 'AWD', 'WO', 'PST']
+const VOIDED = ['CANC', 'ABD', 'AWD', 'WO']
+const RECHECK_LATER = ['PST']
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -459,6 +460,10 @@ async function settleTip(tip) {
   const fix = resolved.fix
   if (!id || !fix) return { status: 'skipped', reason: 'Nie znaleziono fixture_id: ' + resolved.resolvedBy, resolved_by: resolved.resolvedBy }
   const st = String((((fix.fixture || {}).status || {}).short) || '')
+  // WERSJA 28: PST oznacza mecz przełożony, a nie anulowany. Nie zapisujemy już
+  // automatycznego zwrotu, bo API może później zaktualizować ten sam fixture do FT.
+  // Dzięki temu typ zostaje pending i zostanie ponownie sprawdzony po rozegraniu meczu.
+  if (RECHECK_LATER.includes(st)) return { status: 'pending', reason: 'Mecz przełożony — czeka na nowy termin status=' + st, resolved_fixture_id: id, resolved_by: resolved.resolvedBy }
   if (VOIDED.includes(st)) return { status: 'void', reason: 'Mecz void status=' + st, resolved_fixture_id: id, resolved_by: resolved.resolvedBy }
   if (!FINISHED.includes(st)) return { status: 'pending', reason: 'Mecz nie jest zakonczony status=' + st, resolved_fixture_id: id, resolved_by: resolved.resolvedBy }
   const sc = scoreFromFixture(fix)
@@ -542,6 +547,10 @@ async function settleAkoLeg(leg) {
 
   const st = String((((fix.fixture || {}).status || {}).short) || '')
   const score = scoreTextFromFixture(fix)
+
+  if (RECHECK_LATER.includes(st)) {
+    return { ...leg, fixture_id: id, api_fixture_id: id, status: 'pending', result: 'pending', settlement_status: 'pending', score, reason: 'AKO noga przełożona — czeka na nowy termin status=' + st, settled_at: null }
+  }
 
   if (VOIDED.includes(st)) {
     return { ...leg, fixture_id: id, api_fixture_id: id, status: 'void', result: 'void', settlement_status: 'void', score, reason: 'AKO noga void status=' + st, settled_at: new Date().toISOString() }
@@ -685,20 +694,64 @@ async function updateTipSafe(supabase, tipId, originalPayload, maxAttempts = 12)
   }
 }
 
+function isFalsePostponedVoidCandidateV28(tip = {}) {
+  const status = norm(tip.status || tip.result || tip.settlement_status || tip.result_status)
+  if (!['void', 'push', 'zwrot'].includes(status)) return false
+
+  const reason = norm([
+    tip.settlement_reason,
+    tip.settlement_note,
+    tip.fixture_status,
+    tip.live_status,
+    tip.status_detail
+  ].filter(Boolean).join(' '))
+
+  // Główna ścieżka: wcześniejszy automat zapisał "Mecz void status=PST".
+  if (reason.includes('status=pst') || reason.includes('status pst') || reason.includes('mecz void status=pst')) return true
+
+  // Bezpieczny fallback dla konkretnego starego rekordu, gdy kolumna reason nie
+  // istniała w dawnym schemacie albo została usunięta przez fallback zapisu.
+  const teams = teamNamesFromTip(tip)
+  const home = compact(teams.homeRaw || teams.home)
+  const away = compact(teams.awayRaw || teams.away)
+  return home.includes('coloradorapids') && away.includes('austin')
+}
+
 // Rozliczanie wyłącznie wirtualnych typów profilu Typer Expert.
 exports.config = { schedule: '37 * * * *' }
 
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders, body: '' }
   const supabase = getSupabase()
-  const { data: tips, error } = await supabase
+  const pendingRequest = supabase
     .from('tips')
     .select('*')
     .eq('author_name', AUTHOR_NAME)
     .or('status.eq.pending,settlement_status.eq.pending,status.is.null,settlement_status.is.null')
     .order('created_at', { ascending: false })
     .limit(20)
-  if (error) return json(500, { ok: false, error: error.message })
+
+  // WERSJA 28: naprawiamy stare błędne zwroty zapisane wtedy, gdy API zwróciło PST.
+  // Pobieramy tylko ostatnie rekordy Typer Expert i filtrujemy je lokalnie, żeby nie
+  // zależeć od opcjonalnych kolumn settlement_reason / settlement_note w Supabase.
+  const repairRequest = supabase
+    .from('tips')
+    .select('*')
+    .eq('author_name', AUTHOR_NAME)
+    .or('status.eq.void,status.eq.push,settlement_status.eq.void,result_status.eq.void')
+    .order('created_at', { ascending: false })
+    .limit(200)
+
+  const [pendingResult, repairResult] = await Promise.all([pendingRequest, repairRequest])
+  if (pendingResult.error) return json(500, { ok: false, error: pendingResult.error.message })
+  if (repairResult.error) return json(500, { ok: false, error: repairResult.error.message })
+
+  const pendingTips = Array.isArray(pendingResult.data) ? pendingResult.data : []
+  const pstRepairTips = (Array.isArray(repairResult.data) ? repairResult.data : []).filter(isFalsePostponedVoidCandidateV28)
+  const uniqueTips = new Map()
+  ;[...pendingTips, ...pstRepairTips].forEach(tip => uniqueTips.set(String(tip.id), tip))
+  const tips = [...uniqueTips.values()]
+  const repairIds = new Set(pstRepairTips.map(tip => String(tip.id)))
 
   const checked = []
   const settled = []
@@ -716,7 +769,12 @@ exports.handler = async function(event) {
         leg_statuses: res.leg_statuses || null
       })
       if (['won','lost','void'].includes(res.status)) {
-        const save = await updateTipSafe(supabase, tip.id, updatePayload(res, tip))
+        const payload = updatePayload(res, tip)
+        if (repairIds.has(String(tip.id))) {
+          payload.settlement_source = 'typer_expert_pst_void_repair_v28'
+          payload.settlement_reason = `${res.reason || ''} | naprawiono wcześniejszy błędny zwrot PST`.trim()
+        }
+        const save = await updateTipSafe(supabase, tip.id, payload)
         if (save.error) skipped.push({ id: tip.id, reason: save.error.message, removed_columns: save.removedColumns })
         else settled.push({ id: tip.id, status: res.status, type: isAkoTip(tip) ? 'ako' : 'single', removed_columns: save.removedColumns })
       } else if (!isAkoTip(tip) && res.resolved_fixture_id && !fixtureId(tip)) {
@@ -743,5 +801,18 @@ exports.handler = async function(event) {
       skipped.push({ id: tip.id, reason: e.message || String(e) })
     }
   }
-  return json(200, { ok: true, version: VERSION, author: AUTHOR_NAME, checked: checked.length, settled, skipped, schemaFallbackUsed: settled.some(row => (row.removed_columns || []).length > 0), sample: checked.slice(0, 20) })
+  return json(200, {
+    ok: true,
+    version: VERSION,
+    author: AUTHOR_NAME,
+    checked: checked.length,
+    pending_checked: pendingTips.length,
+    pst_void_repair_candidates: pstRepairTips.length,
+    settled,
+    skipped,
+    schemaFallbackUsed: settled.some(row => (row.removed_columns || []).length > 0),
+    sample: checked.slice(0, 20)
+  })
 }
+
+exports.__test = { settleByKeys, isFalsePostponedVoidCandidateV28, scoreFromFixture }
