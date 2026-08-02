@@ -35,6 +35,7 @@ import { createPortal } from 'react-dom'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 import './mobile-fix-v1.css'
+import './responsive-core-v28.css'
 import AlgorithmView from './AlgorithmView'
 import achievementFanatykV1772 from './assets/achievements-v1772/fanatyk.svg'
 import achievementWinnerV1772 from './assets/achievements-v1772/prawdziwy-wygrany.svg'
@@ -25644,19 +25645,11 @@ function AuthView({ onAuth }) {
                 <div className="auth609-heading-copy auth609-heading-center">
                   <div className="auth609-beta-banner" role="note" aria-label={authLang === 'en' ? 'Beta version information' : 'Informacja o wersji beta'}>
                     <span className="auth609-beta-kicker">{authLang === 'en' ? 'BETA VERSION' : 'WERSJA BETA'}</span>
-                    <span className="auth609-beta-info" tabIndex="0" aria-label={authLang === 'en' ? 'How to change browser zoom' : 'Jak zmienić zoom przeglądarki'}>
+                    <span className="auth609-beta-info" tabIndex="0" aria-label={authLang === 'en' ? 'Responsive layout information' : 'Informacja o responsywnym układzie'}>
                       i
                       <span className="auth609-beta-tooltip" role="tooltip">
-                        <span>{authLang === 'en' ? <>If the layout looks incorrect, use your browser <b>zoom</b>.</> : <>Jeśli widok się rozjeżdża, użyj <b>zoomu</b> przeglądarki.</>}</span>
-                        <span className="auth609-beta-shortcuts">
-                          <strong>Ctrl <em>+</em></strong>
-                          <i>{authLang === 'en' ? 'and' : 'i'}</i>
-                          <strong>Ctrl <em>-</em></strong>
-                        </span>
-                        <span>{authLang === 'en' ? <>or set the browser <b>zoom</b> manually.</> : <>lub ustaw <b>zoom</b> ręcznie w przeglądarce.</>}</span>
-                        <span className="auth609-beta-zoomrow">
-                          <em>-</em><small>100%</small><em>+</em>
-                        </span>
+                        <span>{authLang === 'en' ? <>The layout now adapts automatically to your screen size.</> : <>Układ strony dopasowuje się teraz automatycznie do rozmiaru ekranu.</>}</span>
+                        <span>{authLang === 'en' ? <>No manual browser zoom is required.</> : <>Nie trzeba ręcznie zmieniać zoomu przeglądarki.</>}</span>
                       </span>
                     </span>
                     <p>
@@ -38222,105 +38215,55 @@ function App() {
 
 function BetaiExactScaleProvider({ children }) {
   useEffect(() => {
-    if (typeof window === 'undefined' || typeof document === 'undefined') return
+    if (typeof window === 'undefined' || typeof document === 'undefined') return undefined
 
-    const html = document.documentElement
-    const body = document.body
-    const appRoot = document.getElementById('root')
-    const legacyScaleClasses = [
-      'betai-fhd-monitor80-v1323',
-      'betai-fhd-auto80-v1612'
-    ]
+    const clearLegacyScale = () => {
+      const html = document.documentElement
+      const body = document.body
+      const appRoot = document.getElementById('root')
+      const legacyClasses = [
+        'betai-fhd-monitor80-v1323',
+        'betai-fhd-auto80-v1612',
+        'betai-fhd-auto75-v1613'
+      ]
 
-    const clearLegacyBodyScale = () => {
-      legacyScaleClasses.forEach(className => {
-        html.classList.remove(className)
+      legacyClasses.forEach(className => {
+        html?.classList?.remove(className)
         body?.classList?.remove(className)
         appRoot?.classList?.remove(className)
       })
-      body?.classList?.remove('betai-fhd-auto75-v1613')
-      appRoot?.classList?.remove('betai-fhd-auto75-v1613')
+
+      ;[html, body, appRoot].filter(Boolean).forEach(element => {
+        element.style.removeProperty('zoom')
+        element.style.removeProperty('width')
+        element.style.removeProperty('min-width')
+        element.style.removeProperty('max-width')
+        element.style.removeProperty('transform')
+        element.style.removeProperty('transform-origin')
+        element.style.removeProperty('--betai-fhd-auto75-scale')
+        element.style.removeProperty('--betai-fhd-auto75-width')
+      })
+
       if (body?.dataset) {
         delete body.dataset.betaiFhdMonitor80
         delete body.dataset.betaiGlobalZoom80V1528
       }
-      if (body?.style) {
-        body.style.removeProperty('zoom')
-        body.style.removeProperty('width')
-        body.style.removeProperty('min-width')
-        body.style.removeProperty('max-width')
-        body.style.removeProperty('transform')
-        body.style.removeProperty('transform-origin')
-      }
+      window.__BETAI_FHD_AUTO75_V1613__ = false
     }
 
-    const shouldUseFhd75 = () => {
-      const dpr = window.devicePixelRatio || 1
-      const swCss = window.screen?.width || 0
-      const shCss = window.screen?.height || 0
-      const swPhys = Math.round(swCss * dpr)
-      const shPhys = Math.round(shCss * dpr)
-      const maxPhys = Math.max(swPhys, shPhys)
-      const minPhys = Math.min(swPhys, shPhys)
-      const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0, 0)
-      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0, 0)
-      const maxView = Math.max(vw, vh)
-      const minView = Math.min(vw, vh)
-      const touchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0
-      const isTouch = touchPoints > 1
-      const manualZoomOut = swCss > 0 && vw > swCss * 1.08
-      const is2k = maxPhys >= 2450 || maxView >= 2200
-      const is1680x1050 = maxPhys >= 1640 && maxPhys <= 1725 && minPhys >= 1010 && minPhys <= 1085
-      const isFhdPhysical = maxPhys >= 1880 && maxPhys <= 1945 && minPhys >= 1030 && minPhys <= 1115
-      const isFhdCss = Math.max(swCss, shCss) >= 1880 && Math.max(swCss, shCss) <= 1945 && Math.min(swCss, shCss) >= 1030 && Math.min(swCss, shCss) <= 1115
-      const isFhdScaledViewport = maxView >= 1500 && maxView <= 1605 && minView >= 760 && minView <= 930
-      const isFhdNativeViewport = maxView >= 1800 && maxView <= 1945 && minView >= 900 && minView <= 1115
-
-      return !isTouch && !manualZoomOut && !is2k && !is1680x1050 && (
-        isFhdPhysical || isFhdCss || isFhdScaledViewport || isFhdNativeViewport
-      )
-    }
-
-    const apply = () => {
-      clearLegacyBodyScale()
-      const useFhd75 = shouldUseFhd75()
-      html.classList.toggle('betai-fhd-auto75-v1613', useFhd75)
-      if (useFhd75) {
-        html.style.setProperty('--betai-fhd-auto75-scale', '0.75')
-        html.style.setProperty('--betai-fhd-auto75-width', '133.333vw')
-      } else {
-        html.style.removeProperty('--betai-fhd-auto75-scale')
-        html.style.removeProperty('--betai-fhd-auto75-width')
-      }
-      window.__BETAI_FHD_AUTO75_V1613__ = useFhd75
-    }
-
-    const applyAfterResume = () => {
-      window.requestAnimationFrame(apply)
-    }
-
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') applyAfterResume()
-    }
-
-    apply()
-    window.addEventListener('resize', apply)
-    window.addEventListener('orientationchange', apply)
-    window.addEventListener('load', apply)
-    window.addEventListener('betai:resume-v19', applyAfterResume)
-    window.addEventListener('betai:tab-resume-v29', applyAfterResume)
-    document.addEventListener('visibilitychange', onVisibility)
-    const timers = [60, 250, 800, 1600].map(ms => window.setTimeout(apply, ms))
+    const refresh = () => window.requestAnimationFrame(clearLegacyScale)
+    clearLegacyScale()
+    window.addEventListener('resize', refresh)
+    window.addEventListener('orientationchange', refresh)
+    window.addEventListener('pageshow', refresh)
+    document.addEventListener('visibilitychange', refresh)
 
     return () => {
-      window.removeEventListener('resize', apply)
-      window.removeEventListener('orientationchange', apply)
-      window.removeEventListener('load', apply)
-      window.removeEventListener('betai:resume-v19', applyAfterResume)
-      window.removeEventListener('betai:tab-resume-v29', applyAfterResume)
-      document.removeEventListener('visibilitychange', onVisibility)
-      timers.forEach(timer => window.clearTimeout(timer))
-      clearLegacyBodyScale()
+      window.removeEventListener('resize', refresh)
+      window.removeEventListener('orientationchange', refresh)
+      window.removeEventListener('pageshow', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+      clearLegacyScale()
     }
   }, [])
   return children
