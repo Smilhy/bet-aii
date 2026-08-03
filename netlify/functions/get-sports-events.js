@@ -42,7 +42,7 @@ exports.handler = async function(event) {
   // WERSJA 6: marker schematu kursów. Stare cache z błędnie wrzuconymi kursami
   // 1. połowy do grupy "Gole" ignorujemy, żeby po deployu UI dostało świeże,
   // poprawnie rozdzielone rynki.
-  const ODDS_SCHEMA_VERSION = 'team-total-real-odds-restored-v10'
+  const ODDS_SCHEMA_VERSION = 'team-total-search-pagination-v11'
   const getSupabaseAdmin = () => {
     const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -1598,21 +1598,51 @@ exports.handler = async function(event) {
 
   const fetchApiFootballOddsByFixture = async (apiKey, cfg, fixtureId) => {
     if (!apiKey || !cfg || !fixtureId) return { rows: [], errors: [] }
-    try {
-      const url = new URL(`${cfg.host}/odds`)
-      url.searchParams.set('fixture', String(fixtureId))
-      const response = await fetch(url.toString(), {
-        headers: { 'x-apisports-key': apiKey, 'x-rapidapi-key': apiKey }
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) return { rows: [], errors: [`odds/fixture/${fixtureId}: HTTP ${response.status}`] }
-      if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
-        return { rows: [], errors: [`odds/fixture/${fixtureId}: ${JSON.stringify(data.errors).slice(0, 120)}`] }
+
+    // WERSJA 42: endpoint /odds jest stronicowany również przy filtrze fixture.
+    // Wyszukiwarka meczu pobierała wcześniej wyłącznie stronę 1, przez co część
+    // bukmacherów i rynków (m.in. Team Total Goals) mogła nie trafić do UI.
+    const collected = []
+    const errors = []
+    let page = 1
+    let totalPages = 1
+    const maxPages = 50
+
+    while (page <= totalPages && page <= maxPages) {
+      try {
+        const url = new URL(`${cfg.host}/odds`)
+        url.searchParams.set('fixture', String(fixtureId))
+        url.searchParams.set('page', String(page))
+        const response = await fetch(url.toString(), {
+          headers: { 'x-apisports-key': apiKey, 'x-rapidapi-key': apiKey }
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) {
+          errors.push(`odds/fixture/${fixtureId}/p${page}: HTTP ${response.status}`)
+          break
+        }
+        if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
+          errors.push(`odds/fixture/${fixtureId}/p${page}: ${JSON.stringify(data.errors).slice(0, 120)}`)
+          break
+        }
+
+        const rows = Array.isArray(data?.response) ? data.response : []
+        collected.push(...rows)
+
+        const pagingTotal = Number(data?.paging?.total || 1)
+        totalPages = Number.isFinite(pagingTotal) && pagingTotal > 0
+          ? Math.min(pagingTotal, maxPages)
+          : 1
+
+        if (!rows.length || page >= totalPages) break
+        page += 1
+      } catch (error) {
+        errors.push(`odds/fixture/${fixtureId}/p${page}: ${error.message}`)
+        break
       }
-      return { rows: Array.isArray(data?.response) ? data.response : [], errors: [] }
-    } catch (error) {
-      return { rows: [], errors: [`odds/fixture/${fixtureId}: ${error.message}`] }
     }
+
+    return { rows: collected, errors }
   }
 
   const enrichSearchFixturesWithApiFootballOdds = async (apiKey, cfg, fixtures) => {
