@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
-const { isTeamTotalLikeV40, isPureFullTimeTeamTotalBetV40, inferTeamTotalSideV41, isBet365BookmakerV41, isTeamTotalCandidateV46 } = require('./_lib/team-total-market')
+const { isTeamTotalLikeV40, isPureFullTimeTeamTotalBetV40, inferTeamTotalSideV41, isBet365BookmakerV41, isTeamTotalCandidateV46, extractTeamTotalLineV47 } = require('./_lib/team-total-market')
 
 exports.handler = async function(event) {
   const qs = event.queryStringParameters || {}
@@ -42,7 +42,7 @@ exports.handler = async function(event) {
   // WERSJA 6: marker schematu kursów. Stare cache z błędnie wrzuconymi kursami
   // 1. połowy do grupy "Gole" ignorujemy, żeby po deployu UI dostało świeże,
   // poprawnie rozdzielone rynki.
-  const ODDS_SCHEMA_VERSION = 'team-total-home-away-final-v14'
+  const ODDS_SCHEMA_VERSION = 'team-total-home-line-number-fix-v15'
   const getSupabaseAdmin = () => {
     const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -1356,7 +1356,7 @@ exports.handler = async function(event) {
       const combined = combinedRaw.toLowerCase()
       const sideKey = inferTeamTotalSideV41(rawBetName, value, home, away)
       const side = sideKey === 'away' ? away : home
-      const line = combinedRaw.match(/([0-9]+(?:[\.,][0-9]+)?)/)?.[1]?.replace(',', '.') || ''
+      const line = extractTeamTotalLineV47(rawBetName, value)
       const isOver = combined.includes('over') || combined.includes('powyzej') || combined.includes('powyżej')
       const isUnder = combined.includes('under') || combined.includes('ponizej') || combined.includes('poniżej')
       if (isOver && line) return `${side} powyżej ${line} gola`

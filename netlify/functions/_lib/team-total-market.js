@@ -227,6 +227,29 @@ function isTeamTotalCandidateV46(rawBetName = '', rawValue = '', home = '', away
   return hasGoalMeaning
 }
 
+function extractTeamTotalLineV47(rawBetName = '', rawValue = '') {
+  const combined = `${String(rawBetName || '')} ${String(rawValue || '')}`
+    .replace(/,/g, '.')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (!combined) return ''
+
+  // Najpierw szukamy liczby stojącej bezpośrednio przy kierunku zakładu.
+  // To chroni nazwy drużyn z numerem, np. "Brann 2 Over 1.5":
+  // linią jest 1.5, a nie cyfra 2 należąca do nazwy zespołu.
+  const afterDirection = combined.match(/(?:over|under|powyżej|poniżej|powyzej|ponizej)\s*([0-9]+(?:\.[0-9]+)?)/i)
+  if (afterDirection?.[1]) return afterDirection[1]
+
+  const beforeDirection = combined.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:over|under|powyżej|poniżej|powyzej|ponizej)/i)
+  if (beforeDirection?.[1]) return beforeDirection[1]
+
+  // Awaryjnie bierzemy ostatnią liczbę, nie pierwszą. W feedach nazwa
+  // drużyny może zawierać "2", natomiast linia rynku występuje później.
+  const numbers = [...combined.matchAll(/\b([0-9]+(?:\.[0-9]+)?)\b/g)].map(match => match[1])
+  return numbers.length ? numbers[numbers.length - 1] : ''
+}
+
 function isBet365BookmakerV41(value = '') {
   const name = normalizeTeamTotalTextV41(value).replace(/\s+/g, '')
   return name === 'bet365' || name.includes('bet365')
@@ -245,4 +268,5 @@ module.exports = {
   teamIdentityAppearsV44,
   isBet365BookmakerV41,
   isTeamTotalCandidateV46,
+  extractTeamTotalLineV47,
 }

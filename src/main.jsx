@@ -8583,6 +8583,20 @@ function betaiTeamIdentityAppearsV44(raw = '', team = '') {
   return Boolean(compactNeedle && compactHaystack.includes(compactNeedle))
 }
 
+function betaiExtractTeamTotalLineV47(raw = '') {
+  const combined = String(raw || '').replace(/,/g, '.').replace(/\s+/g, ' ').trim()
+  if (!combined) return ''
+
+  const afterDirection = combined.match(/(?:over|under|powyżej|poniżej|powyzej|ponizej)\s*([0-9]+(?:\.[0-9]+)?)/i)
+  if (afterDirection?.[1]) return afterDirection[1]
+
+  const beforeDirection = combined.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:over|under|powyżej|poniżej|powyzej|ponizej)/i)
+  if (beforeDirection?.[1]) return beforeDirection[1]
+
+  const numbers = [...combined.matchAll(/\b([0-9]+(?:\.[0-9]+)?)\b/g)].map(match => match[1])
+  return numbers.length ? numbers[numbers.length - 1] : ''
+}
+
 function betaiTeamTotalSideV44(item = {}, home = '', away = '') {
   const metadata = String(item?.teamTotalSide || item?.team_total_side || item?.team_side || '').toLowerCase()
   if (metadata === 'home' || metadata === 'away') return metadata
@@ -8880,7 +8894,7 @@ function betaiCanonicalPickV1663(market = '', pick = '', home = '', away = '', s
     if (text === 'no' || text.includes('nie')) return 'Obie drużyny strzelą: NIE'
   }
   if (label === 'Team Total Goals') {
-    const line = text.match(/([0-9]+(?:[\.,][0-9]+)?)/)?.[1]?.replace(',', '.')
+    const line = betaiExtractTeamTotalLineV47(raw)
     const sideKey = betaiTeamTotalSideV44({ ...sourceItem, pick: raw }, home, away)
     const side = sideKey === 'away' ? away : home
     if ((text.includes('over') || text.includes('powyzej')) && line) return `${side} powyżej ${line} gola`
