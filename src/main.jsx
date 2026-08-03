@@ -36672,7 +36672,30 @@ function App() {
   // V6: Stripe Connect return is handled once below. Do not auto-start onboarding on refresh.
 
   useEffect(() => {
-    fetchTips(sessionUser?.id)
+    if (!sessionUser?.id) return
+    let cancelled = false
+
+    const repairAndRefreshV48 = async () => {
+      try {
+        const response = await fetch('/.netlify/functions/repair-cichy-brann-odds-v48', {
+          method: 'POST',
+          cache: 'no-store'
+        })
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`)
+
+        if (!cancelled) {
+          await fetchTips(sessionUser.id, { force: true })
+          if (Number(payload.updated || 0) > 0) fetchRealRanking().catch(() => {})
+        }
+      } catch (error) {
+        console.warn('v48 fixed odds repair skipped', error)
+        if (!cancelled) fetchTips(sessionUser.id)
+      }
+    }
+
+    repairAndRefreshV48()
+    return () => { cancelled = true }
   }, [sessionUser?.id])
 
 
