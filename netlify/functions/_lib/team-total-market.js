@@ -207,6 +207,26 @@ function inferTeamTotalSideV41(rawBetName = '', rawValue = '', home = '', away =
   return 'home'
 }
 
+
+function isTeamTotalCandidateV46(rawBetName = '', rawValue = '', home = '', away = '') {
+  const betName = normalizeTeamTotalTextV41(rawBetName)
+  const value = normalizeTeamTotalTextV41(rawValue)
+  const combined = `${betName} ${value}`.trim()
+  if (!combined || containsPartialPeriodV41(combined)) return false
+  if (['corner', 'corners', 'card', 'cards', 'player', 'booking', 'shots', 'throw in', 'offsides'].some(token => combined.includes(token))) return false
+
+  const hasDirection = /\b(over|under|powyzej|ponizej)\b/.test(combined)
+  const hasLine = /\b\d+(?:[.,]\d+)?\b/.test(combined)
+  if (!hasDirection || !hasLine) return false
+
+  const explicitSide = /\b(home|away|host|visitor|visitors|guest|team 1|team 2|1st team|2nd team|individual 1|individual 2|total 1|total 2)\b/.test(combined)
+  const namedSide = teamIdentityAppearsV44(combined, home) || teamIdentityAppearsV44(combined, away)
+  if (!explicitSide && !namedSide) return false
+
+  const hasGoalMeaning = combined.includes('goal') || combined.includes('gole') || combined.includes('bram') || combined.includes('total') || combined.includes('over/under') || combined.includes('over under') || combined.includes('o/u')
+  return hasGoalMeaning
+}
+
 function isBet365BookmakerV41(value = '') {
   const name = normalizeTeamTotalTextV41(value).replace(/\s+/g, '')
   return name === 'bet365' || name.includes('bet365')
@@ -224,4 +244,5 @@ module.exports = {
   normalizeTeamIdentityV44,
   teamIdentityAppearsV44,
   isBet365BookmakerV41,
+  isTeamTotalCandidateV46,
 }

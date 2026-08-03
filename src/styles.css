@@ -82282,3 +82282,17 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
     border-radius:22px!important;
   }
 }
+
+
+/* WERSJA 1911 — Team Total: obie drużyny zawsze widoczne */
+.team-total-side-empty-v46{
+  margin:0 0 12px;
+  padding:11px 13px;
+  border:1px dashed rgba(255,199,87,.28);
+  border-radius:12px;
+  color:#d9c58f;
+  background:rgba(91,65,17,.16);
+  font-size:11px;
+  font-weight:800;
+  line-height:1.45;
+}

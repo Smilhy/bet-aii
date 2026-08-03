@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
-const { isTeamTotalLikeV40, isPureFullTimeTeamTotalBetV40, inferTeamTotalSideV41, isBet365BookmakerV41 } = require('./_lib/team-total-market')
+const { isTeamTotalLikeV40, isPureFullTimeTeamTotalBetV40, inferTeamTotalSideV41, isBet365BookmakerV41, isTeamTotalCandidateV46 } = require('./_lib/team-total-market')
 
 exports.handler = async function(event) {
   const qs = event.queryStringParameters || {}
@@ -42,7 +42,7 @@ exports.handler = async function(event) {
   // WERSJA 6: marker schematu kursów. Stare cache z błędnie wrzuconymi kursami
   // 1. połowy do grupy "Gole" ignorujemy, żeby po deployu UI dostało świeże,
   // poprawnie rozdzielone rynki.
-  const ODDS_SCHEMA_VERSION = 'team-total-home-away-real-v13'
+  const ODDS_SCHEMA_VERSION = 'team-total-home-away-final-v14'
   const getSupabaseAdmin = () => {
     const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -485,7 +485,8 @@ exports.handler = async function(event) {
     draw_no_bet: 'Draw No Bet',
     alternate_totals: 'Over/Under',
     alternate_spreads: 'Handicap',
-    team_totals: 'Team Total Goals'
+    team_totals: 'Team Total Goals',
+    alternate_team_totals: 'Team Total Goals'
   }
 
   const normalizeOutcomePick = (marketKey, outcomeName, point, home, away, description = '') => {
@@ -529,6 +530,71 @@ exports.handler = async function(event) {
     return `${name}${pointLabel}`
   }
 
+
+  const collectTeamTotalsFromAllBookmakersV46 = (home, away, bookmakers = []) => {
+    const buckets = new Map()
+    ;(Array.isArray(bookmakers) ? bookmakers : []).forEach(bookmaker => {
+      const bookmakerName = String(bookmaker?.title || bookmaker?.name || bookmaker?.key || '')
+      ;(Array.isArray(bookmaker?.markets) ? bookmaker.markets : []).forEach(bookMarket => {
+        const key = String(bookMarket?.key || bookMarket?.market || '').toLowerCase()
+        const title = String(bookMarket?.title || bookMarket?.name || key)
+        const isTeamTotalMarket = key === 'team_totals' || key === 'alternate_team_totals' || isTeamTotalLikeV40(title)
+        if (!isTeamTotalMarket || !Array.isArray(bookMarket?.outcomes)) return
+
+        bookMarket.outcomes.forEach(outcome => {
+          const rawOdd = Number(outcome?.price)
+          if (!Number.isFinite(rawOdd) || rawOdd <= 1.001) return
+          const rawPoint = outcome?.point ?? outcome?.handicap ?? outcome?.line
+          const combinedValue = `${outcome?.description || ''} ${outcome?.name || ''} ${rawPoint ?? ''}`.trim()
+          if (!isTeamTotalCandidateV46(title, combinedValue, home, away)) return
+
+          const sideKey = inferTeamTotalSideV41(title, combinedValue, home, away)
+          if (sideKey !== 'home' && sideKey !== 'away') return
+          const directionText = `${outcome?.name || ''} ${outcome?.description || ''}`.toLowerCase()
+          const direction = directionText.includes('under') ? 'under' : directionText.includes('over') ? 'over' : ''
+          const lineMatch = `${rawPoint ?? ''} ${outcome?.name || ''} ${outcome?.description || ''}`.match(/(\d+(?:[.,]\d+)?)/)
+          const line = lineMatch ? Number(String(lineMatch[1]).replace(',', '.')) : Number.NaN
+          if (!direction || !Number.isFinite(line)) return
+
+          const bucketKey = `${sideKey}|${direction}|${line}`
+          if (!buckets.has(bucketKey)) buckets.set(bucketKey, [])
+          buckets.get(bucketKey).push({
+            market: 'Team Total Goals',
+            pick: `${sideKey === 'away' ? away : home} ${direction === 'over' ? 'powyżej' : 'poniżej'} ${line} gola`,
+            odds: rawOdd,
+            confidence: 0,
+            bookmaker: bookmakerName,
+            source: 'the-odds-api-team-totals',
+            rawBetName: title,
+            rawValue: combinedValue,
+            teamTotalSide: sideKey,
+            team_total_side: sideKey,
+          })
+        })
+      })
+    })
+
+    const result = []
+    buckets.forEach(candidates => {
+      const bet365 = candidates.filter(item => isBet365BookmakerV41(item.bookmaker))
+      const pool = bet365.length ? bet365 : candidates
+      const sorted = [...pool].sort((a, b) => Number(a.odds) - Number(b.odds))
+      const median = Number(sorted[Math.floor(sorted.length / 2)]?.odds || 0)
+      const chosen = [...pool].sort((a, b) => Math.abs(Number(a.odds) - median) - Math.abs(Number(b.odds) - median))[0]
+      if (!chosen) return
+      result.push({
+        ...chosen,
+        odds: Number(Number(chosen.odds).toFixed(2)),
+        oddsSamples: candidates.length,
+        oddsSource: bet365.length ? 'bet365-real' : (candidates.length > 1 ? 'median-bookmaker' : 'single-bookmaker'),
+        note: bet365.length
+          ? 'Realny kurs Bet365 z The Odds API.'
+          : `Realny kurs z The Odds API (${candidates.length} źr.).`,
+      })
+    })
+    return result
+  }
+
   // WERSJA 1847: popularne rynki piłkarskie + trzy rynki połowowe.
   const allowedFootballMarketsV1663 = new Set([
     '1X2',
@@ -568,6 +634,7 @@ exports.handler = async function(event) {
 
     bookmakerMarkets.forEach(bookMarket => {
       const key = String(bookMarket.key || bookMarket.market || '').toLowerCase()
+      if (key === 'team_totals' || key === 'alternate_team_totals') return
       const label = marketNameMap[key] || String(bookMarket.title || bookMarket.key || 'Rynek')
       if (!Array.isArray(bookMarket.outcomes)) return
 
@@ -580,6 +647,11 @@ exports.handler = async function(event) {
         })
       })
     })
+
+    // WERSJA 46: Team Total pobieramy ze WSZYSTKICH bukmacherów, nie tylko
+    // z pierwszego rekordu. Pierwszy bookmaker często ma tylko stronę Away,
+    // podczas gdy kursy Home znajdują się w kolejnych rekordach.
+    markets.push(...collectTeamTotalsFromAllBookmakersV46(home, away, bookmakers))
 
     addMarketIfMissing(markets, isBaseball ? 'Moneyline' : 'Zwycięzca meczu', `${home} wygra`, 1.80, 70)
     if (isFootball) addMarketIfMissing(markets, '1X2', 'Remis', 3.25, 55)
@@ -1405,13 +1477,20 @@ exports.handler = async function(event) {
     ;(Array.isArray(rows) ? rows : []).forEach(row => {
       ;(Array.isArray(row?.bookmakers) ? row.bookmakers : []).forEach(bookmaker => {
         ;(Array.isArray(bookmaker?.bets) ? bookmaker.bets : []).forEach(bet => {
-          const market = apiFootballBetLabel(bet?.name, bet?.id)
-          if (market === 'BTTS' && !isPureFullTimeBttsBetV22(bet?.name, bet?.id)) return
-          if (market === 'Team Total Goals' && !isPureFullTimeTeamTotalBetV40(bet?.name, bet?.id)) return
-          if (!isAllowedFootballMarketV1663(market)) return
+          const baseMarket = apiFootballBetLabel(bet?.name, bet?.id)
+          if (baseMarket === 'BTTS' && !isPureFullTimeBttsBetV22(bet?.name, bet?.id)) return
           ;(Array.isArray(bet?.values) ? bet.values : []).forEach(value => {
             const rawOdd = Number(value?.odd)
             if (!Number.isFinite(rawOdd) || rawOdd <= 1) return
+
+            // WERSJA 46: niektóre feedy mają ogólną nazwę rynku, np.
+            // "Goals Over/Under", a stronę Home/Away zapisują dopiero w value.
+            // Wcześniej taki kurs gospodarzy wpadał do zwykłych Goli i znikał
+            // z Team Total, podczas gdy jawny rynek Away był widoczny.
+            const valueAwareTeamTotal = isTeamTotalCandidateV46(bet?.name, value?.value, home, away)
+            const market = valueAwareTeamTotal ? 'Team Total Goals' : baseMarket
+            if (market === 'Team Total Goals' && !valueAwareTeamTotal && !isPureFullTimeTeamTotalBetV40(bet?.name, bet?.id)) return
+            if (!isAllowedFootballMarketV1663(market)) return
             const pick = normalizeApiFootballOddPick(market, value?.value, home, away, bet?.name, bet?.id)
             if (!pick) return
             const teamTotalSide = market === 'Team Total Goals'

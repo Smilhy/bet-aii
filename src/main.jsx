@@ -15515,7 +15515,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                     const over = sectionItems.filter(item => parseTeamTotalMetaV1711(item).direction === 'over').slice().sort((a,b) => parseTeamTotalMetaV1711(a).line - parseTeamTotalMetaV1711(b).line)
                     const under = sectionItems.filter(item => parseTeamTotalMetaV1711(item).direction === 'under').slice().sort((a,b) => parseTeamTotalMetaV1711(a).line - parseTeamTotalMetaV1711(b).line)
                     return { ...section, over, under, count: over.length + under.length }
-                  }).filter(section => section.count > 0) : []
+                  }) : []
                   return (
                     <div key={groupLabel} className={`betfolio-market-accordion ${expanded ? 'expanded' : ''} ${isGoalsGroup ? 'goals-split-ready-v1704' : ''} ${isTeamTotalGroup ? 'team-total-ready-v1711' : ''}`}>
                       <button type="button" className="betfolio-market-accordion-head" onClick={() => setExpandedMarketGroup(expanded ? '' : groupLabel)}>
@@ -15529,6 +15529,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                             {teamTotalSectionsV1711.map(section => (
                               <div key={section.key} className="team-total-team-card-v1711">
                                 <div className="team-total-team-header-v1711">{section.title}</div>
+                                {section.count === 0 ? (
+                                  <div className="team-total-side-empty-v46">
+                                    API nie zwróciło jeszcze realnych kursów dla tej drużyny — sekcja pozostaje widoczna i odświeży się po pobraniu kursów.
+                                  </div>
+                                ) : null}
                                 <div className="team-total-columns-v1711">
                                   <div className="betfolio-goals-column-v1704 over">
                                     <div className="betfolio-goals-column-head-v1704">
