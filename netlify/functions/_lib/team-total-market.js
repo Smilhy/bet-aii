@@ -1,6 +1,6 @@
 'use strict'
 
-function normalizeTeamTotalTextV40(value = '') {
+function normalizeTeamTotalTextV41(value = '') {
   return String(value || '')
     .toLowerCase()
     .normalize('NFD')
@@ -10,51 +10,59 @@ function normalizeTeamTotalTextV40(value = '') {
     .trim()
 }
 
-function isTeamTotalLikeV40(rawName = '') {
-  const text = normalizeTeamTotalTextV40(rawName)
+function containsPartialPeriodV41(rawName = '') {
+  const text = normalizeTeamTotalTextV41(rawName)
   if (!text) return false
-  return (
-    text.includes('team total') ||
-    text.includes('team totals') ||
-    text.includes('team total goals') ||
-    text.includes('team goals over/under') ||
-    text.includes('team goals over under') ||
-    text.includes('home team goals') ||
-    text.includes('away team goals') ||
-    text.includes('home team total') ||
-    text.includes('away team total') ||
-    text.includes('home goals over/under') ||
-    text.includes('away goals over/under') ||
-    text.includes('home goals over under') ||
-    text.includes('away goals over under')
-  )
-}
 
-function isPureFullTimeTeamTotalBetV40(rawName = '', rawId = null) {
-  const text = normalizeTeamTotalTextV40(rawName)
-  if (!text || !isTeamTotalLikeV40(text)) return false
-
-  // Najważniejsza ochrona: kursów drużynowych z 1./2. połowy nie wolno
-  // łączyć z pełnym meczem. Wcześniej wszystkie trafiały do jednego koszyka,
-  // więc np. kurs z połowy 2.36 mógł zastąpić pełnomeczowe 1.16.
   const partialPeriodTokens = [
-    'first half', '1st half', '1 half', '1h', 'half time', 'halftime',
-    'second half', '2nd half', '2 half', '2h',
+    'first half', '1st half', '1 half', 'half 1', '1h', 'half time', 'halftime',
+    'second half', '2nd half', '2 half', 'half 2', '2h',
     'both halves', 'each half', 'either half',
-    'first period', 'second period', 'period', 'quarter',
+    'first period', 'second period', 'period 1', 'period 2', 'quarter',
     'first 10 min', 'first 15 min', 'first 30 min',
     '10 minutes', '15 minutes', '30 minutes', '45 minutes',
     '60 minutes', '75 minutes', 'minute 1 15', 'minute 16 30',
     'minute 31 45', 'minute 46 60', 'minute 61 75', 'minute 76 90'
   ]
-  if (partialPeriodTokens.some(token => text.includes(token))) return false
 
-  const forbidden = ['corners', 'corner', 'cards', 'card', 'player', 'booking', 'shots']
+  return partialPeriodTokens.some(token => text.includes(token))
+}
+
+function isTeamTotalLikeV41(rawName = '') {
+  const text = normalizeTeamTotalTextV41(rawName)
+  if (!text) return false
+
+  if (
+    text.includes('team total') ||
+    text.includes('team totals') ||
+    text.includes('team goals') ||
+    text.includes('total team goals') ||
+    text.includes('goals team total')
+  ) return true
+
+  const hasHomeAwaySide = /\b(home|away|host|visitor|visitors|guest|team 1|team 2|1st team|2nd team)\b/.test(text)
+  const hasGoals = text.includes('goal')
+  const hasTotalOrLine = text.includes('total') || text.includes('over/under') || text.includes('over under')
+
+  // Obsługa rzeczywistych nazw spotykanych u dostawców, np.
+  // "Home Team - Total Goals" oraz "Total Goals - Home Team".
+  return hasHomeAwaySide && hasGoals && hasTotalOrLine
+}
+
+function isPureFullTimeTeamTotalBetV41(rawName = '', rawId = null) {
+  const text = normalizeTeamTotalTextV41(rawName)
+  if (!text || !isTeamTotalLikeV41(text)) return false
+  if (containsPartialPeriodV41(text)) return false
+
+  const forbidden = ['corners', 'corner', 'cards', 'card', 'player', 'booking', 'shots', 'throw in', 'offsides']
   if (forbidden.some(token => text.includes(token))) return false
 
   const normalized = text
     .replace(/full time/g, ' ')
+    .replace(/full match/g, ' ')
+    .replace(/whole match/g, ' ')
     .replace(/90 min(?:utes)?/g, ' ')
+    .replace(/regular time/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 
@@ -62,33 +70,88 @@ function isPureFullTimeTeamTotalBetV40(rawName = '', rawId = null) {
     'team total',
     'team totals',
     'team total goals',
+    'total team goals',
     'home team goals',
     'away team goals',
     'home team total',
     'away team total',
     'home team total goals',
     'away team total goals',
+    'home total goals',
+    'away total goals',
+    'total goals home team',
+    'total goals away team',
+    'goals total home team',
+    'goals total away team',
     'home team goals over/under',
     'away team goals over/under',
     'home team goals over under',
     'away team goals over under',
+    'goals over/under home team',
+    'goals over/under away team',
+    'goals over under home team',
+    'goals over under away team',
     'home goals over/under',
     'away goals over/under',
     'home goals over under',
-    'away goals over under'
+    'away goals over under',
+    'home goals total',
+    'away goals total',
+    'team 1 total goals',
+    'team 2 total goals',
+    '1st team total goals',
+    '2nd team total goals'
   ])
 
   if (exactFullTimeNames.has(normalized)) return true
 
-  // Nie opieramy się na samym ID, ponieważ różni bukmacherzy mogą używać
-  // odmiennych nazw/ID. Nazwa musi jednoznacznie opisywać pełny mecz.
-  const hasTeamSide = normalized.includes('home') || normalized.includes('away') || normalized.includes('team total')
+  const hasSide = /\b(home|away|host|visitor|visitors|guest|team 1|team 2|1st team|2nd team)\b/.test(normalized)
+  const hasGoals = normalized.includes('goal')
   const hasTotalMeaning = normalized.includes('total') || normalized.includes('over/under') || normalized.includes('over under') || normalized.includes('team goals')
-  return hasTeamSide && hasTotalMeaning
+
+  // Genericzne "Team Total Goals" nie zawiera strony w nazwie — strona jest wtedy
+  // zapisana w wartości typu "Home Over 1.5" / "Away Under 0.5".
+  if (normalized.includes('team total') && hasGoals) return true
+
+  return hasSide && hasGoals && hasTotalMeaning
+}
+
+function inferTeamTotalSideV41(rawBetName = '', rawValue = '', home = '', away = '') {
+  const betName = normalizeTeamTotalTextV41(rawBetName)
+  const value = normalizeTeamTotalTextV41(rawValue)
+  const combined = `${betName} ${value}`.trim()
+  const homeKey = normalizeTeamTotalTextV41(home)
+  const awayKey = normalizeTeamTotalTextV41(away)
+
+  if (
+    /\b(away|visitor|visitors|guest|team 2|2nd team)\b/.test(combined) ||
+    (awayKey && combined.includes(awayKey))
+  ) return 'away'
+
+  if (
+    /\b(home|host|team 1|1st team)\b/.test(combined) ||
+    (homeKey && combined.includes(homeKey))
+  ) return 'home'
+
+  // Osobne rynki Home/Away zwykle określają stronę w nazwie. Gdy dostawca
+  // wysyła wyłącznie "Team Total Goals", domyślna strona pozostaje home,
+  // ale wartości "Away ..." są wykrywane powyżej.
+  return 'home'
+}
+
+function isBet365BookmakerV41(value = '') {
+  const name = normalizeTeamTotalTextV41(value).replace(/\s+/g, '')
+  return name === 'bet365' || name.includes('bet365')
 }
 
 module.exports = {
-  normalizeTeamTotalTextV40,
-  isTeamTotalLikeV40,
-  isPureFullTimeTeamTotalBetV40,
+  normalizeTeamTotalTextV40: normalizeTeamTotalTextV41,
+  isTeamTotalLikeV40: isTeamTotalLikeV41,
+  isPureFullTimeTeamTotalBetV40: isPureFullTimeTeamTotalBetV41,
+  normalizeTeamTotalTextV41,
+  containsPartialPeriodV41,
+  isTeamTotalLikeV41,
+  isPureFullTimeTeamTotalBetV41,
+  inferTeamTotalSideV41,
+  isBet365BookmakerV41,
 }

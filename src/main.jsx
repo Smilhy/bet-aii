@@ -8685,8 +8685,8 @@ function betaiIsPureFullTimeBttsSourceV22(item = {}) {
   return rawBetId === 8 || exactNames.has(normalized)
 }
 
-// WERSJA 40: ochrona UI przed starym cache Team Total z kursami 1./2. połowy.
-// Do sekcji Team Total pełnego meczu wpuszczamy tylko jednoznaczne rynki full-time.
+// WERSJA 41: Team Total wraca do UI, ale rynki połowowe nadal są blokowane.
+// Frontend ufa kanonicznemu rynkowi z backendu i odrzuca tylko jawne okresy 1H/2H.
 function betaiIsPureFullTimeTeamTotalSourceV40(item = {}) {
   const raw = [
     item.__rawMarketTextV22,
@@ -8702,21 +8702,25 @@ function betaiIsPureFullTimeTeamTotalSourceV40(item = {}) {
     .replace(/\s+/g, ' ')
     .trim()
 
-  // Dane z nowego backendu mogą zawierać tylko kanoniczne market/pick.
-  if (!text) return String(item.market || '').trim() === 'Team Total Goals'
-
   const partialTokens = [
-    'first half', '1st half', '1 half', '1h', 'half time', 'halftime',
-    'second half', '2nd half', '2 half', '2h',
-    'both halves', 'each half', 'either half', 'period', 'quarter',
-    'first 10 min', 'first 15 min', 'first 30 min',
+    'first half', '1st half', '1 half', 'half 1', '1h', 'half time', 'halftime',
+    'second half', '2nd half', '2 half', 'half 2', '2h',
+    'both halves', 'each half', 'either half', 'first period', 'second period',
+    'period 1', 'period 2', 'quarter', 'first 10 min', 'first 15 min', 'first 30 min',
     '10 minutes', '15 minutes', '30 minutes', '45 minutes', '60 minutes', '75 minutes'
   ]
   if (partialTokens.some(token => text.includes(token))) return false
-  if (['corner', 'corners', 'card', 'cards', 'player', 'shots'].some(token => text.includes(token))) return false
+  if (['corner', 'corners', 'card', 'cards', 'player', 'shots', 'booking'].some(token => text.includes(token))) return false
 
-  const isTeamTotal = text.includes('team total') || text.includes('team goals') || text.includes('home team goals') || text.includes('away team goals') || text.includes('home goals over') || text.includes('away goals over')
-  return isTeamTotal
+  // Po stronie backendu rynek jest już bezpiecznie rozdzielony. Dzięki temu
+  // nietypowa nazwa dostawcy nie usuwa całej sekcji Team Total z ekranu.
+  if (String(item.market || '').trim() === 'Team Total Goals') return true
+  if (!text) return false
+
+  const hasSide = /\b(home|away|host|visitor|visitors|guest|team 1|team 2|1st team|2nd team)\b/.test(text)
+  const hasGoals = text.includes('goal')
+  const hasTotal = text.includes('team total') || text.includes('team goals') || text.includes('total goals') || text.includes('goals total') || text.includes('over/under') || text.includes('over under')
+  return hasGoals && hasTotal && (hasSide || text.includes('team total'))
 }
 
 function betaiIsSafePopularFootballPickV1664(market = '', pick = '', home = '', away = '') {

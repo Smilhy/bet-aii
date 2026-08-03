@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
-const { isTeamTotalLikeV40, isPureFullTimeTeamTotalBetV40 } = require('./_lib/team-total-market')
+const { isTeamTotalLikeV40, isPureFullTimeTeamTotalBetV40, inferTeamTotalSideV41, isBet365BookmakerV41 } = require('./_lib/team-total-market')
 
 exports.handler = async function(event) {
   const qs = event.queryStringParameters || {}
@@ -42,7 +42,7 @@ exports.handler = async function(event) {
   // WERSJA 6: marker schematu kursów. Stare cache z błędnie wrzuconymi kursami
   // 1. połowy do grupy "Gole" ignorujemy, żeby po deployu UI dostało świeże,
   // poprawnie rozdzielone rynki.
-  const ODDS_SCHEMA_VERSION = 'team-total-full-time-strict-v9'
+  const ODDS_SCHEMA_VERSION = 'team-total-real-odds-restored-v10'
   const getSupabaseAdmin = () => {
     const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -1280,10 +1280,8 @@ exports.handler = async function(event) {
       if (lower === 'away') return `${away} DNB`
     }
     if (market === 'Team Total Goals') {
-      const normalizedValue = String(value || '').toLowerCase()
-      const homeKey = String(home || '').toLowerCase()
-      const awayKey = String(away || '').toLowerCase()
-      const side = betName.includes('away') || betName.includes('visitor') || betName.includes('guest') || (awayKey && normalizedValue.includes(awayKey)) ? away : home
+      const sideKey = inferTeamTotalSideV41(rawBetName, value, home, away)
+      const side = sideKey === 'away' ? away : home
       const line = value.match(/([0-9]+(?:[\.,][0-9]+)?)/)?.[1]?.replace(',', '.') || ''
       if ((lower.includes('over') || lower.includes('powyzej')) && line) return `${side} powyżej ${line} gola`
       if ((lower.includes('under') || lower.includes('ponizej')) && line) return `${side} poniżej ${line} gola`
@@ -1324,20 +1322,25 @@ exports.handler = async function(event) {
       .sort((a, b) => a.odds - b.odds)
     if (!cleanOdds.length) return null
 
-    // Jedna linia z kilku bukmacherów ma być pokazana raz. Nie bierzemy pierwszego
-    // kursu z API, bo czasem pierwszy bukmacher ma skrajny kurs. Medianę trudniej
-    // zepsuć pojedynczym outlierem.
-    const oddsValues = cleanOdds.map(item => item.odds)
+    // Team Total: jeżeli API zwraca kurs Bet365, pokazujemy dokładnie ten realny
+    // kurs. To eliminuje sytuację, w której mediana innych bukmacherów różni się
+    // od kursu widocznego użytkownikowi w Bet365. Gdy Bet365 nie ma danej linii,
+    // nadal używamy stabilnej mediany realnych bukmacherów.
+    const preferredBet365 = market === 'Team Total Goals'
+      ? cleanOdds.filter(item => isBet365BookmakerV41(item.bookmaker))
+      : []
+    const sourcePool = preferredBet365.length ? preferredBet365 : cleanOdds
+    const oddsValues = sourcePool.map(item => item.odds)
     const median = oddsValues[Math.floor(oddsValues.length / 2)]
-    const stable = cleanOdds.filter(item => item.odds >= median * 0.55 && item.odds <= median * 1.85)
-    const pool = stable.length ? stable : cleanOdds
+    const stable = sourcePool.filter(item => item.odds >= median * 0.55 && item.odds <= median * 1.85)
+    const pool = stable.length ? stable : sourcePool
     const chosen = pool.sort((a, b) => Math.abs(a.odds - median) - Math.abs(b.odds - median))[0]
 
     return {
       ...chosen,
       odds: Number(chosen.odds.toFixed(2)),
       oddsSamples: cleanOdds.length,
-      oddsSource: cleanOdds.length > 1 ? 'median-bookmaker' : 'single-bookmaker'
+      oddsSource: preferredBet365.length ? 'bet365-real' : (cleanOdds.length > 1 ? 'median-bookmaker' : 'single-bookmaker')
     }
   }
 
