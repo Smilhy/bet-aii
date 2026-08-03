@@ -8555,6 +8555,50 @@ function betaiStripAccentsV1663(value = '') {
   return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
+// WERSJA 44: ujednolicenie nazw drużyn dla Team Total.
+// Przykład: API może zwrócić "Brann 2", a karta meczu pokazuje "Brann II".
+function betaiNormalizeTeamIdentityV44(value = '') {
+  return betaiStripAccentsV1663(value)
+    .replace(/[()[\]{}:_-]+/g, ' ')
+    .replace(/\bix\b/g, '9')
+    .replace(/\bviii\b/g, '8')
+    .replace(/\bvii\b/g, '7')
+    .replace(/\bvi\b/g, '6')
+    .replace(/\biv\b/g, '4')
+    .replace(/\bv\b/g, '5')
+    .replace(/\biii\b/g, '3')
+    .replace(/\bii\b/g, '2')
+    .replace(/\bi\b/g, '1')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function betaiTeamIdentityAppearsV44(raw = '', team = '') {
+  const haystack = betaiNormalizeTeamIdentityV44(raw)
+  const needleValue = betaiNormalizeTeamIdentityV44(team)
+  if (!haystack || !needleValue) return false
+  if (haystack.includes(needleValue)) return true
+  const compactHaystack = haystack.replace(/[^a-z0-9]+/g, '')
+  const compactNeedle = needleValue.replace(/[^a-z0-9]+/g, '')
+  return Boolean(compactNeedle && compactHaystack.includes(compactNeedle))
+}
+
+function betaiTeamTotalSideV44(item = {}, home = '', away = '') {
+  const metadata = String(item?.teamTotalSide || item?.team_total_side || item?.team_side || '').toLowerCase()
+  if (metadata === 'home' || metadata === 'away') return metadata
+
+  const raw = [item?.pick, item?.rawValue, item?.rawBetName, item?.rawMarket, item?.market, item?.name]
+    .filter(Boolean)
+    .join(' ')
+  const text = betaiNormalizeTeamIdentityV44(raw)
+
+  if (/\b(away|visitor|visitors|guest|team 2|2nd team|individual 2|total 2)\b/.test(text) || /^(?:2|away)\s+(?:over|under)\b/.test(text)) return 'away'
+  if (/\b(home|host|team 1|1st team|individual 1|total 1)\b/.test(text) || /^(?:1|home)\s+(?:over|under)\b/.test(text)) return 'home'
+  if (betaiTeamIdentityAppearsV44(raw, away)) return 'away'
+  if (betaiTeamIdentityAppearsV44(raw, home)) return 'home'
+  return ''
+}
+
 function betaiCanonicalMarketLabelV1663(rawMarket = '', rawPick = '') {
   const text = betaiStripAccentsV1663(rawMarket)
   const pickText = betaiStripAccentsV1663(rawPick)
@@ -8732,7 +8776,7 @@ function betaiIsPureFullTimeTeamTotalSourceV40(item = {}) {
   return hasGoals && hasTotal && (hasSide || text.includes('team total'))
 }
 
-function betaiIsSafePopularFootballPickV1664(market = '', pick = '', home = '', away = '') {
+function betaiIsSafePopularFootballPickV1664(market = '', pick = '', home = '', away = '', sourceItem = {}) {
   const label = betaiCanonicalMarketLabelV1663(market, pick)
   const raw = String(pick || '').trim()
   const text = betaiStripAccentsV1663(raw)
@@ -8777,7 +8821,11 @@ function betaiIsSafePopularFootballPickV1664(market = '', pick = '', home = '', 
   }
 
   if (label === 'Team Total Goals') {
-    const hasSide = (homeText && text.includes(homeText)) || (awayText && text.includes(awayText)) || text.includes('home') || text.includes('away') || text.includes('gospodar') || text.includes('gosc')
+    const sideKey = betaiTeamTotalSideV44({ ...sourceItem, pick: raw }, home, away)
+    const hasSide = sideKey === 'home' || sideKey === 'away'
+      || betaiTeamIdentityAppearsV44(raw, home)
+      || betaiTeamIdentityAppearsV44(raw, away)
+      || text.includes('home') || text.includes('away') || text.includes('gospodar') || text.includes('gosc')
     return hasSide && hasLine && (text.includes('powyzej') || text.includes('ponizej') || text.includes('over') || text.includes('under'))
   }
 
@@ -8804,7 +8852,7 @@ function betaiIsSafePopularFootballPickV1664(market = '', pick = '', home = '', 
   return false
 }
 
-function betaiCanonicalPickV1663(market = '', pick = '', home = '', away = '') {
+function betaiCanonicalPickV1663(market = '', pick = '', home = '', away = '', sourceItem = {}) {
   const label = betaiCanonicalMarketLabelV1663(market)
   const raw = String(pick || '').trim()
   const text = betaiStripAccentsV1663(raw)
@@ -8833,11 +8881,8 @@ function betaiCanonicalPickV1663(market = '', pick = '', home = '', away = '') {
   }
   if (label === 'Team Total Goals') {
     const line = text.match(/([0-9]+(?:[\.,][0-9]+)?)/)?.[1]?.replace(',', '.')
-    const homeText = betaiStripAccentsV1663(home)
-    const awayText = betaiStripAccentsV1663(away)
-    const side = (awayText && text.includes(awayText)) || text.includes('away') || text.includes('gosc')
-      ? away
-      : home
+    const sideKey = betaiTeamTotalSideV44({ ...sourceItem, pick: raw }, home, away)
+    const side = sideKey === 'away' ? away : home
     if ((text.includes('over') || text.includes('powyzej')) && line) return `${side} powyżej ${line} gola`
     if ((text.includes('under') || text.includes('ponizej')) && line) return `${side} poniżej ${line} gola`
   }
@@ -13332,7 +13377,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         const rawPick = item.pick || item.value || item.name || ''
         const rawMarketTextV6 = [item.market, item.rawBetName, item.rawMarket, item.betName, item.title, item.name].filter(Boolean).join(' ')
         const market = betaiCanonicalMarketLabelV1663(rawMarketTextV6 || item.market || '', rawPick)
-        const pick = betaiCanonicalPickV1663(market, rawPick, home, away)
+        const pick = betaiCanonicalPickV1663(market, rawPick, home, away, item)
         return { ...item, market, pick, __rawMarketTextV22: rawMarketTextV6, __rawOriginalMarketV22: item.market }
       })
       .filter(item => {
@@ -13341,7 +13386,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           if (marketName === 'BTTS' && !betaiIsPureFullTimeBttsSourceV22(item)) return false
           if (marketName === 'Team Total Goals' && !betaiIsPureFullTimeTeamTotalSourceV40(item)) return false
           return betaiIsAllowedFootballMarketV1663(marketName, item.pick)
-            && betaiIsSafePopularFootballPickV1664(marketName, item.pick, home, away)
+            && betaiIsSafePopularFootballPickV1664(marketName, item.pick, home, away, item)
         }
         return !footballOnlyMarkets.includes(marketName)
       })
@@ -15450,9 +15495,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                     const awayName = String(effectiveSelectedMatch?.away || '')
                     const normalizedHome = betaiStripAccentsV1663(homeName)
                     const normalizedAway = betaiStripAccentsV1663(awayName)
-                    let teamKey = 'other'
-                    if (normalizedHome && normalized.includes(normalizedHome)) teamKey = 'home'
-                    else if (normalizedAway && normalized.includes(normalizedAway)) teamKey = 'away'
+                    let teamKey = betaiTeamTotalSideV44(item, homeName, awayName) || 'other'
+                    if (teamKey === 'other' && normalizedHome && normalized.includes(normalizedHome)) teamKey = 'home'
+                    else if (teamKey === 'other' && normalizedAway && normalized.includes(normalizedAway)) teamKey = 'away'
                     return { line, direction, teamKey }
                   }
                   const allowedTeamTotalLinesV1711 = new Set([0.5, 1.5])

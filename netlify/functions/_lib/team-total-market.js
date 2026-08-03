@@ -125,26 +125,55 @@ function isPureFullTimeTeamTotalBetV41(rawName = '', rawId = null) {
   return hasSide && hasTotalMeaning && (hasGoals || normalized.includes('over/under') || normalized.includes('over under') || normalized.includes('o/u') || normalized.includes('total'))
 }
 
+function normalizeTeamIdentityV44(value = '') {
+  return normalizeTeamTotalTextV41(value)
+    .replace(/\bix\b/g, '9')
+    .replace(/\bviii\b/g, '8')
+    .replace(/\bvii\b/g, '7')
+    .replace(/\bvi\b/g, '6')
+    .replace(/\biv\b/g, '4')
+    .replace(/\bv\b/g, '5')
+    .replace(/\biii\b/g, '3')
+    .replace(/\bii\b/g, '2')
+    .replace(/\bi\b/g, '1')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function teamIdentityAppearsV44(combined = '', team = '') {
+  const haystack = normalizeTeamIdentityV44(combined)
+  const needle = normalizeTeamIdentityV44(team)
+  if (!haystack || !needle) return false
+  if (haystack.includes(needle)) return true
+  const compactHaystack = haystack.replace(/[^a-z0-9]+/g, '')
+  const compactNeedle = needle.replace(/[^a-z0-9]+/g, '')
+  return Boolean(compactNeedle && compactHaystack.includes(compactNeedle))
+}
+
 function inferTeamTotalSideV41(rawBetName = '', rawValue = '', home = '', away = '') {
   const betName = normalizeTeamTotalTextV41(rawBetName)
   const value = normalizeTeamTotalTextV41(rawValue)
   const combined = `${betName} ${value}`.trim()
-  const homeKey = normalizeTeamTotalTextV41(home)
-  const awayKey = normalizeTeamTotalTextV41(away)
 
+  // Najpierw jednoznaczne znaczniki strony. Obsługujemy także nazwy dostawców
+  // typu "Individual Total 1/2", "Total 1/2" i wartości "1 Over 1.5".
   if (
-    /\b(away|visitor|visitors|guest|team 2|2nd team)\b/.test(combined) ||
-    (awayKey && combined.includes(awayKey))
+    /\b(away|visitor|visitors|guest|team 2|2nd team|individual 2|total 2)\b/.test(combined) ||
+    /^(?:2|away)\s+(?:over|under)\b/.test(value)
   ) return 'away'
 
   if (
-    /\b(home|host|team 1|1st team)\b/.test(combined) ||
-    (homeKey && combined.includes(homeKey))
+    /\b(home|host|team 1|1st team|individual 1|total 1)\b/.test(combined) ||
+    /^(?:1|home)\s+(?:over|under)\b/.test(value)
   ) return 'home'
 
-  // Osobne rynki Home/Away zwykle określają stronę w nazwie. Gdy dostawca
-  // wysyła wyłącznie "Team Total Goals", domyślna strona pozostaje home,
-  // ale wartości "Away ..." są wykrywane powyżej.
+  // Nazwa drużyny może różnić się zapisem rezerw: "Brann II" vs "Brann 2".
+  // Porównujemy więc również wersję z ujednoliconymi cyframi rzymskimi.
+  if (teamIdentityAppearsV44(combined, away)) return 'away'
+  if (teamIdentityAppearsV44(combined, home)) return 'home'
+
+  // Genericzne "Team Total Goals" bez oznaczenia strony pozostaje domyślnie
+  // gospodarzem. Wartości away/team 2 są wykrywane wcześniej.
   return 'home'
 }
 
@@ -162,5 +191,7 @@ module.exports = {
   isTeamTotalLikeV41,
   isPureFullTimeTeamTotalBetV41,
   inferTeamTotalSideV41,
+  normalizeTeamIdentityV44,
+  teamIdentityAppearsV44,
   isBet365BookmakerV41,
 }

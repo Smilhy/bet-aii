@@ -1414,9 +1414,14 @@ exports.handler = async function(event) {
             if (!Number.isFinite(rawOdd) || rawOdd <= 1) return
             const pick = normalizeApiFootballOddPick(market, value?.value, home, away, bet?.name, bet?.id)
             if (!pick) return
+            const teamTotalSide = market === 'Team Total Goals'
+              ? inferTeamTotalSideV41(bet?.name, value?.value, home, away)
+              : ''
             rawMarkets.push({
               market,
               pick,
+              teamTotalSide,
+              team_total_side: teamTotalSide,
               odds: rawOdd,
               confidence: 0,
               bookmaker: bookmaker?.name || '',
