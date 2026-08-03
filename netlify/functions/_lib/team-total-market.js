@@ -46,6 +46,26 @@ function isTeamTotalLikeV41(rawName = '') {
     text.includes('2nd team total')
   ) return true
 
+  // API-FOOTBALL używa także krótkich pełnomeczowych nazw
+  // "Home Team Goals" i "Away Team Goals". Nie mają one słowa
+  // "total" ani "over/under" w nazwie rynku, bo kierunek i linia
+  // są zapisane dopiero w values (np. "Over 1.5").
+  const exactSideGoalNames = new Set([
+    'home team goals',
+    'away team goals',
+    'home goals',
+    'away goals',
+    'host team goals',
+    'visitor team goals',
+    'team 1 goals',
+    'team 2 goals',
+    '1st team goals',
+    '2nd team goals',
+    'goals home team',
+    'goals away team',
+  ])
+  if (exactSideGoalNames.has(text)) return true
+
   const hasHomeAwaySide = /\b(home|away|host|visitor|visitors|guest|team 1|team 2|1st team|2nd team|individual 1|individual 2)\b/.test(text)
   const hasGoals = text.includes('goal')
   const hasTotalOrLine = text.includes('total') || text.includes('over/under') || text.includes('over under') || text.includes('o/u')
@@ -80,6 +100,16 @@ function isPureFullTimeTeamTotalBetV41(rawName = '', rawId = null) {
     'total team goals',
     'home team goals',
     'away team goals',
+    'home goals',
+    'away goals',
+    'host team goals',
+    'visitor team goals',
+    'team 1 goals',
+    'team 2 goals',
+    '1st team goals',
+    '2nd team goals',
+    'goals home team',
+    'goals away team',
     'home team total',
     'away team total',
     'home team total goals',

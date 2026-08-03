@@ -42,7 +42,7 @@ exports.handler = async function(event) {
   // WERSJA 6: marker schematu kursów. Stare cache z błędnie wrzuconymi kursami
   // 1. połowy do grupy "Gole" ignorujemy, żeby po deployu UI dostało świeże,
   // poprawnie rozdzielone rynki.
-  const ODDS_SCHEMA_VERSION = 'team-total-visible-parser-v12'
+  const ODDS_SCHEMA_VERSION = 'team-total-home-away-real-v13'
   const getSupabaseAdmin = () => {
     const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
