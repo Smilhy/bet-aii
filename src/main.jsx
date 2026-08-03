@@ -8577,6 +8577,15 @@ function betaiCanonicalMarketLabelV1663(rawMarket = '', rawPick = '') {
     text.includes('away team goals') ||
     text.includes('home goals over/under') ||
     text.includes('away goals over/under') ||
+    text.includes('home team over/under') ||
+    text.includes('away team over/under') ||
+    text.includes('home team over under') ||
+    text.includes('away team over under') ||
+    text.includes('home team o/u') ||
+    text.includes('away team o/u') ||
+    text.includes('individual total') ||
+    text.includes('team 1 total') ||
+    text.includes('team 2 total') ||
     text.includes('gole druzyny') ||
     text.includes('suma goli druzyny') ||
     text.includes('bramki druzyny') ||
@@ -13486,6 +13495,14 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     groups[label].push({ ...item, __index: index })
     return groups
   }, {})
+  // WERSJA 43: nie ukrywamy całego rodzaju zakładu tylko dlatego, że dostawca
+  // nie zwrócił jeszcze kursu. Sekcja Team Total pozostaje widoczna i pokaże
+  // jasny komunikat zamiast całkowicie znikać z planszy.
+  const selectedSportTextV43 = `${selectedMatch?.sport || ''} ${selectedMatch?.league || ''} ${form.sport || ''}`.toLowerCase()
+  const selectedIsFootballV43 = selectedSportTextV43.includes('piłka') || selectedSportTextV43.includes('pilka') || selectedSportTextV43.includes('football') || selectedSportTextV43.includes('soccer')
+  if (selectedMatch && selectedIsFootballV43 && !Object.prototype.hasOwnProperty.call(groupedMarketOptions, 'Team Total Goals')) {
+    groupedMarketOptions['Team Total Goals'] = []
+  }
   if (Array.isArray(groupedMarketOptions.BTTS)) {
     groupedMarketOptions.BTTS.sort((a, b) => {
       const order = value => betaiStripAccentsV1663(value).includes('tak') ? 0 : betaiStripAccentsV1663(value).includes('nie') ? 1 : 2

@@ -37,16 +37,23 @@ function isTeamTotalLikeV41(rawName = '') {
     text.includes('team totals') ||
     text.includes('team goals') ||
     text.includes('total team goals') ||
-    text.includes('goals team total')
+    text.includes('goals team total') ||
+    text.includes('individual total') ||
+    text.includes('individual team total') ||
+    text.includes('team 1 total') ||
+    text.includes('team 2 total') ||
+    text.includes('1st team total') ||
+    text.includes('2nd team total')
   ) return true
 
-  const hasHomeAwaySide = /\b(home|away|host|visitor|visitors|guest|team 1|team 2|1st team|2nd team)\b/.test(text)
+  const hasHomeAwaySide = /\b(home|away|host|visitor|visitors|guest|team 1|team 2|1st team|2nd team|individual 1|individual 2)\b/.test(text)
   const hasGoals = text.includes('goal')
-  const hasTotalOrLine = text.includes('total') || text.includes('over/under') || text.includes('over under')
+  const hasTotalOrLine = text.includes('total') || text.includes('over/under') || text.includes('over under') || text.includes('o/u')
 
-  // Obsługa rzeczywistych nazw spotykanych u dostawców, np.
-  // "Home Team - Total Goals" oraz "Total Goals - Home Team".
-  return hasHomeAwaySide && hasGoals && hasTotalOrLine
+  // Rzeczywiste feedy używają również krótkich nazw bez słowa "Goals",
+  // np. "Home Team Over/Under" / "Away Team O/U".
+  // Słowa corner/card/player są odrzucane później przez filtr pełnego meczu.
+  return hasHomeAwaySide && (hasGoals || hasTotalOrLine) && hasTotalOrLine
 }
 
 function isPureFullTimeTeamTotalBetV41(rawName = '', rawId = null) {
@@ -105,15 +112,17 @@ function isPureFullTimeTeamTotalBetV41(rawName = '', rawId = null) {
 
   if (exactFullTimeNames.has(normalized)) return true
 
-  const hasSide = /\b(home|away|host|visitor|visitors|guest|team 1|team 2|1st team|2nd team)\b/.test(normalized)
+  const hasSide = /\b(home|away|host|visitor|visitors|guest|team 1|team 2|1st team|2nd team|individual 1|individual 2)\b/.test(normalized)
   const hasGoals = normalized.includes('goal')
-  const hasTotalMeaning = normalized.includes('total') || normalized.includes('over/under') || normalized.includes('over under') || normalized.includes('team goals')
+  const hasTotalMeaning = normalized.includes('total') || normalized.includes('over/under') || normalized.includes('over under') || normalized.includes('o/u') || normalized.includes('team goals')
 
   // Genericzne "Team Total Goals" nie zawiera strony w nazwie — strona jest wtedy
   // zapisana w wartości typu "Home Over 1.5" / "Away Under 0.5".
-  if (normalized.includes('team total') && hasGoals) return true
+  if (normalized.includes('team total')) return true
+  if (normalized.includes('individual total')) return true
 
-  return hasSide && hasGoals && hasTotalMeaning
+  // Krótkie nazwy dostawców: "Home Team Over/Under" albo "Away Team O/U".
+  return hasSide && hasTotalMeaning && (hasGoals || normalized.includes('over/under') || normalized.includes('over under') || normalized.includes('o/u') || normalized.includes('total'))
 }
 
 function inferTeamTotalSideV41(rawBetName = '', rawValue = '', home = '', away = '') {
