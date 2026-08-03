@@ -8685,6 +8685,40 @@ function betaiIsPureFullTimeBttsSourceV22(item = {}) {
   return rawBetId === 8 || exactNames.has(normalized)
 }
 
+// WERSJA 40: ochrona UI przed starym cache Team Total z kursami 1./2. połowy.
+// Do sekcji Team Total pełnego meczu wpuszczamy tylko jednoznaczne rynki full-time.
+function betaiIsPureFullTimeTeamTotalSourceV40(item = {}) {
+  const raw = [
+    item.__rawMarketTextV22,
+    item.__rawOriginalMarketV22,
+    item.rawBetName,
+    item.rawMarket,
+    item.betName,
+    item.market_name,
+    item.title,
+  ].filter(Boolean).join(' ')
+  const text = betaiStripAccentsV1663(raw)
+    .replace(/[()[\]{}:_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  // Dane z nowego backendu mogą zawierać tylko kanoniczne market/pick.
+  if (!text) return String(item.market || '').trim() === 'Team Total Goals'
+
+  const partialTokens = [
+    'first half', '1st half', '1 half', '1h', 'half time', 'halftime',
+    'second half', '2nd half', '2 half', '2h',
+    'both halves', 'each half', 'either half', 'period', 'quarter',
+    'first 10 min', 'first 15 min', 'first 30 min',
+    '10 minutes', '15 minutes', '30 minutes', '45 minutes', '60 minutes', '75 minutes'
+  ]
+  if (partialTokens.some(token => text.includes(token))) return false
+  if (['corner', 'corners', 'card', 'cards', 'player', 'shots'].some(token => text.includes(token))) return false
+
+  const isTeamTotal = text.includes('team total') || text.includes('team goals') || text.includes('home team goals') || text.includes('away team goals') || text.includes('home goals over') || text.includes('away goals over')
+  return isTeamTotal
+}
+
 function betaiIsSafePopularFootballPickV1664(market = '', pick = '', home = '', away = '') {
   const label = betaiCanonicalMarketLabelV1663(market, pick)
   const raw = String(pick || '').trim()
@@ -13292,6 +13326,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         const marketName = String(item.market || '')
         if (isFootball) {
           if (marketName === 'BTTS' && !betaiIsPureFullTimeBttsSourceV22(item)) return false
+          if (marketName === 'Team Total Goals' && !betaiIsPureFullTimeTeamTotalSourceV40(item)) return false
           return betaiIsAllowedFootballMarketV1663(marketName, item.pick)
             && betaiIsSafePopularFootballPickV1664(marketName, item.pick, home, away)
         }

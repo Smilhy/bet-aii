@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const { isTeamTotalLikeV40, isPureFullTimeTeamTotalBetV40 } = require('./_lib/team-total-market')
 
 exports.handler = async function(event) {
   const qs = event.queryStringParameters || {}
@@ -41,7 +42,7 @@ exports.handler = async function(event) {
   // WERSJA 6: marker schematu kursów. Stare cache z błędnie wrzuconymi kursami
   // 1. połowy do grupy "Gole" ignorujemy, żeby po deployu UI dostało świeże,
   // poprawnie rozdzielone rynki.
-  const ODDS_SCHEMA_VERSION = 'btts-full-match-strict-v8'
+  const ODDS_SCHEMA_VERSION = 'team-total-full-time-strict-v9'
   const getSupabaseAdmin = () => {
     const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -1183,20 +1184,12 @@ exports.handler = async function(event) {
     const lower = name.toLowerCase()
     const betId = Number(rawId)
 
-    // WERSJA 7: Team Total Goals — gole konkretnej drużyny.
-    // API-FOOTBALL może zwrócić nazwy w kilku wariantach, np.
-    // Home Team Goals Over/Under, Away Team Goals Over/Under, Team Total Goals.
-    if (
-      lower.includes('team total') ||
-      lower.includes('team totals') ||
-      lower.includes('team goals over/under') ||
-      lower.includes('team goals over under') ||
-      lower.includes('team total goals') ||
-      lower.includes('home team goals') ||
-      lower.includes('away team goals') ||
-      lower.includes('home goals over/under') ||
-      lower.includes('away goals over/under')
-    ) return 'Team Total Goals'
+    // WERSJA 40: Team Total Goals tylko dla PEŁNEGO MECZU.
+    // Rynki Home/Away Team Goals z 1. lub 2. połowy mają podobne nazwy,
+    // ale inne kursy. Nie wolno ich scalać z pełnomeczowym Team Total.
+    if (isTeamTotalLikeV40(name)) {
+      return isPureFullTimeTeamTotalBetV40(name, betId) ? 'Team Total Goals' : (name || 'Rynek')
+    }
 
     // WERSJA 1847: te reguły muszą być przed ogólnym "winner" i "over/under".
     // Oficjalne nazwy API-FOOTBALL obejmują m.in. First Half Winner (id 13)
@@ -1407,6 +1400,7 @@ exports.handler = async function(event) {
         ;(Array.isArray(bookmaker?.bets) ? bookmaker.bets : []).forEach(bet => {
           const market = apiFootballBetLabel(bet?.name, bet?.id)
           if (market === 'BTTS' && !isPureFullTimeBttsBetV22(bet?.name, bet?.id)) return
+          if (market === 'Team Total Goals' && !isPureFullTimeTeamTotalBetV40(bet?.name, bet?.id)) return
           if (!isAllowedFootballMarketV1663(market)) return
           ;(Array.isArray(bet?.values) ? bet.values : []).forEach(value => {
             const rawOdd = Number(value?.odd)
