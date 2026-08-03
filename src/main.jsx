@@ -36699,6 +36699,34 @@ function App() {
   }, [sessionUser?.id])
 
 
+  useEffect(() => {
+    if (!sessionUser?.id) return
+    let cancelled = false
+
+    const repairAndRefreshV49 = async () => {
+      try {
+        const response = await fetch('/.netlify/functions/repair-cichy-vaduz-stgallen-v49', {
+          method: 'POST',
+          cache: 'no-store'
+        })
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`)
+
+        if (!cancelled) {
+          await fetchTips(sessionUser.id, { force: true })
+          await fetchRealRanking().catch(() => {})
+        }
+      } catch (error) {
+        console.warn('v49 cichy Vaduz/St. Gallen repair skipped', error)
+        if (!cancelled) fetchTips(sessionUser.id)
+      }
+    }
+
+    repairAndRefreshV49()
+    return () => { cancelled = true }
+  }, [sessionUser?.id])
+
+
 
 
 
