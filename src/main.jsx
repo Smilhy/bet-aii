@@ -34744,6 +34744,7 @@ function App() {
   const [dashboardNow, setDashboardNow] = useState(() => Date.now())
   const [view, setView] = useState('dashboard')
   const [sessionUser, setSessionUser] = useState(null)
+  const welcomeCheckStartedRefV51 = useRef(new Set())
   const [passwordRecoveryMode, setPasswordRecoveryMode] = useState(() => isPasswordRecoveryUrl())
   const [passwordRecoveryUser, setPasswordRecoveryUser] = useState(null)
   const userProfile = getUserProfileView(sessionUser)
@@ -36054,73 +36055,294 @@ function App() {
   async function ensureUserWalletAndWelcome(user = sessionUser) {
     const email = normalizeEmail(user?.email || accountProfile?.email || '')
     if (!email || !isSupabaseConfigured || !supabase) return
+
+    const userId = String(user?.id || '')
+    const guardKey = `${email}:${userId}`
+    if (welcomeCheckStartedRefV51.current.has(guardKey)) return
+    welcomeCheckStartedRefV51.current.add(guardKey)
+
+    const BONUS_TOKENS_V51 = 100
+    const SIGNUP_WINDOW_MS_V51 = 24 * 60 * 60 * 1000
+
     try {
-      const { data: existing } = await supabase
+      const createdRaw = user?.created_at || user?.createdAt || ''
+      const createdMs = Date.parse(createdRaw)
+      const nowMs = Date.now()
+      const hasReliableCreatedAt = Number.isFinite(createdMs)
+      const accountAgeMs = hasReliableCreatedAt ? Math.max(0, nowMs - createdMs) : Number.POSITIVE_INFINITY
+      const isFreshRegistrationV51 = hasReliableCreatedAt && accountAgeMs <= SIGNUP_WINDOW_MS_V51
+
+      const walletRequest = supabase
         .from('betai_token_wallets')
         .select('*')
         .eq('email', email)
         .maybeSingle()
 
-      if (!existing) {
+      const bonusHistoryRequest = supabase
+        .from('betai_token_transactions')
+        .select('id,user_id,email,delta_tokens,reason,ref_type,ref_id,created_at')
+        .eq('email', email)
+        .eq('reason', 'welcome_bonus')
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+      const [{ data: existingWallet, error: walletError }, { data: bonusHistory, error: bonusHistoryError }] = await Promise.all([
+        walletRequest,
+        bonusHistoryRequest
+      ])
+
+      if (walletError) throw walletError
+      if (bonusHistoryError) console.warn('V51 welcome bonus history read skipped', bonusHistoryError)
+
+      const welcomeHistoryReliableV51 = !bonusHistoryError
+      const welcomeTransactions = Array.isArray(bonusHistory) ? bonusHistory : []
+      const hasWelcomeTransaction = welcomeTransactions.length > 0
+      let wallet = existingWallet || null
+      let forcedBalanceAfterRepairV51 = null
+
+      const readLocalTokenBalanceV51 = () => {
+        try { return Math.max(0, Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0) } catch (_) { return 0 }
+      }
+
+      const loadLedgerBalanceV51 = async (excludeTransactionIds = []) => {
+        try {
+          const excluded = new Set((excludeTransactionIds || []).map(value => String(value || '')).filter(Boolean))
+          const { data, error } = await supabase
+            .from('betai_token_transactions')
+            .select('id,delta_tokens')
+            .eq('email', email)
+            .order('created_at', { ascending: true })
+            .limit(5000)
+          if (error) throw error
+          const ledgerRows = Array.isArray(data) ? data : []
+          return Math.max(0, ledgerRows.reduce((sum, row) => {
+            if (excluded.has(String(row?.id || ''))) return sum
+            return sum + (Number(row?.delta_tokens || 0) || 0)
+          }, 0))
+        } catch (error) {
+          console.warn('V51 token ledger reconstruction skipped', error)
+          return null
+        }
+      }
+
+      // V51 SELF-HEAL:
+      // Starsze konto nigdy nie powinno otrzymać bonusu "powitalnego" po wielu dniach/miesiącach.
+      // Jeśli stary kod przyznał taki bonus później niż 24h po rejestracji, cofamy WYŁĄCZNIE
+      // tę błędną transakcję i zapisujemy audytową transakcję -100. Prawidłowego bonusu
+      // przyznanego podczas rejestracji nie dotykamy.
+      if (wallet && hasReliableCreatedAt && welcomeTransactions.length) {
+        const lateBonusTransactions = welcomeTransactions.filter(tx => {
+          const txMs = Date.parse(tx?.created_at || '')
+          const delta = Number(tx?.delta_tokens || 0) || 0
+          const alreadyMarked = String(tx?.ref_type || '') === 'reversed_v51' || String(tx?.ref_id || '') === 'reversed_v51'
+          return Number.isFinite(txMs) && txMs > createdMs + SIGNUP_WINDOW_MS_V51 && delta > 0 && !alreadyMarked
+        })
+
+        if (lateBonusTransactions.length) {
+          const lateIds = lateBonusTransactions.map(tx => String(tx.id || '')).filter(Boolean)
+          let reversalRows = []
+          if (lateIds.length) {
+            try {
+              const { data } = await supabase
+                .from('betai_token_transactions')
+                .select('id,ref_id')
+                .eq('email', email)
+                .eq('reason', 'welcome_bonus_reversal_v51')
+                .in('ref_id', lateIds)
+              reversalRows = Array.isArray(data) ? data : []
+            } catch (error) {
+              console.warn('V51 welcome reversal history skipped', error)
+            }
+          }
+
+          const reversedIds = new Set(reversalRows.map(row => String(row.ref_id || '')))
+          const toReverse = lateBonusTransactions.filter(tx => !reversedIds.has(String(tx.id || '')))
+          const correction = toReverse.reduce((sum, tx) => sum + Math.max(0, Number(tx.delta_tokens || 0) || 0), 0)
+
+          if (correction > 0) {
+            const currentBalance = Math.max(0, Number(wallet.balance || 0) || 0)
+            const localBalanceBeforeRepair = readLocalTokenBalanceV51()
+            const ledgerBalanceWithoutBadBonus = await loadLedgerBalanceV51(toReverse.map(tx => tx.id))
+            const walletWithoutBadBonus = Math.max(0, currentBalance - correction)
+            const localWithoutBadBonus = Math.max(0, localBalanceBeforeRepair - correction)
+            // V50 mógł nie tylko DODAĆ 100, ale też NADPISAĆ wcześniejsze saldo na 100.
+            // Dlatego nie odejmujemy ślepo. Jeśli historia transakcji wskazuje wyższe prawidłowe
+            // saldo (np. wcześniejsze 173), odtwarzamy je z ledgeru.
+            const correctedBalance = Math.max(
+              walletWithoutBadBonus,
+              localWithoutBadBonus,
+              ledgerBalanceWithoutBadBonus == null ? 0 : ledgerBalanceWithoutBadBonus
+            )
+            const correctedAt = new Date().toISOString()
+
+            const { error: repairWalletError } = await supabase
+              .from('betai_token_wallets')
+              .update({
+                balance: correctedBalance,
+                welcome_bonus_claimed: true,
+                updated_at: correctedAt
+              })
+              .eq('email', email)
+
+            if (repairWalletError) throw repairWalletError
+
+            for (const tx of toReverse) {
+              const delta = Math.max(0, Number(tx.delta_tokens || 0) || 0)
+              if (!delta) continue
+              try {
+                await supabase.from('betai_token_transactions').insert({
+                  user_id: userId || tx.user_id || null,
+                  email,
+                  delta_tokens: -delta,
+                  delta_pln: 0,
+                  reason: 'welcome_bonus_reversal_v51',
+                  ref_type: 'system_repair_v51',
+                  ref_id: String(tx.id || '') || null
+                })
+              } catch (error) {
+                console.warn('V51 welcome reversal audit insert skipped', error)
+              }
+              // Drugi znacznik idempotencji: nawet jeśli tabela korekt chwilowo odmówi INSERT,
+              // oryginalny błędny bonus zostaje oznaczony i nie będzie odjęty drugi raz.
+              try {
+                await supabase
+                  .from('betai_token_transactions')
+                  .update({ ref_type: 'reversed_v51', ref_id: 'reversed_v51' })
+                  .eq('id', tx.id)
+              } catch (error) {
+                console.warn('V51 welcome original transaction mark skipped', error)
+              }
+            }
+
+            wallet = { ...wallet, balance: correctedBalance, welcome_bonus_claimed: true, updated_at: correctedAt }
+            forcedBalanceAfterRepairV51 = correctedBalance
+            setTokenBalance(correctedBalance)
+            try {
+              localStorage.setItem('betai_tokens_' + email, String(correctedBalance))
+              localStorage.removeItem('betai_reward_balance_lock_' + email)
+              window.dispatchEvent(new CustomEvent('betai-token-balance-changed', {
+                detail: { email, balance: correctedBalance, reason: 'welcome_bonus_reversal_v51' }
+              }))
+            } catch (_) {}
+
+            showToast({
+              type: 'info',
+              title: 'Korekta bonusu powitalnego',
+              message: `Cofnięto ${correction} coinów przyznanych omyłkowo staremu kontu.`
+            })
+          }
+        }
+      }
+
+      const grantWelcomeBonusV51 = async (baseBalance = 0) => {
+        const safeBase = Math.max(0, Number(baseBalance || 0) || 0)
+        const nextBalance = safeBase + BONUS_TOKENS_V51
+        const now = new Date().toISOString()
+
         await supabase.from('betai_token_wallets').upsert({
           email,
-          user_id: user?.id || null,
-          balance: 100,
+          user_id: userId || null,
+          balance: nextBalance,
           welcome_bonus_claimed: true,
-          updated_at: new Date().toISOString()
+          updated_at: now
         }, { onConflict: 'email' })
+
         await supabase.from('betai_token_transactions').insert({
+          user_id: userId || null,
           email,
-          delta_tokens: 100,
+          delta_tokens: BONUS_TOKENS_V51,
           delta_pln: 0,
           reason: 'welcome_bonus',
-          ref_type: 'system'
+          ref_type: 'registration_v51'
         })
+
         await supabase.from('betai_system_notifications').insert({
           recipient_email: email,
           title: 'Witamy w BetAI 👋',
           body: 'Miło Cię widzieć! Na start dodaliśmy 100 coinów do Twojego konta. Możesz nimi tipować najlepsze wiadomości na czacie.',
-          reward_tokens: 100,
+          reward_tokens: BONUS_TOKENS_V51,
           sent_by: 'betai',
           is_read: false
         })
-        setTokenBalance(100)
-        showToast({ type: 'success', title: 'Witaj w BetAI 👋', message: 'Miło Cię widzieć! Dodaliśmy 100 coinów na start.' })
+
+        setTokenBalance(nextBalance)
+        try {
+          localStorage.setItem('betai_tokens_' + email, String(nextBalance))
+          localStorage.removeItem('betai_reward_balance_lock_' + email)
+        } catch (_) {}
+        showToast({ type: 'success', title: 'Witaj w BetAI 👋', message: 'Dodaliśmy 100 coinów na start.' })
+        return nextBalance
+      }
+
+      if (!wallet) {
+        // Nie ma portfela. Bonus dostaje TYLKO konto faktycznie utworzone w ostatnich 24h
+        // i tylko jeśli w historii nie ma już bonusu powitalnego.
+        if (isFreshRegistrationV51 && welcomeHistoryReliableV51 && !hasWelcomeTransaction) {
+          const nextBalance = await grantWelcomeBonusV51(0)
+          wallet = { email, user_id: userId || null, balance: nextBalance, welcome_bonus_claimed: true }
+        } else {
+          // Stare konto bez rekordu portfela: NIE zerujemy jego Coinów. Odtwarzamy możliwie
+          // bezpieczne saldo z historii transakcji i lokalnego cache, ale nie przyznajemy bonusu.
+          const localBalance = readLocalTokenBalanceV51()
+          const ledgerBalance = await loadLedgerBalanceV51()
+          const restoredBalance = Math.max(localBalance, ledgerBalance == null ? 0 : ledgerBalance)
+          await supabase.from('betai_token_wallets').upsert({
+            email,
+            user_id: userId || null,
+            balance: restoredBalance,
+            welcome_bonus_claimed: true,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'email' })
+          wallet = { email, user_id: userId || null, balance: restoredBalance, welcome_bonus_claimed: true }
+          setTokenBalance(restoredBalance)
+          try {
+            localStorage.setItem('betai_tokens_' + email, String(restoredBalance))
+            localStorage.removeItem('betai_reward_balance_lock_' + email)
+          } catch (_) {}
+        }
       } else {
-        const balance = Number(existing.balance || 0) || 0
-        const localBalance = (() => { try { return Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0 } catch (_) { return 0 } })()
-        const displayBalance = Math.max(balance, localBalance, Number(tokenBalance || 0) || 0)
+        const balance = Math.max(0, Number(wallet.balance || 0) || 0)
+
+        if (isFreshRegistrationV51 && welcomeHistoryReliableV51 && !hasWelcomeTransaction) {
+          // Nowe konto może mieć już utworzony portfel przez Live Chat lub inną funkcję.
+          // Dlatego o bonusie decyduje data rejestracji + brak transakcji welcome_bonus,
+          // a nie sama flaga welcome_bonus_claimed.
+          const nextBalance = await grantWelcomeBonusV51(balance)
+          wallet = { ...wallet, balance: nextBalance, welcome_bonus_claimed: true }
+        } else if (!wallet.welcome_bonus_claimed) {
+          // Stare konto z flagą FALSE tylko zamykamy przed późniejszym błędnym bonusem.
+          await supabase
+            .from('betai_token_wallets')
+            .update({ welcome_bonus_claimed: true, updated_at: new Date().toISOString() })
+            .eq('email', email)
+          wallet = { ...wallet, welcome_bonus_claimed: true }
+        }
+
+        const remoteBalance = Math.max(0, Number(wallet.balance || 0) || 0)
+        const localBalance = (() => {
+          try { return Math.max(0, Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0) } catch (_) { return 0 }
+        })()
+        const displayBalance = forcedBalanceAfterRepairV51 != null
+          ? Math.max(0, Number(forcedBalanceAfterRepairV51 || 0) || 0)
+          : Math.max(remoteBalance, localBalance, Number(tokenBalance || 0) || 0)
         setTokenBalance(displayBalance)
         try { localStorage.setItem('betai_tokens_' + email, String(displayBalance)) } catch (_) {}
-        if (!existing.welcome_bonus_claimed) {
-          const next = balance + 100
-          await supabase.from('betai_token_wallets').update({ balance: next, welcome_bonus_claimed: true, updated_at: new Date().toISOString() }).eq('email', email)
-          await supabase.from('betai_token_transactions').insert({ email, delta_tokens: 100, delta_pln: 0, reason: 'welcome_bonus', ref_type: 'system' })
-          await supabase.from('betai_system_notifications').insert({
-            recipient_email: email,
-            title: 'Witamy w BetAI 👋',
-            body: 'Miło Cię widzieć! Przyznaliśmy jednorazowy bonus powitalny: 100 coinów.',
-            reward_tokens: 100,
-            sent_by: 'betai',
-            is_read: false
-          })
-          setTokenBalance(next)
-          showToast({ type: 'success', title: 'Bonus powitalny', message: 'Dodaliśmy 100 coinów do Twojego konta.' })
-        } else {
-          const welcomeToastKey = `betai_welcome_toast_seen_${email}_${user?.id || ''}`
-          let shouldShowWelcomeToast = true
-          try {
-            shouldShowWelcomeToast = sessionStorage.getItem(welcomeToastKey) !== '1'
-            if (shouldShowWelcomeToast) sessionStorage.setItem(welcomeToastKey, '1')
-          } catch (_) {}
-          if (shouldShowWelcomeToast) {
-            showToast({ type: 'success', title: 'Witaj ponownie 👋', message: 'Miło Cię widzieć z powrotem w BetAI.' })
-          }
+
+        const welcomeToastKey = `betai_welcome_toast_seen_${email}_${userId}`
+        let shouldShowWelcomeToast = true
+        try {
+          shouldShowWelcomeToast = sessionStorage.getItem(welcomeToastKey) !== '1'
+          if (shouldShowWelcomeToast) sessionStorage.setItem(welcomeToastKey, '1')
+        } catch (_) {}
+        if (shouldShowWelcomeToast && !isFreshRegistrationV51) {
+          showToast({ type: 'success', title: 'Witaj ponownie 👋', message: 'Miło Cię widzieć z powrotem w BetAI.' })
         }
       }
-      await fetchNotifications(user?.id)
+
+      await fetchNotifications(userId)
     } catch (error) {
-      console.warn('ensure wallet/welcome skipped', error)
+      console.warn('ensure wallet/welcome V51 skipped', error)
+      welcomeCheckStartedRefV51.current.delete(guardKey)
       try {
         const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
         setTokenBalance(localTokens)
@@ -37438,7 +37660,6 @@ function App() {
       try { await registerReferralFromStoredCode({ id: userId, email: sessionUser?.email }) } catch (e) { console.error(e) }
       try { await fetchStripeConnectStatus(userId) } catch (e) { console.error(e) }
       try { await fetchUnlockedTips(userId) } catch (e) { console.error(e) }
-      try { await ensureUserWalletAndWelcome({ id: userId, email: sessionUser?.email }) } catch (e) { console.error(e) }
     }
 
     async function loadSession() {
@@ -37471,7 +37692,11 @@ function App() {
           if (!cachedUserV50?.id) setAuthLoading(false)
           sessionRequestV50.then(({ data }) => {
             const lateUser = data?.session?.user || null
-            if (lateUser?.id) setSessionUser(lateUser)
+            if (lateUser?.id) {
+              setSessionUser(lateUser)
+              safeInitialLoad(lateUser.id)
+              ensureUserWalletAndWelcome(lateUser)
+            }
           }).catch(error => console.warn('V50 late session refresh skipped', error))
         } else {
           const data = sessionResultV50?.data || null
