@@ -6099,6 +6099,7 @@ function AnimatedDashboardHero() {
   }))
 
   const heroSlides = [...newsHeroSlides, ...staticHeroSlides]
+  const liteMobileHeroV50 = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 900px)').matches
 
   useEffect(() => { setPanel(0) }, [lang])
 
@@ -6143,7 +6144,7 @@ function AnimatedDashboardHero() {
         {heroSlides.map((slide, index) => {
           const previous = (panel - 1 + heroSlides.length) % heroSlides.length
           const next = (panel + 1) % heroSlides.length
-          const shouldLoad = index === panel || index === previous || index === next
+          const shouldLoad = liteMobileHeroV50 ? index === panel : (index === panel || index === previous || index === next)
           const slideKey = slide.key || slide.src || `${slide.type}-${index}`
           return (
             <div key={slideKey} className={`betai-dashboard-slide-v551 ${panel === index ? 'active' : ''} ${slide.type === 'news' ? 'news-slide-v40' : ''} ${String(slide.src || '').includes('you-vs-ai-hero') ? 'you-vs-ai-slide-v25' : ''}`}>
@@ -34713,6 +34714,24 @@ function BetaiPresenceHeartbeatV1901({ user }) {
   return null
 }
 
+// V50 — szybki start mobilny: użyj zapisanej lokalnie sesji bez czekania na odświeżenie tokena przez sieć.
+function readCachedSupabaseUserV50() {
+  if (typeof window === 'undefined') return null
+  try {
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index) || ''
+      if (!/^sb-.*-auth-token$/i.test(key)) continue
+      const raw = window.localStorage.getItem(key)
+      if (!raw) continue
+      const parsed = JSON.parse(raw)
+      const session = parsed?.currentSession || parsed?.session || parsed
+      const user = session?.user || parsed?.user || null
+      if (user?.id) return user
+    }
+  } catch (_) {}
+  return null
+}
+
 function App() {
   const [tips, setTips] = useState([])
   const [lastTipSaveStatus, setLastTipSaveStatus] = useState(readTipDebug())
@@ -36528,6 +36547,7 @@ function App() {
   useEffect(() => {
     if (sessionUser?.id) {
       setUnlockedTips(new Set())
+      fetchTips(sessionUser.id, { force: true })
       fetchUnlockedTips(sessionUser.id)
       fetchPaymentHistory(sessionUser.id)
       fetchFollowingTipsters(sessionUser.id)
@@ -36671,64 +36691,7 @@ function App() {
 
   // V6: Stripe Connect return is handled once below. Do not auto-start onboarding on refresh.
 
-  useEffect(() => {
-    if (!sessionUser?.id) return
-    let cancelled = false
-
-    const repairAndRefreshV48 = async () => {
-      try {
-        const response = await fetch('/.netlify/functions/repair-cichy-brann-odds-v48', {
-          method: 'POST',
-          cache: 'no-store'
-        })
-        const payload = await response.json().catch(() => ({}))
-        if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`)
-
-        if (!cancelled) {
-          await fetchTips(sessionUser.id, { force: true })
-          if (Number(payload.updated || 0) > 0) fetchRealRanking().catch(() => {})
-        }
-      } catch (error) {
-        console.warn('v48 fixed odds repair skipped', error)
-        if (!cancelled) fetchTips(sessionUser.id)
-      }
-    }
-
-    repairAndRefreshV48()
-    return () => { cancelled = true }
-  }, [sessionUser?.id])
-
-
-  useEffect(() => {
-    if (!sessionUser?.id) return
-    let cancelled = false
-
-    const repairAndRefreshV49 = async () => {
-      try {
-        const response = await fetch('/.netlify/functions/repair-cichy-vaduz-stgallen-v49', {
-          method: 'POST',
-          cache: 'no-store'
-        })
-        const payload = await response.json().catch(() => ({}))
-        if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`)
-
-        if (!cancelled) {
-          await fetchTips(sessionUser.id, { force: true })
-          await fetchRealRanking().catch(() => {})
-        }
-      } catch (error) {
-        console.warn('v49 cichy Vaduz/St. Gallen repair skipped', error)
-        if (!cancelled) fetchTips(sessionUser.id)
-      }
-    }
-
-    repairAndRefreshV49()
-    return () => { cancelled = true }
-  }, [sessionUser?.id])
-
-
-
-
+  // V50: jednorazowe naprawy V48/V49 są już zapisane w bazie i nie są uruchamiane przy każdym wejściu.
 
   async function fetchStripeConnectStatus(userId = sessionUser?.id) {
     try {
@@ -37485,20 +37448,46 @@ function App() {
           return
         }
 
-        const { data } = await supabase.auth.getSession()
-        const user = data?.session?.user || null
-        const recoveryFromUrl = isPasswordRecoveryUrl()
-        if (recoveryFromUrl && user?.id) {
-          setPasswordRecoveryMode(true)
-          setPasswordRecoveryUser(user)
-          try { localStorage.setItem('betai_password_recovery_active', '1') } catch (_) {}
+        const cachedUserV50 = readCachedSupabaseUserV50()
+        if (cachedUserV50?.id) {
+          setSessionUser(cachedUserV50)
+          setWalletBalance(0)
+          setAuthLoading(false)
         }
-        setSessionUser(user)
-        setWalletBalance(0)
 
-        if (user?.id && !recoveryFromUrl) {
-          safeInitialLoad(user.id)
-          ensureUserWalletAndWelcome(user)
+        const sessionRequestV50 = supabase.auth.getSession()
+        let sessionTimerV50 = null
+        const sessionResultV50 = await Promise.race([
+          sessionRequestV50,
+          new Promise(resolve => {
+            sessionTimerV50 = window.setTimeout(() => resolve({ __betaiTimeoutV50: true }), 6500)
+          })
+        ])
+        if (sessionTimerV50) window.clearTimeout(sessionTimerV50)
+
+        const recoveryFromUrl = isPasswordRecoveryUrl()
+        if (sessionResultV50?.__betaiTimeoutV50) {
+          console.warn('V50 auth session timeout — UI continues without blocking')
+          if (!cachedUserV50?.id) setAuthLoading(false)
+          sessionRequestV50.then(({ data }) => {
+            const lateUser = data?.session?.user || null
+            if (lateUser?.id) setSessionUser(lateUser)
+          }).catch(error => console.warn('V50 late session refresh skipped', error))
+        } else {
+          const data = sessionResultV50?.data || null
+          const user = data?.session?.user || null
+          if (recoveryFromUrl && user?.id) {
+            setPasswordRecoveryMode(true)
+            setPasswordRecoveryUser(user)
+            try { localStorage.setItem('betai_password_recovery_active', '1') } catch (_) {}
+          }
+          setSessionUser(user)
+          setWalletBalance(0)
+
+          if (user?.id && !recoveryFromUrl) {
+            safeInitialLoad(user.id)
+            ensureUserWalletAndWelcome(user)
+          }
         }
 
         const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {

@@ -82296,3 +82296,14 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   font-weight:800;
   line-height:1.45;
 }
+
+/* V50 — MOBILE STARTUP STABILITY: mniej kosztownego renderowania poza ekranem */
+@media (max-width: 1000px) {
+  .app-shell:not(.no-rightbar-page) .rightbar > *,
+  .app-shell:not(.no-rightbar-page) .real-ranking-panel,
+  .app-shell:not(.no-rightbar-page) .betai-right-chat-final {
+    content-visibility:auto;
+    contain-intrinsic-size:1px 620px;
+  }
+  .betai-dashboard-slide-v551:not(.active){pointer-events:none}
+}
