@@ -7693,7 +7693,47 @@ function renderBetaiShowcaseBadgeIconV17(kind = 'standard') {
   )
 }
 
-function DashboardTipsterShowcaseV16({ rows = [], tips = [], onOpenTipster = null }) {
+
+function getBetaiRightShowcaseFollowersV55(row = {}, followStats = {}) {
+  const profileFollowers = Math.max(
+    Number(row.followers || 0) || 0,
+    Number(row.followers_count || 0) || 0,
+    Number(row.author_followers_count || 0) || 0,
+    Number(row.profile_followers_count || 0) || 0
+  )
+
+  const keys = new Set([
+    ...getBetaiRightShowcaseIdentityTokensV16(row),
+    row.tipster_id,
+    row.id,
+    row.user_id,
+    row.author_id,
+    row.owner_id,
+    row.email,
+    row.author_email,
+    row.user_email,
+    row.username,
+    row.author_name,
+    row.user_name,
+    formatRankingName(row),
+    row.public_slug,
+  ].map(value => String(value || '').trim().toLowerCase()).filter(Boolean))
+
+  let liveFollowers = 0
+  keys.forEach(key => {
+    const stat = followStats?.[key]
+    liveFollowers = Math.max(
+      liveFollowers,
+      Number(stat?.followers || 0) || 0,
+      Number(stat?.followers_count || 0) || 0
+    )
+  })
+
+  return Math.max(0, profileFollowers, liveFollowers)
+}
+
+function DashboardTipsterShowcaseV16({ rows = [], tips = [], followStats = {}, onOpenTipster = null }) {
+
   const lang = useBetaiLanguageState()
   const [activeIndex, setActiveIndex] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -7709,7 +7749,7 @@ function DashboardTipsterShowcaseV16({ rows = [], tips = [], onOpenTipster = nul
       const totalTips = Number(row.totalTips || row.total_tips || row.tips_count || 0) || 0
       const yieldValue = Number(row.roi ?? row.yield ?? row.imported_yield ?? 0) || 0
       const profitValue = Number(row.profit ?? row.earnings ?? row.total_earnings ?? row.imported_profit ?? 0) || 0
-      const followers = Number(row.followers ?? row.followers_count ?? 0) || 0
+      const followers = getBetaiRightShowcaseFollowersV55(row, followStats)
       const form = buildBetaiRightShowcaseFormV16(row, tips)
       const rowTokens = getBetaiRightShowcaseIdentityTokensV16(row)
       const hasPremiumTip = rowTokens.some(token => premiumTipTokens.has(token))
@@ -7792,7 +7832,7 @@ function DashboardTipsterShowcaseV16({ rows = [], tips = [], onOpenTipster = nul
         description: lang === 'en' ? 'The most followed tipsters in the community.' : 'Wyświetlani są najpopularniejsi typerzy.',
       },
     ]
-  }, [rows, tips, lang])
+  }, [rows, tips, followStats, lang])
 
   useEffect(() => {
     if (paused || categories.length <= 1) return undefined
@@ -7948,7 +7988,7 @@ function DashboardTipsterShowcaseV16({ rows = [], tips = [], onOpenTipster = nul
   )
 }
 
-function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }) {
+function Rightbar({ ranking = [], tips = [], user = null, followStats = {}, onOpenTipster = null }) {
   const lang = useBetaiLanguageState()
   const t = (value) => translateBetaiTextValue(value, lang)
   cacheBetaiCurrentUserAvatar(user)
@@ -8052,7 +8092,7 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
   return (
     <aside className="rightbar">
       <LiveChatPanel user={user} />
-      <DashboardTipsterShowcaseV16 rows={realRanking} tips={tips} onOpenTipster={onOpenTipster} />
+      <DashboardTipsterShowcaseV16 rows={realRanking} tips={tips} followStats={followStats} onOpenTipster={onOpenTipster} />
       <section className="panel real-ranking-panel real-ranking-panel-v19">
         <div className="panel-head"><h2>🏆 {t('Top typerzy')}</h2><a>{t('Ranking real')}</a></div>
         {rightRankingRows.length ? rightRankingRows.slice(0, 4).map((row, index) => {
@@ -38922,7 +38962,7 @@ function App() {
         )}
       </main>
 
-      {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={effectiveAccountProfile || sessionUser} onOpenTipster={openTipsterProfile} />}
+      {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={effectiveAccountProfile || sessionUser} followStats={followStats} onOpenTipster={openTipsterProfile} />}
       <SiteReviewsWidget user={effectiveAccountProfile || sessionUser} />
       <SupportChatWidget user={effectiveAccountProfile || sessionUser} />
     </div>
