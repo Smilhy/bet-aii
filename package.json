@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-36-real-profile-online-status",
-  "version": "36.0.0",
+  "name": "betai-wersja-56-mobile-lite-pwa",
+  "version": "56.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
