@@ -30,24 +30,6 @@
   <meta name="twitter:description" content="Sports picks, AI match analysis, tipster rankings, live chat, premium picks, AI Coach, Tip DNA and Trust Score." />
   <meta name="twitter:image" content="https://bet-ai.app/dashboard-hero-v551/slide-1.png" />
   <meta name="theme-color" content="#06111b" />
-  <script>
-    // WERSJA 56 — TELEFON: lekkie wejście app-like zamiast ciężkiego desktopowego SPA.
-    // Desktop bez zmian. Na telefonie / otwieramy /app/, chyba że użytkownik wymusi ?desktop=1.
-    (function () {
-      try {
-        var q = new URLSearchParams(location.search || '');
-        var explicitDesktop = q.get('desktop') === '1';
-        var authCallback = /access_token=|refresh_token=|type=recovery|error_description=/i.test(location.hash || '') || q.has('code');
-        var touch = (navigator.maxTouchPoints || 0) > 0;
-        var narrowScreen = Math.min(screen.width || innerWidth || 9999, screen.height || innerHeight || 9999) <= 900;
-        var mobileUa = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
-        var plainHome = location.pathname === '/' || location.pathname === '/index.html';
-        if (!explicitDesktop && !authCallback && plainHome && (mobileUa || (touch && narrowScreen))) {
-          location.replace('/app/');
-        }
-      } catch (_) {}
-    })();
-  </script>
 
   <script type="application/ld+json">
   {

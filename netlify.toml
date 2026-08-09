@@ -19,11 +19,6 @@
   status = 404
 
 [[redirects]]
-  from = "/app"
-  to = "/app/"
-  status = 301
-
-[[redirects]]
   from = "/tipster/*"
   to = "/index.html"
   status = 200
@@ -56,25 +51,6 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
     X-Content-Type-Options = "nosniff"
-
-
-# WERSJA 56 — Mobile Lite PWA
-[[headers]]
-  for = "/app/"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/app/sw.js"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-    Service-Worker-Allowed = "/app/"
-
-[[headers]]
-  for = "/app/manifest.webmanifest"
-  [headers.values]
-    Cache-Control = "no-cache"
-    Content-Type = "application/manifest+json"
 
 # WERSJA 1867.9 — każdy bot działa niezależnie.
 # To są częstotliwości skanowania, niezależne dla każdego bota.
