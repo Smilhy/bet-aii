@@ -82307,3 +82307,20 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth4
   }
   .betai-dashboard-slide-v551:not(.active){pointer-events:none}
 }
+
+/* =============================================================
+   WERSJA 56 — LOGIN: podpowiedź CTRL +/- stale otwarta
+   Baza: WERSJA 55. Tooltip nie wymaga hover/focus/kliknięcia w "i".
+   ============================================================= */
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-tooltip{
+  opacity:1 !important;
+  visibility:visible !important;
+  transform:translateY(0) scale(1) !important;
+  pointer-events:none !important;
+}
+
+/* Ikona "i" zostaje jako wizualne oznaczenie informacji, ale nie jest już
+   potrzebna do otwarcia podpowiedzi. */
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
+  cursor:default !important;
+}
