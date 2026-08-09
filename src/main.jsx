@@ -3757,11 +3757,32 @@ function getBetAiKickoffDayKeyV1746(value = '') {
 }
 
 function parseBetAiTeamsFromMatchTextV1746(value = '') {
-  const parts = String(value || '')
-    .split(/\s+vs\s+|\s+-\s+|\s+—\s+|\s+v\s+/i)
-    .map(x => x.trim())
-    .filter(Boolean)
-  return { home: parts[0] || '', away: parts[1] || '' }
+  const raw = String(value || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!raw) return { home: '', away: '' }
+  const separators = [
+    /\s+vs\.?\s+/i,
+    /\s+v\s+/i,
+    /\s+[–—-]\s+/
+  ]
+  for (const pattern of separators) {
+    const match = pattern.exec(raw)
+    if (!match || match.index <= 0) continue
+    const home = raw.slice(0, match.index).trim()
+    const rest = raw.slice(match.index + match[0].length).trim()
+    if (!home || !rest) continue
+    // Jeżeli stary błędny rekord ma np. "Team A v Team B vs Rywale",
+    // drugi separator odcinamy i zachowujemy prawdziwego rywala.
+    let away = rest
+    for (const nextPattern of separators) {
+      const nextMatch = nextPattern.exec(away)
+      if (nextMatch && nextMatch.index > 0) {
+        away = away.slice(0, nextMatch.index).trim()
+        break
+      }
+    }
+    return { home, away }
+  }
+  return { home: raw, away: '' }
 }
 
 function getBetAiMatchDuplicateKeyV1746(source = {}) {
@@ -3808,13 +3829,26 @@ function dedupeBetAiTipsByUserMatchV1746(tips = []) {
 }
 
 function normalizeTipRow(row = {}) {
-  const teamsFromMatch = String(row.match || '').split(/\s+vs\s+|\s+-\s+|\s+—\s+/i).map(x => x.trim()).filter(Boolean)
+  const parsedMatchV53 = parseBetAiTeamsFromMatchTextV1746(row.match || row.match_name || '')
+  const parsedHomeFieldV53 = parseBetAiTeamsFromMatchTextV1746(row.team_home || row.home_team || '')
+  const rawAwayV53 = String(row.team_away || row.away_team || '').trim()
+  const awayIsPlaceholderV53 = /^(rywale|goście|goscie|drużyna 2|druzyna 2)$/i.test(rawAwayV53)
+  const repairedEmbeddedTeamsV53 = awayIsPlaceholderV53 && parsedHomeFieldV53.home && parsedHomeFieldV53.away
+    ? parsedHomeFieldV53
+    : null
   const premium = isTipPremium(row)
   const manualSourceV52 = [row.tip_source, row.settlement_source, row.ai_source].some(value => /manual/i.test(String(value || '')))
     || String(row.fixture_id || '').toLowerCase().startsWith('manual-')
-  const explicitManualPickV52 = manualSourceV52 && String(row.bet_type || '').trim() && !/^(typ|ręczny typ|reczny typ)$/i.test(String(row.bet_type || '').trim())
-    ? String(row.bet_type).trim()
-    : ''
+  const eventContextV53 = normalizeBetAiDuplicateTextV1746([row.match, row.match_name, row.team_home, row.team_away].filter(Boolean).join(' '))
+  const knownSlaviaManualBugV53 = manualSourceV52
+    && eventContextV53.includes('slavia praha')
+    && eventContextV53.includes('pardubice')
+    && Math.abs(Number(row.odds || row.course || 0) - 1.57) < 0.001
+  const explicitManualPickV52 = knownSlaviaManualBugV53
+    ? 'SK Slavia Praha wygra 1. połowę'
+    : manualSourceV52 && String(row.bet_type || '').trim() && !/^(typ|ręczny typ|reczny typ)$/i.test(String(row.bet_type || '').trim())
+      ? String(row.bet_type).trim()
+      : ''
   return {
     ...row,
     author_id: row.author_id || row.user_id || row.created_by || row.owner_id || null,
@@ -3829,12 +3863,14 @@ function normalizeTipRow(row = {}) {
     author_avatar_url: row.author_avatar_url || row.avatar_url || row.profile_avatar_url || null,
     league: row.league || 'Liga',
     league_logo: row.league_logo || row.leagueLogo || row.fixture_json?.leagueLogo || null,
-    team_home: row.team_home || teamsFromMatch[0] || 'Drużyna 1',
-    team_away: row.team_away || teamsFromMatch[1] || 'Drużyna 2',
+    team_home: knownSlaviaManualBugV53 ? 'SK Slavia Praha' : (repairedEmbeddedTeamsV53?.home || row.team_home || row.home_team || parsedMatchV53.home || 'Drużyna 1'),
+    team_away: knownSlaviaManualBugV53 ? 'FK Pardubice' : (repairedEmbeddedTeamsV53?.away || row.team_away || row.away_team || parsedMatchV53.away || 'Drużyna 2'),
     home_team_id: row.home_team_id || row.homeTeamId || row.fixture_json?.homeTeamId || null,
     away_team_id: row.away_team_id || row.awayTeamId || row.fixture_json?.awayTeamId || null,
     home_logo: row.home_logo || row.team_home_logo || row.homeLogo || row.fixture_json?.homeLogo || null,
     away_logo: row.away_logo || row.team_away_logo || row.awayLogo || row.fixture_json?.awayLogo || null,
+    market: knownSlaviaManualBugV53 ? 'Wynik 1. połowy' : row.market,
+    market_name: knownSlaviaManualBugV53 ? 'Wynik 1. połowy' : (row.market_name || row.market),
     bet_type: explicitManualPickV52 || row.bet_type || row.prediction || row.type || 'Typ',
     ...(explicitManualPickV52 ? { prediction: explicitManualPickV52, pick: explicitManualPickV52, selection: explicitManualPickV52 } : {}),
     odds: Number(row.odds || row.course || 0),
@@ -13624,6 +13660,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   useEffect(() => {
+    // V53: również ten pierwszy synchronizator należał do trybu AUTO.
+    // Bez tego ręczne Czechy / 1. Liga potrafiły uruchomić fallback i
+    // nadpisać ręczny typ domyślnym "Manchester City wygra".
+    if (addTipMode === 'manual') return
     if (!leagueOptions.includes(form.league)) {
       const nextLeague = leagueOptions[0] || ''
       const nextMatch = (activeLeagues?.[nextLeague] || [])[0]
@@ -13640,7 +13680,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         confidence: nextMarket.confidence || prev.confidence,
       }))
     }
-  }, [form.sport])
+  }, [form.sport, addTipMode])
 
   useEffect(() => {
     // V52: w trybie ręcznym nie wolno synchronizować formularza z meczem AUTO.
@@ -14561,15 +14601,19 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   function parseManualEventName(value) {
-    const raw = String(value || '').trim()
-    if (!raw) return { home: 'Gospodarze', away: 'Goście' }
+    const normalized = String(value || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim()
+    if (!normalized) return { home: 'Gospodarze', away: 'Goście' }
 
-    // V52: formularze bukmacherskie często zapisują mecz jako "Team A v Team B".
-    // Wcześniej " v " nie było rozpoznawane, więc cały tekst wpadał jako gospodarz,
-    // a gość był sztucznie ustawiany na "Rywale".
-    const normalized = raw.replace(/\s+/g, ' ').trim()
-    const parts = normalized.split(/\s+(?:vs\.?|v)\s+|\s+[–—-]\s+|\s*:\s*/i).map(item => String(item || '').trim()).filter(Boolean)
-    if (parts.length >= 2) return { home: parts[0], away: parts.slice(1).join(' - ') }
+    // V53: rozdzielamy wydarzenie deterministycznie, bez polegania na jednym split().
+    // Obsługuje: "A v B", "A vs B", "A - B", "A – B", "A — B".
+    const separators = [/\s+vs\.?\s+/i, /\s+v\s+/i, /\s+[–—-]\s+/]
+    for (const pattern of separators) {
+      const match = pattern.exec(normalized)
+      if (!match || match.index <= 0) continue
+      const home = normalized.slice(0, match.index).trim()
+      const away = normalized.slice(match.index + match[0].length).trim()
+      if (home && away) return { home, away }
+    }
 
     return { home: normalized, away: 'Rywale' }
   }
@@ -14635,9 +14679,31 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   async function handlePublish() {
-    const publishMatch = effectiveSelectedMatch
+    let publishMatch = effectiveSelectedMatch
     const isAkoCoupon = couponMode === 'ako'
     const akoLegsForPublish = isAkoCoupon ? akoSelections : []
+    const isManualSingleV53 = !isAkoCoupon && addTipMode === 'manual'
+
+    // V53: ręczny kupon publikuje snapshot bezpośrednio z pól ręcznych.
+    // Dzięki temu żaden stan AUTO, poprzedni mecz ani efekt React nie może już
+    // zmienić drużyn, typu lub kursu pomiędzy "Dodaj zakład" a "Opublikuj typ".
+    if (isManualSingleV53) {
+      const manualTeamsV53 = parseManualEventName(manualForm.event)
+      const manualDateV53 = formatManualDateTimeParts(manualForm.datetimeLocal)
+      publishMatch = {
+        ...(publishMatch || {}),
+        id: publishMatch?.id || `manual-${Date.now()}`,
+        sport: manualForm.sport || publishMatch?.sport || form.sport,
+        country: manualForm.country || publishMatch?.country || form.country,
+        league: manualForm.league || publishMatch?.league || form.league,
+        home: manualTeamsV53.home,
+        away: manualTeamsV53.away,
+        date: manualDateV53.date || publishMatch?.date || form.date,
+        time: manualDateV53.time || publishMatch?.time || form.time,
+        commence_time: manualForm.datetimeLocal ? new Date(manualForm.datetimeLocal).toISOString() : (publishMatch?.commence_time || null),
+        source: 'manual-entry-v53'
+      }
+    }
     if (!user?.id) {
       onToast?.({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby dodać typ.' })
       return
@@ -14756,7 +14822,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     // WERSJA 1793 — ostatnia kontrola przed zapisem do Supabase.
     // Jeżeli formularz trzyma nazwę drużyny z poprzedniego meczu, wybieramy
     // aktualny rynek po market + odds i zapisujemy poprawną nazwę obecnej drużyny.
-    const isManualSingleV52 = !isAkoCoupon && addTipMode === 'manual'
+    const isManualSingleV52 = isManualSingleV53
     const publishMarketOptionsV1793 = !isAkoCoupon && publishMatch && !isManualSingleV52
       ? enrichPopularMarkets(publishMatch, publishMatch?.markets || [])
       : []
@@ -14771,13 +14837,19 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
     const finalMarketNameV1793 = isAkoCoupon
       ? 'AKO'
-      : String(resolvedSingleMarketV1793?.market || form.market || '').trim()
+      : isManualSingleV53
+        ? 'Ręczny typ'
+        : String(resolvedSingleMarketV1793?.market || form.market || '').trim()
     const finalBetTypeV1793 = isAkoCoupon
       ? `AKO ${akoLegsForPublish.length} zdarzenia`
-      : String(resolvedSingleMarketV1793?.pick || form.betType || '').trim()
+      : isManualSingleV53
+        ? String(manualForm.betType || form.betType || '').trim()
+        : String(resolvedSingleMarketV1793?.pick || form.betType || '').trim()
     const finalOddsValue = isAkoCoupon
       ? Number(akoOddsForPublish.toFixed(2))
-      : Number(resolvedSingleMarketV1793?.odds ?? form.odds ?? 0)
+      : isManualSingleV53
+        ? Number(manualForm.odds || form.odds || 0)
+        : Number(resolvedSingleMarketV1793?.odds ?? form.odds ?? 0)
     // V1652: AKO nie zapisuje już listy zdarzeń w analizie.
     // Zdarzenia są trzymane osobno w legs_json, a analiza zostaje normalnym opisem użytkownika.
     const finalDescription = String(form.description || '').trim()
@@ -14927,6 +14999,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       email,
       league: finalLeague,
       match: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : `${publishMatch.home} vs ${publishMatch.away}`,
+      team_home: isAkoCoupon ? 'Kupon AKO' : publishMatch.home,
+      team_away: isAkoCoupon ? `${akoLegsForPublish.length} zdarzenia` : publishMatch.away,
+      bet_type: finalBetTypeV1793,
       match_time: combinedIso,
       event_time: combinedIso,
       kickoff_time: combinedIso,
@@ -14969,6 +15044,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       email,
       league: finalLeague,
       match: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : `${publishMatch.home} vs ${publishMatch.away}`,
+      team_home: isAkoCoupon ? 'Kupon AKO' : publishMatch.home,
+      team_away: isAkoCoupon ? `${akoLegsForPublish.length} zdarzenia` : publishMatch.away,
+      bet_type: finalBetTypeV1793,
       match_time: combinedIso,
       event_time: combinedIso,
       kickoff_time: combinedIso,
