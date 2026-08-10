@@ -67,6 +67,39 @@ const BETAI_REFRESH_INTERVALS = Object.freeze({
   profileMs: 120000,
 });
 
+
+// WERSJA 57 — Mobile Fast Start.
+// Ta wersja nie zmienia wyglądu ani logiki typów. Ogranicza tylko burst zapytań
+// podczas pierwszych sekund na telefonie i skraca blokadę odczytu sesji.
+function isBetaiMobilePerformanceV57() {
+  if (typeof window === 'undefined') return false
+  try {
+    if (window.matchMedia?.('(max-width: 900px)').matches) return true
+  } catch (_) {}
+  try {
+    return /Android|iPhone|iPad|iPod|Mobile|Opera Mini|IEMobile/i.test(String(window.navigator?.userAgent || ''))
+  } catch (_) {
+    return false
+  }
+}
+
+function getBetaiAdaptiveIntervalV57(desktopMs, mobileMs) {
+  return isBetaiMobilePerformanceV57() ? Number(mobileMs || desktopMs) : Number(desktopMs)
+}
+
+function getBetaiAuthTimeoutV57() {
+  // Telefon nie może wisieć 6,5 s na „Ładowanie sesji…”.
+  return isBetaiMobilePerformanceV57() ? 1400 : 3500
+}
+
+function scheduleBetaiMobileStartupV57(callback, mobileDelay = 0, desktopDelay = 0) {
+  if (typeof window === 'undefined' || typeof callback !== 'function') return 0
+  const delay = isBetaiMobilePerformanceV57() ? mobileDelay : desktopDelay
+  return window.setTimeout(() => {
+    try { callback() } catch (error) { console.warn('V57 deferred startup task skipped', error) }
+  }, Math.max(0, Number(delay || 0)))
+}
+
 // WERSJA 29 — Opera/tab freeze guard.
 // Po powrocie z innej karty nie uruchamiamy naraz ciężkich pobrań, settlementów i watchdogów.
 // Dajemy rendererowi 1-4 s na odmalowanie UI, a zadania odpalamy kolejką z debounce.
@@ -6388,6 +6421,8 @@ function LiveChatPanel({ user }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [chatAttachment, setChatAttachment] = useState(null)
   const attachmentInputRef = useRef(null)
+  // V57: fallback avatarów z 150 typów nie może lecieć przy każdym odświeżeniu czatu.
+  const chatTipAvatarCacheRefV57 = useRef({ at: 0, map: new Map() })
 
   const email = normalizeEmail(user?.email)
   const userName = resolveRealProfileUsername(user) || (email ? email.split('@')[0] : 'Użytkownik')
@@ -6657,22 +6692,44 @@ function LiveChatPanel({ user }) {
           console.warn('chat profiles avatar hydration skipped', profileAvatarError)
         }
 
-        // Fallback tylko wtedy, kiedy nie ma profilu w mapie.
+        // V57: fallback z tabeli tips jest kosztowny. Najpierw używamy 10-minutowego cache
+        // i pytamy bazę tylko wtedy, gdy w aktualnych wiadomościach naprawdę brakuje avataru.
         try {
-          const { data: chatTipAuthors } = await supabase
-            .from('tips').select('*')
-            .order('created_at', { ascending: false })
-            .limit(150)
-          ;(chatTipAuthors || []).forEach(row => {
-            const emailKey = normalizeEmail(row.author_email)
-            const nameKey = normalizeEmail(row.author_name || row.username)
-            const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
-            const avatar = row.author_avatar_url || row.profile_avatar_url || row.avatar_url || ''
-            if (!avatar) return
-            if (emailKey && !chatProfileMap.has(emailKey)) chatProfileMap.set(emailKey, avatar)
-            if (localKey && !chatProfileMap.has(localKey)) chatProfileMap.set(localKey, avatar)
-            if (nameKey && !chatProfileMap.has(nameKey)) chatProfileMap.set(nameKey, avatar)
+          const fallbackCache = chatTipAvatarCacheRefV57.current || { at: 0, map: new Map() }
+          const fallbackMap = fallbackCache.map instanceof Map ? fallbackCache.map : new Map()
+          fallbackMap.forEach((avatar, key) => {
+            if (avatar && key && !chatProfileMap.has(key)) chatProfileMap.set(key, avatar)
           })
+
+          const messageNeedsFallback = nextMessages.some(row => {
+            const emailKey = normalizeEmail(row.user_email)
+            const nameKey = normalizeEmail(row.user_name)
+            const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
+            return !chatProfileMap.get(emailKey) && !chatProfileMap.get(localKey) && !chatProfileMap.get(nameKey)
+          })
+          const cacheFresh = Date.now() - Number(fallbackCache.at || 0) < 10 * 60 * 1000
+
+          if (messageNeedsFallback && (!cacheFresh || fallbackMap.size === 0)) {
+            const { data: chatTipAuthors } = await supabase
+              .from('tips').select('author_email,author_name,username,author_avatar_url,profile_avatar_url,avatar_url,created_at')
+              .order('created_at', { ascending: false })
+              .limit(isBetaiMobilePerformanceV57() ? 80 : 150)
+            const nextFallbackMap = new Map(fallbackMap)
+            ;(chatTipAuthors || []).forEach(row => {
+              const emailKey = normalizeEmail(row.author_email)
+              const nameKey = normalizeEmail(row.author_name || row.username)
+              const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
+              const avatar = row.author_avatar_url || row.profile_avatar_url || row.avatar_url || ''
+              if (!avatar) return
+              if (emailKey) nextFallbackMap.set(emailKey, avatar)
+              if (localKey) nextFallbackMap.set(localKey, avatar)
+              if (nameKey) nextFallbackMap.set(nameKey, avatar)
+              if (emailKey && !chatProfileMap.has(emailKey)) chatProfileMap.set(emailKey, avatar)
+              if (localKey && !chatProfileMap.has(localKey)) chatProfileMap.set(localKey, avatar)
+              if (nameKey && !chatProfileMap.has(nameKey)) chatProfileMap.set(nameKey, avatar)
+            })
+            chatTipAvatarCacheRefV57.current = { at: Date.now(), map: nextFallbackMap }
+          }
         } catch (tipAvatarError) {
           console.warn('chat tip avatar fallback skipped', tipAvatarError)
         }
@@ -6703,8 +6760,10 @@ function LiveChatPanel({ user }) {
   }
 
   useEffect(() => {
-    loadMessages()
-    if (!isSupabaseConfigured || !supabase) return undefined
+    // V57: prawa kolumna nadal jest renderowana od razu, ale telefon dostaje chwilę
+    // na pokazanie Dashboardu zanim Live Chat rozpocznie cięższe pobieranie.
+    const firstLoadTimerV57 = window.setTimeout(loadMessages, isBetaiMobilePerformanceV57() ? 1800 : 0)
+    if (!isSupabaseConfigured || !supabase) return () => window.clearTimeout(firstLoadTimerV57)
     const channel = supabase
       .channel('betai-live-chat-226-react')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'live_chat_messages' }, loadMessages)
@@ -6714,8 +6773,9 @@ function LiveChatPanel({ user }) {
       })
     const timer = setInterval(() => {
       if (canRunBetaiHeavyTaskV29()) loadMessages()
-    }, BETAI_REFRESH_INTERVALS.liveChatFallbackMs)
+    }, getBetaiAdaptiveIntervalV57(BETAI_REFRESH_INTERVALS.liveChatFallbackMs, 60000))
     return () => {
+      window.clearTimeout(firstLoadTimerV57)
       clearInterval(timer)
       supabase.removeChannel(channel)
     }
@@ -6727,13 +6787,14 @@ function LiveChatPanel({ user }) {
   }, [messages.length])
 
   useEffect(() => {
-    loadOnlineCount()
+    const firstOnlineTimerV57 = window.setTimeout(loadOnlineCount, isBetaiMobilePerformanceV57() ? 2400 : 0)
     const timer = setInterval(() => {
       if (canRunBetaiHeavyTaskV29()) loadOnlineCount()
-    }, BETAI_REFRESH_INTERVALS.onlineCountMs)
-    const onFocusOnlineV29 = () => scheduleBetaiLightTaskV29('online-count-v29', loadOnlineCount, 1800)
+    }, getBetaiAdaptiveIntervalV57(BETAI_REFRESH_INTERVALS.onlineCountMs, 90000))
+    const onFocusOnlineV29 = () => scheduleBetaiLightTaskV29('online-count-v29', loadOnlineCount, isBetaiMobilePerformanceV57() ? 3200 : 1800)
     window.addEventListener('focus', onFocusOnlineV29)
     return () => {
+      window.clearTimeout(firstOnlineTimerV57)
       clearInterval(timer)
       window.removeEventListener('focus', onFocusOnlineV29)
     }
@@ -8013,7 +8074,9 @@ function Rightbar({ ranking = [], tips = [], user = null, followStats = {}, onOp
 
     // WERSJA 1799: nie blokujemy pierwszego renderu prawej kolumny.
     // Najpierw pokazuje się cache / ranking, a sieć odświeża dane w bezczynności.
-    if (typeof window.requestIdleCallback === 'function') {
+    if (isBetaiMobilePerformanceV57()) {
+      timeoutId = window.setTimeout(() => refreshRightbarBotStatsV1798(), 2600)
+    } else if (typeof window.requestIdleCallback === 'function') {
       idleId = window.requestIdleCallback(() => refreshRightbarBotStatsV1798(), { timeout: 1200 })
     } else {
       timeoutId = window.setTimeout(() => refreshRightbarBotStatsV1798(), 250)
@@ -20413,7 +20476,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
       loadUnread()
       const target = activeUserRef.current
       if (target?.id) loadConversation(target)
-    }, 15000)
+    }, getBetaiAdaptiveIntervalV57(15000, 30000))
 
     return () => clearInterval(timer)
   }, [visible, myId])
@@ -34877,7 +34940,7 @@ function BetaiPresenceHeartbeatV1901({ user }) {
     document.addEventListener('visibilitychange', onVisibility)
 
     writeHeartbeat(true)
-    const interval = window.setInterval(() => writeHeartbeat(false), BETAI_PROFILE_PRESENCE_HEARTBEAT_MS_V1901)
+    const interval = window.setInterval(() => writeHeartbeat(false), getBetaiAdaptiveIntervalV57(BETAI_PROFILE_PRESENCE_HEARTBEAT_MS_V1901, 40000))
 
     return () => {
       stopped = true
@@ -34891,21 +34954,61 @@ function BetaiPresenceHeartbeatV1901({ user }) {
   return null
 }
 
-// V50 — szybki start mobilny: użyj zapisanej lokalnie sesji bez czekania na odświeżenie tokena przez sieć.
+// V50/V57 — szybki start mobilny: użyj zapisanej lokalnie sesji bez czekania na odświeżenie tokena przez sieć.
+const BETAI_FAST_AUTH_USER_KEY_V57 = 'betai_fast_auth_user_v57'
+
+function persistFastCachedUserV57(user) {
+  if (typeof window === 'undefined') return
+  try {
+    if (!user?.id) {
+      window.localStorage.removeItem(BETAI_FAST_AUTH_USER_KEY_V57)
+      return
+    }
+    // Cache zawiera wyłącznie dane UI użytkownika, nigdy access/refresh token.
+    window.localStorage.setItem(BETAI_FAST_AUTH_USER_KEY_V57, JSON.stringify({
+      id: user.id,
+      email: user.email || '',
+      created_at: user.created_at || '',
+      user_metadata: user.user_metadata || {},
+      app_metadata: user.app_metadata || {},
+      cached_at: Date.now(),
+    }))
+  } catch (_) {}
+}
+
 function readCachedSupabaseUserV50() {
   if (typeof window === 'undefined') return null
+
+  // V57: własny mały snapshot jest najszybszy i nie zależy od formatu storage Supabase.
   try {
-    for (let index = 0; index < window.localStorage.length; index += 1) {
+    const fastRaw = window.localStorage.getItem(BETAI_FAST_AUTH_USER_KEY_V57)
+    if (fastRaw) {
+      const fastUser = JSON.parse(fastRaw)
+      const age = Date.now() - Number(fastUser?.cached_at || 0)
+      if (fastUser?.id && age >= 0 && age < 30 * 24 * 60 * 60 * 1000) return fastUser
+      if (!fastUser?.id || age >= 30 * 24 * 60 * 60 * 1000) window.localStorage.removeItem(BETAI_FAST_AUTH_USER_KEY_V57)
+    }
+  } catch (_) {}
+
+  // Fallback: natywny storage Supabase. Każdy rekord parsujemy osobno,
+  // żeby jeden uszkodzony wpis nie blokował znalezienia prawidłowej sesji.
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    try {
       const key = window.localStorage.key(index) || ''
       if (!/^sb-.*-auth-token$/i.test(key)) continue
       const raw = window.localStorage.getItem(key)
       if (!raw) continue
       const parsed = JSON.parse(raw)
-      const session = parsed?.currentSession || parsed?.session || parsed
-      const user = session?.user || parsed?.user || null
-      if (user?.id) return user
+      const session = parsed?.currentSession || parsed?.session || parsed?.data?.session || parsed
+      const user = session?.user || parsed?.user || parsed?.data?.user || null
+      if (user?.id) {
+        persistFastCachedUserV57(user)
+        return user
+      }
+    } catch (_) {
+      // continue with next localStorage key
     }
-  } catch (_) {}
+  }
   return null
 }
 
@@ -34920,12 +35023,15 @@ function App() {
   const [dashboardVisibleTips, setDashboardVisibleTips] = useState(3)
   const [dashboardNow, setDashboardNow] = useState(() => Date.now())
   const [view, setView] = useState('dashboard')
-  const [sessionUser, setSessionUser] = useState(null)
+  // V57: jeżeli Supabase ma lokalnie zapisaną sesję, pokazujemy aplikację już w pierwszym renderze.
+  // Sieć potwierdza/odświeża token w tle — nie blokujemy telefonu ekranem „Ładowanie sesji…”.
+  const fastCachedUserV57 = useMemo(() => readCachedSupabaseUserV50(), [])
+  const [sessionUser, setSessionUser] = useState(() => fastCachedUserV57 || null)
   const welcomeCheckStartedRefV51 = useRef(new Set())
   const [passwordRecoveryMode, setPasswordRecoveryMode] = useState(() => isPasswordRecoveryUrl())
   const [passwordRecoveryUser, setPasswordRecoveryUser] = useState(null)
   const userProfile = getUserProfileView(sessionUser)
-  const [authLoading, setAuthLoading] = useState(true)
+  const [authLoading, setAuthLoading] = useState(() => !fastCachedUserV57?.id)
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [selectedProfileSub, setSelectedProfileSub] = useState(null)
   const [tipsterSubscriptions, setTipsterSubscriptions] = useState([])
@@ -35554,7 +35660,7 @@ function App() {
 
     const timer = window.setTimeout(() => {
       runAiBotMaintenanceFallback().catch(() => {})
-    }, 3500)
+    }, isBetaiMobilePerformanceV57() ? 12000 : 3500)
 
     // WERSJA 29: watchdog bota nie odpala już przy każdym powrocie z karty.
     // Cron Netlify pilnuje botów, a frontend robi tylko spokojny start po wejściu admina.
@@ -35593,6 +35699,42 @@ function App() {
       return null
     } finally {
       autoSettleRunningRef.current = false
+    }
+  }
+
+  // V57: szybki pierwszy feed na telefonie. Pobiera tylko to, co jest potrzebne do
+  // natychmiastowego pokazania Dashboardu; pełna hydracja rusza później w tle.
+  async function fetchTipsFastMobileV57(userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase) return false
+    try {
+      const publicTipsPromise = fetch(`/.netlify/functions/get-public-tips?limit=160&t=${Date.now()}`, { cache: 'no-store' })
+        .then(response => response.ok ? response.json() : { tips: [] })
+        .catch(() => ({ tips: [] }))
+      const [{ data: tipsData, error: tipsError }, publicTipsPayload] = await Promise.all([
+        supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(160),
+        publicTipsPromise
+      ])
+      if (tipsError) throw tipsError
+      const publicTipsData = Array.isArray(publicTipsPayload?.tips) ? publicTipsPayload.tips : []
+      let sourceTips = [...publicTipsData, ...(tipsData || [])]
+        .map(normalizeTipRow)
+        .filter(tip => !isBetaiMultisportPublicTipHiddenV28(tip))
+
+      const recentSavedTips = readRecentSavedTips(userId).filter(isTipVisibleInActiveFeed)
+      const byId = new Map()
+      ;[...recentSavedTips, ...sourceTips].forEach(tip => {
+        const key = String(tip.id || `${tip.author_id || tip.user_id || ''}-${tip.created_at || ''}-${tip.match || tip.team_home || ''}-${tip.bet_type || tip.prediction || tip.pick || ''}`)
+        if (key && !byId.has(key)) byId.set(key, tip)
+      })
+      sourceTips = Array.from(byId.values())
+        .sort((a, b) => new Date(b.created_at || b.match_time || 0) - new Date(a.created_at || a.match_time || 0))
+
+      setTips(dedupeBetAiTipsByUserMatchV1746(sourceTips))
+      setLastTipSaveStatus(readTipDebug())
+      return true
+    } catch (error) {
+      console.warn('V57 fast mobile tips skipped', error)
+      return false
     }
   }
 
@@ -35985,7 +36127,7 @@ function App() {
       if (canRunBetaiHeavyTaskV29()) {
         fetchTips(sessionUser?.id)
       }
-    }, 30000)
+    }, getBetaiAdaptiveIntervalV57(30000, 90000))
 
     const onFocusRefresh = () => {
       scheduleBetaiLightTaskV29('focus-refresh-main-v29', () => {
@@ -36016,7 +36158,7 @@ function App() {
       }
     }
 
-    const first = window.setTimeout(run, 1800)
+    const first = window.setTimeout(run, isBetaiMobilePerformanceV57() ? 10000 : 1800)
     const interval = window.setInterval(run, 4 * 60 * 1000)
     const onFocus = () => scheduleBetaiLightTaskV29('user-tips-settlement-v29', run, 4200)
     window.addEventListener('focus', onFocus)
@@ -36944,22 +37086,39 @@ function App() {
   }, [])
 
   useEffect(() => {
+    const startupTimersV57 = []
+    const schedule = (task, mobileDelay, desktopDelay = 0) => {
+      const timer = scheduleBetaiMobileStartupV57(() => {
+        Promise.resolve().then(task).catch(error => console.warn('V57 session startup task skipped', error))
+      }, mobileDelay, desktopDelay)
+      if (timer) startupTimersV57.push(timer)
+    }
+
     if (sessionUser?.id) {
       setUnlockedTips(new Set())
-      fetchTips(sessionUser.id, { force: true })
-      fetchUnlockedTips(sessionUser.id)
-      fetchPaymentHistory(sessionUser.id)
-      fetchFollowingTipsters(sessionUser.id)
-      fetchRankingChallengeClaims(sessionUser.id)
-      fetchFollowStats()
-      fetchNotifications(sessionUser.id)
-      fetchCurrentTokenBalance()
+
+      if (isBetaiMobilePerformanceV57()) {
+        // Najpierw lekki feed, pełna wersja dopiero gdy użytkownik już widzi stronę.
+        fetchTipsFastMobileV57(sessionUser.id)
+        schedule(() => fetchTips(sessionUser.id, { force: true }), 8000, 0)
+      } else {
+        fetchTips(sessionUser.id, { force: true })
+      }
+
+      schedule(() => fetchUnlockedTips(sessionUser.id), 120, 0)
+      schedule(() => fetchCurrentTokenBalance(), 180, 0)
+      schedule(() => fetchNotifications(sessionUser.id), 700, 0)
+      schedule(() => fetchFollowingTipsters(sessionUser.id), 1100, 0)
+      schedule(() => fetchFollowStats(), 1500, 0)
+      schedule(() => fetchRankingChallengeClaims(sessionUser.id), 2400, 0)
     } else {
       setUnlockedTips(new Set())
       setFollowingTipsters(new Set())
       setNotifications([])
       setTokenBalance(0)
     }
+
+    return () => startupTimersV57.forEach(timer => window.clearTimeout(timer))
   }, [sessionUser?.id])
 
 
@@ -37825,18 +37984,40 @@ function App() {
 
   useEffect(() => {
     let unsubscribe = null
+    const startupTimersV57 = new Set()
+    const initialLoadAtV57 = new Map()
+
+    const scheduleInitialTaskV57 = (label, task, mobileDelay, desktopDelay = 0) => {
+      const timer = scheduleBetaiMobileStartupV57(() => {
+        startupTimersV57.delete(timer)
+        Promise.resolve().then(task).catch(error => console.warn(`V57 ${label} skipped`, error))
+      }, mobileDelay, desktopDelay)
+      if (timer) startupTimersV57.add(timer)
+      return timer
+    }
 
     async function safeInitialLoad(userId) {
-      try { await fetchPaymentHistory(userId) } catch (e) { console.error(e) }
-      try { await fetchPayoutRequests(userId) } catch (e) { console.error(e) }
-      try { await fetchUserPlan(userId) } catch (e) { console.error(e) }
-      try { await fetchWalletBalance(userId) } catch (e) { console.error(e) }
-      try { await fetchTipsterEarnings(userId) } catch (e) { console.error(e) }
-      try { await fetchRealRanking() } catch (e) { console.error(e) }
-      try { await fetchReferralData(userId) } catch (e) { console.error(e) }
-      try { await registerReferralFromStoredCode({ id: userId, email: sessionUser?.email }) } catch (e) { console.error(e) }
-      try { await fetchStripeConnectStatus(userId) } catch (e) { console.error(e) }
-      try { await fetchUnlockedTips(userId) } catch (e) { console.error(e) }
+      const cleanUserId = String(userId || '')
+      if (!cleanUserId) return
+      const now = Date.now()
+      const previous = Number(initialLoadAtV57.get(cleanUserId) || 0)
+      if (now - previous < 8000) return
+      initialLoadAtV57.set(cleanUserId, now)
+
+      // Krytyczne dla nagłówka/portfela — tylko dwa lekkie odczyty na starcie.
+      Promise.allSettled([
+        fetchUserPlan(cleanUserId),
+        fetchWalletBalance(cleanUserId),
+      ]).catch(() => {})
+
+      // Reszta nie jest potrzebna do pierwszego renderu Dashboardu.
+      scheduleInitialTaskV57('ranking', () => fetchRealRanking(), 1700, 200)
+      scheduleInitialTaskV57('payments', () => fetchPaymentHistory(cleanUserId), 3800, 300)
+      scheduleInitialTaskV57('payouts', () => fetchPayoutRequests(cleanUserId), 4500, 450)
+      scheduleInitialTaskV57('earnings', () => fetchTipsterEarnings(cleanUserId), 5200, 650)
+      scheduleInitialTaskV57('referrals', () => fetchReferralData(cleanUserId), 6000, 800)
+      scheduleInitialTaskV57('register-referral', () => registerReferralFromStoredCode({ id: cleanUserId, email: sessionUser?.email }), 6800, 1000)
+      scheduleInitialTaskV57('stripe-connect', () => fetchStripeConnectStatus(cleanUserId), 7600, 1200)
     }
 
     async function loadSession() {
@@ -37858,23 +38039,24 @@ function App() {
         const sessionResultV50 = await Promise.race([
           sessionRequestV50,
           new Promise(resolve => {
-            sessionTimerV50 = window.setTimeout(() => resolve({ __betaiTimeoutV50: true }), 6500)
+            sessionTimerV50 = window.setTimeout(() => resolve({ __betaiTimeoutV50: true }), getBetaiAuthTimeoutV57())
           })
         ])
         if (sessionTimerV50) window.clearTimeout(sessionTimerV50)
 
         const recoveryFromUrl = isPasswordRecoveryUrl()
         if (sessionResultV50?.__betaiTimeoutV50) {
-          console.warn('V50 auth session timeout — UI continues without blocking')
+          console.warn('V57 auth session timeout — UI continues without blocking')
           if (!cachedUserV50?.id) setAuthLoading(false)
           sessionRequestV50.then(({ data }) => {
             const lateUser = data?.session?.user || null
             if (lateUser?.id) {
+              persistFastCachedUserV57(lateUser)
               setSessionUser(lateUser)
               safeInitialLoad(lateUser.id)
               ensureUserWalletAndWelcome(lateUser)
             }
-          }).catch(error => console.warn('V50 late session refresh skipped', error))
+          }).catch(error => console.warn('V57 late session refresh skipped', error))
         } else {
           const data = sessionResultV50?.data || null
           const user = data?.session?.user || null
@@ -37883,6 +38065,8 @@ function App() {
             setPasswordRecoveryUser(user)
             try { localStorage.setItem('betai_password_recovery_active', '1') } catch (_) {}
           }
+          if (user?.id) persistFastCachedUserV57(user)
+          else persistFastCachedUserV57(null)
           setSessionUser(user)
           setWalletBalance(0)
 
@@ -37899,6 +38083,7 @@ function App() {
           const tokenOnlyRefresh = eventName === 'TOKEN_REFRESHED'
 
           if (recoveryEvent && nextUser?.id) {
+            persistFastCachedUserV57(nextUser)
             setPasswordRecoveryMode(true)
             setPasswordRecoveryUser(nextUser)
             setSessionUser(nextUser)
@@ -37907,10 +38092,13 @@ function App() {
           }
 
           if (tokenOnlyRefresh && nextUser?.id) {
+            persistFastCachedUserV57(nextUser)
             setSessionUser(nextUser)
             return
           }
 
+          if (nextUser?.id) persistFastCachedUserV57(nextUser)
+          else persistFastCachedUserV57(null)
           setSessionUser(nextUser)
           setWalletBalance(0)
           setTipsterEarnings({ total: 0, sales: 0, history: [] })
@@ -37931,7 +38119,6 @@ function App() {
           setUnlockedTips(new Set())
           safeInitialLoad(nextUser.id)
           ensureUserWalletAndWelcome(nextUser)
-          registerReferralFromStoredCode(nextUser)
         })
 
         unsubscribe = listener?.subscription?.unsubscribe
@@ -37945,6 +38132,8 @@ function App() {
     loadSession()
 
     return () => {
+      startupTimersV57.forEach(timer => window.clearTimeout(timer))
+      startupTimersV57.clear()
       if (typeof unsubscribe === 'function') unsubscribe()
     }
   }, [])
@@ -38134,6 +38323,7 @@ function App() {
       }
     } catch (_) {}
     if (supabase) await supabase.auth.signOut()
+    persistFastCachedUserV57(null)
     setSessionUser(null)
     setWalletBalance(0)
     setTipsterEarnings({ total: 0, sales: 0, history: [] })
@@ -38220,10 +38410,10 @@ function App() {
     }
 
     window.addEventListener('betai-token-balance-changed', refreshTokens)
-    const quickRefresh = setTimeout(refreshTokens, 350)
-    const quickNotificationPoll = setTimeout(pollTipNotifications, 900)
-    const interval = setInterval(refreshTokens, BETAI_REFRESH_INTERVALS.tokenBalanceMs)
-    const notificationInterval = setInterval(pollTipNotifications, BETAI_REFRESH_INTERVALS.notificationPollMs)
+    const quickRefresh = setTimeout(refreshTokens, isBetaiMobilePerformanceV57() ? 900 : 350)
+    const quickNotificationPoll = setTimeout(pollTipNotifications, isBetaiMobilePerformanceV57() ? 1800 : 900)
+    const interval = setInterval(refreshTokens, getBetaiAdaptiveIntervalV57(BETAI_REFRESH_INTERVALS.tokenBalanceMs, 120000))
+    const notificationInterval = setInterval(pollTipNotifications, getBetaiAdaptiveIntervalV57(BETAI_REFRESH_INTERVALS.notificationPollMs, 120000))
 
     let walletChannel = null
     if (isSupabaseConfigured && supabase) {
@@ -38511,8 +38701,8 @@ function App() {
       }
     }
 
-    const initialPoll = setTimeout(pollTipTransfers, 700)
-    const pollInterval = setInterval(pollTipTransfers, BETAI_REFRESH_INTERVALS.tipTransferPollMs)
+    const initialPoll = setTimeout(pollTipTransfers, isBetaiMobilePerformanceV57() ? 2200 : 700)
+    const pollInterval = setInterval(pollTipTransfers, getBetaiAdaptiveIntervalV57(BETAI_REFRESH_INTERVALS.tipTransferPollMs, 120000))
 
     return () => {
       clearTimeout(initialPoll)

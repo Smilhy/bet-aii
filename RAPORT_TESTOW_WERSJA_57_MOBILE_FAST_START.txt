@@ -1,0 +1,25 @@
+BetAI WERSJA 57 — raport kontroli Mobile Fast Start
+
+Baza: Wersja 56 ZOOM INFO ALWAYS OPEN (działająca baza z V55).
+Odrzucona Wersja 56 Mobile Lite NIE została użyta.
+
+Kontrole wykonane:
+- main.jsx: parsowanie JSX/ES2022 przez TypeScript transpileModule — 0 błędów składni.
+- TEST_WERSJA_6_DNB_90MIN.js — OK.
+- TEST_WERSJA_1882_ALGORITHM_MODEL.js — OK.
+- TEST_WERSJA_26_TYPER_EXPERT_PENDING_STAKE.js — OK.
+- Pozostałe testy wymagające @supabase/supabase-js nie zostały uruchomione lokalnie, ponieważ paczka źródłowa nie zawiera node_modules.
+- Nie zmieniano plików SQL ani funkcji rozliczania typów.
+
+Najważniejsze parametry V57 mobile:
+- auth timeout: 1400 ms (desktop 3500 ms),
+- szybki feed: 160 rekordów,
+- pełna hydracja: po 8000 ms,
+- Live Chat start: 1800 ms,
+- Live Chat fallback poll: 60000 ms,
+- online count poll: 90000 ms,
+- tips soft poll: 90000 ms,
+- coin/notification/tip-transfer fallback: 120000 ms,
+- profile heartbeat: 40000 ms,
+- auto-settlement first run: 10000 ms,
+- admin bot maintenance first run: 12000 ms.
