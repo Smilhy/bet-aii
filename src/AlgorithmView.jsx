@@ -27,7 +27,7 @@ const TEXT = {
     noBetReason: 'Powód braku zakładu', reasonProbability: 'Prawdopodobieństwo {value}% — wymagane minimum 51%', reasonOdds: 'Kurs {value} — wymagane minimum 2.00', reasonMissingOdds: 'Brak kursu O/U 2.5 dla wybranego kierunku', reasonNoData: 'Brak pełnych statystyk strzałów i rożnych', reasonStarted: 'Mecz rozpoczęty — pominięty', reasonCompetition: 'Mecz poza listą topowych rozgrywek', reasonUnknown: 'Warunki zakładu nie zostały spełnione',
     lockedPick: 'ZAMROŻONE PRE-MATCH', pickSaved: 'Typ zapisano', oddsSaved: 'Kurs zapisano', noPostKickoffChanges: 'Bez zmian po rozpoczęciu',
     forecastHitRate: 'Trafność wszystkich prognoz', financialRoi: 'ROI zakładów z kursem ≥ 2.00', forecastsSettled: 'Wszystkie rozliczone prognozy', financialSettled: 'Rozliczone finansowo',
-    overviewMore: 'Więcej statystyk', progressMore: 'Szczegóły skanu', statsSortLabel: 'Sortowanie', sortByProfit: 'Profit od największego', sortByProfitAsc: 'Profit od najmniejszego', sortByCount: 'Najwięcej typów', filters: { bets: 'Zakłady', queue: 'W kolejce', no_bet: 'Bez zakładu', results: 'Wyniki', all: 'Wszystkie', stats: 'Statystyki' }
+    overviewMore: 'Więcej statystyk', progressMore: 'Szczegóły skanu', statsSortLabel: 'Sortowanie', sortByProfit: 'Profit od największego', sortByProfitAsc: 'Profit od najmniejszego', sortByCount: 'Najwięcej typów', resultsNewestFirst: 'Najnowsze → najstarsze', resultsOldestFirst: 'Najstarsze → najnowsze', filters: { bets: 'Zakłady', queue: 'W kolejce', no_bet: 'Bez zakładu', results: 'Wyniki', all: 'Wszystkie', stats: 'Statystyki' }
   },
   en: {
     title: 'Over / Under 2.5 Algorithm',
@@ -45,7 +45,7 @@ const TEXT = {
     noBetReason: 'No-bet reason', reasonProbability: 'Probability {value}% — minimum 51% required', reasonOdds: 'Odds {value} — minimum 2.00 required', reasonMissingOdds: 'No O/U 2.5 odds for the selected side', reasonNoData: 'Missing complete shots and corners data', reasonStarted: 'Match started — skipped', reasonCompetition: 'Outside the top competitions list', reasonUnknown: 'Bet conditions were not met',
     lockedPick: 'PRE-MATCH LOCKED', pickSaved: 'Pick saved', oddsSaved: 'Odds saved', noPostKickoffChanges: 'No changes after kick-off',
     forecastHitRate: 'Hit rate of all forecasts', financialRoi: 'ROI for bets with odds ≥ 2.00', forecastsSettled: 'All settled forecasts', financialSettled: 'Financially settled',
-    overviewMore: 'More statistics', progressMore: 'Scan details', statsSortLabel: 'Sort', sortByProfit: 'Highest profit', sortByProfitAsc: 'Lowest profit', sortByCount: 'Most bets', filters: { bets: 'Bets', queue: 'In queue', no_bet: 'No bet', results: 'Results', all: 'All', stats: 'Statistics' }
+    overviewMore: 'More statistics', progressMore: 'Scan details', statsSortLabel: 'Sort', sortByProfit: 'Highest profit', sortByProfitAsc: 'Lowest profit', sortByCount: 'Most bets', resultsNewestFirst: 'Newest → oldest', resultsOldestFirst: 'Oldest → newest', filters: { bets: 'Bets', queue: 'In queue', no_bet: 'No bet', results: 'Results', all: 'All', stats: 'Statistics' }
   }
 }
 
@@ -550,6 +550,9 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
   const [automation, setAutomation] = useState({})
   const [clock, setClock] = useState(() => Date.now())
   const [filter, setFilter] = useState('bets')
+  // WERSJA 58: Wyniki domyślnie od najnowszego meczu do najstarszego.
+  // Użytkownik może jednym przyciskiem odwrócić kolejność.
+  const [resultsSortDirection, setResultsSortDirection] = useState('desc')
   const [loading, setLoading] = useState(true)
   const [action, setAction] = useState('')
   const [error, setError] = useState('')
@@ -627,18 +630,23 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
       if (filter === 'stats') return false
       return true
     })
-    // WERSJA 32: mecze w dolnej liście Algorytmu zawsze od najbliższego startu
-    // do najpóźniejszego. Nie zmieniamy żadnej logiki wyboru ani oceny typu.
+    // WERSJA 58:
+    // - wszystkie aktywne widoki zachowują dotychczasowe sortowanie od najbliższego startu,
+    // - zakładka Wyniki domyślnie pokazuje najnowsze mecze na górze,
+    // - przycisk góra/dół pozwala odwrócić kolejność Wyników bez zmiany danych/modelu.
     .sort((a, b) => {
       const aKickoff = Date.parse(a?.kickoff || '')
       const bKickoff = Date.parse(b?.kickoff || '')
       const aValid = Number.isFinite(aKickoff)
       const bValid = Number.isFinite(bKickoff)
-      if (aValid && bValid) return aKickoff - bKickoff
+      if (aValid && bValid) {
+        if (filter === 'results' && resultsSortDirection === 'desc') return bKickoff - aKickoff
+        return aKickoff - bKickoff
+      }
       if (aValid) return -1
       if (bValid) return 1
       return 0
-    }), [rows, filter, clock])
+    }), [rows, filter, clock, resultsSortDirection])
 
 
   const topTodayRows = useMemo(() => {
@@ -731,7 +739,21 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
 
       <div className="algorithm-toolbar-v1880">
         <div>{FILTERS.map(([key]) => <button type="button" key={key} className={filter === key ? 'active' : ''} onClick={() => setFilter(key)}>{t.filters[key]}</button>)}</div>
-        <span>{filter === 'stats' ? `${summary.settled || 0} rozliczonych` : `${visibleRows.length} / ${rows.length}`}</span>
+        <section className="algorithm-toolbar-right-v58">
+          {filter === 'results' && (
+            <button
+              type="button"
+              className="algorithm-results-sort-v58"
+              aria-label={resultsSortDirection === 'desc' ? t.resultsNewestFirst : t.resultsOldestFirst}
+              title={resultsSortDirection === 'desc' ? t.resultsNewestFirst : t.resultsOldestFirst}
+              onClick={() => setResultsSortDirection(previous => previous === 'desc' ? 'asc' : 'desc')}
+            >
+              <b aria-hidden="true">{resultsSortDirection === 'desc' ? '↓' : '↑'}</b>
+              <span>{resultsSortDirection === 'desc' ? t.resultsNewestFirst : t.resultsOldestFirst}</span>
+            </button>
+          )}
+          <span>{filter === 'stats' ? `${summary.settled || 0} rozliczonych` : `${visibleRows.length} / ${rows.length}`}</span>
+        </section>
       </div>
 
       {filter === 'stats' ? <AlgorithmStats rows={rows} summary={summary} t={t} /> : loading && !rows.length ? <div className="algorithm-empty-v1880">{t.loading}</div> : !visibleRows.length ? <div className="algorithm-empty-v1880">{rows.length ? t.empty : t.setupEmpty}</div> : (
