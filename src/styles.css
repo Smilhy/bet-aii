@@ -82390,3 +82390,54 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
     text-overflow:ellipsis;
   }
 }
+
+
+/* WERSJA 59 — Algorytm: kurs Over 2.5 i Under 2.5 stale widoczny przy procentach */
+.algorithm-market-odds-v59{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:7px;
+  padding:6px 9px;
+  border:1px solid rgba(76,224,217,.16);
+  border-radius:8px;
+  background:rgba(4,20,31,.48);
+  color:#8fa9b8;
+  font-size:10px;
+  line-height:1;
+}
+.algorithm-market-odds-v59 span{
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:800;
+}
+.algorithm-market-odds-v59 strong{
+  color:#f4fbff;
+  font-size:13px;
+  font-weight:950;
+}
+.algorithm-prob-bars-v59>div.is-selected .algorithm-market-odds-v59{
+  border-color:rgba(83,244,232,.30);
+  background:rgba(43,219,209,.08);
+}
+.algorithm-prob-bars-v59>div.is-selected .algorithm-market-odds-v59 strong{
+  color:#69fff2;
+  text-shadow:0 0 10px rgba(83,244,232,.22);
+}
+.algorithm-card-v1880.is-tone-b .algorithm-market-odds-v59{
+  border-color:rgba(145,137,255,.18);
+  background:rgba(16,19,50,.45);
+}
+.algorithm-card-v1880.is-tone-b .algorithm-prob-bars-v59>div.is-selected .algorithm-market-odds-v59{
+  border-color:rgba(153,138,255,.34);
+  background:rgba(140,112,255,.10);
+}
+.algorithm-card-v1880.is-tone-b .algorithm-prob-bars-v59>div.is-selected .algorithm-market-odds-v59 strong{
+  color:#c2bcff;
+  text-shadow:0 0 10px rgba(153,138,255,.22);
+}
+@media(max-width:640px){
+  .algorithm-market-odds-v59{padding:7px 9px;font-size:10px}
+  .algorithm-market-odds-v59 strong{font-size:14px}
+}

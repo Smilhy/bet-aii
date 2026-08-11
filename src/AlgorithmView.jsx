@@ -329,9 +329,17 @@ function AlgorithmCard({ row, lang, t, expanded, onToggle, index = 0 }) {
         </div>
       ) : (
         <>
-          <div className="algorithm-prob-bars-v1880">
-            <div className={row.selected_market === 'over_2_5' ? 'is-selected' : ''}><span><b>{t.over}</b><em>{number(row.over_probability, 1)}%</em></span><i><u style={{ width: `${Math.max(0, Math.min(100, Number(row.over_probability || 0)))}%` }} /></i></div>
-            <div className={row.selected_market === 'under_2_5' ? 'is-selected' : ''}><span><b>{t.under}</b><em>{number(row.under_probability, 1)}%</em></span><i><u style={{ width: `${Math.max(0, Math.min(100, Number(row.under_probability || 0)))}%` }} /></i></div>
+          <div className="algorithm-prob-bars-v1880 algorithm-prob-bars-v59">
+            <div className={row.selected_market === 'over_2_5' ? 'is-selected' : ''}>
+              <span><b>{t.over}</b><em>{number(row.over_probability, 1)}%</em></span>
+              <small className="algorithm-market-odds-v59"><span>{t.odds}</span><strong>{Number(row.over_odds || 0) > 1 ? number(row.over_odds, 2) : t.noOdds}</strong></small>
+              <i><u style={{ width: `${Math.max(0, Math.min(100, Number(row.over_probability || 0)))}%` }} /></i>
+            </div>
+            <div className={row.selected_market === 'under_2_5' ? 'is-selected' : ''}>
+              <span><b>{t.under}</b><em>{number(row.under_probability, 1)}%</em></span>
+              <small className="algorithm-market-odds-v59"><span>{t.odds}</span><strong>{Number(row.under_odds || 0) > 1 ? number(row.under_odds, 2) : t.noOdds}</strong></small>
+              <i><u style={{ width: `${Math.max(0, Math.min(100, Number(row.under_probability || 0)))}%` }} /></i>
+            </div>
           </div>
           {isNoBet && <div className="algorithm-no-bet-reason-v1897"><b>{t.noBetReason}</b><span>{getSelectionReason(row, t)}</span></div>}
           <div className="algorithm-card-meta-v1898">
