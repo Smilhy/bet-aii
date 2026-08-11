@@ -204,11 +204,33 @@ function buildOverUnderOddsMap(rows = []) {
     if (!prices.over.length && !prices.under.length) return
     const summarize = list => {
       if (!list.length) return { best: 0, bestBookmaker: '', consensus: 0, books: 0 }
-      const best = list.reduce((winner, current) => current.odd > winner.odd ? current : winner, list[0])
+
+      // WERSJA 60: API z kursami potrafi sporadycznie zwrócić pojedynczy,
+      // ewidentnie błędny kurs dla tego samego rynku (np. 4.50 przy rynku
+      // Over 2.5, gdzie pozostałe firmy mają ~1.80). Dotychczas wybieraliśmy
+      // po prostu najwyższą liczbę, więc taki outlier stawał się "best odds".
+      // Najpierw wyznaczamy medianę rynku, odrzucamy skrajne odchylenia,
+      // a dopiero potem wybieramy najlepszy REALNY kurs.
+      const marketMedian = median(list.map(item => item.odd))
+      let candidates = list.slice()
+
+      if (list.length >= 3 && marketMedian > 1) {
+        const minPlausible = marketMedian * 0.72
+        const maxPlausible = marketMedian * 1.35
+        const filtered = list.filter(item => item.odd >= minPlausible && item.odd <= maxPlausible)
+        if (filtered.length >= 2) candidates = filtered
+      } else if (list.length === 2) {
+        const ordered = list.slice().sort((a, b) => a.odd - b.odd)
+        const low = ordered[0]
+        const high = ordered[1]
+        if (low.odd > 1 && high.odd / low.odd >= 1.60) candidates = [low]
+      }
+
+      const best = candidates.reduce((winner, current) => current.odd > winner.odd ? current : winner, candidates[0])
       return {
         best: round(best.odd, 2),
         bestBookmaker: best.bookmaker,
-        consensus: round(median(list.map(item => item.odd)), 2),
+        consensus: round(marketMedian, 2),
         books: list.length
       }
     }
