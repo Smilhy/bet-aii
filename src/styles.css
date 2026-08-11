@@ -82441,3 +82441,70 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
   .algorithm-market-odds-v59{padding:7px 9px;font-size:10px}
   .algorithm-market-odds-v59 strong{font-size:14px}
 }
+
+/* WERSJA 61 — kursy typów: żółte, pulsujące i większe */
+@keyframes betaiOddsPulseV61{
+  0%,100%{
+    transform:scale(1);
+    opacity:1;
+    text-shadow:0 0 10px rgba(255,214,64,.22), 0 0 20px rgba(255,214,64,.12);
+    filter:drop-shadow(0 0 0 rgba(255,214,64,.0));
+  }
+  50%{
+    transform:scale(1.06);
+    opacity:1;
+    text-shadow:0 0 12px rgba(255,224,102,.48), 0 0 26px rgba(255,196,0,.22), 0 0 42px rgba(255,196,0,.16);
+    filter:drop-shadow(0 0 10px rgba(255,210,64,.22));
+  }
+}
+
+.app-shell .profile-ticket-v6 .profile-ticket-v6-field.odds,
+.profile-static-v3 article.profile-ticket-v6 .profile-ticket-v6-field.odds,
+.app-shell.no-rightbar-page article.profile-ticket-v6:not(.dashboard-ticket-v6) .profile-ticket-v6-field.odds{
+  text-align:center!important;
+  justify-items:center!important;
+}
+
+.app-shell .profile-ticket-v6 .profile-ticket-v6-field.odds small,
+.profile-static-v3 article.profile-ticket-v6 .profile-ticket-v6-field.odds small,
+.app-shell.no-rightbar-page article.profile-ticket-v6:not(.dashboard-ticket-v6) .profile-ticket-v6-field.odds small{
+  color:#ffd54a!important;
+  font-size:13px!important;
+  font-weight:1000!important;
+  letter-spacing:.16em!important;
+  text-shadow:0 0 10px rgba(255,213,74,.14)!important;
+}
+
+.app-shell .profile-ticket-v6 .profile-ticket-v6-field.odds strong,
+.profile-static-v3 article.profile-ticket-v6 .profile-ticket-v6-field.odds strong,
+.app-shell.no-rightbar-page article.profile-ticket-v6:not(.dashboard-ticket-v6) .profile-ticket-v6-field.odds strong{
+  color:#ffd54a!important;
+  font-size:36px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:-.04em!important;
+  display:inline-block!important;
+  animation:betaiOddsPulseV61 1.8s ease-in-out infinite!important;
+}
+
+@media (max-width:1600px){
+  .app-shell .profile-ticket-v6 .profile-ticket-v6-field.odds strong,
+  .profile-static-v3 article.profile-ticket-v6 .profile-ticket-v6-field.odds strong,
+  .app-shell.no-rightbar-page article.profile-ticket-v6:not(.dashboard-ticket-v6) .profile-ticket-v6-field.odds strong{
+    font-size:33px!important;
+  }
+}
+
+@media (max-width:900px){
+  .app-shell .profile-ticket-v6 .profile-ticket-v6-field.odds small,
+  .profile-static-v3 article.profile-ticket-v6 .profile-ticket-v6-field.odds small,
+  .app-shell.no-rightbar-page article.profile-ticket-v6:not(.dashboard-ticket-v6) .profile-ticket-v6-field.odds small{
+    font-size:12px!important;
+  }
+
+  .app-shell .profile-ticket-v6 .profile-ticket-v6-field.odds strong,
+  .profile-static-v3 article.profile-ticket-v6 .profile-ticket-v6-field.odds strong,
+  .app-shell.no-rightbar-page article.profile-ticket-v6:not(.dashboard-ticket-v6) .profile-ticket-v6-field.odds strong{
+    font-size:32px!important;
+  }
+}
