@@ -82508,3 +82508,118 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
     font-size:32px!important;
   }
 }
+
+/* WERSJA 64 — Algorytm: kursy większe, czytelniejsze, złote i pulsujące */
+@keyframes betaiAlgorithmGoldPulseV64 {
+  0%,100% {
+    transform: scale(1);
+    opacity: 1;
+    text-shadow:
+      0 0 10px rgba(255, 211, 70, .26),
+      0 0 22px rgba(255, 195, 0, .14);
+    filter: drop-shadow(0 0 0 rgba(255, 199, 82, 0));
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+    text-shadow:
+      0 0 12px rgba(255, 230, 148, .55),
+      0 0 24px rgba(255, 210, 69, .36),
+      0 0 40px rgba(255, 183, 0, .26);
+    filter: drop-shadow(0 0 10px rgba(255, 204, 64, .28));
+  }
+}
+
+/* karta meczu — główny kurs typu */
+.algorithm-pick-strip-v1898 > div:nth-child(3){
+  position: relative;
+}
+.algorithm-pick-strip-v1898 > div:nth-child(3) small{
+  color: #ffd75a !important;
+  font-size: 12px !important;
+  font-weight: 1000 !important;
+  letter-spacing: .16em !important;
+  text-shadow: 0 0 10px rgba(255, 213, 74, .18) !important;
+}
+.algorithm-pick-strip-v1898 > div:nth-child(3) strong{
+  color: #ffd75a !important;
+  font-size: 42px !important;
+  line-height: .96 !important;
+  font-weight: 1000 !important;
+  letter-spacing: -.04em !important;
+  display: inline-block !important;
+  animation: betaiAlgorithmGoldPulseV64 1.8s ease-in-out infinite !important;
+}
+
+/* top 5 — kurs z prawej strony */
+.algorithm-top-wide-side-v34 > div:first-child small{
+  color:#ffd75a !important;
+  font-size:12px !important;
+  font-weight:1000 !important;
+  letter-spacing:.16em !important;
+  text-shadow:0 0 10px rgba(255,213,74,.18) !important;
+}
+.algorithm-top-wide-side-v34 > div:first-child strong{
+  color:#ffd75a !important;
+  font-size:34px !important;
+  line-height:1 !important;
+  font-weight:1000 !important;
+  letter-spacing:-.04em !important;
+  display:inline-block !important;
+  animation: betaiAlgorithmGoldPulseV64 1.8s ease-in-out infinite !important;
+}
+
+/* over / under kursy na paskach prawdopodobieństwa */
+.algorithm-market-odds-v59{
+  border-color: rgba(255, 212, 84, .22) !important;
+  background: linear-gradient(135deg, rgba(53, 37, 5, .30), rgba(20, 15, 4, .22)) !important;
+}
+.algorithm-market-odds-v59 span{
+  color:#ffdc74 !important;
+  font-size:10px !important;
+  font-weight:1000 !important;
+  letter-spacing:.12em !important;
+  text-shadow:0 0 8px rgba(255, 213, 74, .12) !important;
+}
+.algorithm-market-odds-v59 strong{
+  color:#ffd75a !important;
+  font-size:24px !important;
+  line-height:1 !important;
+  font-weight:1000 !important;
+  letter-spacing:-.03em !important;
+  display:inline-block !important;
+  animation: betaiAlgorithmGoldPulseV64 1.8s ease-in-out infinite !important;
+}
+.algorithm-prob-bars-v59>div.is-selected .algorithm-market-odds-v59{
+  border-color: rgba(255, 224, 118, .34) !important;
+  background: linear-gradient(135deg, rgba(92, 66, 6, .34), rgba(40, 28, 5, .28)) !important;
+  box-shadow: 0 0 0 1px rgba(255, 215, 90, .06), inset 0 0 20px rgba(255, 194, 41, .05) !important;
+}
+.algorithm-prob-bars-v59>div.is-selected .algorithm-market-odds-v59 strong{
+  color:#ffe383 !important;
+}
+.algorithm-card-v1880.is-tone-b .algorithm-market-odds-v59,
+.algorithm-card-v1880.is-tone-b .algorithm-prob-bars-v59>div.is-selected .algorithm-market-odds-v59{
+  background: linear-gradient(135deg, rgba(53, 37, 5, .30), rgba(20, 15, 4, .22)) !important;
+}
+
+@media (max-width: 1600px){
+  .algorithm-pick-strip-v1898 > div:nth-child(3) strong{ font-size: 38px !important; }
+  .algorithm-top-wide-side-v34 > div:first-child strong{ font-size: 31px !important; }
+  .algorithm-market-odds-v59 strong{ font-size: 22px !important; }
+}
+
+@media (max-width: 900px){
+  .algorithm-pick-strip-v1898 > div:nth-child(3) small,
+  .algorithm-top-wide-side-v34 > div:first-child small{ font-size: 11px !important; }
+  .algorithm-pick-strip-v1898 > div:nth-child(3) strong{ font-size: 34px !important; }
+  .algorithm-top-wide-side-v34 > div:first-child strong{ font-size: 28px !important; }
+  .algorithm-market-odds-v59 strong{ font-size: 20px !important; }
+}
+
+@media (max-width: 640px){
+  .algorithm-pick-strip-v1898 > div:nth-child(3) strong{ font-size: 30px !important; }
+  .algorithm-top-wide-side-v34 > div:first-child strong{ font-size: 24px !important; }
+  .algorithm-market-odds-v59{ padding: 8px 10px !important; }
+  .algorithm-market-odds-v59 strong{ font-size: 18px !important; }
+}
