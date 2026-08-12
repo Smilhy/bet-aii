@@ -82623,3 +82623,74 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
   .algorithm-market-odds-v59{ padding: 8px 10px !important; }
   .algorithm-market-odds-v59 strong{ font-size: 18px !important; }
 }
+
+/* WERSJA 65 — Algorytm: kurs złoty, ale bez "ramki poświaty"; bardziej wtopiony w panel */
+@keyframes betaiAlgorithmEmbeddedGoldPulseV65{
+  0%,100%{
+    transform:scale(1);
+    color:#ffd75a;
+    opacity:1;
+    text-shadow:none;
+    filter:none;
+  }
+  50%{
+    transform:scale(1.018);
+    color:#fff0a6;
+    opacity:1;
+    text-shadow:none;
+    filter:none;
+  }
+}
+
+/* Główny kurs w karcie meczu */
+.algorithm-pick-strip-v1898 > div:nth-child(3) small{
+  text-shadow:none!important;
+}
+.algorithm-pick-strip-v1898 > div:nth-child(3) strong{
+  text-shadow:none!important;
+  filter:none!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  animation:betaiAlgorithmEmbeddedGoldPulseV65 1.8s ease-in-out infinite!important;
+}
+
+/* TOP 5 */
+.algorithm-top-wide-side-v34 > div:first-child small{
+  text-shadow:none!important;
+}
+.algorithm-top-wide-side-v34 > div:first-child strong{
+  text-shadow:none!important;
+  filter:none!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  animation:betaiAlgorithmEmbeddedGoldPulseV65 1.8s ease-in-out infinite!important;
+}
+
+/* Over / Under — bez złotej ramki i bez osobnego złotego tła */
+.algorithm-market-odds-v59,
+.algorithm-prob-bars-v59>div.is-selected .algorithm-market-odds-v59,
+.algorithm-card-v1880.is-tone-b .algorithm-market-odds-v59,
+.algorithm-card-v1880.is-tone-b .algorithm-prob-bars-v59>div.is-selected .algorithm-market-odds-v59{
+  border-color:rgba(120,160,180,.14)!important;
+  background:rgba(4,20,31,.18)!important;
+  box-shadow:none!important;
+}
+.algorithm-market-odds-v59 span{
+  text-shadow:none!important;
+}
+.algorithm-market-odds-v59 strong,
+.algorithm-prob-bars-v59>div.is-selected .algorithm-market-odds-v59 strong,
+.algorithm-card-v1880.is-tone-b .algorithm-prob-bars-v59>div.is-selected .algorithm-market-odds-v59 strong{
+  text-shadow:none!important;
+  filter:none!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  animation:betaiAlgorithmEmbeddedGoldPulseV65 1.8s ease-in-out infinite!important;
+}
+
+/* Zachowujemy złoty kolor, ale bez aureoli */
+.algorithm-pick-strip-v1898 > div:nth-child(3) strong,
+.algorithm-top-wide-side-v34 > div:first-child strong,
+.algorithm-market-odds-v59 strong{
+  color:#ffd75a!important;
+}
