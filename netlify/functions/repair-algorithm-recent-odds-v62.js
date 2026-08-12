@@ -65,7 +65,7 @@ exports.handler = async function(event) {
 
     const { data, error } = await supabase
       .from('algorithm_bets')
-      .select('fixture_id,kickoff,home_team_name,away_team_name,status,selected_market,selected_odds,over_odds,under_odds,over_bookmaker,under_bookmaker,over_market_books,under_market_books,formula_snapshot,updated_at')
+      .select('fixture_id,kickoff,home_team,away_team,status,selected_market,selected_odds,over_odds,under_odds,over_bookmaker,under_bookmaker,over_market_books,under_market_books,formula_snapshot,updated_at')
       .gte('kickoff', since)
       .in('status', ['won', 'lost', 'void'])
       .order('kickoff', { ascending: false })
@@ -94,7 +94,7 @@ exports.handler = async function(event) {
         if (!(over > 1) && !(under > 1)) {
           skipped.push({
             fixture_id: fixtureId,
-            match: `${row.home_team_name || ''} - ${row.away_team_name || ''}`.trim(),
+            match: `${row.home_team || ''} - ${row.away_team || ''}`.trim(),
             reason: 'archive_odds_unavailable'
           })
           await sleep(360)
@@ -146,7 +146,7 @@ exports.handler = async function(event) {
 
         changed.push({
           fixture_id: fixtureId,
-          match: `${row.home_team_name || ''} - ${row.away_team_name || ''}`.trim(),
+          match: `${row.home_team || ''} - ${row.away_team || ''}`.trim(),
           previous_over: previous.over_odds,
           previous_under: previous.under_odds,
           archived_over: patch.over_odds,
@@ -157,7 +157,7 @@ exports.handler = async function(event) {
       } catch (err) {
         errors.push({
           fixture_id: fixtureId,
-          match: `${row.home_team_name || ''} - ${row.away_team_name || ''}`.trim(),
+          match: `${row.home_team || ''} - ${row.away_team || ''}`.trim(),
           error: String(err?.message || err)
         })
       }
