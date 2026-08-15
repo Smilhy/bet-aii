@@ -1,9 +1,0 @@
-WERSJA 1649 — Dodaj typ: mniej mylące pobieranie meczów
-
-Zmiany:
-- kliknięcie ligi po lewej pobiera najbliższe mecze z zakresu 14 dni, a nie tylko dzisiejsze,
-- komunikaty „Dziś brak meczów” zmienione na „Brak meczów” / „Brak meczów w tej lidze”,
-- opis trybu dodawania wyjaśnia, że liga pokazuje najbliższe mecze,
-- nie zmienia logiki zapisu typów ani bazy danych.
-
-SQL nie jest potrzebny.

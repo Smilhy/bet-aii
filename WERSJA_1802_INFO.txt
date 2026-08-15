@@ -1,7 +1,0 @@
-WERSJA 1802 — Top typerzy: statystyki bota jak Mój profil + bez „zł”
-
-Zmiany:
-- betai-multisport-ai w sekcji Top typerzy korzysta z tego samego kanonu statystyk co Mój profil, Ranking i Dashboard,
-- poprawione: skuteczność, yield, profit i liczba typów,
-- usunięty sufiks „zł” z pola Zysk — widoczna jest tylko kwota,
-- pozostałe konta i logika rankingowa bez zmian.
