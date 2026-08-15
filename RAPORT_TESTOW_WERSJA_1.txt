@@ -1,0 +1,49 @@
+BETAI — RAPORT TESTÓW WERSJA 1
+Data kontroli: 13 lipca 2026
+
+WYNIK OGÓLNY
+Wersja 1 przechodzi lokalny build, testy logiki i testy responsywności. Krytyczny błąd mobilny z ucinaniem formularza został usunięty.
+
+TESTY EKRANÓW
+- 320 × 568 px (iPhone SE): brak przewijania poziomego, brak uciętych elementów, brak błędów, kontrolki >= 44 px.
+- 360 × 740 px (mały Android): wynik prawidłowy.
+- 390 × 844 px (iPhone 14): wynik prawidłowy.
+- 412 × 915 px (większy Android): wynik prawidłowy.
+- 768 × 1024 px (tablet): brak sztucznego zoomu 50%, brak przepełnienia, kontrolki >= 44 px.
+
+BUILD I KOD
+- Vite production build: OK.
+- Test rozliczania DNB/90 minut: OK.
+- Test źródła typów AI: OK.
+- Test predykcji AI: OK.
+- Test statystyk predykcji AI: OK.
+- Test wyników predykcji AI: OK.
+- Test modelu algorytmu: OK.
+- Składnia 55 funkcji Netlify: OK.
+- Wszystkie 13 funkcji wskazanych w netlify.toml istnieją.
+- 41 bezpośrednich odwołań do obrazów i zasobów publicznych: wszystkie pliki istnieją.
+- npm audit --omit=dev: 0 znanych podatności.
+
+NAPRAWIONE PROBLEMY
+- Stała szerokość panelu logowania 660/700 px na telefonie.
+- Ucinanie prawej części formularza.
+- Wymuszanie szerokiego viewportu i skali 0,5 na tablecie.
+- Zbyt małe obszary dotykowe przy logowaniu.
+- Brakujący obraz auth-final-455.png.
+- Zduplikowane klucze tłumaczeń i pole rawTip.
+- Nieobsługiwany selektor CSS wykrywany przez nowy build.
+- Nieaktualny komunikat polecający ręczne używanie zoomu.
+
+WAŻNE OGRANICZENIE TESTU
+Bez adresu wdrożonej strony i prawdziwych zmiennych środowiskowych nie można potwierdzić połączenia z konkretną bazą Supabase, wysyłania e-maili, płatności Stripe, zewnętrznych API ani rzeczywistego uruchamiania harmonogramów Netlify. Kod, konfiguracja, build i lokalne testy są poprawne, lecz po wdrożeniu trzeba wykonać test końcowy na środowisku produkcyjnym.
+
+UWAGA WYDAJNOŚCIOWA
+Paczka frontendowa jest duża: CSS około 2,75 MB (379 KB gzip), JavaScript około 1,21 MB (333 KB gzip). Strona powinna działać, ale pierwsze otwarcie na wolnym internecie może być wolniejsze. Kolejny etap optymalizacji powinien obejmować podział main.jsx i CSS na mniejsze moduły oraz lazy loading widoków.
+
+CHECKLISTA PO WDROŻENIU
+1. Ustaw wszystkie potrzebne zmienne środowiskowe w Netlify.
+2. Wykonaj deploy z czystym cache.
+3. Sprawdź logowanie, rejestrację i reset hasła na prawdziwym telefonie.
+4. Sprawdź dodawanie/odczyt danych z Supabase przy aktywnych politykach RLS.
+5. Sprawdź logi Scheduled Functions po pierwszym cyklu.
+6. Wykonaj test płatności Stripe w trybie testowym, jeżeli płatności są aktywne.

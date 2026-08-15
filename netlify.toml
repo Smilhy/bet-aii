@@ -1,0 +1,114 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NPM_VERSION = "10.9.8"
+  NPM_FLAGS = "--no-audit --no-fund"
+
+[functions]
+  node_bundler = "esbuild"
+
+# WERSJA 19 — brakujący stary bundle po nowym deployu ma zwrócić 404,
+# a nie index.html udający JavaScript. Inline watchdog wtedy pobierze świeżą wersję.
+[[redirects]]
+  from = "/assets/*"
+  to = "/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/tipster/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+
+# WERSJA 19 — dokument aplikacji zawsze jest sprawdzany ponownie,
+# natomiast pliki z hashem Vite mogą być długo cacheowane.
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/tipster/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    X-Content-Type-Options = "nosniff"
+
+# WERSJA 1867.9 — każdy bot działa niezależnie.
+# To są częstotliwości skanowania, niezależne dla każdego bota.
+# BetAI AI i Ograć Buka nie mają cooldownu czasowego.
+# Typer Expert jako jedyny ma cooldown 2 h i czeka na rozliczenie
+# własnego poprzedniego typu, ponieważ wylicza następną stawkę progresji.
+
+[functions."publish-betai-multisport-ai"]
+  schedule = "7 */2 * * *"
+
+[functions."publish-typer-expert"]
+  schedule = "27 */2 * * *"
+
+[functions."publish-ograc-buka"]
+  schedule = "47 */2 * * *"
+
+# WERSJA 7 / FIX 1870 — BetAI MultiSport AI rozlicza co godzinę.
+# Poprzednio działało tylko 4 razy dziennie, więc zakończony mecz mógł długo wisieć jako PENDING.
+[functions."settle-live-ai-picks"]
+  schedule = "17 * * * *"
+
+# Typer Expert — główny endpoint pozostaje zwykłą funkcją HTTP,
+# dzięki czemu działa z przycisku admina i po bezpośrednim wejściu w URL.
+# Harmonogram jest przypięty WYŁĄCZNIE do osobnego wrappera scheduled-settle-typer-expert.
+[functions."scheduled-settle-typer-expert"]
+  schedule = "37 * * * *"
+
+# Ograć Buka — rozliczanie własnych typów co godzinę.
+[functions."settle-ograc-buka"]
+  schedule = "52 * * * *"
+
+# WERSJA 13 — AI Prediction: automatyczne rozliczanie historii i skuteczności.
+[functions."settle-ai-prediction-history"]
+  schedule = "42 * * * *"
+
+# WERSJA 14 — automatyczny zapis predykcji do historii nawet bez otwierania strony.
+# Co 2 godziny pobiera najbliższe mecze i zapisuje pierwszy przedmeczowy snapshot.
+[functions."capture-ai-predictions"]
+  schedule = "12 */2 * * *"
+# WERSJA 23 — twardy watchdog dla botów profili.
+# Pilnuje minimum 1 typu dziennie dla Typer Expert i Ograć Buka.
+# Jeśli normalny value scan nie znajdzie typu, używa awaryjnej selekcji dziennej.
+[functions."ai-bot-watchdog"]
+  schedule = "9 * * * *"
+
+# Dodatkowy dzienny trigger po porannym rozliczeniu, bez czekania na wejście admina.
+[functions."force-daily-bot-tips"]
+  schedule = "19 9,15,21 * * *"
+
+[functions."ai-bot-maintenance-background"]
+  background = true
+
+# WERSJA 1886 — pełny automat PRE-MATCH co 15 minut.
+# Jeden zablokowany worker pobiera dane sekwencyjnie z limiterem API, nie analizuje
+# spotkań rozpoczętych/live, wybiera wyższe prawdopodobieństwo (minimum 51%) i stawia 1 j.
+# Rozliczenie odbywa się osobno dopiero po przewidywanym końcu meczu.
+[functions."scheduled-generate-algorithm-picks"]
+  schedule = "*/15 * * * *"
+
+[functions."algorithm-cycle-background"]
+  background = true

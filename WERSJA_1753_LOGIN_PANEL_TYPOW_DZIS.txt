@@ -1,0 +1,12 @@
+WERSJA 1753 — LOGIN PANEL POPRAWKA NAPISU
+
+Poprawiono napis w kafelku statystyk:
+- było: Typy AI dzisiaj
+- jest: Typów dziś
+
+Kolejność zostaje tak jak chciałeś:
+1. Zarejestrowanych użytkowników
+2. Skuteczność AI
+3. Typów dziś
+4. Aktywni teraz
+5. Wyświetlenia witryny

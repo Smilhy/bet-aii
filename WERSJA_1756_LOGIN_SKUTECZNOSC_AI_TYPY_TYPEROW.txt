@@ -1,0 +1,9 @@
+WERSJA 1756 — LOGIN PANEL: SKUTECZNOŚĆ AI + NAZWA TYPY TYPERÓW
+
+Zmiany:
+- kafelek "Typów typerów" zmieniony na "Typy typerów",
+- "Skuteczność AI" nie jest już sztywnym 76%,
+- "Skuteczność AI" pobiera realną skuteczność z ai_bets:
+  WON / (WON + LOST), bez VOID/PUSH/PENDING,
+- jeśli baza nie ma jeszcze rozliczonych typów AI, zostaje fallback 76%,
+- licznik odświeża się razem z resztą statystyk co 30 sekund.

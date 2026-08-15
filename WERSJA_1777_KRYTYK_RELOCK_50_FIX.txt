@@ -1,0 +1,17 @@
+WERSJA 1777 — KRYTYK BUKMACHERSKI: RESET STAREGO 1/1
+
+Problem:
+- odznaka została wcześniej zdobyta przy celu 1,
+- po zmianie celu na 50 baza pamiętała unlocked=true,
+- dlatego przy 1/50 nadal wyświetlał się znacznik ✓.
+
+Naprawa:
+- frontend dla Krytyka sprawdza aktualny warunek current >= target,
+- SQL resetuje stare unlocked=true, gdy current_value < 50,
+- funkcja przeliczająca nie zachowuje starego odblokowania 1/1 dla tej jednej odznaki,
+- pozostałe osiągnięcia nadal zachowują trwałe odblokowanie.
+
+Kolejność:
+1. Wdróż paczkę.
+2. Uruchom SUPABASE_1777_KRYTYK_RESET_STAREGO_1_1.sql.
+3. Ctrl+F5.

@@ -1,0 +1,23 @@
+WERSJA 1764 — BOT: SYNC ROZLICZENIA Z ai_bets DO tips
+
+Przyczyna, czemu dalej widziałeś "Zwrot":
+- funkcja 1763 poprawnie przeliczyła ai_bets,
+- ale profil / historia bota czyta część wierszy z tabeli tips,
+- stare rekordy w tips nadal miały status/result/settlement_status = void,
+  więc frontend dalej pokazywał "Zwrot".
+
+Naprawa:
+- settle-live-ai-picks aktualizuje teraz ai_bets ORAZ odpowiadające rekordy w tips,
+- synchronizuje status, result, settlement_status, profit,
+- działa dla betai-multisport-ai po fixture_id / ai_external_key / match + prediction,
+- response pokazuje nowe pola:
+  syncedTips
+  syncedTipsFallback
+
+Po deployu uruchom:
+https://www.bet-ai.app/.netlify/functions/settle-live-ai-picks?limit=700&force=1
+
+Oczekiwany JSON:
+version: 1764-settle-live-ai-picks-sync-ai-bets-to-tips
+table: ai_bets+tips
+syncedTips > 0 jeśli były stare rekordy w tips do poprawienia.

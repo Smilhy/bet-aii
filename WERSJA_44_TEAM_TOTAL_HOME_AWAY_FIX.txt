@@ -1,0 +1,1 @@
+Wersja 44: Team Total Goals rozpoznaje osobno gospodarzy i gosci, takze przy nazwach Brann II / Brann 2. Bez zmian logiki pozostalych rynkow.

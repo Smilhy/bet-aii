@@ -1,0 +1,37 @@
+BetAI WERSJA 1805 — IMPORT STATYSTYK BETFOLIO SMILHYTV
+
+Najważniejsze zmiany:
+1. Profil smilhytv startuje od historycznej bazy:
+   - 815 wszystkich typów (812 rozliczonych + 3 pending)
+   - 474 wygrane
+   - 338 przegrane
+   - 0 zwrotów
+   - stawki 246510.00
+   - profit 85963.39
+   - yield 34.87%
+   - średni kurs 1.84
+   - maksymalny kurs 48.00
+
+2. Zaimportowane rozbicia ze screenów Betfolio:
+   - SOLO / AKO / BetBuilder
+   - Publiczny / Płatny
+   - sporty
+   - zakresy kursów
+   - godziny dodawania
+   - miesiące
+   - yield płaskiej stawki
+
+3. Import działa jako baza addytywna.
+   Każdy nowy typ dodany po dacie importu dopisuje się do liczników,
+   profitu, stawek, yield, średniego kursu i tabel szczegółowych.
+
+4. Wykres statystyk zachowuje miesiące historyczne i dokłada nowe typy,
+   zamiast przełączać się na historię od zera.
+
+5. Statystyki na kartach typów i profilu używają tej samej bazy addytywnej.
+
+Ważne:
+Screeny nie zawierają listy 812 konkretnych meczów, dlatego nie da się
+uczciwie odtworzyć pojedynczych rekordów w zakładkach Wyniki/Historia.
+Zaimportowane są wszystkie dostępne statystyki zbiorcze. Nowe typy będą
+już zapisywane jako normalne rekordy meczów i pojawią się w historii.

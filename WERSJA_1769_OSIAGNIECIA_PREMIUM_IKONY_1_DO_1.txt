@@ -1,0 +1,13 @@
+WERSJA 1769 — OSIĄGNIĘCIA PREMIUM + IKONY 1:1
+
+Poprawiono wyłącznie panel osiągnięć po prawej stronie profilu.
+
+Zmiany:
+- ramka i tło dopasowane do premium panelu „Społeczność” powyżej,
+- mocniejsza turkusowa obwódka i subtelny szklany połysk,
+- usunięto tekstowe imitacje ikon,
+- wszystkie 9 ikon zostało wyciętych bezpośrednio z przesłanego screena,
+- ikony są zapisane na sztywno w public/achievements-v1769,
+- logika osiągnięć nie została zmieniona.
+
+Nie jest potrzebny żaden SQL.

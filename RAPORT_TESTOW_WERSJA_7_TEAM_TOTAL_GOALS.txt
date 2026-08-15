@@ -1,0 +1,44 @@
+BetAI — WERSJA 7 TEAM TOTAL GOALS
+
+Zakres zmiany:
+- Dodano nowy rynek piłkarski: Team Total Goals.
+- Rynek pokazuje osobne gole dla gospodarzy i gości:
+  * [Drużyna] powyżej 0.5 gola
+  * [Drużyna] poniżej 0.5 gola
+  * [Drużyna] powyżej 1.5 gola
+  * [Drużyna] poniżej 1.5 gola
+  oraz inne linie, jeżeli API-FOOTBALL je zwróci.
+- W widoku kursów dodano osobną grupę Team Total Goals.
+- Grupa jest rozbita na dwie kolumny: Team Total PONIŻEJ i Team Total POWYŻEJ.
+- Dodano mapowanie nazw API-FOOTBALL:
+  Home Team Goals Over/Under,
+  Away Team Goals Over/Under,
+  Team Total Goals,
+  Home/Away Goals Over/Under.
+- Dodano kanoniczne klucze rozliczania:
+  market_key = team_total_goals
+  selection_key = home_over_1_5, home_under_0_5, away_over_1_5 itd.
+- Dodano automatyczne rozliczanie Team Total Goals po końcowym wyniku meczu.
+- Nie dodano nowych tabel Supabase.
+- Nie trzeba zmieniać zmiennych środowiskowych Netlify.
+- Zmieniono wersję cache kursów na team-total-goals-v7, żeby Netlify/Supabase nie pokazywały starych danych bez tego rynku.
+
+Ważne:
+- Rynek pojawi się wtedy, gdy API-FOOTBALL zwróci kursy Team Total Goals dla danego meczu.
+- Jeżeli dany mecz nie ma takich kursów u dostawcy, ta grupa może być pusta — to normalne.
+
+Testy wykonane lokalnie:
+- node --check dla 63 plików funkcji Netlify: OK
+- npm ci: OK
+- npm run build: OK
+- npm audit --audit-level=moderate: 0 vulnerabilities
+- TEST_WERSJA_7_TEAM_TOTAL_GOALS.js: OK
+- TEST_WERSJA_6_DNB_90MIN.js: OK
+- TEST_WERSJA_7_AI_SOURCE_FILTER.js: OK
+- TEST_WERSJA_11_AI_PREDICTIONS.js: OK
+- TEST_WERSJA_13_AI_PREDICTION_STATS.js: OK
+- TEST_WERSJA_14_AI_PREDICTION_RESULTS.js: OK
+- TEST_WERSJA_1882_ALGORITHM_MODEL.js: OK
+
+Status:
+Gotowe do wrzucenia na GitHub/Netlify jako następna wersja po Wersji 6.

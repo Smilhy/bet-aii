@@ -31,6 +31,39 @@ function average(rows, getter) {
   return rows.reduce((sum, row) => sum + Number(getter(row) || 0), 0) / rows.length
 }
 
+
+async function fetchSettledHistoryV66(supabase, maxRows = 5000) {
+  const pageSize = 1000
+  const rows = []
+  for (let from = 0; from < maxRows; from += pageSize) {
+    const to = Math.min(maxRows - 1, from + pageSize - 1)
+    const { data, error } = await supabase
+      .from('algorithm_bets')
+      .select('*')
+      .in('status', ['won', 'lost', 'void'])
+      .in('selected_market', ['over_2_5', 'under_2_5'])
+      .gt('stake', 0)
+      .order('kickoff', { ascending: false })
+      .range(from, to)
+    if (error) throw error
+    const page = Array.isArray(data) ? data : []
+    rows.push(...page)
+    if (page.length < pageSize) break
+  }
+  return rows
+}
+
+async function exactPlacedStatusCountV66(supabase, status) {
+  const { count, error } = await supabase
+    .from('algorithm_bets')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', status)
+    .in('selected_market', ['over_2_5', 'under_2_5'])
+    .gt('stake', 0)
+  if (error) throw error
+  return Number(count || 0)
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
   if (event.httpMethod !== 'GET') return json(405, { error: 'Method not allowed' })
@@ -49,7 +82,24 @@ exports.handler = async function(event) {
     if (status) query = query.eq('status', status)
     const { data, error } = await query
     if (error) throw error
-    const allRows = Array.isArray(data) ? data : []
+    const recentAllRows = Array.isArray(data) ? data : []
+
+    // WERSJA 66:
+    // Dotychczas statystyki W/L oraz zakładka Wyniki były liczone tylko z ostatniego
+    // okna `limit` posortowanego po kickoff. W bazie są także setki technicznych/no_bet
+    // rekordów, więc wraz z kolejnymi skanami stare wygrane/przegrane wypadały poza
+    // limit i licznik potrafił ZMNIEJSZAĆ się z dnia na dzień.
+    //
+    // Zakończone zakłady pobieramy osobnym kanałem, niezależnym od technicznych rekordów.
+    const settledHistoryRows = await fetchSettledHistoryV66(supabase, 5000)
+
+    // Dokładne liczniki pochodzą z COUNT w bazie, więc nie zależą od limitu listy.
+    const [exactWon, exactLost, exactVoided] = await Promise.all([
+      exactPlacedStatusCountV66(supabase, 'won'),
+      exactPlacedStatusCountV66(supabase, 'lost'),
+      exactPlacedStatusCountV66(supabase, 'void')
+    ])
+
     const currentTime = Date.now()
     const isLegacyFutureNonTop = row => {
       const kickoff = Date.parse(row?.kickoff || '')
@@ -57,18 +107,38 @@ exports.handler = async function(event) {
     }
     // Techniczne rekordy bez danych oraz stare przyszłe rekordy spoza listy TOP
     // pozostają w bazie dla diagnostyki, ale nie zaśmiecają dashboardu.
-    const hiddenTechnicalRows = allRows.filter(row => isHiddenTechnicalRow(row) || isLegacyFutureNonTop(row))
-    const rows = allRows.filter(row => !isHiddenTechnicalRow(row) && !isLegacyFutureNonTop(row))
-    const waiting = rows.filter(row => String(row.analysis_state || 'ready') !== 'ready')
-    const bets = rows.filter(row => String(row.analysis_state || 'ready') === 'ready' && row.selected_market !== 'no_bet' && Number(row.stake || 0) > 0)
-    const settled = bets.filter(row => ['won', 'lost'].includes(String(row.status || '')))
-    const won = settled.filter(row => row.status === 'won').length
-    const lost = settled.filter(row => row.status === 'lost').length
+    const hiddenTechnicalRows = recentAllRows.filter(row => isHiddenTechnicalRow(row) || isLegacyFutureNonTop(row))
+    const recentVisibleRows = recentAllRows.filter(row => !isHiddenTechnicalRow(row) && !isLegacyFutureNonTop(row))
+
+    // Do listy widocznej w UI dokładamy wszystkie załadowane historyczne wyniki,
+    // ale bez duplikatów. Dzięki temu Wyniki nie znikają, gdy nowe skany dodają no_bet.
+    const mergedRowsMapV66 = new Map()
+    ;[...recentVisibleRows, ...settledHistoryRows].forEach(row => {
+      const key = String(row?.fixture_id || row?.id || '')
+      if (key) mergedRowsMapV66.set(key, row)
+    })
+    const rows = Array.from(mergedRowsMapV66.values())
+
+    const waiting = recentVisibleRows.filter(row => String(row.analysis_state || 'ready') !== 'ready')
+    const recentBets = recentVisibleRows.filter(row => String(row.analysis_state || 'ready') === 'ready' && row.selected_market !== 'no_bet' && Number(row.stake || 0) > 0)
+
+    const settled = settledHistoryRows.filter(row => ['won', 'lost'].includes(String(row.status || '')))
+    const won = exactWon
+    const lost = exactLost
     const financiallySettled = settled.filter(row => Number(row.selected_odds || 0) > 1)
-    const pending = bets.filter(row => row.status === 'pending').length
-    const voided = bets.filter(row => row.status === 'void').length
+    const pending = recentBets.filter(row => row.status === 'pending').length
+    const voided = exactVoided
     const stake = financiallySettled.reduce((sum, row) => sum + Number(row.stake || 0), 0)
     const profit = financiallySettled.reduce((sum, row) => sum + Number(row.profit || 0), 0)
+
+    // `bets` zachowujemy dla dalszych pól summary, ale łączymy aktywne zakłady
+    // z pełną historią rozliczonych.
+    const betsMapV66 = new Map()
+    ;[...recentBets, ...settledHistoryRows].forEach(row => {
+      const key = String(row?.fixture_id || row?.id || '')
+      if (key) betsMapV66.set(key, row)
+    })
+    const bets = Array.from(betsMapV66.values())
 
     let latestRuns = []
     try {
@@ -90,7 +160,7 @@ exports.handler = async function(event) {
       if (!lockError) workerLock = lockData || null
     } catch (_) {}
 
-    const activeAllRows = allRows.filter(row => {
+    const activeAllRows = recentAllRows.filter(row => {
       const kickoff = Date.parse(row.kickoff || '')
       return Number.isFinite(kickoff) && kickoff > currentTime && isTopCompetitionRecord(row)
     })
@@ -113,13 +183,17 @@ exports.handler = async function(event) {
       latest_settlement: latestRuns.find(row => row.run_type === 'settle') || null,
       summary: {
         analyzed: rows.length,
+        recent_query_rows: recentAllRows.length,
+        historical_results_loaded: settledHistoryRows.length,
+        results_total: exactWon + exactLost + exactVoided,
+        counts_source: 'database_exact_v66',
         hidden_technical: hiddenTechnicalRows.length,
         waiting: waiting.length,
         ready: rows.length - waiting.length,
         bets: bets.length,
-        settled: settled.length,
+        settled: exactWon + exactLost,
         financially_settled: financiallySettled.length,
-        settled_without_odds: settled.length - financiallySettled.length,
+        settled_without_odds: Math.max(0, (exactWon + exactLost) - financiallySettled.length),
         bets_without_odds: bets.filter(row => Number(row.selected_odds || 0) <= 1).length,
         won,
         lost,
@@ -131,7 +205,7 @@ exports.handler = async function(event) {
         profit: round(profit, 2),
         stake: round(stake, 2),
         roi: stake > 0 ? round(profit / stake * 100, 2) : 0,
-        hit_rate: settled.length > 0 ? round(won / settled.length * 100, 2) : 0,
+        hit_rate: (won + lost) > 0 ? round(won / (won + lost) * 100, 2) : 0,
         avg_odds: round(average(financiallySettled, row => row.selected_odds), 2),
         avg_probability: round(average(bets, row => row.selected_probability), 2)
       },

@@ -1,0 +1,14 @@
+WERSJA 1749 — TYPY AI BTTS VOID RESETTLE FIX
+
+Naprawiono główny problem:
+- poprzednia funkcja 1748 rozpoznawała BTTS, ale stare rekordy VOID tylko backfillowała wynikiem,
+  nie zmieniała ich na WON/LOST.
+- teraz jeśli mecz ma finalny wynik i typ BTTS da się rozliczyć, błędny VOID/PUSH zostanie przeliczony
+  na WON albo LOST.
+
+Po deployu uruchom:
+https://www.bet-ai.app/.netlify/functions/settle-live-ai-picks?limit=700
+
+Oczekiwany wynik:
+- version: 1749-settle-live-ai-picks-btts-void-resettle-fix
+- settled powinno być > 0, jeśli były błędne BTTS VOID z finalnym wynikiem.

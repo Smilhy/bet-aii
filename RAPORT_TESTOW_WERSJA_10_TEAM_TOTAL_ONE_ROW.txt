@@ -1,0 +1,16 @@
+WERSJA 10 — TEAM TOTAL ONE ROW
+
+Zmiany:
+- Team Total Goals przebudowane na sekcje per drużyna.
+- Gospodarze mają POWYŻEJ i PONIŻEJ obok siebie.
+- Goście mają POWYŻEJ i PONIŻEJ obok siebie.
+- Pokazywane są tylko czyste linie 0.5 i 1.5 gola.
+- Uproszczony układ, żeby oba kierunki były widoczne dla tej samej drużyny w jednym miejscu.
+
+Testy:
+- npm install --no-audit --no-fund: OK
+- npm run build: OK
+- Vite build: OK
+
+Uwagi:
+- Po deployu zrób Ctrl+F5.

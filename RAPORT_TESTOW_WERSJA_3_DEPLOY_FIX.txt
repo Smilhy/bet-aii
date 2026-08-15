@@ -1,0 +1,41 @@
+BetAI WERSJA 3 — COACH AI + DEPLOY/NPM FIX
+
+Cel poprawki:
+- usunięcie podejrzanego i niepotrzebnego polecenia chmod z netlify.toml,
+- uproszczenie buildu Netlify do: npm run build,
+- dodanie .npmrc z publicznym registry npm i wyłączeniem audit/fund podczas instalacji,
+- ustawienie Node 22 / npm 10 dla Netlify,
+- poprawienie package-lock: nazwa projektu zgodna z package.json,
+- usunięcie prywatnych/internalnych adresów registry z package-lock i zamiana na https://registry.npmjs.org/,
+- zachowanie funkcji Coach AI w Mój profil -> Coach AI.
+
+Wykonane testy lokalne w czystej kopii:
+1. npm ci --registry=https://registry.npmjs.org
+   Wynik: OK — added 54 packages.
+
+2. npm install --registry=https://registry.npmjs.org
+   Wynik: OK — added 54 packages.
+
+3. npm run build
+   Wynik: OK — Vite build zakończony sukcesem.
+   Output:
+   - dist/index.html
+   - dist/assets/index-rFfiw9if.css
+   - dist/assets/index-K0s-m2bc.js
+
+4. npm audit --audit-level=moderate --omit=dev
+   Wynik: OK — found 0 vulnerabilities.
+
+5. Testy logiki:
+   - test:settlement — OK
+   - test:ai-source — OK
+   - test:ai-predictions — OK
+   - test:ai-prediction-stats — OK
+   - test:ai-prediction-results — OK
+   - test:algorithm — OK
+
+6. Sprawdzenie składni Netlify Functions:
+   Wynik: OK — 55 plików JS sprawdzonych, 0 błędów składni.
+
+Uwaga:
+Screen z Netlify pokazywał deploy w trakcie instalacji, nie ostateczny błąd. Ta wersja usuwa elementy, które mogły blokować lub utrudniać instalację po stronie Netlify: stary custom chmod, wewnętrzne URL-e registry w lockfile i brak wymuszenia publicznego registry npm.

@@ -760,7 +760,11 @@ export default function AlgorithmView({ lang = 'pl', isAdmin = false }) {
               <span>{resultsSortDirection === 'desc' ? t.resultsNewestFirst : t.resultsOldestFirst}</span>
             </button>
           )}
-          <span>{filter === 'stats' ? `${summary.settled || 0} rozliczonych` : `${visibleRows.length} / ${rows.length}`}</span>
+          <span>{filter === 'stats'
+            ? `${summary.settled || 0} rozliczonych`
+            : filter === 'results'
+              ? `${summary.results_total ?? visibleRows.length} wyników`
+              : `${visibleRows.length} / ${rows.length}`}</span>
         </section>
       </div>
 

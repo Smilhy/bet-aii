@@ -1,0 +1,14 @@
+BETAI WERSJA 1806 — NAPRAWA KONTYNUACJI STATYSTYK SMILHYTV
+
+1. Wdróż tę paczkę na Netlify.
+2. W Supabase SQL Editor uruchom jeden raz:
+   SUPABASE_RUN_ONCE_WERSJA_1806_NAPRAWA_KONTYNUACJI_STATYSTYK_SMILHYTV.sql
+3. Odśwież stronę i otwórz Mój profil.
+
+Naprawa usuwa błąd, w którym stary trigger bazy po dodaniu pierwszego
+nowego typu nadpisywał historyczne 812 typów wartością 1.
+
+Po naprawie:
+- baza historyczna: 812 typów / 474 wygrane / 338 przegrane / 0 pending,
+- każdy nowy typ jest dodawany do tej bazy,
+- typ już opublikowany po imporcie pozostaje widoczny jako kolejny typ.

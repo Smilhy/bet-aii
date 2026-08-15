@@ -1,0 +1,13 @@
+WERSJA 1752 — LOGIN PANEL STATY KOLEJNOŚĆ
+
+Zmiany w panelu logowania po lewej stronie:
+- przeniesiono kafelek "Typy AI dzisiaj" nad "Aktywni teraz",
+- zmieniono nazwę "Typów dzisiaj" na "Typy AI dzisiaj",
+- reszty strony nie ruszano.
+
+Nowa kolejność:
+1. Zarejestrowanych użytkowników
+2. Skuteczność AI
+3. Typy AI dzisiaj
+4. Aktywni teraz
+5. Wyświetlenia witryny
