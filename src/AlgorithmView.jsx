@@ -416,7 +416,7 @@ function sortStatsRows(rows, mode = 'profit_desc') {
 
 function StatsTable({ title, firstLabel, rows, t }) {
   return (
-    <section className="algorithm-stats-table-v1882">
+    <section className="algorithm-stats-table-v1882" data-stats-ui-version="70">
       <h3>{title}</h3>
       <div className="algorithm-stats-head-v1882"><b>{firstLabel}</b><b>{t.count}</b><b>{t.balance}</b><b>{t.yield}</b><b>{t.avgOdds}</b><b>W/L</b></div>
       {rows.length ? rows.map(row => (
@@ -425,8 +425,15 @@ function StatsTable({ title, firstLabel, rows, t }) {
           <span>{row.bets}</span>
           <span className={row.profit > 0 ? 'pos' : row.profit < 0 ? 'neg' : 'neutral'}><i aria-hidden="true">{row.profit > 0 ? '▲' : row.profit < 0 ? '▼' : '•'}</i>{signed(row.profit, 2, ' j.')}</span>
           <span className={row.yieldValue > 0 ? 'pos' : row.yieldValue < 0 ? 'neg' : 'neutral'}><i aria-hidden="true">{row.yieldValue > 0 ? '▲' : row.yieldValue < 0 ? '▼' : '•'}</i>{signed(row.yieldValue, 2, '%')}</span>
-          <span className="algorithm-odds-pulse-v1902">{number(row.avgOdds, 2)}</span>
-          <span className="algorithm-wl-v1902"><b className="won">{row.won}</b><i>/</i><b className="lost">{row.lost}</b></span>
+          <span
+            className="algorithm-odds-pulse-v1902 algorithm-odds-pulse-v70"
+            style={{ color: '#ffd84d', fontWeight: 1000, fontSize: '16px' }}
+          >{number(row.avgOdds, 2)}</span>
+          <span className="algorithm-wl-v1902 algorithm-wl-v70">
+            <b className="won" style={{ color: '#3ff2a3', fontWeight: 1000 }}>{row.won}</b>
+            <i style={{ color: '#91a6b4', fontStyle: 'normal' }}>/</i>
+            <b className="lost" style={{ color: '#ff5874', fontWeight: 1000 }}>{row.lost}</b>
+          </span>
         </div>
       )) : <div className="algorithm-stats-empty-v1882">{t.noStats}</div>}
     </section>

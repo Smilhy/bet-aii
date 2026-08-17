@@ -82734,3 +82734,37 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
     text-shadow:0 0 6px rgba(255,211,77,.18),0 0 12px rgba(255,211,77,.12);
   }
 }
+
+
+/* WERSJA 70 — twarde wymuszenie widoczności zmian w Algorytm -> Statystyki */
+@keyframes algorithmOddsPulseV70{
+  0%,100%{transform:scale(1);color:#ffd84d;text-shadow:0 0 3px rgba(255,216,77,.18),0 0 8px rgba(255,200,0,.10)}
+  50%{transform:scale(1.055);color:#ffe98a;text-shadow:0 0 7px rgba(255,224,105,.46),0 0 15px rgba(255,190,0,.22)}
+}
+.algorithm-stats-table-v1882[data-stats-ui-version="70"] .algorithm-odds-pulse-v70{
+  display:inline-block!important;
+  color:#ffd84d!important;
+  font-size:16px!important;
+  font-weight:1000!important;
+  line-height:1!important;
+  animation:algorithmOddsPulseV70 1.65s ease-in-out infinite!important;
+}
+.algorithm-stats-table-v1882[data-stats-ui-version="70"] .algorithm-wl-v70{
+  display:flex!important;
+  align-items:center!important;
+  gap:4px!important;
+  font-size:14px!important;
+  font-weight:1000!important;
+}
+.algorithm-stats-table-v1882[data-stats-ui-version="70"] .algorithm-wl-v70 .won{
+  color:#3ff2a3!important;
+  text-shadow:0 0 7px rgba(63,242,163,.18)!important;
+}
+.algorithm-stats-table-v1882[data-stats-ui-version="70"] .algorithm-wl-v70 .lost{
+  color:#ff5874!important;
+  text-shadow:0 0 7px rgba(255,88,116,.18)!important;
+}
+.algorithm-stats-table-v1882[data-stats-ui-version="70"] .algorithm-wl-v70 i{
+  color:#91a6b4!important;
+  font-style:normal!important;
+}
