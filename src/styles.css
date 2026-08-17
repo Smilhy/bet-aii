@@ -82768,3 +82768,51 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
   color:#91a6b4!important;
   font-style:normal!important;
 }
+
+/* WERSJA 71 — Algorytm / Statystyki: top KPI i summary z kolorami W/L, profitu i złotym kursem */
+.algorithm-stats-inline-meta-v71{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.algorithm-stats-inline-meta-v71 .profit-positive{
+  color:#57f0b1!important;
+  font-weight:900;
+}
+.algorithm-stats-inline-meta-v71 .profit-negative{
+  color:#ff6f86!important;
+  font-weight:900;
+}
+.algorithm-stats-inline-meta-v71 .profit-neutral{
+  color:#b8cad5!important;
+  font-weight:900;
+}
+.algorithm-inline-wl-v71,
+.algorithm-metric-wl-v71{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:4px!important;
+}
+.algorithm-metric-v1880 strong .algorithm-metric-odds-v71{
+  display:inline-block!important;
+}
+.algorithm-metric-v1880 strong .algorithm-metric-wl-v71{
+  font-size:25px!important;
+  line-height:1!important;
+}
+.algorithm-metric-v1880 strong .algorithm-metric-wl-v71 .won{
+  color:#3ff2a3!important;
+  text-shadow:0 0 7px rgba(63,242,163,.18)!important;
+}
+.algorithm-metric-v1880 strong .algorithm-metric-wl-v71 .lost{
+  color:#ff5874!important;
+  text-shadow:0 0 7px rgba(255,88,116,.18)!important;
+}
+.algorithm-metric-v1880 strong .algorithm-metric-wl-v71 i{
+  color:#91a6b4!important;
+  font-style:normal!important;
+}
+@media(max-width:700px){
+  .algorithm-stats-inline-meta-v71{gap:4px}
+}

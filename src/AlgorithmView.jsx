@@ -542,13 +542,31 @@ function AlgorithmStats({ rows, summary, t }) {
         </div>
       </div>
       <div className="algorithm-stats-split-v1897">
-        <article><small>{t.forecastHitRate}</small><strong>{number(forecastHitRate, 2)}%</strong><span>{t.forecastsSettled}: {settledForecasts.length} · W/L {forecastWon}/{forecastLost}</span></article>
-        <article><small>{t.financialRoi}</small><strong className={financialRoi >= 0 ? 'positive' : 'negative'}>{signed(financialRoi, 2, '%')}</strong><span>{t.financialSettled}: {financialSettled.length} · {signed(financialProfit, 2, ' j.')}</span></article>
+        <article>
+          <small>{t.forecastHitRate}</small>
+          <strong>{number(forecastHitRate, 2)}%</strong>
+          <span className="algorithm-stats-inline-meta-v71">
+            {t.forecastsSettled}: {settledForecasts.length} · W/L
+            <span className="algorithm-wl-v1902 algorithm-wl-v70 algorithm-inline-wl-v71">
+              <b className="won">{forecastWon}</b>
+              <i>/</i>
+              <b className="lost">{forecastLost}</b>
+            </span>
+          </span>
+        </article>
+        <article>
+          <small>{t.financialRoi}</small>
+          <strong className={financialRoi >= 0 ? 'positive' : 'negative'}>{signed(financialRoi, 2, '%')}</strong>
+          <span className="algorithm-stats-inline-meta-v71">
+            {t.financialSettled}: {financialSettled.length} ·
+            <b className={financialProfit > 0 ? 'profit-positive' : financialProfit < 0 ? 'profit-negative' : 'profit-neutral'}>{signed(financialProfit, 2, ' j.')}</b>
+          </span>
+        </article>
       </div>
       <div className="algorithm-stats-kpis-v1882">
-        <Metric label={t.avgOdds} value={number(averageOdds, 2)} />
+        <Metric label={t.avgOdds} value={<span className="algorithm-odds-pulse-v1902 algorithm-odds-pulse-v70 algorithm-metric-odds-v71">{number(averageOdds, 2)}</span>} />
         <Metric label={t.avgProbability} value={`${number(averageProbability, 1)}%`} />
-        <Metric label={t.record} value={`${forecastWon}/${forecastLost}`} />
+        <Metric label={t.record} value={<span className="algorithm-wl-v1902 algorithm-wl-v70 algorithm-metric-wl-v71"><b className="won">{forecastWon}</b><i>/</i><b className="lost">{forecastLost}</b></span>} />
         <Metric label={t.maxDrawdown} value={`${number(maxDrawdown, 2)} j.`} tone={maxDrawdown > 0 ? 'negative' : ''} />
       </div>
       <div className="algorithm-stats-grid-v1882"><StatsTable title={t.byLeague} firstLabel={t.league} rows={sortedLeagueRows} t={t} /><StatsTable title={t.byMarket} firstLabel={t.market} rows={sortedMarketRows} t={t} /></div>
