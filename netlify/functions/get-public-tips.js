@@ -1,5 +1,6 @@
 
 const { createClient } = require('@supabase/supabase-js')
+const { repairTyperPendingProgression, BOT_POLICIES } = require('./_lib/ai-bot-cycle')
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -419,10 +420,23 @@ exports.handler = async (event) => {
     if (error) throw error
 
     const rows = Array.isArray(data) ? data : []
-    // WERSJA 26: przed zwróceniem feedu naprawiamy aktywną stawkę progresji
-    // Typer Expert. Dzięki temu pending nie pokazuje już sztucznego 1.00, a
-    // ta sama prawidłowa stawka jest od razu zapisywana do Supabase.
-    const typerProgressionRepair = await repairTyperExpertPendingStakeV26(supabase, rows)
+    // WERSJA 67: publiczny feed NIE może liczyć progresji tylko z ostatnich
+    // 300/500 rekordów feedu. To mogło ponownie ustawić pending Typer Expert
+    // na 1.00, bo w tym fragmencie brakowało starszych strat.
+    // Używamy jednego kanonicznego kalkulatora z pełnej historii Typer Expert.
+    const typerProgressionRepair = await repairTyperPendingProgression(
+      supabase,
+      BOT_POLICIES.typer.progression || { baseStake: 1, maxStake: 1000, targetProfit: 0.4 }
+    )
+    if (Array.isArray(typerProgressionRepair?.repairs)) {
+      const repairedById = new Map(
+        typerProgressionRepair.repairs.map(item => [String(item.id), Number(item.new_stake || item.expected_stake || 0)])
+      )
+      rows.forEach(row => {
+        const repairedStake = repairedById.get(String(row?.id || ''))
+        if (Number(repairedStake) > 0) row.stake = repairedStake
+      })
+    }
     const rowsWithStats = attachAuthorStatsV1759(rows)
     const activeRows = rowsWithStats.filter(row => !isBetaiMultisportAiTipV28(row)).filter(isActivePublicTipV1751)
 
@@ -430,7 +444,7 @@ exports.handler = async (event) => {
       tips: activeRows,
       count: activeRows.length,
       rawCount: rows.length,
-      source: 'service-role-public-tips-v26-typer-progression-stake-fix',
+      source: 'service-role-public-tips-v67-canonical-typer-progression',
       typerProgressionRepair,
       updatedAt: new Date().toISOString()
     })
@@ -438,7 +452,7 @@ exports.handler = async (event) => {
     return json(500, {
       error: error?.message || String(error),
       tips: [],
-      source: 'service-role-public-tips-v26-typer-progression-stake-fix'
+      source: 'service-role-public-tips-v67-canonical-typer-progression'
     })
   }
 }

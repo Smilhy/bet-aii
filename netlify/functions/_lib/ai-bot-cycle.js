@@ -6,7 +6,7 @@ const AUTHORS = {
   ograc: { name: 'Ograć Buka', username: 'ograc-buka', source: 'ograc_buka_independent_v1867_9', mirrorAiBets: false }
 }
 
-const VERSION = '1896.0-typer-pending-stake-canonical-fix'
+const VERSION = '1897.0-typer-expert-daily-progression-stall-fix-v67'
 const DEFAULT_BOTS = ['betai', 'typer', 'ograc']
 
 // Każdy bot działa niezależnie. Nie ma wspólnej rotacji.
@@ -34,6 +34,9 @@ const BOT_POLICIES = {
   typer: {
     strategyName: 'Rynek + prognoza API-Football + progresja',
     cooldownHours: 2,
+    // WERSJA 67: progresja dzienna nie może wybierać meczu za 4-7 dni,
+    // bo taki pending blokowałby wszystkie kolejne dni.
+    maxPickHoursAhead: 24,
     blockWhilePending: true,
     progression: { enabled: true, baseStake: 1, maxStake: 1000, targetProfit: 0.4 },
     minOdds: 1.50,
@@ -407,6 +410,9 @@ function getBotPolicy(bot, settings = {}, query = {}) {
     maxSpread: clamp(botQueryValue('max_spread_pct') ?? envNumber('MAX_SPREAD_PCT', base.maxSpread), 1, 25),
     // Tylko Typer Expert (progresja) ma cooldown 2 h. Pozostałe boty: 0 h.
     cooldownHours: bot === 'typer' ? 2 : 0,
+    maxPickHoursAhead: bot === 'typer'
+      ? clamp(botQueryValue('max_pick_hours_ahead') ?? envNumber('MAX_PICK_HOURS_AHEAD', base.maxPickHoursAhead || 24), 6, 36)
+      : null,
     progression
   }
 }
@@ -543,9 +549,19 @@ function buildSyntheticDailyCandidate(event, bot, policy = {}) {
   }
 }
 
+function withinBotPickWindowV67(event, bot, policy = {}) {
+  if (bot !== 'typer') return true
+  const kickoffMs = Date.parse(event?.kickoff || '')
+  if (!Number.isFinite(kickoffMs)) return false
+  const maxHours = Math.max(6, Math.min(36, Number(policy.maxPickHoursAhead || 24) || 24))
+  const delta = kickoffMs - Date.now()
+  return delta > 0 && delta <= maxHours * 3_600_000
+}
+
 function selectDailyEmergencyCandidate({ candidates = [], events = [], bot, policy = {}, ownRecentFixtures = new Set() }) {
   const relaxed = (candidates || [])
     .filter(candidate => candidate?.event?.fixtureId && !ownRecentFixtures.has(candidate.event.fixtureId))
+    .filter(candidate => withinBotPickWindowV67(candidate.event, bot, policy))
     .filter(candidate => (policy.allowedMarkets || []).includes(candidate.marketKey))
     .filter(candidate => (policy.allowedSelections || []).includes(candidate.selectionKey))
     .filter(candidate => number(candidate.odds, 0) >= number(policy.minOdds, 1.2) && number(candidate.odds, 0) <= number(policy.maxOdds, 5))
@@ -561,8 +577,12 @@ function selectDailyEmergencyCandidate({ candidates = [], events = [], bot, poli
 
   const futureEvents = (events || [])
     .filter(event => event?.fixtureId && !ownRecentFixtures.has(event.fixtureId))
+    .filter(event => withinBotPickWindowV67(event, bot, policy))
     .sort((a, b) => Date.parse(a.kickoff) - Date.parse(b.kickoff))
-  const event = futureEvents[0] || (events || []).sort((a, b) => Date.parse(a.kickoff) - Date.parse(b.kickoff))[0]
+  const unrestrictedFallback = bot === 'typer'
+    ? null
+    : (events || []).sort((a, b) => Date.parse(a.kickoff) - Date.parse(b.kickoff))[0]
+  const event = futureEvents[0] || unrestrictedFallback
   return buildSyntheticDailyCandidate(event, bot, policy)
 }
 
@@ -876,6 +896,58 @@ function isTyperExpertRowV26(row = {}) {
   return identity.includes('typerexpert') || identity.includes('typerexpertprogression')
 }
 
+
+async function loadTyperExpertHistoryV67(supabase, options = {}) {
+  const ascending = options.ascending !== false
+  const perQueryLimit = Math.max(100, Math.min(2500, Number(options.limit || 2000) || 2000))
+  const merged = new Map()
+  const queryErrors = []
+
+  const queries = [
+    { column: 'author_name', method: 'eq', value: AUTHORS.typer.name },
+    { column: 'username', method: 'eq', value: AUTHORS.typer.username },
+    { column: 'public_slug', method: 'eq', value: AUTHORS.typer.username },
+    { column: 'source', method: 'ilike', value: '%typer_expert%' }
+  ]
+
+  for (const selector of queries) {
+    try {
+      let query = supabase
+        .from('tips')
+        .select('*')
+        .order('created_at', { ascending })
+        .limit(perQueryLimit)
+
+      query = selector.method === 'ilike'
+        ? query.ilike(selector.column, selector.value)
+        : query.eq(selector.column, selector.value)
+
+      const { data, error } = await query
+      if (error) {
+        queryErrors.push(`${selector.column}: ${error.message || error}`)
+        continue
+      }
+
+      ;(Array.isArray(data) ? data : [])
+        .filter(isTyperExpertRowV26)
+        .forEach(row => {
+          const key = String(row?.id || `${row?.created_at || ''}|${duplicateKey(row)}|${row?.prediction || row?.pick || ''}`)
+          if (key) merged.set(key, row)
+        })
+    } catch (error) {
+      queryErrors.push(`${selector.column}: ${error.message || error}`)
+    }
+  }
+
+  const rows = [...merged.values()].sort((a, b) => {
+    const at = Date.parse(a?.created_at || '') || 0
+    const bt = Date.parse(b?.created_at || '') || 0
+    return ascending ? at - bt : bt - at
+  })
+
+  return { rows, queryErrors }
+}
+
 function normalizeTipStatus(value) {
   const status = String(value == null ? '' : value).trim().toLowerCase()
   if (/(won|win|wygran)/.test(status)) return 'won'
@@ -967,18 +1039,13 @@ function applySettledTipToProgressionState(state, row, targetProfit) {
 
 async function repairTyperPendingProgression(supabase, settings = {}, options = {}) {
   const targetProfit = clamp(settings.targetProfit || 0.4, 0.01, 100)
-  const { data, error } = await supabase
-    .from('tips')
-    .select('*')
-    .order('created_at', { ascending: true })
-    .limit(1500)
-  if (error) throw error
-
-  // WERSJA 26: historia progresji musi objąć wszystkie rekordy Typer Expert,
-  // również starsze wpisy zapisane tylko przez username/public_slug/source.
-  // Poprzednie .eq('author_name', 'Typer Expert') mogło pominąć część strat,
-  // przez co świeży pending był zapisywany błędnie ze stawką 1.00.
-  const rows = (Array.isArray(data) ? data : []).filter(isTyperExpertRowV26)
+  // WERSJA 67:
+  // Nie pobieramy już "pierwszych 1500" rekordów całej tabeli tips.
+  // To był realny deadlock: Typer Expert mógł mieć stary pending poza oknem
+  // rozliczania, a progresja widziała zupełnie inny fragment tabeli.
+  // Historia jest teraz pobierana bezpośrednio po tożsamości Typer Expert.
+  const loaded = await loadTyperExpertHistoryV67(supabase, { ascending: true, limit: 2500 })
+  const rows = loaded.rows
   let state = { cycleNet: 0, cycleStep: 0, completedCycles: 0, totalNet: 0 }
   let pendingCount = 0
   const repairs = []
@@ -1039,6 +1106,8 @@ async function repairTyperPendingProgression(supabase, settings = {}, options = 
     repaired: repairs.length,
     repairs,
     skipped: skipped.slice(0, 10),
+    history_source: 'targeted_typer_expert_identity_v67',
+    history_query_errors: loaded.queryErrors || [],
     final_settled_state: {
       cycle_net: round(state.cycleNet, 2),
       next_step: Number(state.cycleStep || 0) + 1,
@@ -1049,18 +1118,10 @@ async function repairTyperPendingProgression(supabase, settings = {}, options = 
 }
 
 async function readTyperProgressionState(supabase, targetProfit = 0.4) {
-  const { data, error } = await supabase
-    .from('tips')
-    .select('*')
-    .order('created_at', { ascending: true })
-    .limit(1500)
-  if (error) throw error
-
-  // WERSJA 26: historia progresji musi objąć wszystkie rekordy Typer Expert,
-  // również starsze wpisy zapisane tylko przez username/public_slug/source.
-  // Poprzednie .eq('author_name', 'Typer Expert') mogło pominąć część strat,
-  // przez co świeży pending był zapisywany błędnie ze stawką 1.00.
-  const rows = (Array.isArray(data) ? data : []).filter(isTyperExpertRowV26)
+  // WERSJA 67: pełna historia tylko Typer Expert, niezależnie od liczby
+  // zwykłych użytkowników i rekordów w public.tips.
+  const loaded = await loadTyperExpertHistoryV67(supabase, { ascending: true, limit: 2500 })
+  const rows = loaded.rows
   const pending = rows.filter(row => rowTipStatus(row) === 'pending')
 
   let cycleNet = 0
@@ -1089,7 +1150,9 @@ async function readTyperProgressionState(supabase, targetProfit = 0.4) {
     cycleNet: round(cycleNet, 2),
     cycleStep,
     completedCycles,
-    totalNet: round(totalNet, 2)
+    totalNet: round(totalNet, 2),
+    historySource: 'targeted_typer_expert_identity_v67',
+    historyQueryErrors: loaded.queryErrors || []
   }
 }
 
@@ -1301,7 +1364,9 @@ async function runAiBotCycle(event = {}, options = {}) {
       .map(duplicateKey)
       .filter(Boolean))
     ownRecentFixturesByBot[bot] = ownRecentFixtures
-    const ownFreshPool = candidates.filter(candidate => !ownRecentFixtures.has(candidate.event.fixtureId))
+    const ownFreshPool = candidates
+      .filter(candidate => !ownRecentFixtures.has(candidate.event.fixtureId))
+      .filter(candidate => withinBotPickWindowV67(candidate.event, bot, botPolicies[bot]))
     const ranked = rankBotCandidates(ownFreshPool, bot, botPolicies[bot])
     shortlists[bot] = ranked.slice(0, Math.max(8, botPolicies[bot].predictionLookups || 0))
     strategyDiagnostics[bot] = {
@@ -1467,4 +1532,4 @@ function createHandler(options = {}) {
   }
 }
 
-module.exports = { AUTHORS, VERSION, BOT_POLICIES, runAiBotCycle, repairTyperPendingProgression, createHandler, json, _test: { parseMarket, buildCandidates, scoreCandidate, labelFor, candidateTier, rankBotCandidates, apiStrategyPass, getBotPolicy, normalizeTipStatus, rowTipStatus, profitFromTip, progressionForOdds, repairTyperPendingProgression, isTyperExpertRowV26 } }
+module.exports = { AUTHORS, VERSION, BOT_POLICIES, runAiBotCycle, repairTyperPendingProgression, readTyperProgressionState, loadTyperExpertHistoryV67, createHandler, json, _test: { parseMarket, buildCandidates, scoreCandidate, labelFor, candidateTier, rankBotCandidates, apiStrategyPass, getBotPolicy, normalizeTipStatus, rowTipStatus, profitFromTip, progressionForOdds, repairTyperPendingProgression, isTyperExpertRowV26, loadTyperExpertHistoryV67, withinBotPickWindowV67 } }

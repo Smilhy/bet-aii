@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 
 const AUTHOR_NAME = 'Typer Expert'
-const VERSION = '1885.2-typer-expert-void-final-repair-v29'
+const VERSION = '1897.1-typer-expert-targeted-settlement-stall-release-v67'
 
 const FINISHED = ['FT', 'AET', 'PEN']
 const VOIDED = ['CANC', 'ABD', 'AWD', 'WO']
@@ -484,7 +484,7 @@ function scoreFromFixture(fix) {
   return { h: toNum(h, 0), a: toNum(a, 0) }
 }
 
-async function settleTip(tip) {
+async function settleTip(tip, options = {}) {
   const officialCorrection = knownOfficialCorrectionV29(tip)
   if (officialCorrection) return officialCorrection
 
@@ -496,7 +496,23 @@ async function settleTip(tip) {
   // WERSJA 28: PST oznacza mecz przełożony, a nie anulowany. Nie zapisujemy już
   // automatycznego zwrotu, bo API może później zaktualizować ten sam fixture do FT.
   // Dzięki temu typ zostaje pending i zostanie ponownie sprawdzony po rozegraniu meczu.
-  if (RECHECK_LATER.includes(st)) return { status: 'pending', reason: 'Mecz przełożony — czeka na nowy termin status=' + st, resolved_fixture_id: id, resolved_by: resolved.resolvedBy }
+  if (RECHECK_LATER.includes(st)) {
+    const stalePstVoidHours = Math.max(12, Math.min(168, Number(options.stalePstVoidHours || 24) || 24))
+    const ageHours = stalePostponedHoursV67(tip)
+    // WERSJA 67: Typer Expert ma progresję i nie może być zablokowany na zawsze
+    // przez przełożony mecz. Po 24 h od pierwotnego kickoffu wirtualny system
+    // traktuje taki typ jak zwrot (void), aby progresja mogła przejść dalej.
+    if (ageHours >= stalePstVoidHours) {
+      return {
+        status: 'void',
+        reason: `Stale PST V67: mecz przełożony ponad ${stalePstVoidHours} h — zwrot wirtualnej progresji status=${st}`,
+        stale_pst_void_v67: true,
+        resolved_fixture_id: id,
+        resolved_by: resolved.resolvedBy
+      }
+    }
+    return { status: 'pending', reason: 'Mecz przełożony — czeka na nowy termin status=' + st, resolved_fixture_id: id, resolved_by: resolved.resolvedBy }
+  }
   if (VOIDED.includes(st)) return { status: 'void', reason: 'Mecz void status=' + st, resolved_fixture_id: id, resolved_by: resolved.resolvedBy }
   if (!FINISHED.includes(st)) return { status: 'pending', reason: 'Mecz nie jest zakonczony status=' + st, resolved_fixture_id: id, resolved_by: resolved.resolvedBy }
   const sc = scoreFromFixture(fix)
@@ -745,6 +761,82 @@ function isTyperExpertRowV29(tip = {}) {
   return identity.includes('typerexpert') || identity.includes('typerexpertprogression')
 }
 
+
+async function loadTyperExpertRowsV67(supabase, options = {}) {
+  const ascending = Boolean(options.ascending)
+  const limit = Math.max(100, Math.min(2500, Number(options.limit || 1200) || 1200))
+  const merged = new Map()
+  const errors = []
+  const selectors = [
+    { column: 'author_name', method: 'eq', value: AUTHOR_NAME },
+    { column: 'username', method: 'eq', value: 'typer-expert' },
+    { column: 'public_slug', method: 'eq', value: 'typer-expert' },
+    { column: 'source', method: 'ilike', value: '%typer_expert%' }
+  ]
+
+  for (const selector of selectors) {
+    try {
+      let query = supabase
+        .from('tips')
+        .select('*')
+        .order('created_at', { ascending })
+        .limit(limit)
+      query = selector.method === 'ilike'
+        ? query.ilike(selector.column, selector.value)
+        : query.eq(selector.column, selector.value)
+      const { data, error } = await query
+      if (error) {
+        errors.push(`${selector.column}: ${error.message || error}`)
+        continue
+      }
+      ;(Array.isArray(data) ? data : [])
+        .filter(isTyperExpertRowV29)
+        .forEach(row => {
+          const key = String(row?.id || `${row?.created_at || ''}|${fixtureId(row) || ''}|${textOf(row)}`)
+          if (key) merged.set(key, row)
+        })
+    } catch (error) {
+      errors.push(`${selector.column}: ${error.message || error}`)
+    }
+  }
+
+  const rows = [...merged.values()].sort((a, b) => {
+    const at = Date.parse(a?.created_at || '') || 0
+    const bt = Date.parse(b?.created_at || '') || 0
+    return ascending ? at - bt : bt - at
+  })
+  return { rows, errors }
+}
+
+function tipKickoffMsV67(tip = {}) {
+  const candidates = [
+    tip.event_time,
+    tip.kickoff_time,
+    tip.match_time,
+    tip.fixture_date,
+    tip.match_date && tip.match_time ? `${tip.match_date}T${tip.match_time}` : '',
+    tip.match_date,
+    tip.created_at
+  ].filter(Boolean)
+  for (const value of candidates) {
+    const ts = Date.parse(value)
+    if (Number.isFinite(ts)) return ts
+  }
+  return null
+}
+
+function stalePostponedHoursV67(tip = {}) {
+  const ts = tipKickoffMsV67(tip)
+  if (!Number.isFinite(ts)) return 0
+  return Math.max(0, (Date.now() - ts) / 3_600_000)
+}
+
+function isV67ReleasedStalePstVoid(tip = {}) {
+  const source = norm(tip.settlement_source || '')
+  const reason = norm(tip.settlement_reason || '')
+  return source.includes('typer_expert_stale_pst_void_v67') || reason.includes('stale pst v67')
+}
+
 function isRecentEnoughForVoidRecheckV29(tip = {}, days = 45) {
   const raw = tip.match_time || tip.event_time || tip.kickoff_time || tip.created_at || tip.updated_at
   const ts = Date.parse(raw || '')
@@ -805,21 +897,18 @@ exports.handler = async function(event) {
   const query = event.queryStringParameters || {}
   const repairDays = Math.max(7, Math.min(120, Number(query.repair_days || 45) || 45))
 
-  // WERSJA 29: jedno pobranie i lokalne filtrowanie. Dzięki temu naprawa nie zależy
-  // od tego, czy starszy rekord zapisał wynik w status, result, result_status czy
-  // settlement_status, ani od technicznego wariantu nazwy autora.
-  const { data: recentRows, error: recentError } = await supabase
-    .from('tips')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(700)
-  if (recentError) return json(500, { ok: false, error: recentError.message })
-
-  const typerRows = (Array.isArray(recentRows) ? recentRows : []).filter(isTyperExpertRowV29)
+  // WERSJA 67: pobieramy wyłącznie rekordy Typer Expert po jego tożsamości.
+  // Stare `.limit(700)` na całej tabeli tips mogło całkowicie pominąć Typer Expert,
+  // gdy inni użytkownicy dodali dużo nowych typów. To powodowało martwy pending,
+  // którego settlement nie widział, a progresja blokowała kolejne publikacje.
+  const targeted = await loadTyperExpertRowsV67(supabase, { ascending: false, limit: 1800 })
+  const typerRows = targeted.rows
+  const stalePstVoidHours = Math.max(12, Math.min(168, Number(query.stale_pst_void_hours || 24) || 24))
   const pendingTips = typerRows.filter(tip => !['won', 'win', 'lost', 'loss', 'void', 'push'].includes(tipUnifiedStatusV29(tip))).slice(0, 30)
   const pstRepairTips = typerRows.filter(tip => {
     const current = tipUnifiedStatusV29(tip)
     if (!['void', 'push', 'zwrot'].includes(current)) return false
+    if (isV67ReleasedStalePstVoid(tip)) return false
     return isFalsePostponedVoidCandidateV28(tip) || isRecentEnoughForVoidRecheckV29(tip, repairDays)
   }).slice(0, 200)
 
@@ -833,7 +922,7 @@ exports.handler = async function(event) {
   const skipped = []
   for (const tip of (tips || [])) {
     try {
-      const res = isAkoTip(tip) ? await settleAkoTip(tip) : await settleTip(tip)
+      const res = isAkoTip(tip) ? await settleAkoTip(tip) : await settleTip(tip, { stalePstVoidHours })
       checked.push({
         id: tip.id,
         type: isAkoTip(tip) ? 'ako' : 'single',
@@ -845,7 +934,11 @@ exports.handler = async function(event) {
       })
       if (['won','lost','void'].includes(res.status)) {
         const payload = updatePayload(res, tip)
-        if (repairIds.has(String(tip.id))) {
+        if (res.stale_pst_void_v67) {
+          payload.settlement_source = 'typer_expert_stale_pst_void_v67'
+          payload.settlement_reason = res.reason || `Stale PST V67 po ${stalePstVoidHours} h`
+        }
+        if (repairIds.has(String(tip.id)) && !res.stale_pst_void_v67) {
           payload.settlement_source = 'typer_expert_void_final_repair_v29'
           payload.settlement_reason = `${res.reason || ''} | ponownie zweryfikowano wcześniejszy zwrot V29`.trim()
         }
@@ -908,6 +1001,9 @@ exports.handler = async function(event) {
     pending_checked: pendingTips.length,
     void_repair_candidates: pstRepairTips.length,
     repair_days: repairDays,
+    stale_pst_void_hours: stalePstVoidHours,
+    targeted_history_rows: typerRows.length,
+    targeted_query_errors: targeted.errors || [],
     settled,
     skipped,
     schemaFallbackUsed: settled.some(row => (row.removed_columns || []).length > 0),
@@ -915,4 +1011,4 @@ exports.handler = async function(event) {
   })
 }
 
-exports.__test = { settleByKeys, isFalsePostponedVoidCandidateV28, scoreFromFixture, knownOfficialCorrectionV29, isTyperExpertRowV29, tipUnifiedStatusV29 }
+exports.__test = { settleByKeys, isFalsePostponedVoidCandidateV28, scoreFromFixture, knownOfficialCorrectionV29, isTyperExpertRowV29, tipUnifiedStatusV29, loadTyperExpertRowsV67, stalePostponedHoursV67, isV67ReleasedStalePstVoid }
