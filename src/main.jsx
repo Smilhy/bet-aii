@@ -24393,7 +24393,7 @@ function LeaderboardView({
                       onClick={() => openRow(row)}
                       title={lang === 'en' ? `Open ${name}'s profile` : `Otwórz profil typera ${name}`}
                     >
-                      <span className="ranking-yield-avatar-shell-v19">
+                      <span className="ranking-yield-avatar-shell-v19 ranking-yield-avatar-shell-v73" data-place={place}>
                         <span className={`ranking-yield-avatar-v19 ${avatarUrl ? 'has-avatar' : ''}`}>
                           {avatarUrl ? <img src={avatarUrl} alt="" loading="lazy" /> : String(name || '?').slice(0, 2).toUpperCase()}
                         </span>

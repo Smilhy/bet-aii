@@ -82875,3 +82875,91 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
   0%,100%{transform:scale(1);color:#ffd34d;text-shadow:0 0 5px rgba(255,211,77,.10),0 0 10px rgba(255,211,77,.08)}
   50%{transform:scale(1.04);color:#ffe58a;text-shadow:0 0 8px rgba(255,224,105,.18),0 0 16px rgba(255,205,64,.10)}
 }
+
+
+/* WERSJA 73 — Ranking: widoczne miejsca 1 / 2 / 3 przy podium */
+.ranking-yield-podium-person-v19{
+  overflow:visible!important;
+}
+.ranking-yield-avatar-shell-v19.ranking-yield-avatar-shell-v73{
+  overflow:visible!important;
+  isolation:isolate!important;
+}
+/* Stary element liczby ukrywamy — numer rysuje teraz niezależny medal,
+   dzięki czemu globalne style przycisków/b nie mogą go schować. */
+.ranking-yield-avatar-shell-v73 > .ranking-yield-place-v19{
+  display:none!important;
+}
+.ranking-yield-avatar-shell-v73::after{
+  content:attr(data-place)!important;
+  position:absolute!important;
+  z-index:30!important;
+  left:50%!important;
+  bottom:-15px!important;
+  transform:translateX(-50%)!important;
+  width:30px!important;
+  height:30px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  box-sizing:border-box!important;
+  border-radius:50%!important;
+  border:3px solid #071722!important;
+  background:var(--podium-accent)!important;
+  color:#101820!important;
+  font-size:13px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  font-family:inherit!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.38),0 0 13px color-mix(in srgb,var(--podium-accent) 42%,transparent)!important;
+  pointer-events:none!important;
+}
+.ranking-yield-podium-person-v19.podium-place-1 .ranking-yield-avatar-shell-v73::after{
+  width:33px!important;
+  height:33px!important;
+  bottom:-16px!important;
+  background:#ffd21a!important;
+  color:#1d1903!important;
+  box-shadow:0 6px 16px rgba(0,0,0,.42),0 0 18px rgba(255,210,26,.42)!important;
+}
+.ranking-yield-podium-person-v19.podium-place-2 .ranking-yield-avatar-shell-v73::after{
+  background:#dfe8ef!important;
+  color:#17212a!important;
+  box-shadow:0 6px 16px rgba(0,0,0,.38),0 0 14px rgba(223,232,239,.28)!important;
+}
+.ranking-yield-podium-person-v19.podium-place-3 .ranking-yield-avatar-shell-v73::after{
+  background:#ec942f!important;
+  color:#211306!important;
+  box-shadow:0 6px 16px rgba(0,0,0,.38),0 0 14px rgba(236,148,47,.32)!important;
+}
+/* Wyraźniejsza obręcz avatara jak w przykładzie użytkownika. */
+.ranking-yield-podium-person-v19.podium-place-1 .ranking-yield-avatar-shell-v73::before{
+  border-color:#ffd21a!important;
+  box-shadow:0 0 20px rgba(255,210,26,.34),inset 0 0 12px rgba(255,255,255,.05)!important;
+}
+.ranking-yield-podium-person-v19.podium-place-2 .ranking-yield-avatar-shell-v73::before{
+  border-color:#dfe8ef!important;
+  box-shadow:0 0 16px rgba(223,232,239,.22),inset 0 0 12px rgba(255,255,255,.05)!important;
+}
+.ranking-yield-podium-person-v19.podium-place-3 .ranking-yield-avatar-shell-v73::before{
+  border-color:#ec942f!important;
+  box-shadow:0 0 16px rgba(236,148,47,.26),inset 0 0 12px rgba(255,255,255,.05)!important;
+}
+/* Więcej miejsca pod avatarami na medal 1/2/3. */
+.ranking-yield-name-v19{
+  margin-top:21px!important;
+}
+@media(max-width:760px){
+  .ranking-yield-avatar-shell-v73::after{
+    width:27px!important;
+    height:27px!important;
+    bottom:-14px!important;
+    font-size:12px!important;
+  }
+  .ranking-yield-podium-person-v19.podium-place-1 .ranking-yield-avatar-shell-v73::after{
+    width:30px!important;
+    height:30px!important;
+    bottom:-15px!important;
+  }
+  .ranking-yield-name-v19{margin-top:19px!important}
+}
