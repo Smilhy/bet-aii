@@ -6,7 +6,7 @@ const AUTHORS = {
   ograc: { name: 'Ograć Buka', username: 'ograc-buka', source: 'ograc_buka_independent_v1867_9', mirrorAiBets: false }
 }
 
-const VERSION = '1897.0-typer-expert-daily-progression-stall-fix-v67'
+const VERSION = '1898.0-typer-expert-policy-rate-limit-fix-v68'
 const DEFAULT_BOTS = ['betai', 'typer', 'ograc']
 
 // Każdy bot działa niezależnie. Nie ma wspólnej rotacji.
@@ -389,17 +389,44 @@ function getBotPolicy(bot, settings = {}, query = {}) {
   const prefix = bot === 'betai' ? 'BETAI_VALUE_V2' : bot === 'typer' ? 'TYPER_EXPERT' : 'OGRAC_BUKA'
   const envNumber = (name, fallback) => number(process.env[`${prefix}_${name}`], fallback)
   const botQueryValue = (name) => query[`${bot}_${name}`]
-  // Zakres kursów może być wspólny, lecz wszystkie pozostałe progi pozostają osobne.
+
+  // WERSJA 68:
+  // Typer Expert ma kanoniczną politykę w kodzie. Stare zmienne Netlify ENV
+  // (np. TYPER_EXPERT_MAX_ODDS=1.2, MAX_STAKE=1, TARGET_PROFIT=0.01)
+  // nie mogą już po cichu zepsuć selekcji ani wyłączyć progresji.
+  //
+  // Pozostawiamy możliwość JAWNEGO override przez parametr URL typer_* do testów,
+  // ale normalny harmonogram zawsze korzysta z bezpiecznych wartości z BOT_POLICIES.typer.
+  if (bot === 'typer') {
+    const minOdds = clamp(botQueryValue('min_odds') ?? base.minOdds, 1.5, 5)
+    const maxOdds = clamp(botQueryValue('max_odds') ?? base.maxOdds, minOdds, 5)
+    const baseStake = clamp(botQueryValue('base_stake') ?? base.progression?.baseStake ?? 1, 1, 1000)
+    const maxStake = clamp(botQueryValue('max_stake') ?? base.progression?.maxStake ?? 1000, baseStake, 1000)
+    const targetProfit = clamp(botQueryValue('target_profit') ?? base.progression?.targetProfit ?? 0.4, 0.01, 100)
+
+    return {
+      ...base,
+      minOdds: Math.max(settings.minOdds || 1.5, minOdds),
+      maxOdds: Math.min(settings.maxOdds || 5, maxOdds),
+      minBooks: Math.round(clamp(botQueryValue('min_books') ?? base.minBooks, 1, 8)),
+      minProbability: clamp(botQueryValue('min_probability_pct') ?? base.minProbability, 10, 80),
+      minEdge: clamp(botQueryValue('min_edge_pct') ?? base.minEdge, -5, 25),
+      maxSpread: clamp(botQueryValue('max_spread_pct') ?? base.maxSpread, 1, 25),
+      cooldownHours: 2,
+      maxPickHoursAhead: clamp(botQueryValue('max_pick_hours_ahead') ?? base.maxPickHoursAhead ?? 24, 6, 36),
+      progression: {
+        enabled: true,
+        baseStake,
+        maxStake,
+        targetProfit
+      },
+      policySourceV68: 'canonical_code_not_netlify_env'
+    }
+  }
+
+  // Inne boty zachowują dotychczasowe ENV/URL override.
   const minOdds = clamp(botQueryValue('min_odds') ?? query.min_odds ?? envNumber('MIN_ODDS', base.minOdds), 1.2, 5)
   const maxOdds = clamp(botQueryValue('max_odds') ?? query.max_odds ?? envNumber('MAX_ODDS', base.maxOdds), minOdds, 5)
-  const progression = bot === 'typer'
-    ? {
-        enabled: true,
-        baseStake: clamp(botQueryValue('base_stake') ?? envNumber('BASE_STAKE', base.progression?.baseStake || 1), 1, 1000),
-        maxStake: clamp(botQueryValue('max_stake') ?? envNumber('MAX_STAKE', base.progression?.maxStake || 1000), 1, 1000),
-        targetProfit: clamp(botQueryValue('target_profit') ?? envNumber('TARGET_PROFIT', base.progression?.targetProfit || 0.4), 0.01, 100)
-      }
-    : null
   return {
     ...base,
     minOdds: Math.max(settings.minOdds || 1.2, minOdds),
@@ -408,15 +435,11 @@ function getBotPolicy(bot, settings = {}, query = {}) {
     minProbability: clamp(botQueryValue('min_probability_pct') ?? envNumber('MIN_PROBABILITY_PCT', base.minProbability), 10, 80),
     minEdge: clamp(botQueryValue('min_edge_pct') ?? envNumber('MIN_EDGE_PCT', base.minEdge), -5, 25),
     maxSpread: clamp(botQueryValue('max_spread_pct') ?? envNumber('MAX_SPREAD_PCT', base.maxSpread), 1, 25),
-    // Tylko Typer Expert (progresja) ma cooldown 2 h. Pozostałe boty: 0 h.
-    cooldownHours: bot === 'typer' ? 2 : 0,
-    maxPickHoursAhead: bot === 'typer'
-      ? clamp(botQueryValue('max_pick_hours_ahead') ?? envNumber('MAX_PICK_HOURS_AHEAD', base.maxPickHoursAhead || 24), 6, 36)
-      : null,
-    progression
+    cooldownHours: 0,
+    maxPickHoursAhead: null,
+    progression: null
   }
 }
-
 
 function candidateTier(candidate, policy) {
   if (!candidate || !policy) return ''
@@ -1346,7 +1369,12 @@ async function runAiBotCycle(event = {}, options = {}) {
     return result
   }
 
-  const dates = Array.from({ length: settings.days }, (_, index) => todayWarsaw(index))
+  // WERSJA 68: publikacja Typer Expert nie potrzebuje skanować 7 dni i 28 requestów
+  // jednocześnie. Jego typ może być maks. 24 h do przodu, więc przy uruchomieniu
+  // tylko tego bota wystarczą dziś + jutro. To mocno ogranicza minute-rate API.
+  const typerOnlyRunV68 = botsToRun.length === 1 && botsToRun[0] === 'typer'
+  const effectiveDaysV68 = typerOnlyRunV68 ? Math.min(2, settings.days) : settings.days
+  const dates = Array.from({ length: effectiveDaysV68 }, (_, index) => todayWarsaw(index))
   const [events, oddsMap] = await Promise.all([
     fetchFixtures(context, settings, dates),
     fetchOdds(context, dates)
@@ -1408,7 +1436,10 @@ async function runAiBotCycle(event = {}, options = {}) {
     api_remaining: context.apiRemaining,
     api_durations: context.apiDurations,
     errors: context.errors.slice(0, 20),
-    forced_daily_selections: forcedDailySelections
+    forced_daily_selections: forcedDailySelections,
+    typer_only_rate_limit_guard_v68: typerOnlyRunV68
+      ? { enabled: true, scanned_days: effectiveDaysV68, reason: 'Typer Expert wybiera maks. 24h do przodu' }
+      : { enabled: false }
   }
 
   if (dryRun) {

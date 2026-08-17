@@ -1,7 +1,7 @@
 const { runAiBotCycle, json } = require('./_lib/ai-bot-cycle')
 const settleTyperExpert = require('./settle-typer-expert')
 
-// WERSJA 67:
+// WERSJA 68:
 // Każdy 2-godzinny cykl Typer Expert najpierw rozlicza jego własny poprzedni typ.
 // Dzięki temu ukryty/stary pending nie blokuje progresji przez wiele dni.
 // Dopiero po rozliczeniu system liczy następną stawkę progresji i publikuje max 1 typ.
@@ -14,7 +14,7 @@ exports.handler = async function handler(event = {}) {
         httpMethod: 'POST',
         queryStringParameters: {
           ...(event.queryStringParameters || {}),
-          source: 'publish-typer-expert-v67-pre-settle',
+          source: 'publish-typer-expert-v68-pre-settle',
           stale_pst_void_hours: (event.queryStringParameters || {}).stale_pst_void_hours || '24'
         }
       })
