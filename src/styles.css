@@ -82816,3 +82816,62 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 @media(max-width:700px){
   .algorithm-stats-inline-meta-v71{gap:4px}
 }
+
+/* WERSJA 72 — Algorytm / Statystyki: górne KPI dopasowane jak na screenie użytkownika */
+.algorithm-stats-inline-meta-v71{
+  font-size:13px!important;
+  line-height:1.25!important;
+}
+.algorithm-stats-inline-meta-v71 .algorithm-inline-wl-v71{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  font-size:16px!important;
+  font-weight:950!important;
+  line-height:1!important;
+}
+.algorithm-stats-inline-meta-v71 .algorithm-inline-wl-v71 .won,
+.algorithm-metric-v1880 strong .algorithm-metric-wl-v71 .won{
+  color:#49f2a8!important;
+  background:transparent!important;
+  border:none!important;
+  border-color:transparent!important;
+  padding:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  text-shadow:0 0 8px rgba(73,242,168,.18)!important;
+}
+.algorithm-stats-inline-meta-v71 .algorithm-inline-wl-v71 .lost,
+.algorithm-metric-v1880 strong .algorithm-metric-wl-v71 .lost{
+  color:#ff607c!important;
+  background:transparent!important;
+  border:none!important;
+  border-color:transparent!important;
+  padding:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  text-shadow:0 0 8px rgba(255,96,124,.18)!important;
+}
+.algorithm-stats-inline-meta-v71 .algorithm-inline-wl-v71 i,
+.algorithm-metric-v1880 strong .algorithm-metric-wl-v71 i{
+  color:#9cb0bd!important;
+  font-style:normal!important;
+  font-weight:900!important;
+}
+.algorithm-metric-v1880 strong .algorithm-metric-wl-v71{
+  gap:8px!important;
+  font-size:25px!important;
+}
+.algorithm-metric-v1880 strong .algorithm-metric-odds-v71{
+  display:inline-block!important;
+  font-size:25px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  color:#ffd34d!important;
+  text-shadow:0 0 5px rgba(255,211,77,.10),0 0 10px rgba(255,211,77,.08)!important;
+  animation:algorithmTopKpiOddsPulseV72 1.8s ease-in-out infinite!important;
+}
+@keyframes algorithmTopKpiOddsPulseV72{
+  0%,100%{transform:scale(1);color:#ffd34d;text-shadow:0 0 5px rgba(255,211,77,.10),0 0 10px rgba(255,211,77,.08)}
+  50%{transform:scale(1.04);color:#ffe58a;text-shadow:0 0 8px rgba(255,224,105,.18),0 0 16px rgba(255,205,64,.10)}
+}
