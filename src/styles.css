@@ -82694,3 +82694,43 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 .algorithm-market-odds-v59 strong{
   color:#ffd75a!important;
 }
+
+
+/* WERSJA 69 — Statystyki lig: złote pulsujące kursy + zielone W / czerwone L */
+.algorithm-stats-row-v1882 .algorithm-odds-pulse-v1902{
+  color:#ffd34d!important;
+  font-weight:950!important;
+  font-size:15px!important;
+  letter-spacing:.01em!important;
+  text-shadow:0 0 6px rgba(255,211,77,.12)!important;
+  animation:algorithmOddsGlowV1902 1.9s ease-in-out infinite!important;
+}
+.algorithm-stats-row-v1882 .algorithm-wl-v1902{
+  display:flex!important;
+  align-items:center!important;
+  gap:4px!important;
+  font-weight:950!important;
+}
+.algorithm-stats-row-v1882 .algorithm-wl-v1902 i{
+  color:#8da3b2!important;
+  font-style:normal!important;
+  font-weight:800!important;
+}
+.algorithm-stats-row-v1882 .algorithm-wl-v1902 .won{
+  color:#48f0a6!important;
+  text-shadow:0 0 8px rgba(72,240,166,.18)!important;
+}
+.algorithm-stats-row-v1882 .algorithm-wl-v1902 .lost{
+  color:#ff6078!important;
+  text-shadow:0 0 8px rgba(255,96,120,.18)!important;
+}
+@keyframes algorithmOddsGlowV1902{
+  0%,100%{
+    color:#ffd34d;
+    text-shadow:0 0 4px rgba(255,211,77,.10),0 0 8px rgba(255,211,77,.08);
+  }
+  50%{
+    color:#ffe27d;
+    text-shadow:0 0 6px rgba(255,211,77,.18),0 0 12px rgba(255,211,77,.12);
+  }
+}

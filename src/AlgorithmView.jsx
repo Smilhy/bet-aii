@@ -425,8 +425,8 @@ function StatsTable({ title, firstLabel, rows, t }) {
           <span>{row.bets}</span>
           <span className={row.profit > 0 ? 'pos' : row.profit < 0 ? 'neg' : 'neutral'}><i aria-hidden="true">{row.profit > 0 ? '▲' : row.profit < 0 ? '▼' : '•'}</i>{signed(row.profit, 2, ' j.')}</span>
           <span className={row.yieldValue > 0 ? 'pos' : row.yieldValue < 0 ? 'neg' : 'neutral'}><i aria-hidden="true">{row.yieldValue > 0 ? '▲' : row.yieldValue < 0 ? '▼' : '•'}</i>{signed(row.yieldValue, 2, '%')}</span>
-          <span>{number(row.avgOdds, 2)}</span>
-          <span>{row.won}/{row.lost}</span>
+          <span className="algorithm-odds-pulse-v1902">{number(row.avgOdds, 2)}</span>
+          <span className="algorithm-wl-v1902"><b className="won">{row.won}</b><i>/</i><b className="lost">{row.lost}</b></span>
         </div>
       )) : <div className="algorithm-stats-empty-v1882">{t.noStats}</div>}
     </section>
