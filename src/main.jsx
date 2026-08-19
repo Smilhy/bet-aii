@@ -34990,19 +34990,9 @@ function persistFastCachedUserV57(user) {
 function readCachedSupabaseUserV50() {
   if (typeof window === 'undefined') return null
 
-  // V57: własny mały snapshot jest najszybszy i nie zależy od formatu storage Supabase.
-  try {
-    const fastRaw = window.localStorage.getItem(BETAI_FAST_AUTH_USER_KEY_V57)
-    if (fastRaw) {
-      const fastUser = JSON.parse(fastRaw)
-      const age = Date.now() - Number(fastUser?.cached_at || 0)
-      if (fastUser?.id && age >= 0 && age < 30 * 24 * 60 * 60 * 1000) return fastUser
-      if (!fastUser?.id || age >= 30 * 24 * 60 * 60 * 1000) window.localStorage.removeItem(BETAI_FAST_AUTH_USER_KEY_V57)
-    }
-  } catch (_) {}
-
-  // Fallback: natywny storage Supabase. Każdy rekord parsujemy osobno,
-  // żeby jeden uszkodzony wpis nie blokował znalezienia prawidłowej sesji.
+  // WERSJA 75: najpierw czytamy natywną sesję Supabase z localStorage.
+  // Własny fast-cache może być o kilka sekund starszy po przełączeniu konta,
+  // dlatego nie może mieć pierwszeństwa nad aktualnym sb-*-auth-token.
   for (let index = 0; index < window.localStorage.length; index += 1) {
     try {
       const key = window.localStorage.key(index) || ''
@@ -35017,9 +35007,21 @@ function readCachedSupabaseUserV50() {
         return user
       }
     } catch (_) {
-      // continue with next localStorage key
+      // continue with next native Supabase storage key
     }
   }
+
+  // Dopiero fallback: mały snapshot UI, gdy natywny storage jeszcze nie jest dostępny.
+  try {
+    const fastRaw = window.localStorage.getItem(BETAI_FAST_AUTH_USER_KEY_V57)
+    if (fastRaw) {
+      const fastUser = JSON.parse(fastRaw)
+      const age = Date.now() - Number(fastUser?.cached_at || 0)
+      if (fastUser?.id && age >= 0 && age < 30 * 24 * 60 * 60 * 1000) return fastUser
+      if (!fastUser?.id || age >= 30 * 24 * 60 * 60 * 1000) window.localStorage.removeItem(BETAI_FAST_AUTH_USER_KEY_V57)
+    }
+  } catch (_) {}
+
   return null
 }
 
@@ -35127,6 +35129,61 @@ function App() {
   })
   const accountSwitchAtRefV74 = useRef(0)
 
+  // WERSJA 75 — twardy bezpiecznik na wyścig autoryzacji.
+  // Stary getSession() nie może po kilku sekundach nadpisać konta, na które user
+  // zdążył się już zalogować.
+  const authMutationSerialRefV75 = useRef(0)
+
+  function markAuthoritativeAuthMutationV75(reason = 'auth') {
+    authMutationSerialRefV75.current = Number(authMutationSerialRefV75.current || 0) + 1
+    try { window.__betaiAuthMutationV75 = { serial: authMutationSerialRefV75.current, reason, at: Date.now() } } catch (_) {}
+    return authMutationSerialRefV75.current
+  }
+
+  function commitAuthoritativeSessionUserV75(nextUser = null, reason = 'auth') {
+    markAuthoritativeAuthMutationV75(reason)
+    persistFastCachedUserV57(nextUser || null)
+    commitSessionUserV74(nextUser || null, reason)
+  }
+
+  function tokenCacheKeyV75(userId = '', email = '') {
+    const id = String(userId || '').trim()
+    const mail = normalizeEmail(email || '')
+    return id && mail ? `betai_tokens_v75_${id}_${mail}` : ''
+  }
+
+  function readAccountTokenCacheV75(userId = '', email = '') {
+    const key = tokenCacheKeyV75(userId, email)
+    if (!key) return 0
+    try {
+      const raw = localStorage.getItem(key)
+      if (!raw) return 0
+      const parsed = JSON.parse(raw)
+      if (String(parsed?.user_id || '') !== String(userId || '')) return 0
+      if (normalizeEmail(parsed?.email || '') !== normalizeEmail(email || '')) return 0
+      return Math.max(0, Number(parsed?.balance || 0) || 0)
+    } catch (_) { return 0 }
+  }
+
+  function writeAccountTokenCacheV75(userId = '', email = '', balance = 0, source = 'remote') {
+    const key = tokenCacheKeyV75(userId, email)
+    const clean = Math.max(0, Number(balance || 0) || 0)
+    if (!key) return clean
+    try {
+      localStorage.setItem(key, JSON.stringify({
+        user_id: String(userId || ''),
+        email: normalizeEmail(email || ''),
+        balance: clean,
+        source,
+        verified_at: Date.now()
+      }))
+      // Kompatybilność ze starszymi podwidokami; główna aplikacja V75 już tego
+      // email-only klucza nie używa do hydracji salda.
+      localStorage.setItem('betai_tokens_' + normalizeEmail(email || ''), String(clean))
+    } catch (_) {}
+    return clean
+  }
+
   function isActiveAccountRequestV74(userId = '', email = '', epoch = null) {
     const active = activeAccountRefV74.current || {}
     const cleanId = String(userId || '').trim()
@@ -35184,7 +35241,10 @@ function App() {
     // żeby stary lock utrzymywał błędne saldo innego użytkownika.
     try {
       const nextEmail = normalizeEmail(nextUser?.email || '')
-      if (nextEmail) localStorage.removeItem('betai_reward_balance_lock_' + nextEmail)
+      if (nextEmail) {
+        localStorage.removeItem('betai_reward_balance_lock_' + nextEmail)
+        localStorage.removeItem('betai_tokens_' + nextEmail)
+      }
     } catch (_) {}
   }
 
@@ -35246,11 +35306,16 @@ function App() {
       return cleanBalance
     }
 
-    setTokenBalance(prev => Math.max(Number(prev || 0) || 0, cleanBalance))
+    let finalBalance = cleanBalance
     try {
-      const currentLocal = Number(localStorage.getItem('betai_tokens_' + walletEmail) || '0') || 0
-      const finalBalance = Math.max(currentLocal, cleanBalance)
-      localStorage.setItem('betai_tokens_' + walletEmail, String(finalBalance))
+      const rawLock = localStorage.getItem('betai_reward_balance_lock_' + walletEmail)
+      const lock = rawLock ? JSON.parse(rawLock) : null
+      const sameUserLock = lock && Number(lock.until || 0) > Date.now() && String(lock.user_id || '') === String(active.id || '')
+      if (sameUserLock) finalBalance = Math.max(finalBalance, Math.max(0, Number(lock.balance || 0) || 0))
+    } catch (_) {}
+    setTokenBalance(finalBalance)
+    try {
+      writeAccountTokenCacheV75(active.id, walletEmail, finalBalance, reason)
       localStorage.setItem('betai_reward_balance_lock_' + walletEmail, JSON.stringify({ balance: finalBalance, until: Date.now() + 90000, reason, user_id: active.id || null }))
       window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email: walletEmail, balance: finalBalance, reason, user_id: active.id || null } }))
       try {
@@ -35282,8 +35347,9 @@ function App() {
         const raw = localStorage.getItem('betai_reward_balance_lock_' + email)
         const lock = raw ? JSON.parse(raw) : null
         if (!lock || Number(lock.until || 0) <= Date.now()) return null
-        // Stary lock bez zgodnego user_id po przełączeniu konta traktujemy jako niewiarygodny.
-        if (lock.user_id && String(lock.user_id) !== String(request.id)) return null
+        // V75: lock musi jawnie należeć do TEGO SAMEGO user_id. Stare locki bez user_id
+        // są niewiarygodne, bo mogły powstać przed naprawą izolacji kont.
+        if (!lock.user_id || String(lock.user_id) !== String(request.id)) return null
         return lock
       } catch (_) {}
       return null
@@ -35292,9 +35358,7 @@ function App() {
     const applyTokenBalance = (candidateBalance, source = 'remote') => {
       if (!requestStillActive()) return 0
       const cleanCandidate = Math.max(0, Number(candidateBalance || 0) || 0)
-      const localBalance = (() => {
-        try { return Math.max(0, Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0) } catch (_) { return 0 }
-      })()
+      const localBalance = readAccountTokenCacheV75(request.id, email)
       const lock = getRewardLock()
       const lockedBalance = Math.max(0, Number(lock?.balance || 0) || 0)
 
@@ -35307,7 +35371,7 @@ function App() {
 
       if (!requestStillActive()) return 0
       setTokenBalance(finalBalance)
-      try { localStorage.setItem('betai_tokens_' + email, String(finalBalance)) } catch (_) {}
+      writeAccountTokenCacheV75(request.id, email, finalBalance, source)
       return finalBalance
     }
 
@@ -35334,7 +35398,7 @@ function App() {
     if (Date.now() - Number(accountSwitchAtRefV74.current || 0) < 30000) return 0
 
     try {
-      const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
+      const localTokens = readAccountTokenCacheV75(request.id, email)
       return applyTokenBalance(localTokens, 'local')
     } catch (_) {
       return 0
@@ -36204,16 +36268,24 @@ function App() {
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase || !sessionUser?.id) return undefined
 
+    const realtimeUserIdV75 = String(sessionUser.id || '')
+    const realtimeEmailV75 = normalizeEmail(sessionUser.email || '')
+    const realtimeEpochV75 = Number(activeAccountRefV74.current?.epoch || 0)
+    const realtimeStillActiveV75 = () => isActiveAccountRequestV74(realtimeUserIdV75, realtimeEmailV75, realtimeEpochV75)
+
     let refreshTimer = null
     const scheduleFullRefresh = () => {
+      if (!realtimeStillActiveV75()) return
       window.clearTimeout(refreshTimer)
       refreshTimer = window.setTimeout(() => {
-        fetchTips(sessionUser?.id)
+        if (!realtimeStillActiveV75()) return
+        fetchTips(realtimeUserIdV75)
         fetchRealRanking()
       }, 450)
     }
 
     const hydrateIncomingTip = (rawTip = {}) => {
+      if (!realtimeStillActiveV75()) return null
       let incomingTip = normalizeTipRow(rawTip || {})
       if (!incomingTip?.id) return null
       if (isBetaiMultisportPublicTipHiddenV28(incomingTip)) return null
@@ -36231,7 +36303,7 @@ function App() {
 
     // CORE LOCK v983: realtime tips/profiles — auto-refresh bez F5, nie usuwać.
     const channel = supabase
-      .channel(`betai-live-tip-center-${sessionUser.id}`)
+      .channel(`betai-live-tip-center-${realtimeUserIdV75}-${realtimeEpochV75}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tips' }, (payload) => {
         const incomingTip = hydrateIncomingTip(payload?.new || {})
         if (!incomingTip) return
@@ -36254,6 +36326,7 @@ function App() {
         scheduleFullRefresh()
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
+        if (!realtimeStillActiveV75()) return
         const updatedProfile = payload?.new || {}
         if (!updatedProfile?.id) return
 
@@ -36296,26 +36369,29 @@ function App() {
         fetchRealRanking()
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'referrals' }, () => {
-        fetchReferralData(sessionUser?.id)
+        if (!realtimeStillActiveV75()) return
+        fetchReferralData(realtimeUserIdV75)
         fetchCurrentTokenBalance()
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'referral_rewards' }, () => {
-        fetchReferralData(sessionUser?.id)
+        if (!realtimeStillActiveV75()) return
+        fetchReferralData(realtimeUserIdV75)
         fetchCurrentTokenBalance()
       })
       .subscribe()
 
     const softPoll = window.setInterval(() => {
-      if (canRunBetaiHeavyTaskV29()) {
-        fetchTips(sessionUser?.id)
+      if (realtimeStillActiveV75() && canRunBetaiHeavyTaskV29()) {
+        fetchTips(realtimeUserIdV75)
       }
     }, getBetaiAdaptiveIntervalV57(30000, 90000))
 
     const onFocusRefresh = () => {
       scheduleBetaiLightTaskV29('focus-refresh-main-v29', () => {
-        fetchTips(sessionUser?.id)
+        if (!realtimeStillActiveV75()) return
+        fetchTips(realtimeUserIdV75)
         fetchRealRanking()
-        fetchReferralData(sessionUser?.id)
+        fetchReferralData(realtimeUserIdV75)
       }, 2600)
     }
     window.addEventListener('focus', onFocusRefresh)
@@ -36620,9 +36696,7 @@ function App() {
       let wallet = existingWallet || null
       let forcedBalanceAfterRepairV51 = null
 
-      const readLocalTokenBalanceV51 = () => {
-        try { return Math.max(0, Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0) } catch (_) { return 0 }
-      }
+      const readLocalTokenBalanceV51 = () => readAccountTokenCacheV75(userId, email)
 
       const loadLedgerBalanceV51 = async (excludeTransactionIds = []) => {
         try {
@@ -36739,7 +36813,7 @@ function App() {
             if (isActiveAccountRequestV74(userId, email, requestEpochV74)) {
               setTokenBalance(correctedBalance)
               try {
-                localStorage.setItem('betai_tokens_' + email, String(correctedBalance))
+                writeAccountTokenCacheV75(userId, email, correctedBalance, 'welcome_bonus_reversal_v51')
                 localStorage.removeItem('betai_reward_balance_lock_' + email)
                 window.dispatchEvent(new CustomEvent('betai-token-balance-changed', {
                   detail: { email, balance: correctedBalance, reason: 'welcome_bonus_reversal_v51', user_id: userId }
@@ -36790,7 +36864,7 @@ function App() {
         if (isActiveAccountRequestV74(userId, email, requestEpochV74)) {
           setTokenBalance(nextBalance)
           try {
-            localStorage.setItem('betai_tokens_' + email, String(nextBalance))
+            writeAccountTokenCacheV75(userId, email, nextBalance, 'welcome_bonus_v51')
             localStorage.removeItem('betai_reward_balance_lock_' + email)
           } catch (_) {}
           showToast({ type: 'success', title: 'Witaj w BetAI 👋', message: 'Dodaliśmy 100 coinów na start.' })
@@ -36821,7 +36895,7 @@ function App() {
           if (isActiveAccountRequestV74(userId, email, requestEpochV74)) {
             setTokenBalance(restoredBalance)
             try {
-              localStorage.setItem('betai_tokens_' + email, String(restoredBalance))
+              writeAccountTokenCacheV75(userId, email, restoredBalance, 'wallet_restore_v75')
               localStorage.removeItem('betai_reward_balance_lock_' + email)
             } catch (_) {}
           }
@@ -36852,7 +36926,7 @@ function App() {
           : remoteBalance
         if (!isActiveAccountRequestV74(userId, email, requestEpochV74)) return
         setTokenBalance(displayBalance)
-        try { localStorage.setItem('betai_tokens_' + email, String(displayBalance)) } catch (_) {}
+        writeAccountTokenCacheV75(userId, email, displayBalance, 'wallet_remote_v75')
 
         const welcomeToastKey = `betai_welcome_toast_seen_${email}_${userId}`
         let shouldShowWelcomeToast = true
@@ -36871,7 +36945,7 @@ function App() {
       welcomeCheckStartedRefV51.current.delete(guardKey)
       try {
         if (isActiveAccountRequestV74(userId, email, requestEpochV74) && Date.now() - Number(accountSwitchAtRefV74.current || 0) >= 30000) {
-          const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
+          const localTokens = readAccountTokenCacheV75(userId, email)
           setTokenBalance(localTokens)
         }
       } catch (_) {}
@@ -38285,7 +38359,15 @@ function App() {
           setAuthLoading(false)
         }
 
+        const sessionRequestSerialV75 = Number(authMutationSerialRefV75.current || 0)
         const sessionRequestV50 = supabase.auth.getSession()
+        const canApplyGetSessionV75 = (candidateUser = null) => {
+          const serialSame = Number(authMutationSerialRefV75.current || 0) === sessionRequestSerialV75
+          if (serialSame) return true
+          const activeId = String(activeAccountRefV74.current?.id || '')
+          const candidateId = String(candidateUser?.id || '')
+          return Boolean(activeId && candidateId && activeId === candidateId)
+        }
         let sessionTimerV50 = null
         const sessionResultV50 = await Promise.race([
           sessionRequestV50,
@@ -38301,9 +38383,13 @@ function App() {
           if (!cachedUserV50?.id) setAuthLoading(false)
           sessionRequestV50.then(({ data }) => {
             const lateUser = data?.session?.user || null
+            if (!canApplyGetSessionV75(lateUser)) {
+              console.warn('V75 blocked stale late-getSession', { late: lateUser?.id || null, active: activeAccountRefV74.current?.id || null })
+              return
+            }
             if (lateUser?.id) {
               persistFastCachedUserV57(lateUser)
-              commitSessionUserV74(lateUser, 'late-getSession')
+              commitSessionUserV74(lateUser, 'late-getSession-v75-verified')
               safeInitialLoad(lateUser)
               ensureUserWalletAndWelcome(lateUser)
             }
@@ -38316,11 +38402,15 @@ function App() {
             setPasswordRecoveryUser(user)
             try { localStorage.setItem('betai_password_recovery_active', '1') } catch (_) {}
           }
-          if (user?.id) persistFastCachedUserV57(user)
-          else persistFastCachedUserV57(null)
-          commitSessionUserV74(user, 'getSession')
+          if (!canApplyGetSessionV75(user)) {
+            console.warn('V75 blocked stale getSession', { result: user?.id || null, active: activeAccountRefV74.current?.id || null })
+          } else {
+            if (user?.id) persistFastCachedUserV57(user)
+            else persistFastCachedUserV57(null)
+            commitSessionUserV74(user, 'getSession-v75-verified')
+          }
 
-          if (user?.id && !recoveryFromUrl) {
+          if (canApplyGetSessionV75(user) && user?.id && !recoveryFromUrl) {
             safeInitialLoad(user)
             ensureUserWalletAndWelcome(user)
           }
@@ -38333,23 +38423,22 @@ function App() {
           const tokenOnlyRefresh = eventName === 'TOKEN_REFRESHED'
 
           if (recoveryEvent && nextUser?.id) {
-            persistFastCachedUserV57(nextUser)
             setPasswordRecoveryMode(true)
             setPasswordRecoveryUser(nextUser)
-            commitSessionUserV74(nextUser, 'password-recovery')
+            commitAuthoritativeSessionUserV75(nextUser, 'password-recovery-v75')
             try { localStorage.setItem('betai_password_recovery_active', '1') } catch (_) {}
             return
           }
 
           if (tokenOnlyRefresh && nextUser?.id) {
             persistFastCachedUserV57(nextUser)
-            commitSessionUserV74(nextUser, 'token-refreshed')
+            if (String(activeAccountRefV74.current?.id || '') === String(nextUser.id || '')) {
+              commitSessionUserV74(nextUser, 'token-refreshed-v75')
+            }
             return
           }
 
-          if (nextUser?.id) persistFastCachedUserV57(nextUser)
-          else persistFastCachedUserV57(null)
-          commitSessionUserV74(nextUser, `auth-${eventName || 'change'}`)
+          commitAuthoritativeSessionUserV75(nextUser, `auth-${eventName || 'change'}-v75`)
 
           if (!nextUser?.id) {
             setPasswordRecoveryMode(false)
@@ -38568,9 +38657,8 @@ function App() {
         sessionStorage.removeItem(`betai_welcome_toast_seen_${logoutEmail}_`)
       }
     } catch (_) {}
+    commitAuthoritativeSessionUserV75(null, 'logout-v75')
     if (supabase) await supabase.auth.signOut()
-    persistFastCachedUserV57(null)
-    commitSessionUserV74(null, 'logout')
     setUnlockedTips(new Set())
     clearGuestUnlockedTips()
     try { localStorage.removeItem('betai_unlocked_tips_v1') } catch {}
@@ -38670,7 +38758,7 @@ function App() {
             if (!isActiveAccountRequestV74(currentUserIdV74, currentEmail, requestEpochV74)) return
             const nextBalance = Number(payload?.new?.balance || 0) || 0
             setTokenBalance(nextBalance)
-            try { localStorage.setItem('betai_tokens_' + currentEmail, String(nextBalance)) } catch (_) {}
+            writeAccountTokenCacheV75(currentUserIdV74, currentEmail, nextBalance, 'realtime_wallet_v75')
             fetchNotifications(currentUserIdV74, { skipBalanceRefresh: true })
           })
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'betai_system_notifications', filter: `recipient_email=eq.${currentEmail}` }, payload => {
@@ -39018,19 +39106,19 @@ function App() {
         onComplete={(user) => {
           setPasswordRecoveryMode(false)
           setPasswordRecoveryUser(null)
-          commitSessionUserV74(user || sessionUser, 'password-reset-complete')
+          commitAuthoritativeSessionUserV75(user || sessionUser, 'password-reset-complete-v75')
         }}
         onCancel={() => {
           setPasswordRecoveryMode(false)
           setPasswordRecoveryUser(null)
-          commitSessionUserV74(null, 'password-reset-cancel')
+          commitAuthoritativeSessionUserV75(null, 'password-reset-cancel-v75')
         }}
       />
     )
   }
 
   if (!sessionUser) {
-    return <AuthView onAuth={(user) => commitSessionUserV74(user, 'auth-view')} />
+    return <AuthView onAuth={(user) => commitAuthoritativeSessionUserV75(user, 'auth-view-v75')} />
   }
 
   return (
