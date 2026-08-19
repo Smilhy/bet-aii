@@ -35496,15 +35496,58 @@ function App() {
       }
     }
 
+    // WERSJA 77 — prawa kolumna nie może liczyć statystyk botów tylko z globalnego
+    // okna ostatnich 500 typów. Przy dużej liczbie kuponów smilhytv starsza historia
+    // Ograć Buka / Typer Expert wypadała poza limit i Dashboard pokazywał np.
+    // 1 kupon + 100%/71% yield, mimo że profil miał 47/32 kupony.
+    // Pobieramy TYLKO pełną historię dwóch systemowych typerów — to kilka-kilkadziesiąt
+    // wierszy, więc nie zwiększamy egress przez pobieranie tysięcy rekordów wszystkich osób.
+    const fetchSystemTipsterHistoryV77 = async (slug, displayName) => {
+      const queries = [
+        supabase.from('tips').select('*').eq('public_slug', slug).order('created_at', { ascending: false }).limit(500),
+        supabase.from('tips').select('*').eq('author_name', displayName).order('created_at', { ascending: false }).limit(500),
+        supabase.from('tips').select('*').eq('username', displayName).order('created_at', { ascending: false }).limit(500),
+      ]
+      const groups = await Promise.all(queries.map(query => safeRows(query, [])))
+      const map = new Map()
+      groups.flat().forEach((row, index) => {
+        if (!row) return
+        const id = String(row.id || '').trim()
+        const fixture = String(row.fixture_id || row.api_fixture_id || row.external_fixture_id || '').trim()
+        const pick = String(row.pick || row.prediction || row.bet_type || row.selection || '').trim().toLowerCase()
+        const kickoff = String(row.match_time || row.event_time || row.kickoff_time || row.created_at || '').trim()
+        const key = id || `${slug}|${fixture}|${pick}|${kickoff}|${index}`
+        const previous = map.get(key)
+        map.set(key, previous ? { ...previous, ...row } : row)
+      })
+      return [...map.values()]
+    }
+
     try {
       // WERSJA 1429: ranking/top typerzy bez ciężkich limitów 1000 i bez łańcucha wielu widoków.
-      const [rankingRows, tipRows, profileRows] = await Promise.all([
+      const [rankingRows, tipRows, profileRows, typerExpertHistoryV77, ogracBukaHistoryV77] = await Promise.all([
         safeRows(supabase.from('betai_live_ranking_v999').select('*').order('profit', { ascending: false }).limit(100), []),
         safeRows(supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(500), []),
-        fetchBetaiPublicProfiles().catch(() => [])
+        fetchBetaiPublicProfiles().catch(() => []),
+        fetchSystemTipsterHistoryV77('typer-expert', 'Typer Expert'),
+        fetchSystemTipsterHistoryV77('ograc-buka', 'Ograć Buka'),
       ])
 
       const cleanTipRows = (tipRows || []).filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row) && !isBetaiMultisportPublicTipHiddenV28(row))
+      const rankingStatsTipsMapV77 = new Map()
+      ;[...cleanTipRows, ...(typerExpertHistoryV77 || []), ...(ogracBukaHistoryV77 || [])]
+        .filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row) && !isBetaiMultisportPublicTipHiddenV28(row))
+        .forEach((row, index) => {
+          const id = String(row?.id || '').trim()
+          const fixture = String(row?.fixture_id || row?.api_fixture_id || row?.external_fixture_id || '').trim()
+          const author = String(row?.public_slug || row?.username || row?.author_name || '').trim().toLowerCase()
+          const pick = String(row?.pick || row?.prediction || row?.bet_type || row?.selection || '').trim().toLowerCase()
+          const kickoff = String(row?.match_time || row?.event_time || row?.kickoff_time || row?.created_at || '').trim()
+          const key = id || `${author}|${fixture}|${pick}|${kickoff}|${index}`
+          const previous = rankingStatsTipsMapV77.get(key)
+          rankingStatsTipsMapV77.set(key, previous ? { ...previous, ...row } : row)
+        })
+      const rankingStatsTipRowsV77 = [...rankingStatsTipsMapV77.values()]
       const profileRowsWithSystemV1837 = mergeProfilesPreferStats([
         ...(profileRows || []),
         ...BETAI_SYSTEM_TIPSTER_PROFILES_V1837,
@@ -35512,7 +35555,7 @@ function App() {
       const profileRankingRows = profileRowsWithSystemV1837
         .filter(profile => !isBlockedTestProfile(profile) && !isHiddenDemoProfileV1712(profile) && !isBetaiMultisportPublicTipHiddenV28(profile))
         .map(profile => {
-        const canonical = buildCanonicalProfileStatsV1817(profile, cleanTipRows)
+        const canonical = buildCanonicalProfileStatsV1817(profile, rankingStatsTipRowsV77)
         const profit = Number(canonical?.profit ?? profile.profit ?? profile.earnings ?? profile.imported_profit ?? 0) || 0
         const totalTips = Number(canonical?.totalTips ?? profile.total_tips ?? profile.tips_count ?? profile.imported_total_tips ?? 0) || 0
         const wins = Number(canonical?.wonTips ?? profile.wins ?? profile.imported_won_tips ?? 0) || 0
@@ -35531,6 +35574,9 @@ function App() {
           canonical_pending_tips: pending,
           canonical_yield: roi,
           canonical_profit: profit,
+          ranking_stats_source_v77: isTyperExpertLiveStatsProfileV21(profile) || getBetaiSystemTipsterProfileV1838(profile)
+            ? 'targeted_full_system_tipster_history_v77'
+            : 'profile_canonical_v1817',
           // W tym wierszu imported_* jest tylko aliasem UI i musi pokazywać
           // pełny aktualny stan, nie sam historyczny baseline.
           imported_total_tips: totalTips,
@@ -35558,8 +35604,8 @@ function App() {
 
       const cleanRankingRows = (rankingRows || []).filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(formatRankingName(row)) && !isBetaiMultisportPublicTipHiddenV28(row))
       const finalRows = buildLiveLeaderboardRows(
-        mergeRankingRows(profileRankingRows, cleanRankingRows, buildRankingFromTips(cleanTipRows)),
-        cleanTipRows.length ? cleanTipRows : (tips || []).filter(row => !isBlockedTestProfile(row))
+        mergeRankingRows(profileRankingRows, cleanRankingRows, buildRankingFromTips(rankingStatsTipRowsV77)),
+        rankingStatsTipRowsV77.length ? rankingStatsTipRowsV77 : (tips || []).filter(row => !isBlockedTestProfile(row))
       )
 
       setRealRanking((finalRows || []).filter(row => !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(formatRankingName(row)) && !isBetaiMultisportPublicTipHiddenV28(row)))
