@@ -3430,9 +3430,12 @@ function getRankingIdentityKey(row = {}) {
   const email = normalizeEmail(row.email || row.author_email || row.user_email)
   const username = normalizeEmail(row.username || row.author_name || row.user_name)
   const id = String(row.tipster_id || row.author_id || row.user_id || row.id || '').toLowerCase()
+  // WERSJA 76: jeśli rekord ma stabilny UUID użytkownika, UUID jest kanoniczny.
+  // Email/nazwa są tylko aliasami prezentacyjnymi i nie mogą skleić dwóch różnych kont.
+  if (id) return `id:${id}`
   if (email) return `email:${email}`
   if (username && !isGenericProfileName(username)) return `user:${username}`
-  return id ? `id:${id}` : ''
+  return ''
 }
 
 function normalizeRankingProfit(row = {}) {
@@ -3529,11 +3532,17 @@ function buildCanonicalProfileStatsV1817(profile = {}, tips = []) {
     const tip = normalizeTipRow(rawTip)
     const ids = [tip?.author_id, tip?.user_id, tip?.created_by, tip?.owner_id, tip?.tipster_id]
       .map(value => String(value || '').trim().toLowerCase()).filter(Boolean)
-    if (profileIds.size && ids.some(value => profileIds.has(value))) return true
+    if (profileIds.size && ids.length) {
+      // WERSJA 76: dwa jawne UUID-y muszą się zgadzać. Nigdy nie spadamy wtedy
+      // do username/email, bo stary alias mógł pochodzić z drugiego konta.
+      return ids.some(value => profileIds.has(value))
+    }
 
     const emails = [tip?.author_email, tip?.email, tip?.user_email]
       .map(value => normalizeEmail(value || '')).filter(Boolean)
-    if (profileEmails.size && emails.some(value => profileEmails.has(value))) return true
+    if (profileEmails.size && emails.length) {
+      return emails.some(value => profileEmails.has(value))
+    }
 
     const names = [tip?.author_name, tip?.username, tip?.public_slug, resolveRealProfileUsername(tip)]
       .map(value => normalizeEmail(value || '')).filter(value => value && !isGenericProfileName(value))
@@ -3611,31 +3620,51 @@ function buildRankingRowsFromTipCards(tips = []) {
 function mergeRankingRows(...groups) {
   const map = new Map()
   const aliasToKey = new Map()
+  const keyExplicitId = new Map()
 
-  const aliasesFor = (raw = {}) => {
-    const aliases = []
+  const identityPartsV76 = (raw = {}) => {
     const botKey = normalizeRankingBotKeyV1761(raw)
-    if (botKey) aliases.push(botKey)
-
+    const id = String(raw.tipster_id || raw.author_id || raw.user_id || raw.id || '').toLowerCase().trim()
     const email = normalizeEmail(raw.email || raw.author_email || raw.user_email)
     const username = normalizeEmail(raw.username || raw.author_name || raw.user_name)
-    const id = String(raw.tipster_id || raw.author_id || raw.user_id || raw.id || '').toLowerCase()
+    const aliases = []
+    if (botKey) aliases.push(botKey)
+    if (id && !botKey) aliases.push(`id:${id}`)
     if (email) {
       aliases.push(`email:${email}`)
       aliases.push(`user:${email.split('@')[0]}`)
     }
     if (username && !isGenericProfileName(username)) aliases.push(`user:${username}`)
-    if (id && !botKey) aliases.push(`id:${id}`)
-    return [...new Set(aliases.filter(Boolean))]
+    return { botKey, id, email, username, aliases: [...new Set(aliases.filter(Boolean))] }
   }
 
   groups.flat().filter(Boolean).forEach(raw => {
-    const aliases = aliasesFor(raw)
-    let key = aliases.find(alias => aliasToKey.has(alias))
-    if (key) key = aliasToKey.get(key)
-    if (!key) key = aliases[0] || getRankingIdentityKey(raw)
+    const ident = identityPartsV76(raw)
+    if (!ident.aliases.length) return
+
+    // UUID jest twardą granicą konta. Rekord z jawnym UUID nie może zostać
+    // dołączony do klucza, który już należy do innego UUID tylko dlatego,
+    // że stary email/username jest taki sam.
+    let key = ident.botKey || (ident.id ? `id:${ident.id}` : '')
+    if (!key) {
+      const safeAlias = ident.aliases.find(alias => {
+        const mapped = aliasToKey.get(alias)
+        if (!mapped) return false
+        const mappedId = keyExplicitId.get(mapped) || ''
+        return !mappedId
+      })
+      key = safeAlias ? aliasToKey.get(safeAlias) : (ident.aliases[0] || getRankingIdentityKey(raw))
+    }
     if (!key) return
-    aliases.forEach(alias => aliasToKey.set(alias, key))
+
+    if (ident.id) keyExplicitId.set(key, ident.id)
+    ident.aliases.forEach(alias => {
+      const existingKey = aliasToKey.get(alias)
+      const existingId = existingKey ? (keyExplicitId.get(existingKey) || '') : ''
+      // Nie przepinamy aliasu pomiędzy dwoma różnymi UUID.
+      if (ident.id && existingId && existingId !== ident.id) return
+      aliasToKey.set(alias, key)
+    })
 
     const previous = map.get(key) || {}
     const profit = normalizeRankingProfit(raw)
@@ -3648,8 +3677,6 @@ function mergeRankingRows(...groups) {
     const pending = getRankingNumber(raw, ['canonical_pending_tips', 'pendingTips', 'pending_tips', 'pending', 'imported_pending_tips'], 0)
     const roi = normalizeRankingYield(raw)
     const incomingHasStats = tipsCount > 0 || wins > 0 || losses > 0 || voids > 0 || pending > 0 || profit !== 0 || roi !== 0
-    // Kolejne grupy są coraz bardziej aktualne. Przy tej samej lub większej liczbie
-    // typów późniejsze dane zastępują stary snapshot zamiast wybierać większy procent.
     const preferIncomingStats = incomingHasStats && (previousTipsCount <= 0 || tipsCount >= previousTipsCount)
     const selectedTips = preferIncomingStats ? Number(tipsCount || 0) : Number(previousTipsCount || 0)
     const selectedWins = preferIncomingStats ? Number(wins || 0) : normalizeRankingWins(previous)
@@ -3665,7 +3692,9 @@ function mergeRankingRows(...groups) {
     map.set(key, {
       ...previous,
       ...raw,
-      tipster_id: raw.tipster_id || raw.author_id || raw.user_id || raw.id || previous.tipster_id || key,
+      // Jeśli mamy jawny UUID, nie pozwalamy późniejszemu aliasowi go zmienić.
+      tipster_id: ident.id || previous.tipster_id || raw.tipster_id || raw.author_id || raw.user_id || raw.id || key,
+      id: ident.id || previous.id || raw.id || raw.user_id || raw.author_id || raw.tipster_id || undefined,
       username: isGenericProfileName(username) ? (raw.email ? String(raw.email).split('@')[0] : previous.username || 'Użytkownik') : username,
       email: raw.email || raw.author_email || previous.email || '',
       avatar_url: raw.avatar_url || raw.author_avatar_url || raw.profile_avatar_url || previous.avatar_url || previous.author_avatar_url || '',
@@ -3688,15 +3717,14 @@ function mergeRankingRows(...groups) {
       pendingTips: selectedPending,
       roi: selectedYield,
       yield: selectedYield,
-      winrate: (selectedWins + selectedLosses) > 0
-        ? (selectedWins / (selectedWins + selectedLosses)) * 100
-        : Number(raw.winrate || raw.wr || previous.winrate || 0),
       earnings: selectedProfit,
+      total_earnings: selectedProfit,
       profit: selectedProfit,
+      winrate: (selectedWins + selectedLosses) > 0 ? (selectedWins / (selectedWins + selectedLosses)) * 100 : Number(raw.winrate ?? previous.winrate ?? 0),
     })
   })
 
-  return Array.from(map.values()).filter(row => !['bet+ai live','betai live','ai tip'].includes(String(row?.username || row?.name || '').toLowerCase()))
+  return Array.from(map.values())
 }
 
 function buildLiveLeaderboardRows(ranking = [], tips = []) {
@@ -4223,15 +4251,16 @@ function addProfileToMap(profileMap, profile = {}) {
   const displayKey = normalizeEmail(profile.display_name || profile.profile_name)
   const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
   const idKey = String(profile.id || profile.user_id || profile.author_id || profile.tipster_id || '').toLowerCase()
-  if (idKey) profileMap.set(idKey, profile)
-  if (emailKey) profileMap.set(emailKey, profile)
-  if (localKey) profileMap.set(localKey, profile)
-  if (slugKey && !isGenericProfileName(slugKey)) profileMap.set(slugKey, profile)
-  if (displayKey && !isGenericProfileName(displayKey)) profileMap.set(displayKey, profile)
-  if (usernameKey && !isGenericProfileName(usernameKey)) profileMap.set(usernameKey, profile)
+  if (idKey) profileMap.set(`id:${idKey}`, profile)
+  if (emailKey) profileMap.set(`email:${emailKey}`, profile)
+  if (localKey) profileMap.set(`user:${localKey}`, profile)
+  if (slugKey && !isGenericProfileName(slugKey)) profileMap.set(`user:${slugKey}`, profile)
+  if (displayKey && !isGenericProfileName(displayKey)) profileMap.set(`user:${displayKey}`, profile)
+  if (usernameKey && !isGenericProfileName(usernameKey)) profileMap.set(`user:${usernameKey}`, profile)
 }
 
-// CORE LOCK v983: znajdowanie profilu bez mieszania użytkowników po nazwie 'user'.
+// WERSJA 76: jawny ID ma absolutne pierwszeństwo. Gdy źródło ma UUID i profil pod tym
+// UUID istnieje, nie wolno podmieniać go profilem znalezionym po nazwie/emailu.
 function findProfileFromMap(profileMap, source = {}) {
   if (!profileMap || !source) return null
   const emailKey = normalizeEmail(source.email || source.author_email || source.user_email)
@@ -4239,11 +4268,14 @@ function findProfileFromMap(profileMap, source = {}) {
   const nameKey = normalizeEmail(source.username || source.author_name || source.user_name)
   const slugKey = normalizeEmail(source.public_slug || source.slug)
   const idKey = String(getTipAuthorId(source) || source.id || source.user_id || source.author_id || source.tipster_id || '').toLowerCase()
-  return profileMap.get(idKey) ||
-    profileMap.get(emailKey) ||
-    profileMap.get(localKey) ||
-    (slugKey && !isGenericProfileName(slugKey) ? profileMap.get(slugKey) : null) ||
-    (nameKey && !isGenericProfileName(nameKey) ? profileMap.get(nameKey) : null) ||
+  if (idKey) {
+    const exact = profileMap.get(`id:${idKey}`)
+    if (exact) return exact
+  }
+  return profileMap.get(`email:${emailKey}`) ||
+    profileMap.get(`user:${localKey}`) ||
+    (slugKey && !isGenericProfileName(slugKey) ? profileMap.get(`user:${slugKey}`) : null) ||
+    (nameKey && !isGenericProfileName(nameKey) ? profileMap.get(`user:${nameKey}`) : null) ||
     null
 }
 
@@ -4332,16 +4364,17 @@ function buildBetaiProfileMap(profiles = []) {
 function mergeProfilesPreferStats(...groups) {
   const map = new Map()
   const aliases = new Map()
+  const keyExplicitId = new Map()
 
-  const profileAliases = (profile = {}) => {
-    const out = []
+  const profileIdentityV76 = (profile = {}) => {
     const botKey = normalizeRankingBotKeyV1761(profile)
-    if (botKey) out.push(botKey)
-    const id = String(profile.id || profile.user_id || profile.author_id || '').toLowerCase()
+    const id = String(profile.id || profile.user_id || profile.author_id || '').toLowerCase().trim()
     const email = normalizeEmail(profile.email || profile.user_email || profile.author_email)
     const username = normalizeEmail(profile.username || profile.user_name || profile.author_name)
     const slug = normalizeEmail(profile.public_slug || profile.slug)
     const display = normalizeEmail(profile.display_name || profile.profile_name)
+    const out = []
+    if (botKey) out.push(botKey)
     if (id) out.push(`id:${id}`)
     if (email) {
       out.push(`email:${email}`)
@@ -4350,7 +4383,7 @@ function mergeProfilesPreferStats(...groups) {
     if (slug && !isGenericProfileName(slug)) out.push(`user:${slug}`)
     if (display && !isGenericProfileName(display)) out.push(`user:${display}`)
     if (username && !isGenericProfileName(username)) out.push(`user:${username}`)
-    return [...new Set(out)]
+    return { botKey, id, email, username, keys: [...new Set(out)] }
   }
 
   const score = (profile = {}) => {
@@ -4364,11 +4397,29 @@ function mergeProfilesPreferStats(...groups) {
   }
 
   groups.flat().filter(Boolean).forEach(profile => {
-    const keys = profileAliases(profile)
-    if (!keys.length) return
-    let key = keys.find(item => aliases.has(item))
-    key = key ? aliases.get(key) : keys[0]
-    keys.forEach(item => aliases.set(item, key))
+    const ident = profileIdentityV76(profile)
+    if (!ident.keys.length) return
+
+    // Każdy profil z UUID dostaje własny kanoniczny klucz. Alias o tej samej nazwie
+    // nie może scalić smilhytv i buchajson1988 w jeden obiekt.
+    let key = ident.botKey || (ident.id ? `id:${ident.id}` : '')
+    if (!key) {
+      const safeAlias = ident.keys.find(alias => {
+        const mapped = aliases.get(alias)
+        return mapped && !keyExplicitId.get(mapped)
+      })
+      key = safeAlias ? aliases.get(safeAlias) : ident.keys[0]
+    }
+    if (!key) return
+    if (ident.id) keyExplicitId.set(key, ident.id)
+
+    ident.keys.forEach(alias => {
+      const existingKey = aliases.get(alias)
+      const existingId = existingKey ? (keyExplicitId.get(existingKey) || '') : ''
+      if (ident.id && existingId && existingId !== ident.id) return
+      aliases.set(alias, key)
+    })
+
     const previous = map.get(key) || {}
     const preferred = score(profile) >= score(previous) ? profile : previous
     const other = preferred === profile ? previous : profile
@@ -4376,6 +4427,7 @@ function mergeProfilesPreferStats(...groups) {
     map.set(key, {
       ...other,
       ...preferred,
+      id: ident.id || preferred.id || other.id,
       username: stableUsername,
       public_slug: preferred.public_slug || other.public_slug || normalizePublicSlug(stableUsername),
       avatar_url: getProfileAvatarUrl(preferred) || getProfileAvatarUrl(other) || '',
@@ -4532,13 +4584,15 @@ function applyProfileAvatarToTip(tip, profileMap) {
 }
 
 function isSameProfileIdentity(left, right) {
-  const leftId = String(left?.id || left?.user_id || left?.author_id || '').trim()
-  const rightId = String(right?.id || right?.user_id || right?.author_id || '').trim()
-  if (leftId && rightId && leftId === rightId) return true
+  const leftId = String(left?.id || left?.user_id || left?.author_id || left?.tipster_id || '').trim()
+  const rightId = String(right?.id || right?.user_id || right?.author_id || right?.tipster_id || '').trim()
+  // WERSJA 76: jeśli obie strony mają UUID, różne UUID = różne konta. Koniec.
+  // Nie wolno później uznać ich za to samo konto przez stary email/username.
+  if (leftId && rightId) return leftId === rightId
 
   const leftEmail = getProfileEmail(left)
   const rightEmail = getProfileEmail(right)
-  if (leftEmail && rightEmail && leftEmail === rightEmail) return true
+  if (leftEmail && rightEmail) return leftEmail === rightEmail
 
   const leftUsername = getProfileUsername(left)
   const rightUsername = getProfileUsername(right)
@@ -4639,20 +4693,33 @@ function hasUnlimitedTipAccess(user, plan = 'free') {
 }
 
 function buildEffectiveAccountProfile(accountProfile, sessionUser) {
-  const sessionEmail = normalizeEmail(sessionUser?.email || accountProfile?.email)
+  // WERSJA 76 — twarda izolacja kont.
+  // Profil z React state może być jeszcze wynikiem spóźnionego requestu poprzedniego konta.
+  // Nigdy nie wolno łączyć go z innym auth.user.
+  const sessionIdV76 = String(sessionUser?.id || '').trim()
+  const sessionEmailOnlyV76 = normalizeEmail(sessionUser?.email || '')
+  const profileIdV76 = String(accountProfile?.id || accountProfile?.user_id || '').trim()
+  const profileEmailV76 = normalizeEmail(accountProfile?.email || '')
+  const profileMatchesSessionV76 = !sessionUser || !accountProfile || Boolean(
+    (sessionIdV76 && profileIdV76 && sessionIdV76 === profileIdV76) ||
+    (sessionEmailOnlyV76 && profileEmailV76 && sessionEmailOnlyV76 === profileEmailV76)
+  )
+  const safeAccountProfileV76 = profileMatchesSessionV76 ? accountProfile : null
+
+  const sessionEmail = normalizeEmail(sessionUser?.email || safeAccountProfileV76?.email)
   const fallbackUsername = sessionEmail ? sessionEmail.split('@')[0] : ''
   const merged = {
     ...(sessionUser || {}),
-    ...(accountProfile || {}),
-    id: accountProfile?.id || sessionUser?.id || null,
-    email: sessionEmail || accountProfile?.email || sessionUser?.email || '',
-    username: accountProfile?.username || sessionUser?.username || sessionUser?.user_metadata?.username || sessionUser?.user_metadata?.name || fallbackUsername,
+    ...(safeAccountProfileV76 || {}),
+    id: sessionUser?.id || safeAccountProfileV76?.id || null,
+    email: sessionEmail || safeAccountProfileV76?.email || sessionUser?.email || '',
+    username: safeAccountProfileV76?.username || sessionUser?.username || sessionUser?.user_metadata?.username || sessionUser?.user_metadata?.name || fallbackUsername,
     avatar_url:
-      accountProfile?.avatar_url ||
-      accountProfile?.profile_avatar_url ||
-      accountProfile?.author_avatar_url ||
-      accountProfile?.photo_url ||
-      accountProfile?.picture ||
+      safeAccountProfileV76?.avatar_url ||
+      safeAccountProfileV76?.profile_avatar_url ||
+      safeAccountProfileV76?.author_avatar_url ||
+      safeAccountProfileV76?.photo_url ||
+      safeAccountProfileV76?.picture ||
       sessionUser?.avatar_url ||
       sessionUser?.profile_avatar_url ||
       sessionUser?.photo_url ||
@@ -4665,10 +4732,10 @@ function buildEffectiveAccountProfile(accountProfile, sessionUser) {
       sessionUser?.raw_user_meta_data?.photo_url ||
       '',
     profile_avatar_url:
-      accountProfile?.profile_avatar_url ||
-      accountProfile?.avatar_url ||
-      accountProfile?.photo_url ||
-      accountProfile?.picture ||
+      safeAccountProfileV76?.profile_avatar_url ||
+      safeAccountProfileV76?.avatar_url ||
+      safeAccountProfileV76?.photo_url ||
+      safeAccountProfileV76?.picture ||
       sessionUser?.profile_avatar_url ||
       sessionUser?.avatar_url ||
       sessionUser?.photo_url ||
@@ -4680,7 +4747,7 @@ function buildEffectiveAccountProfile(accountProfile, sessionUser) {
       sessionUser?.raw_user_meta_data?.picture ||
       sessionUser?.raw_user_meta_data?.photo_url ||
       '',
-    bio: accountProfile?.bio || sessionUser?.bio || sessionUser?.user_metadata?.bio || accountProfile?.description || accountProfile?.about || ''
+    bio: safeAccountProfileV76?.bio || sessionUser?.bio || sessionUser?.user_metadata?.bio || safeAccountProfileV76?.description || safeAccountProfileV76?.about || ''
   }
   if (isGuaranteedPremiumIdentity(merged) || BETAI_PREMIUM_EMAILS.includes(sessionEmail)) {
     merged.is_premium = true
@@ -34979,19 +35046,23 @@ function persistFastCachedUserV57(user) {
 function readCachedSupabaseUserV50() {
   if (typeof window === 'undefined') return null
 
-  // V57: własny mały snapshot jest najszybszy i nie zależy od formatu storage Supabase.
+  // WERSJA 76: jednorazowo czyścimy tylko stare lokalne cache, które mogły zostać
+  // skażone przez mieszanie smilhytv <-> buchajson1988. Baza Supabase nie jest ruszana.
   try {
-    const fastRaw = window.localStorage.getItem(BETAI_FAST_AUTH_USER_KEY_V57)
-    if (fastRaw) {
-      const fastUser = JSON.parse(fastRaw)
-      const age = Date.now() - Number(fastUser?.cached_at || 0)
-      if (fastUser?.id && age >= 0 && age < 30 * 24 * 60 * 60 * 1000) return fastUser
-      if (!fastUser?.id || age >= 30 * 24 * 60 * 60 * 1000) window.localStorage.removeItem(BETAI_FAST_AUTH_USER_KEY_V57)
+    const purgeMarkerV76 = 'betai_account_isolation_cache_purge_v76'
+    if (window.localStorage.getItem(purgeMarkerV76) !== '1') {
+      ;['smilhytv@gmail.com', 'buchajson1988@gmail.com'].forEach(mail => {
+        window.localStorage.removeItem('betai_tokens_' + mail)
+        window.localStorage.removeItem('betai_reward_balance_lock_' + mail)
+      })
+      window.localStorage.removeItem('betai_public_avatar_cache_v912')
+      window.localStorage.setItem(purgeMarkerV76, '1')
     }
   } catch (_) {}
 
-  // Fallback: natywny storage Supabase. Każdy rekord parsujemy osobno,
-  // żeby jeden uszkodzony wpis nie blokował znalezienia prawidłowej sesji.
+  // WERSJA 76: źródłem prawdy jest natywny storage Supabase.
+  // Stary betai_fast_auth_user_v57 mógł zostać po poprzednim koncie i przez chwilę
+  // wstrzykiwać jego usera przed TOKEN_REFRESHED / SIGNED_IN.
   for (let index = 0; index < window.localStorage.length; index += 1) {
     try {
       const key = window.localStorage.key(index) || ''
@@ -35005,10 +35076,19 @@ function readCachedSupabaseUserV50() {
         persistFastCachedUserV57(user)
         return user
       }
-    } catch (_) {
-      // continue with next localStorage key
-    }
+    } catch (_) {}
   }
+
+  // Fallback tylko jeśli natywna sesja Supabase nie istnieje.
+  try {
+    const fastRaw = window.localStorage.getItem(BETAI_FAST_AUTH_USER_KEY_V57)
+    if (fastRaw) {
+      const fastUser = JSON.parse(fastRaw)
+      const age = Date.now() - Number(fastUser?.cached_at || 0)
+      if (fastUser?.id && age >= 0 && age < 6 * 60 * 60 * 1000) return fastUser
+      window.localStorage.removeItem(BETAI_FAST_AUTH_USER_KEY_V57)
+    }
+  } catch (_) {}
   return null
 }
 
@@ -35027,6 +35107,15 @@ function App() {
   // Sieć potwierdza/odświeża token w tle — nie blokujemy telefonu ekranem „Ładowanie sesji…”.
   const fastCachedUserV57 = useMemo(() => readCachedSupabaseUserV50(), [])
   const [sessionUser, setSessionUser] = useState(() => fastCachedUserV57 || null)
+  // WERSJA 76 — numer generacji zmienia się przy KAŻDEJ zmianie konta.
+  // Każdy opóźniony request/timer poprzedniego konta musi przestać mieć prawo do setState.
+  const accountEpochRefV76 = useRef(1)
+  const activeAccountRefV76 = useRef({
+    id: String(fastCachedUserV57?.id || ''),
+    email: normalizeEmail(fastCachedUserV57?.email || ''),
+    key: `${String(fastCachedUserV57?.id || '')}|${normalizeEmail(fastCachedUserV57?.email || '')}`,
+    epoch: 1,
+  })
   const welcomeCheckStartedRefV51 = useRef(new Set())
   const [passwordRecoveryMode, setPasswordRecoveryMode] = useState(() => isPasswordRecoveryUrl())
   const [passwordRecoveryUser, setPasswordRecoveryUser] = useState(null)
@@ -35073,6 +35162,66 @@ function App() {
   const [rankingChallengeClaims, setRankingChallengeClaims] = useState([])
   const [referralData, setReferralData] = useState({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
   const [referralLoading, setReferralLoading] = useState(false)
+
+  const isActiveAccountV76 = (userId = '', email = '', epoch = null) => {
+    const current = activeAccountRefV76.current || {}
+    const id = String(userId || '').trim()
+    const mail = normalizeEmail(email || '')
+    if (epoch != null && Number(current.epoch || 0) !== Number(epoch)) return false
+    if (id && String(current.id || '') !== id) return false
+    if (mail && normalizeEmail(current.email || '') !== mail) return false
+    return Boolean(current.id || current.email)
+  }
+
+  const resetAccountScopedUiV76 = (nextUser = null) => {
+    const nextEmail = normalizeEmail(nextUser?.email || '')
+    // Usuwamy WYŁĄCZNIE lokalny cache salda. Supabase pozostaje źródłem prawdy.
+    // To czyści skażone 7079/187 po wcześniejszym mieszaniu kont.
+    try {
+      if (nextEmail) {
+        localStorage.removeItem('betai_tokens_' + nextEmail)
+        localStorage.removeItem('betai_reward_balance_lock_' + nextEmail)
+      }
+    } catch (_) {}
+    setAccountProfile(null)
+    setUserPlan('free')
+    setLoading(false)
+    setTokenBalance(0)
+    setWalletBalance(0)
+    setPaymentHistory([])
+    setPayoutRequests([])
+    setTipsterEarnings({ total: 0, sales: 0, history: [] })
+    setStripeConnectStatus(null)
+    setNotifications([])
+    setUnlockedTips(new Set())
+    setFollowingTipsters(new Set())
+    setRankingChallengeClaims([])
+    setReferralData({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
+    setReferralLoading(false)
+    setTipsterSubscriptions([])
+    setDmUnreadCount(0)
+    setNotifyPanelOpen(false)
+    setDmPanelOpen(false)
+    setSelectedPayment(null)
+    setSelectedProfileSub(null)
+    setSelectedTipsterId(null)
+  }
+
+  const activateSessionUserV76 = (nextUser = null, source = 'auth') => {
+    const nextId = String(nextUser?.id || '').trim()
+    const nextEmail = normalizeEmail(nextUser?.email || '')
+    const nextKey = `${nextId}|${nextEmail}`
+    const previous = activeAccountRefV76.current || {}
+    if (nextKey !== String(previous.key || '')) {
+      accountEpochRefV76.current += 1
+      activeAccountRefV76.current = { id: nextId, email: nextEmail, key: nextKey, epoch: accountEpochRefV76.current, source }
+      resetAccountScopedUiV76(nextUser)
+    } else {
+      activeAccountRefV76.current = { ...previous, id: nextId, email: nextEmail, key: nextKey, source }
+    }
+    setSessionUser(nextUser)
+    return activeAccountRefV76.current
+  }
   const [aiLiveGenerating, setAiLiveGenerating] = useState(false)
   const [aiSettleGenerating, setAiSettleGenerating] = useState(false)
   const aiAutoSettleRunningRef = useRef(false)
@@ -35121,82 +35270,62 @@ function App() {
   }
 
   function persistTokenBalanceNoRollback(email, balance, reason = 'manual') {
-    const walletEmail = normalizeEmail(email || sessionUser?.email || accountProfile?.email || '')
+    const current = activeAccountRefV76.current || {}
+    const walletEmail = normalizeEmail(email || current.email || '')
     const cleanBalance = Math.max(0, Number(balance || 0) || 0)
-    if (!walletEmail) return cleanBalance
-    setTokenBalance(prev => Math.max(Number(prev || 0) || 0, cleanBalance))
+    if (!walletEmail || !current.id || walletEmail !== normalizeEmail(current.email || '')) return cleanBalance
+
+    // WERSJA 76: nigdy nie dziedziczymy salda poprzedniego konta przez Math.max(prev,...).
+    setTokenBalance(cleanBalance)
     try {
-      const currentLocal = Number(localStorage.getItem('betai_tokens_' + walletEmail) || '0') || 0
-      const finalBalance = Math.max(currentLocal, cleanBalance)
-      localStorage.setItem('betai_tokens_' + walletEmail, String(finalBalance))
-      localStorage.setItem('betai_reward_balance_lock_' + walletEmail, JSON.stringify({ balance: finalBalance, until: Date.now() + 90000, reason }))
-      window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email: walletEmail, balance: finalBalance, reason } }))
-      try {
-        if (isSupabaseConfigured && supabase) {
-          supabase.from('betai_token_wallets').upsert({
-            email: walletEmail,
-            user_id: sessionUser?.id || null,
-            balance: finalBalance,
-            welcome_bonus_claimed: true,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'email' }).then(({ error }) => { if (error) console.warn('wallet persist skipped', error) })
-        }
-      } catch (_) {}
-      return finalBalance
-    } catch (_) {
-      return cleanBalance
-    }
+      localStorage.setItem('betai_tokens_' + walletEmail, String(cleanBalance))
+      window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email: walletEmail, user_id: current.id, balance: cleanBalance, reason } }))
+      if (isSupabaseConfigured && supabase) {
+        supabase.from('betai_token_wallets').upsert({
+          email: walletEmail,
+          user_id: current.id,
+          balance: cleanBalance,
+          welcome_bonus_claimed: true,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'email' }).then(({ error }) => { if (error) console.warn('wallet persist skipped', error) })
+      }
+    } catch (_) {}
+    return cleanBalance
   }
 
-  async function fetchCurrentTokenBalance() {
-    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
-    if (!email) return 0
-
-    const getRewardLock = () => {
-      try {
-        const raw = localStorage.getItem('betai_reward_balance_lock_' + email)
-        const lock = raw ? JSON.parse(raw) : null
-        if (lock && Number(lock.until || 0) > Date.now()) return lock
-      } catch (_) {}
-      return null
-    }
-
-    const applyTokenBalance = (candidateBalance, source = 'remote') => {
-      const cleanCandidate = Math.max(0, Number(candidateBalance || 0) || 0)
-      const localBalance = (() => {
-        try { return Math.max(0, Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0) } catch (_) { return 0 }
-      })()
-      const lock = getRewardLock()
-      const lockedBalance = Math.max(0, Number(lock?.balance || 0) || 0)
-
-      // Po odebraniu wyzwania nie pozwalamy staremu refreshowi cofnąć Coin.
-      const finalBalance = lock
-        ? Math.max(cleanCandidate, localBalance, lockedBalance, Number(tokenBalance || 0) || 0)
-        : Math.max(cleanCandidate, localBalance)
-
-      setTokenBalance(finalBalance)
-      try { localStorage.setItem('betai_tokens_' + email, String(finalBalance)) } catch (_) {}
-      return finalBalance
-    }
+  async function fetchCurrentTokenBalance(identityOverride = null) {
+    const snapshot = identityOverride && typeof identityOverride === 'object'
+      ? { id: String(identityOverride.id || ''), email: normalizeEmail(identityOverride.email || ''), epoch: identityOverride.epoch ?? activeAccountRefV76.current?.epoch }
+      : { ...(activeAccountRefV76.current || {}) }
+    const email = normalizeEmail(snapshot.email || '')
+    const userId = String(snapshot.id || '')
+    if (!email || !userId || !isActiveAccountV76(userId, email, snapshot.epoch)) return 0
 
     try {
       if (isSupabaseConfigured && supabase) {
         const { data, error } = await supabase
           .from('betai_token_wallets')
-          .select('balance,updated_at')
+          .select('balance,updated_at,user_id,email')
           .eq('email', email)
           .maybeSingle()
         if (!error && data) {
-          return applyTokenBalance(Number(data.balance || 0) || 0, 'remote')
+          if (!isActiveAccountV76(userId, email, snapshot.epoch)) return Number(data.balance || 0) || 0
+          const exactBalance = Math.max(0, Number(data.balance || 0) || 0)
+          setTokenBalance(exactBalance)
+          try { localStorage.setItem('betai_tokens_' + email, String(exactBalance)) } catch (_) {}
+          return exactBalance
         }
       }
     } catch (error) {
-      console.warn('token balance realtime refresh skipped', error)
+      console.warn('token balance refresh skipped', error)
     }
 
+    // Lokalny cache wyłącznie jako fallback przy realnym błędzie sieci i tylko dla aktywnego konta.
+    if (!isActiveAccountV76(userId, email, snapshot.epoch)) return 0
     try {
-      const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
-      return applyTokenBalance(localTokens, 'local')
+      const localTokens = Math.max(0, Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0)
+      setTokenBalance(localTokens)
+      return localTokens
     } catch (_) {
       return 0
     }
@@ -35287,6 +35416,17 @@ function App() {
       window.removeEventListener('storage', syncLanguage)
     }
   }, [])
+
+  useEffect(() => {
+    const nextId = String(sessionUser?.id || '')
+    const nextEmail = normalizeEmail(sessionUser?.email || '')
+    const nextKey = `${nextId}|${nextEmail}`
+    if (nextKey !== String(activeAccountRefV76.current?.key || '')) {
+      accountEpochRefV76.current += 1
+      activeAccountRefV76.current = { id: nextId, email: nextEmail, key: nextKey, epoch: accountEpochRefV76.current, source: 'state-sync' }
+      resetAccountScopedUiV76(sessionUser)
+    }
+  }, [sessionUser?.id, sessionUser?.email])
 
   useEffect(() => {
     if (!sessionUser?.id) return
@@ -35430,10 +35570,15 @@ function App() {
   }
 
   async function fetchReferralData(userId = sessionUser?.id) {
-    if (!userId || !isSupabaseConfigured || !supabase) {
-      setReferralData({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
+    const expectedIdV76 = String(userId || '')
+    const expectedEmailV76 = normalizeEmail(activeAccountRefV76.current?.email || '')
+    const expectedEpochV76 = Number(activeAccountRefV76.current?.epoch || 0)
+    const stillCurrentV76 = () => isActiveAccountV76(expectedIdV76, expectedEmailV76, expectedEpochV76)
+    if (!expectedIdV76 || !isSupabaseConfigured || !supabase || !stillCurrentV76()) {
+      if (stillCurrentV76()) setReferralData({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
       return
     }
+    userId = expectedIdV76
 
     const safeQuery = async (promise, fallback = null) => {
       try {
@@ -35468,6 +35613,7 @@ function App() {
         null
       )
 
+      if (!stillCurrentV76()) return
       setReferralData({
         referral_code: row?.referral_code || profileFallback?.referral_code || referralCode,
         referrals_count: Number(row?.referrals_count ?? profileFallback?.referrals_count ?? 0),
@@ -35479,7 +35625,7 @@ function App() {
     } catch (error) {
       console.error('fetchReferralData error', error)
     } finally {
-      setReferralLoading(false)
+      if (stillCurrentV76()) setReferralLoading(false)
     }
   }
 
@@ -35705,7 +35851,11 @@ function App() {
   // V57: szybki pierwszy feed na telefonie. Pobiera tylko to, co jest potrzebne do
   // natychmiastowego pokazania Dashboardu; pełna hydracja rusza później w tle.
   async function fetchTipsFastMobileV57(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase) return false
+    const requestedUserIdV76 = String(userId || '')
+    const identityV76 = { ...(activeAccountRefV76.current || {}) }
+    const stillCurrentV76 = () => !requestedUserIdV76 || isActiveAccountV76(requestedUserIdV76, identityV76.email, identityV76.epoch)
+    if (requestedUserIdV76 && String(identityV76.id || '') !== requestedUserIdV76) return false
+    if (!isSupabaseConfigured || !supabase || !stillCurrentV76()) return false
     try {
       const publicTipsPromise = fetch(`/.netlify/functions/get-public-tips?limit=160&t=${Date.now()}`, { cache: 'no-store' })
         .then(response => response.ok ? response.json() : { tips: [] })
@@ -35729,6 +35879,7 @@ function App() {
       sourceTips = Array.from(byId.values())
         .sort((a, b) => new Date(b.created_at || b.match_time || 0) - new Date(a.created_at || a.match_time || 0))
 
+      if (!stillCurrentV76()) return false
       setTips(dedupeBetAiTipsByUserMatchV1746(sourceTips))
       setLastTipSaveStatus(readTipDebug())
       return true
@@ -35741,6 +35892,26 @@ function App() {
   async function fetchTips(userId = sessionUser?.id, options = {}) {
     const requestedUserId = userId || sessionUser?.id || null
     const force = Boolean(options?.force)
+    const identityV76 = { ...(activeAccountRefV76.current || {}) }
+    const requestedUserIdV76 = String(requestedUserId || '')
+    const stillCurrentV76 = () => !requestedUserIdV76 || isActiveAccountV76(requestedUserIdV76, identityV76.email, identityV76.epoch)
+
+    // WERSJA 76: fetchTips jest największą hydracją Dashboardu i profili. Stary fetch
+    // poprzedniego konta nie może po 5–10 sekundach nadpisać tips/unlocked/subscriptions.
+    if (requestedUserIdV76 && String(identityV76.id || '') !== requestedUserIdV76) return
+
+    const releaseFetchTipsV76 = (replayCurrent = false) => {
+      fetchTipsRunningRef.current = false
+      const queuedUserIdV76 = String(fetchTipsQueuedUserRef.current || '')
+      fetchTipsQueuedUserRef.current = null
+      const activeIdV76 = String(activeAccountRefV76.current?.id || '')
+      const nextIdV76 = (queuedUserIdV76 && queuedUserIdV76 === activeIdV76)
+        ? queuedUserIdV76
+        : (replayCurrent && activeIdV76 && activeIdV76 !== requestedUserIdV76 ? activeIdV76 : '')
+      if (nextIdV76 && isBetaiDocumentVisibleV29()) {
+        scheduleBetaiLightTaskV29('fetch-tips-v76-current-account', () => fetchTips(nextIdV76, { force: true }), 120)
+      }
+    }
 
     if (!force && !isBetaiDocumentVisibleV29()) return
     if (!force && isBetaiResumeCoolingDownV29()) {
@@ -35766,7 +35937,7 @@ function App() {
 
     if (!isSupabaseConfigured || !supabase) {
       setTips([])
-      fetchTipsRunningRef.current = false
+      releaseFetchTipsV76(false)
       return
     }
 
@@ -35787,13 +35958,17 @@ function App() {
         : Promise.resolve({ data: [], error: null })
     ])
 
+    if (!stillCurrentV76()) {
+      releaseFetchTipsV76(true)
+      return
+    }
     setLoading(false)
 
     if (tipsError) {
       console.error('FETCH TIPS ERROR:', tipsError)
       showToast({ type: 'error', title: 'Nie pobrano typów', message: formatAppErrorMessage(tipsError.message || String(tipsError)) })
       setTips([])
-      fetchTipsRunningRef.current = false
+      releaseFetchTipsV76(false)
       return
     }
 
@@ -35833,13 +36008,11 @@ function App() {
     // Teraz zawsze dokładamy własne typy aktualnie zalogowanego profilu i dopiero potem
     // robimy deduplikację. To nie dotyka Top typerów ani cudzych profili.
     try {
-      const currentProfile = effectiveAccountProfile || sessionUser || {}
-      const currentEmail = normalizeEmail(currentProfile.email || sessionUser?.email || '')
+      const currentProfile = (accountProfile && String(accountProfile.id || '') === requestedUserIdV76) ? accountProfile : {}
+      const currentEmail = normalizeEmail(identityV76.email || '')
       const currentUsername = normalizeEmail(
         currentProfile.username ||
         currentProfile.public_slug ||
-        currentProfile.user_metadata?.username ||
-        currentProfile.user_metadata?.name ||
         (currentEmail ? currentEmail.split('@')[0] : '')
       )
       const ownQueries = []
@@ -35873,6 +36046,7 @@ function App() {
 
       if (ownQueries.length) {
         const ownResults = await Promise.allSettled(ownQueries)
+        if (!stillCurrentV76()) { releaseFetchTipsV76(true); return }
         const ownRows = ownResults.flatMap(result => {
           if (result.status !== 'fulfilled') return []
           const payload = result.value || {}
@@ -35905,18 +36079,12 @@ function App() {
         const { data: authorProfiles, error: authorProfilesError } = await supabase
           .from('profiles').select('*')
           .or(profileFilters)
+        if (!stillCurrentV76()) { releaseFetchTipsV76(true); return }
         if (!authorProfilesError && Array.isArray(authorProfiles)) {
-          const authorProfileMap = new Map()
-          authorProfiles.forEach(profile => {
-            if (profile.id) authorProfileMap.set(String(profile.id), profile)
-            if (profile.email) authorProfileMap.set(normalizeEmail(profile.email), profile)
-            if (profile.username) authorProfileMap.set(normalizeEmail(profile.username), profile)
-          })
+          // WERSJA 76: ten sam twardy resolver UUID-first co w całym profilu/rankingu.
+          const authorProfileMap = buildBetaiProfileMap(authorProfiles)
           sourceTips = sourceTips.map(tip => {
-            const profile =
-              authorProfileMap.get(String(getTipAuthorId(tip) || '')) ||
-              authorProfileMap.get(normalizeEmail(tip.author_email || tip.email || tip.user_email)) ||
-              authorProfileMap.get(normalizeEmail(tip.author_name || tip.username))
+            const profile = findProfileFromMap(authorProfileMap, tip)
             return profile
               ? {
                   ...tip,
@@ -35942,8 +36110,9 @@ function App() {
     // WERSJA 912: cache aktualnego usera + RPC publicznych profili.
     // Naprawia przypadek, gdzie stare rekordy w DB miały avatar buchajson1988 przy smilhytv.
     try {
-      cacheBetaiCurrentUserAvatar(sessionUser)
+      if (stillCurrentV76()) cacheBetaiCurrentUserAvatar(sessionUser)
       const allProfiles = await fetchBetaiPublicProfiles()
+      if (!stillCurrentV76()) { releaseFetchTipsV76(true); return }
       const profileMap = buildBetaiProfileMap(allProfiles)
       if (profileMap.size) {
         sourceTips = sourceTips.map(tip => applyProfileAvatarToTip(tip, profileMap))
@@ -36009,17 +36178,15 @@ function App() {
         console.warn('tipster_subscriptions fetch skipped', error)
         activeSubs = []
       }
+      if (!stillCurrentV76()) { releaseFetchTipsV76(true); return }
       setTipsterSubscriptions(activeSubs)
     }
+    if (!stillCurrentV76()) { releaseFetchTipsV76(true); return }
     setTips(dedupeBetAiTipsByUserMatchV1746(sourceTips.filter(tip => !isBetaiMultisportPublicTipHiddenV28(tip))))
     setLastTipSaveStatus(readTipDebug())
     fetchRealRanking()
-    fetchTipsRunningRef.current = false
-    const queuedUserIdV29 = fetchTipsQueuedUserRef.current
-    fetchTipsQueuedUserRef.current = null
-    if (queuedUserIdV29 && queuedUserIdV29 !== requestedUserId && isBetaiDocumentVisibleV29()) {
-      scheduleBetaiLightTaskV29('fetch-tips-queued-v29', () => fetchTips(queuedUserIdV29, { force: true }), 350)
-    }
+    // release od razu obsłuży ewentualny request zakolejkowany już dla aktywnego konta.
+    releaseFetchTipsV76(false)
   }
 
   useEffect(() => {
@@ -36107,8 +36274,12 @@ function App() {
           }
         }))
 
-        if (String(updatedProfile.id) === String((effectiveAccountProfile || sessionUser)?.id)) {
-          setAccountProfile(prev => prev ? ({ ...prev, ...updatedProfile }) : updatedProfile)
+        if (String(updatedProfile.id) === String(sessionUser?.id || '') && isActiveAccountV76(sessionUser?.id, sessionUser?.email)) {
+          setAccountProfile(prev => {
+            const prevId = String(prev?.id || '')
+            if (prevId && prevId !== String(updatedProfile.id)) return updatedProfile
+            return prev ? ({ ...prev, ...updatedProfile }) : updatedProfile
+          })
         }
 
         fetchRealRanking()
@@ -36173,10 +36344,15 @@ function App() {
   }, [sessionUser?.id, view])
 
   async function fetchFollowingTipsters(userId = sessionUser?.id) {
-    if (!userId) {
-      setFollowingTipsters(new Set())
+    const expectedIdV76 = String(userId || '')
+    const expectedEmailV76 = normalizeEmail(activeAccountRefV76.current?.email || '')
+    const expectedEpochV76 = Number(activeAccountRefV76.current?.epoch || 0)
+    const stillCurrentV76 = () => isActiveAccountV76(expectedIdV76, expectedEmailV76, expectedEpochV76)
+    if (!expectedIdV76 || !stillCurrentV76()) {
+      if (stillCurrentV76()) setFollowingTipsters(new Set())
       return
     }
+    userId = expectedIdV76
 
     const localSet = readLocalFollowingTipsters(userId)
     let remoteSet = new Set()
@@ -36195,7 +36371,7 @@ function App() {
       }
 
       try {
-        const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+        const email = expectedEmailV76
         let keyQuery = supabase
           .from('betai_tipster_follow_keys_v1033')
           .select('tipster_id,tipster_key,tipster_name,tipster_email')
@@ -36214,6 +36390,7 @@ function App() {
       }
     }
 
+    if (!stillCurrentV76()) return
     const merged = mergeFollowingSets(localSet, remoteSet)
     writeLocalFollowingTipsters(userId, merged)
     setFollowingTipsters(merged)
@@ -36321,7 +36498,9 @@ function App() {
 
   async function fetchNotifications(userId = sessionUser?.id, options = {}) {
     const skipBalanceRefresh = Boolean(options?.skipBalanceRefresh)
-    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+    const activeIdentityV76 = activeAccountRefV76.current || {}
+    const email = normalizeEmail(activeIdentityV76.email || '')
+    if (userId && String(userId) !== String(activeIdentityV76.id || '')) return
     if (!isSupabaseConfigured || !supabase || (!userId && !email)) {
       setNotifications([])
       setTokenBalance(0)
@@ -36359,23 +36538,29 @@ function App() {
 
       if (!skipBalanceRefresh) {
         try {
-          await fetchCurrentTokenBalance()
+          await fetchCurrentTokenBalance(activeIdentityV76)
         } catch (error) {
-          const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
-          setTokenBalance(Math.max(Number(tokenBalance || 0) || 0, localTokens))
+          if (isActiveAccountV76(activeIdentityV76.id, email, activeIdentityV76.epoch)) {
+            const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
+            setTokenBalance(Math.max(0, localTokens))
+          }
         }
       }
     }
 
     combined.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+    if (String(activeAccountRefV76.current?.id || '') !== String(userId || activeIdentityV76.id || '')) return
     setNotifications(combined)
   }
 
   async function ensureUserWalletAndWelcome(user = sessionUser) {
-    const email = normalizeEmail(user?.email || accountProfile?.email || '')
+    const email = normalizeEmail(user?.email || sessionUser?.email || '')
     if (!email || !isSupabaseConfigured || !supabase) return
 
     const userId = String(user?.id || '')
+    const authEpochV76 = Number(activeAccountRefV76.current?.epoch || 0)
+    const isCurrentWalletUserV76 = () => isActiveAccountV76(userId, email, authEpochV76)
+    if (!isCurrentWalletUserV76()) return
     const guardKey = `${email}:${userId}`
     if (welcomeCheckStartedRefV51.current.has(guardKey)) return
     welcomeCheckStartedRefV51.current.add(guardKey)
@@ -36411,6 +36596,7 @@ function App() {
       ])
 
       if (walletError) throw walletError
+      if (!isCurrentWalletUserV76()) return
       if (bonusHistoryError) console.warn('V51 welcome bonus history read skipped', bonusHistoryError)
 
       const welcomeHistoryReliableV51 = !bonusHistoryError
@@ -36638,12 +36824,10 @@ function App() {
         }
 
         const remoteBalance = Math.max(0, Number(wallet.balance || 0) || 0)
-        const localBalance = (() => {
-          try { return Math.max(0, Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0) } catch (_) { return 0 }
-        })()
         const displayBalance = forcedBalanceAfterRepairV51 != null
           ? Math.max(0, Number(forcedBalanceAfterRepairV51 || 0) || 0)
-          : Math.max(remoteBalance, localBalance, Number(tokenBalance || 0) || 0)
+          : remoteBalance
+        if (!isCurrentWalletUserV76()) return
         setTokenBalance(displayBalance)
         try { localStorage.setItem('betai_tokens_' + email, String(displayBalance)) } catch (_) {}
 
@@ -36662,6 +36846,7 @@ function App() {
     } catch (error) {
       console.warn('ensure wallet/welcome V51 skipped', error)
       welcomeCheckStartedRefV51.current.delete(guardKey)
+      if (!isCurrentWalletUserV76()) return
       try {
         const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
         setTokenBalance(localTokens)
@@ -36740,10 +36925,12 @@ function App() {
       return
     }
 
-    const currentProfile = effectiveAccountProfile || sessionUser || {}
-    const currentId = currentProfile?.id || sessionUser?.id
-    const currentEmail = normalizeEmail(currentProfile?.email || sessionUser?.email || '')
-    const currentUsername = normalizeEmail(resolveRealProfileUsername(currentProfile || sessionUser || {}))
+    // WERSJA 76: „czy to mój profil?” rozstrzygamy wyłącznie po aktualnej sesji auth.
+    // Stary accountProfile nie może sprawić, że kliknięcie buchajson1988 otworzy smilhytv (lub odwrotnie).
+    const currentProfile = sessionUser || {}
+    const currentId = String(sessionUser?.id || '')
+    const currentEmail = normalizeEmail(sessionUser?.email || '')
+    const currentUsername = normalizeEmail(sessionUser?.user_metadata?.username || sessionUser?.user_metadata?.name || String(currentEmail || '').split('@')[0] || '')
     const targetEmail = normalizeEmail(profile?.email || '')
     const targetUsername = normalizeEmail(profile?.username || profile?.public_slug || '')
 
@@ -36751,8 +36938,8 @@ function App() {
     const isOwnProfile = Boolean(
       (id && currentId && String(currentId) === id) ||
       (currentEmail && targetEmail && currentEmail === targetEmail) ||
-      (currentUsername && targetUsername && currentUsername === targetUsername) ||
-      (!id && fallbackLookupKey && (fallbackLookupKey === currentUsername || fallbackLookupKey === currentEmail || fallbackLookupKey === String(currentEmail || '').split('@')[0]))
+      (!id && !targetEmail && currentUsername && targetUsername && currentUsername === targetUsername) ||
+      (!id && !targetEmail && fallbackLookupKey && (fallbackLookupKey === currentUsername || fallbackLookupKey === currentEmail || fallbackLookupKey === String(currentEmail || '').split('@')[0]))
     )
 
     setSelectedTipsterId(null)
@@ -36861,7 +37048,7 @@ function App() {
           }
         }
 
-        const followerEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+        const followerEmail = normalizeEmail(sessionUser?.email || '')
         const tipsterKey = String(localKey || idKey || rawTargetKey || authorName || tipsterId || '').toLowerCase().trim()
         if (tipsterKey) {
           if (alreadyFollowing) {
@@ -36923,11 +37110,15 @@ function App() {
   }, [sessionUser?.id])
 
   async function fetchRankingChallengeClaims(userId = sessionUser?.id) {
-    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
-    if ((!userId && !email) || !isSupabaseConfigured || !supabase) {
-      setRankingChallengeClaims([])
+    const expectedIdV76 = String(userId || '')
+    const email = normalizeEmail(activeAccountRefV76.current?.email || '')
+    const expectedEpochV76 = Number(activeAccountRefV76.current?.epoch || 0)
+    const stillCurrentV76 = () => isActiveAccountV76(expectedIdV76, email, expectedEpochV76)
+    if ((!expectedIdV76 && !email) || !isSupabaseConfigured || !supabase || !stillCurrentV76()) {
+      if (stillCurrentV76()) setRankingChallengeClaims([])
       return []
     }
+    userId = expectedIdV76
     try {
       let query = supabase
         .from('betai_ranking_challenge_claims')
@@ -36942,6 +37133,7 @@ function App() {
       const { data, error } = await query
       if (error) throw error
       const rows = Array.from(new Map((Array.isArray(data) ? data : []).map(row => [`${row.challenge_key}_${row.period_key}`, row])).values())
+      if (!stillCurrentV76()) return []
       setRankingChallengeClaims(rows)
       return rows
     } catch (error) {
@@ -36951,7 +37143,7 @@ function App() {
   }
 
   async function claimRankingChallengeReward(challenge) {
-    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+    const email = normalizeEmail(sessionUser?.email || '')
     const userId = sessionUser?.id
     if (!userId || !email) {
       showToast({ type: 'error', title: 'Wyzwania', message: 'Zaloguj się, aby odebrać nagrodę.' })
@@ -37038,7 +37230,7 @@ function App() {
 
   async function markAllNotificationsRead() {
     if (!isSupabaseConfigured || !supabase) return
-    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+    const email = normalizeEmail(sessionUser?.email || '')
     let failed = false
 
     if (sessionUser?.id) {
@@ -37106,7 +37298,8 @@ function App() {
       }
 
       schedule(() => fetchUnlockedTips(sessionUser.id), 120, 0)
-      schedule(() => fetchCurrentTokenBalance(), 180, 0)
+      const startupIdentityV76 = { id: String(sessionUser.id), email: normalizeEmail(sessionUser.email || ''), epoch: activeAccountRefV76.current?.epoch }
+      schedule(() => fetchCurrentTokenBalance(startupIdentityV76), 180, 0)
       schedule(() => fetchNotifications(sessionUser.id), 700, 0)
       schedule(() => fetchFollowingTipsters(sessionUser.id), 1100, 0)
       schedule(() => fetchFollowStats(), 1500, 0)
@@ -37144,7 +37337,7 @@ function App() {
             if (!response.ok) throw new Error(data.error || 'Nie udało się zsynchronizować subskrypcji profilu.')
             if (data?.user_mismatch) {
               if (supabase) await supabase.auth.signOut()
-              setSessionUser(null)
+              activateSessionUserV76(null, 'password-reset-cancel')
               setWalletBalance(0)
               setUnlockedTips(new Set())
               clearGuestUnlockedTips()
@@ -37252,11 +37445,16 @@ function App() {
   // V50: jednorazowe naprawy V48/V49 są już zapisane w bazie i nie są uruchamiane przy każdym wejściu.
 
   async function fetchStripeConnectStatus(userId = sessionUser?.id) {
+    const expectedIdV76 = String(userId || '')
+    const expectedEmailV76 = normalizeEmail(activeAccountRefV76.current?.email || '')
+    const expectedEpochV76 = Number(activeAccountRefV76.current?.epoch || 0)
+    const stillCurrentV76 = () => isActiveAccountV76(expectedIdV76, expectedEmailV76, expectedEpochV76)
     try {
-      if (!isSupabaseConfigured || !supabase || !userId) {
-        setStripeConnectStatus(null)
+      if (!isSupabaseConfigured || !supabase || !expectedIdV76 || !stillCurrentV76()) {
+        if (stillCurrentV76()) setStripeConnectStatus(null)
         return
       }
+      userId = expectedIdV76
 
       const { data, error } = await supabase
         .from('user_stripe_accounts')
@@ -37269,6 +37467,7 @@ function App() {
         return
       }
 
+      if (!stillCurrentV76()) return
       if (!data) {
         setStripeConnectStatus(null)
         return
@@ -37360,17 +37559,23 @@ function App() {
   }
 
   async function fetchUnlockedTips(userId = sessionUser?.id) {
+    const expectedIdV76 = String(userId || '')
+    const expectedEmailV76 = normalizeEmail(activeAccountRefV76.current?.email || '')
+    const expectedEpochV76 = Number(activeAccountRefV76.current?.epoch || 0)
+    const stillCurrentV76 = () => isActiveAccountV76(expectedIdV76, expectedEmailV76, expectedEpochV76)
     try {
-    if (!isSupabaseConfigured || !supabase || !userId) {
-      setUnlockedTips(new Set())
+    if (!isSupabaseConfigured || !supabase || !expectedIdV76 || !stillCurrentV76()) {
+      if (stillCurrentV76()) setUnlockedTips(new Set())
       return
     }
+    userId = expectedIdV76
 
     const { data, error } = await supabase
       .from('unlocked_tips')
       .select('tip_id')
       .eq('user_id', userId)
 
+    if (!stillCurrentV76()) return
     if (!error && Array.isArray(data)) {
       setUnlockedTips(new Set(data.map(row => row.tip_id)))
     } else {
@@ -37378,7 +37583,7 @@ function App() {
     }
     } catch (error) {
       console.error('fetchUnlockedTips error', error)
-      setUnlockedTips(new Set())
+      if (stillCurrentV76()) setUnlockedTips(new Set())
     }
   }
 
@@ -37660,46 +37865,48 @@ function App() {
     }
   }
 
-  async function fetchWalletBalance(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !userId) {
-      setWalletBalance(0)
-      return
-    }
-
-    const { data, error } = await supabase.rpc('get_wallet_balance', { p_user_id: userId })
-
+  async function fetchWalletBalance(userOrId = sessionUser) {
+    const identity = typeof userOrId === 'object' && userOrId !== null
+      ? { id: String(userOrId.id || ''), email: normalizeEmail(userOrId.email || ''), epoch: userOrId.epoch ?? activeAccountRefV76.current?.epoch }
+      : { id: String(userOrId || ''), email: normalizeEmail(activeAccountRefV76.current?.email || ''), epoch: activeAccountRefV76.current?.epoch }
+    if (!isSupabaseConfigured || !supabase || !identity.id || !isActiveAccountV76(identity.id, identity.email, identity.epoch)) return
+    const { data, error } = await supabase.rpc('get_wallet_balance', { p_user_id: identity.id })
+    if (!isActiveAccountV76(identity.id, identity.email, identity.epoch)) return
     if (error || data === null || data === undefined) {
       setWalletBalance(0)
       return
     }
-
     setWalletBalance(Math.max(0, Number(data || 0)))
   }
 
-  async function fetchUserPlan(userId = sessionUser?.id) {
-    const currentEmail = normalizeEmail(sessionUser?.email)
+  async function fetchUserPlan(userOrId = sessionUser) {
+    const identity = typeof userOrId === 'object' && userOrId !== null
+      ? { id: String(userOrId.id || ''), email: normalizeEmail(userOrId.email || ''), user_metadata: userOrId.user_metadata || {}, epoch: userOrId.epoch ?? activeAccountRefV76.current?.epoch }
+      : { id: String(userOrId || ''), email: normalizeEmail(activeAccountRefV76.current?.email || ''), user_metadata: {}, epoch: activeAccountRefV76.current?.epoch }
+    const userId = identity.id
+    const currentEmail = identity.email
+    const stillCurrentV76 = () => isActiveAccountV76(userId, currentEmail, identity.epoch)
+    if (!userId || !currentEmail || !stillCurrentV76()) return
+
     if (BETAI_PREMIUM_EMAILS.includes(currentEmail)) {
-      // WERSJA 1806: konto smilhytv ma stały Premium/Admin, ale nadal MUSIMY
-      // pobrać pełny rekord profiles. Poprzedni skrót tworzył profil tylko z
-      // emailem i planem, przez co po dodaniu typu znikały imported_* oraz
-      // statystyki Betfolio i profil pokazywał wyłącznie świeży typ.
       let fullPremiumProfile = null
-      if (isSupabaseConfigured && supabase && userId) {
+      if (isSupabaseConfigured && supabase) {
         try {
-          const { data, error } = await supabase
-            .from('profiles').select('*')
-            .eq('id', userId)
-            .maybeSingle()
+          const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
           if (!error && data) fullPremiumProfile = data
         } catch (error) {
           console.warn('Premium profile hydration skipped:', error)
         }
       }
+      if (!stillCurrentV76()) return
 
+      // Jeżeli rekord profiles istnieje, jego ID musi odpowiadać auth userowi.
+      if (fullPremiumProfile?.id && String(fullPremiumProfile.id) !== userId) return
+      const sessionSnapshot = { id: userId, email: currentEmail, user_metadata: identity.user_metadata || {} }
       const hydratedPremiumProfile = buildEffectiveAccountProfile({
         ...(fullPremiumProfile || {}),
-        id: fullPremiumProfile?.id || userId || null,
-        email: fullPremiumProfile?.email || currentEmail,
+        id: userId,
+        email: currentEmail,
         username: fullPremiumProfile?.username || currentEmail.split('@')[0],
         role: BETAI_ADMIN_EMAILS.includes(currentEmail) ? 'admin' : fullPremiumProfile?.role,
         is_admin: BETAI_ADMIN_EMAILS.includes(currentEmail) || Boolean(fullPremiumProfile?.is_admin),
@@ -37707,22 +37914,25 @@ function App() {
         plan: 'premium',
         subscription_status: 'active',
         current_period_end: fullPremiumProfile?.current_period_end || '2099-12-31T23:59:59Z'
-      }, sessionUser)
+      }, sessionSnapshot)
 
+      if (!stillCurrentV76()) return
       setUserPlan('premium')
-      setAccountProfile(prev => ({ ...(prev || {}), ...hydratedPremiumProfile }))
+      // V76: REPLACE, nie merge z prev. Prev może należeć do poprzedniego konta.
+      setAccountProfile(hydratedPremiumProfile)
       return
     }
 
-    if (!isSupabaseConfigured || !supabase || !userId) {
-      setAccountProfile(null)
-      setUserPlan('free')
+    if (!isSupabaseConfigured || !supabase) {
+      if (stillCurrentV76()) {
+        setAccountProfile(null)
+        setUserPlan('free')
+      }
       return
     }
 
     let subscriptionData = null
     let profileData = null
-
     let subResult = await supabase
       .from('user_subscriptions')
       .select('plan,status,current_period_end,cancel_at_period_end,stripe_subscription_id,stripe_customer_id')
@@ -37739,15 +37949,12 @@ function App() {
         .limit(1)
         .maybeSingle()
     }
-
+    if (!stillCurrentV76()) return
     if (!subResult.error) subscriptionData = subResult.data
 
-    const { data: profData, error: profileError } = await supabase
-      .from('profiles').select('*')
-      .eq('id', userId)
-      .maybeSingle()
-
-    if (!profileError) profileData = profData
+    const { data: profData, error: profileError } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+    if (!stillCurrentV76()) return
+    if (!profileError && profData && String(profData.id || '') === userId) profileData = profData
 
     const subscriptionPeriodActive = hasFuturePremiumEnd(subscriptionData?.current_period_end)
     const subPremium = Boolean(subscriptionData) && subscriptionPeriodActive && (
@@ -37756,49 +37963,40 @@ function App() {
     const profilePremium = isPremiumProfile(profileData)
     const effectivePremium = Boolean(subPremium || profilePremium || isAdminUser(profileData))
     const effectivePeriodEnd = subscriptionData?.current_period_end || profileData?.current_period_end || null
+    const sessionSnapshot = { id: userId, email: currentEmail, user_metadata: identity.user_metadata || {} }
 
     const effectiveProfile = buildEffectiveAccountProfile({
       ...(profileData || {}),
-      id: profileData?.id || userId,
-      email: profileData?.email || currentEmail || sessionUser?.email || '',
-      username: profileData?.username || (currentEmail ? currentEmail.split('@')[0] : ''),
+      id: userId,
+      // Auth email jest kanoniczny. Nie pozwalamy profilowi poprzedniego konta podmienić identity.
+      email: currentEmail,
+      username: profileData?.username || currentEmail.split('@')[0],
       current_period_end: effectivePeriodEnd,
       is_premium: effectivePremium,
       plan: effectivePremium ? 'premium' : 'free',
       role: isAdminUser(profileData) || isSmilhytvLifetimePremium(profileData) ? 'admin' : profileData?.role,
       subscription_status: effectivePremium ? 'active' : 'free'
-    }, sessionUser)
+    }, sessionSnapshot)
 
+    if (!stillCurrentV76()) return
     setAccountProfile(effectiveProfile)
 
-    try {
-      await supabase.from('profiles').upsert({
-        id: userId,
-        email: effectiveProfile.email,
-        username: effectiveProfile.username || effectiveProfile.email?.split('@')?.[0] || 'user',
-        is_admin: Boolean(effectiveProfile.is_admin),
-        is_premium: Boolean(effectiveProfile.is_premium),
-        plan: effectivePremium ? 'premium' : (effectiveProfile.plan || 'free'),
-        role: isAdminUser(effectiveProfile) || isSmilhytvLifetimePremium(effectiveProfile) ? 'admin' : effectiveProfile.role,
-        subscription_status: effectivePremium ? 'active' : (effectiveProfile.subscription_status || 'free'),
-        current_period_end: effectiveProfile.current_period_end || null,
-        avatar_url: effectiveProfile.avatar_url || null,
-        bio: effectiveProfile.bio || effectiveProfile.description || effectiveProfile.about || null
-      }, { onConflict: 'id' })
-    } catch (syncError) {
-      console.warn('Profile sync skipped:', syncError)
-    }
-
+    // V76: NIE wykonujemy już automatycznego upsertu email/username przy każdym logowaniu.
+    // To właśnie taki zapis w warunkach race mógł fizycznie mieszać rekordy dwóch kont.
     if (hasUnlimitedTipAccess(effectiveProfile, effectiveProfile.plan)) {
       setUserPlan('premium')
       return
     }
-
     setUserPlan('free')
   }
 
   async function fetchPayoutRequests(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !userId) return
+    const expectedIdV76 = String(userId || '')
+    const expectedEmailV76 = normalizeEmail(activeAccountRefV76.current?.email || '')
+    const expectedEpochV76 = Number(activeAccountRefV76.current?.epoch || 0)
+    const stillCurrentV76 = () => isActiveAccountV76(expectedIdV76, expectedEmailV76, expectedEpochV76)
+    if (!isSupabaseConfigured || !supabase || !expectedIdV76 || !stillCurrentV76()) return
+    userId = expectedIdV76
 
     const { data, error } = await supabase
       .from('payout_requests')
@@ -37806,6 +38004,7 @@ function App() {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
+    if (!stillCurrentV76()) return
     if (!error) setPayoutRequests(data || [])
     else setPayoutRequests([])
   }
@@ -37933,8 +38132,13 @@ function App() {
   }
 
   async function fetchPaymentHistory(userId = sessionUser?.id) {
+    const expectedIdV76 = String(userId || '')
+    const expectedEmailV76 = normalizeEmail(activeAccountRefV76.current?.email || '')
+    const expectedEpochV76 = Number(activeAccountRefV76.current?.epoch || 0)
+    const stillCurrentV76 = () => isActiveAccountV76(expectedIdV76, expectedEmailV76, expectedEpochV76)
     try {
-    if (!isSupabaseConfigured || !supabase || !userId) return
+    if (!isSupabaseConfigured || !supabase || !expectedIdV76 || !stillCurrentV76()) return
+    userId = expectedIdV76
 
     const { data, error } = await supabase
       .from('payments')
@@ -37943,18 +38147,24 @@ function App() {
       .order('created_at', { ascending: false })
       .limit(20)
 
+    if (!stillCurrentV76()) return
     if (!error) setPaymentHistory(data || [])
     } catch (error) {
       console.error('fetchPaymentHistory error', error)
-      setPaymentHistory([])
+      if (stillCurrentV76()) setPaymentHistory([])
     }
   }
 
   async function fetchTipsterEarnings(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !userId) {
-      setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
+    const expectedIdV76 = String(userId || '')
+    const expectedEmailV76 = normalizeEmail(activeAccountRefV76.current?.email || '')
+    const expectedEpochV76 = Number(activeAccountRefV76.current?.epoch || 0)
+    const stillCurrentV76 = () => isActiveAccountV76(expectedIdV76, expectedEmailV76, expectedEpochV76)
+    if (!isSupabaseConfigured || !supabase || !expectedIdV76 || !stillCurrentV76()) {
+      if (stillCurrentV76()) setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
       return
     }
+    userId = expectedIdV76
 
     try {
       const timeout = new Promise(resolve => setTimeout(() => resolve({ data: null, error: { message: 'timeout' } }), 4500))
@@ -37962,6 +38172,7 @@ function App() {
         supabase.rpc('get_tipster_earnings', { p_user_id: userId }),
         timeout
       ])
+      if (!stillCurrentV76()) return
       if (!error && data) {
         const row = Array.isArray(data) ? data[0] : data
         const history = Array.isArray(row?.history) ? row.history.slice(0, 30) : []
@@ -37979,7 +38190,7 @@ function App() {
 
     // WERSJA 1428: nie robimy już fallbacku po tips/payments,
     // bo generował wiele 400 i spowalniał admin/finanse.
-    setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
+    if (stillCurrentV76()) setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
   }
 
   useEffect(() => {
@@ -37996,28 +38207,35 @@ function App() {
       return timer
     }
 
-    async function safeInitialLoad(userId) {
-      const cleanUserId = String(userId || '')
-      if (!cleanUserId) return
+    async function safeInitialLoad(userLike) {
+      const cleanUserId = String(userLike?.id || userLike || '')
+      const cleanEmail = normalizeEmail(userLike?.email || activeAccountRefV76.current?.email || '')
+      const epoch = Number(activeAccountRefV76.current?.epoch || 0)
+      const identity = { id: cleanUserId, email: cleanEmail, user_metadata: userLike?.user_metadata || {}, epoch }
+      if (!cleanUserId || !cleanEmail || !isActiveAccountV76(cleanUserId, cleanEmail, epoch)) return
       const now = Date.now()
-      const previous = Number(initialLoadAtV57.get(cleanUserId) || 0)
+      const loadKey = `${cleanUserId}|${cleanEmail}|${epoch}`
+      const previous = Number(initialLoadAtV57.get(loadKey) || 0)
       if (now - previous < 8000) return
-      initialLoadAtV57.set(cleanUserId, now)
+      initialLoadAtV57.set(loadKey, now)
 
-      // Krytyczne dla nagłówka/portfela — tylko dwa lekkie odczyty na starcie.
+      const stillCurrent = () => isActiveAccountV76(cleanUserId, cleanEmail, epoch)
       Promise.allSettled([
-        fetchUserPlan(cleanUserId),
-        fetchWalletBalance(cleanUserId),
+        fetchUserPlan(identity),
+        fetchWalletBalance(identity),
       ]).catch(() => {})
 
-      // Reszta nie jest potrzebna do pierwszego renderu Dashboardu.
-      scheduleInitialTaskV57('ranking', () => fetchRealRanking(), 1700, 200)
-      scheduleInitialTaskV57('payments', () => fetchPaymentHistory(cleanUserId), 3800, 300)
-      scheduleInitialTaskV57('payouts', () => fetchPayoutRequests(cleanUserId), 4500, 450)
-      scheduleInitialTaskV57('earnings', () => fetchTipsterEarnings(cleanUserId), 5200, 650)
-      scheduleInitialTaskV57('referrals', () => fetchReferralData(cleanUserId), 6000, 800)
-      scheduleInitialTaskV57('register-referral', () => registerReferralFromStoredCode({ id: cleanUserId, email: sessionUser?.email }), 6800, 1000)
-      scheduleInitialTaskV57('stripe-connect', () => fetchStripeConnectStatus(cleanUserId), 7600, 1200)
+      const guardedTask = task => async () => {
+        if (!stillCurrent()) return
+        await task()
+      }
+      scheduleInitialTaskV57('ranking', guardedTask(() => fetchRealRanking()), 1700, 200)
+      scheduleInitialTaskV57('payments', guardedTask(() => fetchPaymentHistory(cleanUserId)), 3800, 300)
+      scheduleInitialTaskV57('payouts', guardedTask(() => fetchPayoutRequests(cleanUserId)), 4500, 450)
+      scheduleInitialTaskV57('earnings', guardedTask(() => fetchTipsterEarnings(cleanUserId)), 5200, 650)
+      scheduleInitialTaskV57('referrals', guardedTask(() => fetchReferralData(cleanUserId)), 6000, 800)
+      scheduleInitialTaskV57('register-referral', guardedTask(() => registerReferralFromStoredCode({ id: cleanUserId, email: cleanEmail })), 6800, 1000)
+      scheduleInitialTaskV57('stripe-connect', guardedTask(() => fetchStripeConnectStatus(cleanUserId)), 7600, 1200)
     }
 
     async function loadSession() {
@@ -38029,8 +38247,7 @@ function App() {
 
         const cachedUserV50 = readCachedSupabaseUserV50()
         if (cachedUserV50?.id) {
-          setSessionUser(cachedUserV50)
-          setWalletBalance(0)
+          activateSessionUserV76(cachedUserV50, 'startup-cache')
           setAuthLoading(false)
         }
 
@@ -38051,9 +38268,13 @@ function App() {
           sessionRequestV50.then(({ data }) => {
             const lateUser = data?.session?.user || null
             if (lateUser?.id) {
+              const activeId = String(activeAccountRefV76.current?.id || '')
+              // Jeśli podczas oczekiwania użytkownik zalogował się już na INNE konto,
+              // stary getSession nie ma prawa cofnąć aplikacji do poprzedniej sesji.
+              if (activeId && activeId !== String(lateUser.id)) return
               persistFastCachedUserV57(lateUser)
-              setSessionUser(lateUser)
-              safeInitialLoad(lateUser.id)
+              activateSessionUserV76(lateUser, 'late-getSession')
+              safeInitialLoad(lateUser)
               ensureUserWalletAndWelcome(lateUser)
             }
           }).catch(error => console.warn('V57 late session refresh skipped', error))
@@ -38067,11 +38288,10 @@ function App() {
           }
           if (user?.id) persistFastCachedUserV57(user)
           else persistFastCachedUserV57(null)
-          setSessionUser(user)
-          setWalletBalance(0)
+          activateSessionUserV76(user, 'getSession')
 
           if (user?.id && !recoveryFromUrl) {
-            safeInitialLoad(user.id)
+            safeInitialLoad(user)
             ensureUserWalletAndWelcome(user)
           }
         }
@@ -38086,23 +38306,23 @@ function App() {
             persistFastCachedUserV57(nextUser)
             setPasswordRecoveryMode(true)
             setPasswordRecoveryUser(nextUser)
-            setSessionUser(nextUser)
+            activateSessionUserV76(nextUser, 'password-recovery')
             try { localStorage.setItem('betai_password_recovery_active', '1') } catch (_) {}
             return
           }
 
           if (tokenOnlyRefresh && nextUser?.id) {
             persistFastCachedUserV57(nextUser)
-            setSessionUser(nextUser)
+            // TOKEN_REFRESHED może aktualizować metadane tylko TEGO SAMEGO auth usera.
+            if (!activeAccountRefV76.current?.id || String(activeAccountRefV76.current.id) === String(nextUser.id)) {
+              activateSessionUserV76(nextUser, 'token-refreshed')
+            }
             return
           }
 
           if (nextUser?.id) persistFastCachedUserV57(nextUser)
           else persistFastCachedUserV57(null)
-          setSessionUser(nextUser)
-          setWalletBalance(0)
-          setTipsterEarnings({ total: 0, sales: 0, history: [] })
-          setStripeConnectStatus(null)
+          activateSessionUserV76(nextUser, `auth:${eventName || 'unknown'}`)
 
           if (!nextUser?.id) {
             setPasswordRecoveryMode(false)
@@ -38117,7 +38337,7 @@ function App() {
           }
 
           setUnlockedTips(new Set())
-          safeInitialLoad(nextUser.id)
+          safeInitialLoad(nextUser)
           ensureUserWalletAndWelcome(nextUser)
         })
 
@@ -38162,8 +38382,7 @@ function App() {
           if (!response.ok) throw new Error(syncData.error || 'Nie udało się zsynchronizować zakupu typu.')
           if (syncData?.user_mismatch) {
             if (supabase) await supabase.auth.signOut()
-            setSessionUser(null)
-            setWalletBalance(0)
+            activateSessionUserV76(null, 'payment-user-mismatch')
             setUnlockedTips(new Set())
             clearGuestUnlockedTips()
             showToast({
@@ -38226,12 +38445,19 @@ function App() {
       )
     }
 
-    setAccountProfile(prev => prev && matchesProfile(prev) ? ({ ...prev, ...profilePatch }) : prev)
-    setSessionUser(prev => prev && matchesProfile(prev) ? ({
-      ...prev,
-      ...profilePatch,
-      user_metadata: { ...(prev.user_metadata || {}), bio: nextBio, description: nextBio, about: nextBio }
-    }) : prev)
+    // WERSJA 76: globalny UPDATE innego profilu nie może dotknąć danych auth/own profile.
+    const exactOwnProfileV76 = Boolean(profileId && String(sessionUser?.id || '').toLowerCase() === profileId)
+    if (exactOwnProfileV76) {
+      setAccountProfile(prev => {
+        const prevId = String(prev?.id || '').toLowerCase()
+        if (prevId && prevId !== profileId) return prev
+        return prev ? ({ ...prev, ...profilePatch }) : profilePatch
+      })
+      setSessionUser(prev => prev && String(prev.id || '').toLowerCase() === profileId ? ({
+        ...prev,
+        user_metadata: { ...(prev.user_metadata || {}), bio: nextBio, description: nextBio, about: nextBio }
+      }) : prev)
+    }
 
     setTips(prev => (prev || []).map(tip => matchesProfile(tip) ? ({
       ...tip,
@@ -38316,7 +38542,7 @@ function App() {
 
   async function logout() {
     try {
-      const logoutEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+      const logoutEmail = normalizeEmail(sessionUser?.email || '')
       if (logoutEmail) {
         sessionStorage.removeItem(`betai_welcome_toast_seen_${logoutEmail}_${sessionUser?.id || ''}`)
         sessionStorage.removeItem(`betai_welcome_toast_seen_${logoutEmail}_`)
@@ -38324,10 +38550,7 @@ function App() {
     } catch (_) {}
     if (supabase) await supabase.auth.signOut()
     persistFastCachedUserV57(null)
-    setSessionUser(null)
-    setWalletBalance(0)
-    setTipsterEarnings({ total: 0, sales: 0, history: [] })
-    setStripeConnectStatus(null)
+    activateSessionUserV76(null, 'logout')
     setUnlockedTips(new Set())
     clearGuestUnlockedTips()
     try { localStorage.removeItem('betai_unlocked_tips_v1') } catch {}
@@ -38368,17 +38591,19 @@ function App() {
   // V6: disabled automatic Stripe account refresh on every return to avoid UI/profile resets.
 
   useEffect(() => {
-    const currentEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
-    if (!currentEmail) return undefined
+    const currentEmail = normalizeEmail(sessionUser?.email || '')
+    const currentUserIdV76 = String(sessionUser?.id || '')
+    const currentEpochV76 = Number(activeAccountRefV76.current?.epoch || 0)
+    if (!currentEmail || !currentUserIdV76) return undefined
 
     let stopped = false
     receivedTipNotificationPollReadyRef.current = false
     lastReceivedTipNotificationKeyRef.current = ''
 
     const refreshTokens = async () => {
-      if (stopped || !canRunBetaiHeavyTaskV29()) return
-      await fetchCurrentTokenBalance()
-      await fetchNotifications(sessionUser?.id, { skipBalanceRefresh: true })
+      if (stopped || !canRunBetaiHeavyTaskV29() || !isActiveAccountV76(currentUserIdV76, currentEmail, currentEpochV76)) return
+      await fetchCurrentTokenBalance({ id: currentUserIdV76, email: currentEmail, epoch: currentEpochV76 })
+      await fetchNotifications(currentUserIdV76, { skipBalanceRefresh: true })
     }
 
     const pollTipNotifications = async () => {
@@ -38421,10 +38646,11 @@ function App() {
         walletChannel = supabase
           .channel(`betai-token-wallet-live-${currentEmail}`)
           .on('postgres_changes', { event: '*', schema: 'public', table: 'betai_token_wallets', filter: `email=eq.${currentEmail}` }, payload => {
+            if (!isActiveAccountV76(currentUserIdV76, currentEmail, currentEpochV76)) return
             const nextBalance = Number(payload?.new?.balance || 0) || 0
             setTokenBalance(nextBalance)
             try { localStorage.setItem('betai_tokens_' + currentEmail, String(nextBalance)) } catch (_) {}
-            fetchNotifications(sessionUser?.id, { skipBalanceRefresh: true })
+            fetchNotifications(currentUserIdV76, { skipBalanceRefresh: true })
           })
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'betai_system_notifications', filter: `recipient_email=eq.${currentEmail}` }, payload => {
             const row = payload?.new || {}
@@ -38448,7 +38674,7 @@ function App() {
         try { supabase.removeChannel(walletChannel) } catch (_) {}
       }
     }
-  }, [sessionUser?.id, sessionUser?.email, accountProfile?.email])
+  }, [sessionUser?.id, sessionUser?.email])
 
   useEffect(() => {
     if (view === 'notifications' && sessionUser?.id) {
@@ -38595,7 +38821,7 @@ function App() {
 
   useEffect(() => {
     const currentUserId = sessionUser?.id || ''
-    const currentEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+    const currentEmail = normalizeEmail(sessionUser?.email || '')
     if ((!currentUserId && !currentEmail) || !isSupabaseConfigured || !supabase) return undefined
 
     receivedTipPollReadyRef.current = false
@@ -38711,7 +38937,7 @@ function App() {
         try { supabase.removeChannel(channel) } catch (_) {}
       })
     }
-  }, [sessionUser?.id, sessionUser?.email, accountProfile?.email])
+  }, [sessionUser?.id, sessionUser?.email])
 
 
   useEffect(() => {
@@ -38768,25 +38994,25 @@ function App() {
         onComplete={(user) => {
           setPasswordRecoveryMode(false)
           setPasswordRecoveryUser(null)
-          setSessionUser(user || sessionUser)
+          activateSessionUserV76(user || sessionUser, 'password-reset-complete')
         }}
         onCancel={() => {
           setPasswordRecoveryMode(false)
           setPasswordRecoveryUser(null)
-          setSessionUser(null)
+          activateSessionUserV76(null, 'password-reset-cancel')
         }}
       />
     )
   }
 
   if (!sessionUser) {
-    return <AuthView onAuth={(user) => setSessionUser(user)} />
+    return <AuthView onAuth={(user) => activateSessionUserV76(user, 'auth-view')} />
   }
 
   return (
     <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
-      <BetaiPresenceHeartbeatV1901 user={effectiveAccountProfile || sessionUser} />
+      <BetaiPresenceHeartbeatV1901 user={sessionUser} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <LiveTipCenterPopup popup={liveTipPopup} open={liveTipPopupVisible} onClose={hideLiveTipPopup} />
       <ReceivedTipPopup popup={receivedTipPopup} open={receivedTipPopupVisible} onClose={hideReceivedTipPopup} />
