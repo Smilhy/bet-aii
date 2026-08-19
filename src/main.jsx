@@ -3317,11 +3317,12 @@ function buildRankingFromTips(tips = []) {
     if (String(authorName).toLowerCase() === 'ai tip') return
     if (isHiddenDemoUserV1712(authorName) || isHiddenDemoProfileV1712(normalized)) return
 
-    const id = String(normalized.author_id || normalized.user_id || normalized.author_email || normalized.username || normalized.author_name || 'unknown').toLowerCase()
+    const systemKeyV78 = normalizeSystemTipsterRankingKeyV78(normalized)
+    const id = systemKeyV78 || String(normalized.author_id || normalized.user_id || normalized.author_email || normalized.username || normalized.author_name || 'unknown').toLowerCase()
     if (isHiddenDemoUserV1712(id)) return
     const current = map.get(id) || {
-      tipster_id: id,
-      id,
+      tipster_id: systemKeyV78 === 'system:typer-expert' ? 'lookup:typer-expert' : systemKeyV78 === 'system:ograc-buka' ? 'lookup:ograc-buka' : id,
+      id: systemKeyV78 || id,
       username: authorName,
       email: normalized.author_email || normalized.email || '',
       total_tips: 0,
@@ -3423,7 +3424,46 @@ function normalizeRankingBotKeyV1761(row = {}) {
   return ''
 }
 
+
+// WERSJA 78 — Typer Expert i Ograć Buka muszą mieć JEDEN stały klucz rankingu.
+// W V77 profil systemowy miał techniczne id `lookup:*`, a rekordy tips często nie mają
+// author_id/user_id. Powstawały więc dwa osobne wiersze tej samej osoby:
+// `id:lookup:typer-expert` oraz np. `id:typer expert`. Prawa kolumna potrafiła wybrać
+// właśnie ten drugi, policzony z 1 widocznego kuponu.
+function normalizeSystemTipsterRankingKeyV78(row = {}) {
+  const raw = [
+    row?.id,
+    row?.tipster_id,
+    row?.author_id,
+    row?.user_id,
+    row?.username,
+    row?.author_name,
+    row?.user_name,
+    row?.display_name,
+    row?.public_slug,
+    row?.slug,
+    row?.email,
+    row?.author_email,
+    row?.source,
+    row?.tip_source,
+    row?.ai_source,
+  ].filter(Boolean).join(' ')
+
+  const clean = String(raw || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/^lookup:/g, '')
+    .replace(/[^a-z0-9]+/g, '')
+
+  if (clean.includes('typerexpert') || clean.includes('typerexpertprogression')) return 'system:typer-expert'
+  if (clean.includes('ogracbuka') || clean.includes('ogracbuk')) return 'system:ograc-buka'
+  return ''
+}
+
 function getRankingIdentityKey(row = {}) {
+  const systemKeyV78 = normalizeSystemTipsterRankingKeyV78(row)
+  if (systemKeyV78) return systemKeyV78
   const botKey = normalizeRankingBotKeyV1761(row)
   if (botKey) return botKey
 
@@ -3623,11 +3663,13 @@ function mergeRankingRows(...groups) {
   const keyExplicitId = new Map()
 
   const identityPartsV76 = (raw = {}) => {
+    const systemKeyV78 = normalizeSystemTipsterRankingKeyV78(raw)
     const botKey = normalizeRankingBotKeyV1761(raw)
     const id = String(raw.tipster_id || raw.author_id || raw.user_id || raw.id || '').toLowerCase().trim()
     const email = normalizeEmail(raw.email || raw.author_email || raw.user_email)
     const username = normalizeEmail(raw.username || raw.author_name || raw.user_name)
     const aliases = []
+    if (systemKeyV78) aliases.push(systemKeyV78)
     if (botKey) aliases.push(botKey)
     if (id && !botKey) aliases.push(`id:${id}`)
     if (email) {
@@ -3635,7 +3677,7 @@ function mergeRankingRows(...groups) {
       aliases.push(`user:${email.split('@')[0]}`)
     }
     if (username && !isGenericProfileName(username)) aliases.push(`user:${username}`)
-    return { botKey, id, email, username, aliases: [...new Set(aliases.filter(Boolean))] }
+    return { systemKeyV78, botKey, id, email, username, aliases: [...new Set(aliases.filter(Boolean))] }
   }
 
   groups.flat().filter(Boolean).forEach(raw => {
@@ -3645,7 +3687,7 @@ function mergeRankingRows(...groups) {
     // UUID jest twardą granicą konta. Rekord z jawnym UUID nie może zostać
     // dołączony do klucza, który już należy do innego UUID tylko dlatego,
     // że stary email/username jest taki sam.
-    let key = ident.botKey || (ident.id ? `id:${ident.id}` : '')
+    let key = ident.systemKeyV78 || ident.botKey || (ident.id ? `id:${ident.id}` : '')
     if (!key) {
       const safeAlias = ident.aliases.find(alias => {
         const mapped = aliasToKey.get(alias)
@@ -35603,10 +35645,90 @@ function App() {
       })
 
       const cleanRankingRows = (rankingRows || []).filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(formatRankingName(row)) && !isBetaiMultisportPublicTipHiddenV28(row))
-      const finalRows = buildLiveLeaderboardRows(
+      const finalRowsBeforeSystemFixV78 = buildLiveLeaderboardRows(
         mergeRankingRows(profileRankingRows, cleanRankingRows, buildRankingFromTips(rankingStatsTipRowsV77)),
         rankingStatsTipRowsV77.length ? rankingStatsTipRowsV77 : (tips || []).filter(row => !isBlockedTestProfile(row))
       )
+
+      // WERSJA 78 — ostatnia warstwa ochronna dla dwóch botów systemowych.
+      // Nie pozwalamy, aby generyczny merge/ranking wybrał duplikat policzony z jednego
+      // widocznego kuponu. Statystyki tych dwóch profili bierzemy bezpośrednio z ich
+      // pełnych, deduplikowanych historii pobranych wyżej.
+      const makeSystemBotRowV78 = (systemKey, slug, displayName, historyRows) => {
+        const history = (Array.isArray(historyRows) ? historyRows : []).map(normalizeTipRow)
+        const stats = finalizeAuthorStats(buildCombinedTipStatsV1791(history), null)
+        const candidates = [
+          ...finalRowsBeforeSystemFixV78,
+          ...profileRankingRows,
+          ...cleanRankingRows,
+          ...BETAI_SYSTEM_TIPSTER_PROFILES_V1837,
+        ].filter(row => normalizeSystemTipsterRankingKeyV78(row) === systemKey)
+
+        const base = candidates.sort((a, b) => {
+          const avatarA = getProfileAvatarUrl(a) ? 1 : 0
+          const avatarB = getProfileAvatarUrl(b) ? 1 : 0
+          return avatarB - avatarA
+        })[0] || {}
+
+        const totalTips = Number(stats?.totalTips || history.length || 0)
+        const wins = Number(stats?.wonTips || 0)
+        const losses = Number(stats?.lostTips || 0)
+        const voids = Number(stats?.voidTips || 0)
+        const pending = Number(stats?.pendingTips || 0)
+        const profit = Number(stats?.profit || 0)
+        const yieldValue = Number(stats?.yield || 0)
+
+        return {
+          ...base,
+          id: systemKey,
+          tipster_id: `lookup:${slug}`,
+          username: displayName,
+          author_name: displayName,
+          public_slug: slug,
+          canonical_total_tips: totalTips,
+          canonical_won_tips: wins,
+          canonical_lost_tips: losses,
+          canonical_void_tips: voids,
+          canonical_pending_tips: pending,
+          canonical_yield: yieldValue,
+          canonical_profit: profit,
+          imported_total_tips: totalTips,
+          imported_won_tips: wins,
+          imported_lost_tips: losses,
+          imported_void_tips: voids,
+          imported_pending_tips: pending,
+          imported_yield: yieldValue,
+          imported_profit: profit,
+          total_tips: totalTips,
+          totalTips,
+          wins,
+          wonTips: wins,
+          losses,
+          lostTips: losses,
+          voids,
+          voidTips: voids,
+          pending,
+          pendingTips: pending,
+          roi: yieldValue,
+          yield: yieldValue,
+          earnings: profit,
+          total_earnings: profit,
+          profit,
+          total_staked: Number(stats?.totalStaked || 0),
+          winrate: (wins + losses) > 0 ? (wins / (wins + losses)) * 100 : 0,
+          ranking_stats_source_v78: 'direct_targeted_system_history_v78',
+        }
+      }
+
+      const typerCanonicalRowV78 = makeSystemBotRowV78('system:typer-expert', 'typer-expert', 'Typer Expert', typerExpertHistoryV77)
+      const ogracCanonicalRowV78 = makeSystemBotRowV78('system:ograc-buka', 'ograc-buka', 'Ograć Buka', ogracBukaHistoryV77)
+
+      const withoutSystemDuplicatesV78 = (finalRowsBeforeSystemFixV78 || []).filter(row => !normalizeSystemTipsterRankingKeyV78(row))
+      const finalRows = sortRankingRows([
+        ...withoutSystemDuplicatesV78,
+        ...(Number(typerCanonicalRowV78.totalTips || 0) > 0 ? [typerCanonicalRowV78] : []),
+        ...(Number(ogracCanonicalRowV78.totalTips || 0) > 0 ? [ogracCanonicalRowV78] : []),
+      ])
 
       setRealRanking((finalRows || []).filter(row => !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(formatRankingName(row)) && !isBetaiMultisportPublicTipHiddenV28(row)))
     } catch (error) {
