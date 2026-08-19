@@ -4639,20 +4639,31 @@ function hasUnlimitedTipAccess(user, plan = 'free') {
 }
 
 function buildEffectiveAccountProfile(accountProfile, sessionUser) {
-  const sessionEmail = normalizeEmail(sessionUser?.email || accountProfile?.email)
+  // WERSJA 74 — twarda izolacja kont.
+  // Nigdy nie wolno scalać profilu poprzednio zalogowanego użytkownika z nową sesją.
+  // To właśnie powodowało zamianę avataru/yieldu/typów między smilhytv i buchajson1988.
+  const sessionIdV74 = String(sessionUser?.id || '').trim()
+  const accountIdV74 = String(accountProfile?.id || accountProfile?.user_id || '').trim()
+  const sessionOnlyEmailV74 = normalizeEmail(sessionUser?.email || '')
+  const accountOnlyEmailV74 = normalizeEmail(accountProfile?.email || accountProfile?.user_email || '')
+  const idMismatchV74 = Boolean(sessionIdV74 && accountIdV74 && sessionIdV74 !== accountIdV74)
+  const emailMismatchV74 = Boolean(sessionOnlyEmailV74 && accountOnlyEmailV74 && sessionOnlyEmailV74 !== accountOnlyEmailV74)
+  const safeAccountProfileV74 = (idMismatchV74 || emailMismatchV74) ? null : accountProfile
+
+  const sessionEmail = normalizeEmail(sessionUser?.email || safeAccountProfileV74?.email)
   const fallbackUsername = sessionEmail ? sessionEmail.split('@')[0] : ''
   const merged = {
     ...(sessionUser || {}),
-    ...(accountProfile || {}),
-    id: accountProfile?.id || sessionUser?.id || null,
-    email: sessionEmail || accountProfile?.email || sessionUser?.email || '',
-    username: accountProfile?.username || sessionUser?.username || sessionUser?.user_metadata?.username || sessionUser?.user_metadata?.name || fallbackUsername,
+    ...(safeAccountProfileV74 || {}),
+    id: safeAccountProfileV74?.id || sessionUser?.id || null,
+    email: sessionEmail || safeAccountProfileV74?.email || sessionUser?.email || '',
+    username: safeAccountProfileV74?.username || sessionUser?.username || sessionUser?.user_metadata?.username || sessionUser?.user_metadata?.name || fallbackUsername,
     avatar_url:
-      accountProfile?.avatar_url ||
-      accountProfile?.profile_avatar_url ||
-      accountProfile?.author_avatar_url ||
-      accountProfile?.photo_url ||
-      accountProfile?.picture ||
+      safeAccountProfileV74?.avatar_url ||
+      safeAccountProfileV74?.profile_avatar_url ||
+      safeAccountProfileV74?.author_avatar_url ||
+      safeAccountProfileV74?.photo_url ||
+      safeAccountProfileV74?.picture ||
       sessionUser?.avatar_url ||
       sessionUser?.profile_avatar_url ||
       sessionUser?.photo_url ||
@@ -4665,10 +4676,10 @@ function buildEffectiveAccountProfile(accountProfile, sessionUser) {
       sessionUser?.raw_user_meta_data?.photo_url ||
       '',
     profile_avatar_url:
-      accountProfile?.profile_avatar_url ||
-      accountProfile?.avatar_url ||
-      accountProfile?.photo_url ||
-      accountProfile?.picture ||
+      safeAccountProfileV74?.profile_avatar_url ||
+      safeAccountProfileV74?.avatar_url ||
+      safeAccountProfileV74?.photo_url ||
+      safeAccountProfileV74?.picture ||
       sessionUser?.profile_avatar_url ||
       sessionUser?.avatar_url ||
       sessionUser?.photo_url ||
@@ -4680,7 +4691,7 @@ function buildEffectiveAccountProfile(accountProfile, sessionUser) {
       sessionUser?.raw_user_meta_data?.picture ||
       sessionUser?.raw_user_meta_data?.photo_url ||
       '',
-    bio: accountProfile?.bio || sessionUser?.bio || sessionUser?.user_metadata?.bio || accountProfile?.description || accountProfile?.about || ''
+    bio: safeAccountProfileV74?.bio || sessionUser?.bio || sessionUser?.user_metadata?.bio || safeAccountProfileV74?.description || safeAccountProfileV74?.about || ''
   }
   if (isGuaranteedPremiumIdentity(merged) || BETAI_PREMIUM_EMAILS.includes(sessionEmail)) {
     merged.is_premium = true
@@ -35105,6 +35116,109 @@ function App() {
   const receivedTipNotificationPollReadyRef = useRef(false)
   const lastReceivedTipNotificationKeyRef = useRef('')
 
+  // WERSJA 74 — jedna aktywna tożsamość dla całej aplikacji.
+  // Każdy request konta dostaje epoch. Odpowiedź ze starego konta jest ignorowana,
+  // nawet jeśli wróci z Supabase kilka sekund po przełączeniu użytkownika.
+  const activeAccountRefV74 = useRef({
+    id: String(fastCachedUserV57?.id || ''),
+    email: normalizeEmail(fastCachedUserV57?.email || ''),
+    user: fastCachedUserV57 || null,
+    epoch: fastCachedUserV57?.id ? 1 : 0,
+  })
+  const accountSwitchAtRefV74 = useRef(0)
+
+  function isActiveAccountRequestV74(userId = '', email = '', epoch = null) {
+    const active = activeAccountRefV74.current || {}
+    const cleanId = String(userId || '').trim()
+    const cleanEmail = normalizeEmail(email || '')
+    if (epoch !== null && Number(epoch) !== Number(active.epoch || 0)) return false
+    if (cleanId && String(active.id || '') !== cleanId) return false
+    if (cleanEmail && normalizeEmail(active.email || '') !== cleanEmail) return false
+    return true
+  }
+
+  function getAccountRequestSnapshotV74(userLike = null) {
+    const active = activeAccountRefV74.current || {}
+    const candidate = userLike && typeof userLike === 'object' ? userLike : active.user
+    return {
+      id: String(candidate?.id || active.id || '').trim(),
+      email: normalizeEmail(candidate?.email || active.email || ''),
+      user: candidate || active.user || null,
+      epoch: Number(active.epoch || 0),
+    }
+  }
+
+  function resetAccountScopedUiV74(nextUser = null) {
+    setAccountProfile(null)
+    setUserPlan('free')
+    setWalletBalance(0)
+    setWallet(0)
+    setTokenBalance(0)
+    setUnlockedTips(new Set())
+    setFollowingTipsters(new Set())
+    setFollowStats({})
+    setNotifications([])
+    setTipsterSubscriptions([])
+    setPaymentHistory([])
+    setPayoutRequests([])
+    setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
+    setStripeConnectStatus(null)
+    setReferralData({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
+    setRankingChallengeClaims([])
+    setTips([])
+    setRealRanking([])
+    setSelectedPayment(null)
+    setSelectedProfileSub(null)
+    setSelectedTipsterId(null)
+    setNotifyPanelOpen(false)
+    setDmPanelOpen(false)
+    fetchTipsRunningRef.current = false
+    fetchTipsQueuedUserRef.current = null
+    receivedTipPollReadyRef.current = false
+    receivedTipNotificationPollReadyRef.current = false
+    lastReceivedTipRef.current = ''
+    lastReceivedTipPollKeyRef.current = ''
+    lastReceivedTipNotificationKeyRef.current = ''
+
+    // Reward-lock jest krótkim zabezpieczeniem UI. Po realnej zmianie konta nie wolno,
+    // żeby stary lock utrzymywał błędne saldo innego użytkownika.
+    try {
+      const nextEmail = normalizeEmail(nextUser?.email || '')
+      if (nextEmail) localStorage.removeItem('betai_reward_balance_lock_' + nextEmail)
+    } catch (_) {}
+  }
+
+  function commitSessionUserV74(nextUser = null, reason = 'auth') {
+    const previous = activeAccountRefV74.current || {}
+    const nextId = String(nextUser?.id || '').trim()
+    const nextEmail = normalizeEmail(nextUser?.email || '')
+    const changed = String(previous.id || '') !== nextId || normalizeEmail(previous.email || '') !== nextEmail
+    const nextEpoch = changed ? Number(previous.epoch || 0) + 1 : Number(previous.epoch || 0)
+
+    activeAccountRefV74.current = { id: nextId, email: nextEmail, user: nextUser || null, epoch: nextEpoch }
+    if (changed) {
+      accountSwitchAtRefV74.current = Date.now()
+      resetAccountScopedUiV74(nextUser)
+      console.info('BetAI V74 account switch isolated', { reason, from: previous.id || null, to: nextId || null, epoch: nextEpoch })
+    }
+    setSessionUser(nextUser || null)
+  }
+
+  useEffect(() => {
+    const active = activeAccountRefV74.current || {}
+    const nextId = String(sessionUser?.id || '').trim()
+    const nextEmail = normalizeEmail(sessionUser?.email || '')
+    const mismatch = String(active.id || '') !== nextId || normalizeEmail(active.email || '') !== nextEmail
+    if (mismatch) {
+      const nextEpoch = Number(active.epoch || 0) + 1
+      activeAccountRefV74.current = { id: nextId, email: nextEmail, user: sessionUser || null, epoch: nextEpoch }
+      accountSwitchAtRefV74.current = Date.now()
+      resetAccountScopedUiV74(sessionUser)
+      return
+    }
+    activeAccountRefV74.current = { ...active, id: nextId, email: nextEmail, user: sessionUser || null }
+  }, [sessionUser?.id, sessionUser?.email, sessionUser?.user_metadata?.avatar_url, sessionUser?.user_metadata?.username])
+
   function hideReceivedTipPopup() {
     setReceivedTipPopupVisible(false)
     if (receivedTipHideTimerRef.current) clearTimeout(receivedTipHideTimerRef.current)
@@ -35121,21 +35235,29 @@ function App() {
   }
 
   function persistTokenBalanceNoRollback(email, balance, reason = 'manual') {
-    const walletEmail = normalizeEmail(email || sessionUser?.email || accountProfile?.email || '')
+    const active = getAccountRequestSnapshotV74()
+    const walletEmail = normalizeEmail(email || active.email || '')
     const cleanBalance = Math.max(0, Number(balance || 0) || 0)
     if (!walletEmail) return cleanBalance
+
+    // V74: spóźniona operacja poprzedniego konta nie może dotknąć bieżącego UI ani walleta.
+    if (active.email && walletEmail !== active.email) {
+      console.warn('V74 blocked stale token write', { walletEmail, activeEmail: active.email, reason })
+      return cleanBalance
+    }
+
     setTokenBalance(prev => Math.max(Number(prev || 0) || 0, cleanBalance))
     try {
       const currentLocal = Number(localStorage.getItem('betai_tokens_' + walletEmail) || '0') || 0
       const finalBalance = Math.max(currentLocal, cleanBalance)
       localStorage.setItem('betai_tokens_' + walletEmail, String(finalBalance))
-      localStorage.setItem('betai_reward_balance_lock_' + walletEmail, JSON.stringify({ balance: finalBalance, until: Date.now() + 90000, reason }))
-      window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email: walletEmail, balance: finalBalance, reason } }))
+      localStorage.setItem('betai_reward_balance_lock_' + walletEmail, JSON.stringify({ balance: finalBalance, until: Date.now() + 90000, reason, user_id: active.id || null }))
+      window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email: walletEmail, balance: finalBalance, reason, user_id: active.id || null } }))
       try {
-        if (isSupabaseConfigured && supabase) {
+        if (isSupabaseConfigured && supabase && isActiveAccountRequestV74(active.id, walletEmail, active.epoch)) {
           supabase.from('betai_token_wallets').upsert({
             email: walletEmail,
-            user_id: sessionUser?.id || null,
+            user_id: active.id || null,
             balance: finalBalance,
             welcome_bonus_claimed: true,
             updated_at: new Date().toISOString()
@@ -35149,19 +35271,26 @@ function App() {
   }
 
   async function fetchCurrentTokenBalance() {
-    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
-    if (!email) return 0
+    const request = getAccountRequestSnapshotV74()
+    const email = normalizeEmail(request.email || '')
+    if (!email || !request.id) return 0
+
+    const requestStillActive = () => isActiveAccountRequestV74(request.id, email, request.epoch)
 
     const getRewardLock = () => {
       try {
         const raw = localStorage.getItem('betai_reward_balance_lock_' + email)
         const lock = raw ? JSON.parse(raw) : null
-        if (lock && Number(lock.until || 0) > Date.now()) return lock
+        if (!lock || Number(lock.until || 0) <= Date.now()) return null
+        // Stary lock bez zgodnego user_id po przełączeniu konta traktujemy jako niewiarygodny.
+        if (lock.user_id && String(lock.user_id) !== String(request.id)) return null
+        return lock
       } catch (_) {}
       return null
     }
 
     const applyTokenBalance = (candidateBalance, source = 'remote') => {
+      if (!requestStillActive()) return 0
       const cleanCandidate = Math.max(0, Number(candidateBalance || 0) || 0)
       const localBalance = (() => {
         try { return Math.max(0, Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0) } catch (_) { return 0 }
@@ -35169,11 +35298,14 @@ function App() {
       const lock = getRewardLock()
       const lockedBalance = Math.max(0, Number(lock?.balance || 0) || 0)
 
-      // Po odebraniu wyzwania nie pozwalamy staremu refreshowi cofnąć Coin.
-      const finalBalance = lock
-        ? Math.max(cleanCandidate, localBalance, lockedBalance, Number(tokenBalance || 0) || 0)
-        : Math.max(cleanCandidate, localBalance)
+      // V74: Supabase jest źródłem prawdy. Wcześniejsze Math.max(remote, local)
+      // utrwalało błędne saldo innego konta zapisane kiedyś w localStorage.
+      // Lock chroni tylko świeżą nagrodę TEGO SAMEGO użytkownika.
+      const finalBalance = source === 'remote'
+        ? (lock ? Math.max(cleanCandidate, lockedBalance) : cleanCandidate)
+        : (lock ? Math.max(localBalance, lockedBalance) : localBalance)
 
+      if (!requestStillActive()) return 0
       setTokenBalance(finalBalance)
       try { localStorage.setItem('betai_tokens_' + email, String(finalBalance)) } catch (_) {}
       return finalBalance
@@ -35186,6 +35318,7 @@ function App() {
           .select('balance,updated_at')
           .eq('email', email)
           .maybeSingle()
+        if (!requestStillActive()) return 0
         if (!error && data) {
           return applyTokenBalance(Number(data.balance || 0) || 0, 'remote')
         }
@@ -35193,6 +35326,12 @@ function App() {
     } catch (error) {
       console.warn('token balance realtime refresh skipped', error)
     }
+
+    if (!requestStillActive()) return 0
+
+    // Tuż po zmianie konta nie pokazujemy lokalnego cache, jeśli odczyt z Supabase zawiódł.
+    // Lepiej chwilowo 0 niż saldo poprzedniego użytkownika.
+    if (Date.now() - Number(accountSwitchAtRefV74.current || 0) < 30000) return 0
 
     try {
       const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
@@ -35430,10 +35569,13 @@ function App() {
   }
 
   async function fetchReferralData(userId = sessionUser?.id) {
-    if (!userId || !isSupabaseConfigured || !supabase) {
-      setReferralData({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
+    const requestedUserIdV74 = String(userId || '').trim()
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
+    if (!requestedUserIdV74 || !isSupabaseConfigured || !supabase) {
+      if (!activeAccountRefV74.current?.id) setReferralData({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
       return
     }
+    if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
 
     const safeQuery = async (promise, fallback = null) => {
       try {
@@ -35448,26 +35590,29 @@ function App() {
 
     setReferralLoading(true)
     try {
-      const codeData = await safeQuery(supabase.rpc('ensure_referral_code', { p_user_id: userId }), '')
+      const codeData = await safeQuery(supabase.rpc('ensure_referral_code', { p_user_id: requestedUserIdV74 }), '')
+      if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
       const referralCode = typeof codeData === 'string' ? codeData : ''
 
-      const dashboardData = await safeQuery(supabase.rpc('get_referral_dashboard', { p_user_id: userId }), null)
+      const dashboardData = await safeQuery(supabase.rpc('get_referral_dashboard', { p_user_id: requestedUserIdV74 }), null)
+      if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
       const row = Array.isArray(dashboardData) ? dashboardData[0] : dashboardData
 
       const referralsRows = await safeQuery(
-        supabase.from('referrals').select('*').eq('referrer_id', userId).order('created_at', { ascending: false }).limit(10),
+        supabase.from('referrals').select('*').eq('referrer_id', requestedUserIdV74).order('created_at', { ascending: false }).limit(10),
         []
       )
       const rewardsRows = await safeQuery(
-        supabase.from('referral_rewards').select('*').eq('referrer_id', userId).order('created_at', { ascending: false }).limit(10),
+        supabase.from('referral_rewards').select('*').eq('referrer_id', requestedUserIdV74).order('created_at', { ascending: false }).limit(10),
         []
       )
 
       const profileFallback = await safeQuery(
-        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+        supabase.from('profiles').select('*').eq('id', requestedUserIdV74).maybeSingle(),
         null
       )
 
+      if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
       setReferralData({
         referral_code: row?.referral_code || profileFallback?.referral_code || referralCode,
         referrals_count: Number(row?.referrals_count ?? profileFallback?.referrals_count ?? 0),
@@ -35479,7 +35624,7 @@ function App() {
     } catch (error) {
       console.error('fetchReferralData error', error)
     } finally {
-      setReferralLoading(false)
+      if (isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) setReferralLoading(false)
     }
   }
 
@@ -35705,7 +35850,9 @@ function App() {
   // V57: szybki pierwszy feed na telefonie. Pobiera tylko to, co jest potrzebne do
   // natychmiastowego pokazania Dashboardu; pełna hydracja rusza później w tle.
   async function fetchTipsFastMobileV57(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase) return false
+    const requestedUserIdV74 = String(userId || '').trim()
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
+    if (!isSupabaseConfigured || !supabase || !requestedUserIdV74 || !isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return false
     try {
       const publicTipsPromise = fetch(`/.netlify/functions/get-public-tips?limit=160&t=${Date.now()}`, { cache: 'no-store' })
         .then(response => response.ok ? response.json() : { tips: [] })
@@ -35715,12 +35862,13 @@ function App() {
         publicTipsPromise
       ])
       if (tipsError) throw tipsError
+      if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return false
       const publicTipsData = Array.isArray(publicTipsPayload?.tips) ? publicTipsPayload.tips : []
       let sourceTips = [...publicTipsData, ...(tipsData || [])]
         .map(normalizeTipRow)
         .filter(tip => !isBetaiMultisportPublicTipHiddenV28(tip))
 
-      const recentSavedTips = readRecentSavedTips(userId).filter(isTipVisibleInActiveFeed)
+      const recentSavedTips = readRecentSavedTips(requestedUserIdV74).filter(isTipVisibleInActiveFeed)
       const byId = new Map()
       ;[...recentSavedTips, ...sourceTips].forEach(tip => {
         const key = String(tip.id || `${tip.author_id || tip.user_id || ''}-${tip.created_at || ''}-${tip.match || tip.team_home || ''}-${tip.bet_type || tip.prediction || tip.pick || ''}`)
@@ -35729,6 +35877,7 @@ function App() {
       sourceTips = Array.from(byId.values())
         .sort((a, b) => new Date(b.created_at || b.match_time || 0) - new Date(a.created_at || a.match_time || 0))
 
+      if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return false
       setTips(dedupeBetAiTipsByUserMatchV1746(sourceTips))
       setLastTipSaveStatus(readTipDebug())
       return true
@@ -35739,8 +35888,13 @@ function App() {
   }
 
   async function fetchTips(userId = sessionUser?.id, options = {}) {
-    const requestedUserId = userId || sessionUser?.id || null
+    const requestedUserId = userId || activeAccountRefV74.current?.id || sessionUser?.id || null
+    const requestedUserIdV74 = String(requestedUserId || '').trim()
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
+    const requestStillActiveV74 = () => !requestedUserIdV74 || isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)
     const force = Boolean(options?.force)
+
+    if (requestedUserIdV74 && !requestStillActiveV74()) return
 
     if (!force && !isBetaiDocumentVisibleV29()) return
     if (!force && isBetaiResumeCoolingDownV29()) {
@@ -35786,6 +35940,16 @@ function App() {
         ? supabase.from('unlocked_tips').select('tip_id').eq('user_id', userId)
         : Promise.resolve({ data: [], error: null })
     ])
+
+    if (!requestStillActiveV74()) {
+      fetchTipsRunningRef.current = false
+      const queuedUserIdV74 = fetchTipsQueuedUserRef.current
+      fetchTipsQueuedUserRef.current = null
+      if (queuedUserIdV74 && String(activeAccountRefV74.current?.id || '') === String(queuedUserIdV74)) {
+        scheduleBetaiLightTaskV29('fetch-tips-account-switch-v74', () => fetchTips(queuedUserIdV74, { force: true }), 120)
+      }
+      return
+    }
 
     setLoading(false)
 
@@ -35833,8 +35997,10 @@ function App() {
     // Teraz zawsze dokładamy własne typy aktualnie zalogowanego profilu i dopiero potem
     // robimy deduplikację. To nie dotyka Top typerów ani cudzych profili.
     try {
-      const currentProfile = effectiveAccountProfile || sessionUser || {}
-      const currentEmail = normalizeEmail(currentProfile.email || sessionUser?.email || '')
+      const activeIdentityV74 = activeAccountRefV74.current || {}
+      const accountProfileMatchesV74 = accountProfile && String(accountProfile?.id || accountProfile?.user_id || '') === requestedUserIdV74
+      const currentProfile = accountProfileMatchesV74 ? accountProfile : (String(activeIdentityV74.id || '') === requestedUserIdV74 ? (activeIdentityV74.user || {}) : {})
+      const currentEmail = normalizeEmail(currentProfile.email || (String(activeIdentityV74.id || '') === requestedUserIdV74 ? activeIdentityV74.email : '') || '')
       const currentUsername = normalizeEmail(
         currentProfile.username ||
         currentProfile.public_slug ||
@@ -35942,16 +36108,21 @@ function App() {
     // WERSJA 912: cache aktualnego usera + RPC publicznych profili.
     // Naprawia przypadek, gdzie stare rekordy w DB miały avatar buchajson1988 przy smilhytv.
     try {
-      cacheBetaiCurrentUserAvatar(sessionUser)
+      const activeUserForAvatarV74 = String(activeAccountRefV74.current?.id || '') === requestedUserIdV74 ? activeAccountRefV74.current?.user : null
+      if (activeUserForAvatarV74) cacheBetaiCurrentUserAvatar(activeUserForAvatarV74)
       const allProfiles = await fetchBetaiPublicProfiles()
       const profileMap = buildBetaiProfileMap(allProfiles)
       if (profileMap.size) {
         sourceTips = sourceTips.map(tip => applyProfileAvatarToTip(tip, profileMap))
       }
-      const currentAvatar = getProfileAvatarUrl(sessionUser)
+      if (!requestStillActiveV74()) {
+        fetchTipsRunningRef.current = false
+        return
+      }
+      const currentAvatar = getProfileAvatarUrl(activeUserForAvatarV74)
       if (currentAvatar) {
-        const currentEmail = normalizeEmail(sessionUser?.email)
-        const currentUsername = normalizeEmail(sessionUser?.username || sessionUser?.user_metadata?.username || sessionUser?.user_metadata?.name)
+        const currentEmail = normalizeEmail(activeUserForAvatarV74?.email)
+        const currentUsername = normalizeEmail(activeUserForAvatarV74?.username || activeUserForAvatarV74?.user_metadata?.username || activeUserForAvatarV74?.user_metadata?.name)
         sourceTips = sourceTips.map(tip => {
           const tipEmail = normalizeEmail(tip.author_email || tip.email || tip.user_email)
           const tipName = normalizeEmail(tip.author_name || tip.username)
@@ -36009,7 +36180,15 @@ function App() {
         console.warn('tipster_subscriptions fetch skipped', error)
         activeSubs = []
       }
+      if (!requestStillActiveV74()) {
+        fetchTipsRunningRef.current = false
+        return
+      }
       setTipsterSubscriptions(activeSubs)
+    }
+    if (!requestStillActiveV74()) {
+      fetchTipsRunningRef.current = false
+      return
     }
     setTips(dedupeBetAiTipsByUserMatchV1746(sourceTips.filter(tip => !isBetaiMultisportPublicTipHiddenV28(tip))))
     setLastTipSaveStatus(readTipDebug())
@@ -36107,8 +36286,11 @@ function App() {
           }
         }))
 
-        if (String(updatedProfile.id) === String((effectiveAccountProfile || sessionUser)?.id)) {
-          setAccountProfile(prev => prev ? ({ ...prev, ...updatedProfile }) : updatedProfile)
+        if (String(updatedProfile.id) === String(activeAccountRefV74.current?.id || '')) {
+          setAccountProfile(prev => {
+            if (prev?.id && String(prev.id) !== String(updatedProfile.id)) return prev
+            return prev ? ({ ...prev, ...updatedProfile }) : updatedProfile
+          })
         }
 
         fetchRealRanking()
@@ -36173,12 +36355,16 @@ function App() {
   }, [sessionUser?.id, view])
 
   async function fetchFollowingTipsters(userId = sessionUser?.id) {
-    if (!userId) {
-      setFollowingTipsters(new Set())
+    const requestedUserIdV74 = String(userId || '').trim()
+    const requestV74 = getAccountRequestSnapshotV74()
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
+    if (!requestedUserIdV74) {
+      if (!activeAccountRefV74.current?.id) setFollowingTipsters(new Set())
       return
     }
+    if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
 
-    const localSet = readLocalFollowingTipsters(userId)
+    const localSet = readLocalFollowingTipsters(requestedUserIdV74)
     let remoteSet = new Set()
 
     if (isSupabaseConfigured && supabase) {
@@ -36186,7 +36372,7 @@ function App() {
         const { data, error } = await supabase
           .from('tipster_follows')
           .select('tipster_id')
-          .eq('follower_id', userId)
+          .eq('follower_id', requestedUserIdV74)
 
         if (error) throw error
         remoteSet = new Set((data || []).map(row => String(row.tipster_id).toLowerCase()).filter(Boolean))
@@ -36194,13 +36380,15 @@ function App() {
         console.warn('fetchFollowingTipsters remote uuid skipped', error)
       }
 
+      if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
+
       try {
-        const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+        const email = normalizeEmail(requestV74.id === requestedUserIdV74 ? requestV74.email : '')
         let keyQuery = supabase
           .from('betai_tipster_follow_keys_v1033')
           .select('tipster_id,tipster_key,tipster_name,tipster_email')
-        if (email) keyQuery = keyQuery.or(`follower_id.eq.${userId},follower_email.eq.${email}`)
-        else keyQuery = keyQuery.eq('follower_id', userId)
+        if (email) keyQuery = keyQuery.or(`follower_id.eq.${requestedUserIdV74},follower_email.eq.${email}`)
+        else keyQuery = keyQuery.eq('follower_id', requestedUserIdV74)
         const { data: keyRows, error: keyError } = await keyQuery
         if (keyError) throw keyError
         ;(keyRows || []).forEach(row => {
@@ -36214,13 +36402,15 @@ function App() {
       }
     }
 
+    if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
     const merged = mergeFollowingSets(localSet, remoteSet)
-    writeLocalFollowingTipsters(userId, merged)
+    writeLocalFollowingTipsters(requestedUserIdV74, merged)
     setFollowingTipsters(merged)
   }
 
-
   async function fetchFollowStats() {
+    const viewerV74 = getAccountRequestSnapshotV74()
+    const requestEpochV74 = viewerV74.epoch
     const addFollowerStat = (stats, key, followerUnique) => {
       const cleanKey = normalizeEmail(key || '')
       if (!cleanKey) return
@@ -36238,9 +36428,9 @@ function App() {
           }
         }
       })
-      const localSet = readLocalFollowingTipsters(sessionUser?.id)
-      if (sessionUser?.id && localSet.size) {
-        const viewerKey = String(sessionUser.id)
+      const localSet = readLocalFollowingTipsters(viewerV74.id)
+      if (viewerV74.id && localSet.size) {
+        const viewerKey = String(viewerV74.id)
         stats[viewerKey] = stats[viewerKey] || { followers: 0, following: 0 }
         stats[viewerKey].following = Math.max(Number(stats[viewerKey].following || 0), localSet.size)
         ;[...localSet].forEach(key => {
@@ -36256,7 +36446,7 @@ function App() {
     const stats = {}
 
     if (!isSupabaseConfigured || !supabase) {
-      setFollowStats(finishStats(stats))
+      if (isActiveAccountRequestV74(viewerV74.id, viewerV74.email, requestEpochV74)) setFollowStats(finishStats(stats))
       return
     }
 
@@ -36315,27 +36505,33 @@ function App() {
       console.warn('fetchFollowStats keys skipped', error)
     }
 
-    setFollowStats(finishStats(stats))
+    if (isActiveAccountRequestV74(viewerV74.id, viewerV74.email, requestEpochV74)) setFollowStats(finishStats(stats))
   }
 
 
   async function fetchNotifications(userId = sessionUser?.id, options = {}) {
     const skipBalanceRefresh = Boolean(options?.skipBalanceRefresh)
-    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
-    if (!isSupabaseConfigured || !supabase || (!userId && !email)) {
-      setNotifications([])
-      setTokenBalance(0)
+    const requestedUserIdV74 = String(userId || '').trim()
+    const requestV74 = getAccountRequestSnapshotV74()
+    const email = normalizeEmail(requestV74.id === requestedUserIdV74 ? requestV74.email : '')
+    const requestEpochV74 = requestV74.epoch
+    if (!isSupabaseConfigured || !supabase || (!requestedUserIdV74 && !email)) {
+      if (!activeAccountRefV74.current?.id) {
+        setNotifications([])
+        setTokenBalance(0)
+      }
       return
     }
+    if (requestedUserIdV74 && !isActiveAccountRequestV74(requestedUserIdV74, email, requestEpochV74)) return
 
     const combined = []
 
-    if (userId) {
+    if (requestedUserIdV74) {
       try {
         const { data, error } = await supabase
           .from('notifications')
           .select('*')
-          .eq('user_id', userId)
+          .eq('user_id', requestedUserIdV74)
           .order('created_at', { ascending: false })
           .limit(50)
         if (!error && Array.isArray(data)) combined.push(...data.map(row => ({ ...row, source: 'follow' })))
@@ -36343,6 +36539,8 @@ function App() {
         console.warn('fetch notifications table skipped', error)
       }
     }
+
+    if (!isActiveAccountRequestV74(requestedUserIdV74, email, requestEpochV74)) return
 
     if (email) {
       try {
@@ -36357,25 +36555,27 @@ function App() {
         console.warn('fetch betai_system_notifications skipped', error)
       }
 
-      if (!skipBalanceRefresh) {
+      if (!skipBalanceRefresh && isActiveAccountRequestV74(requestedUserIdV74, email, requestEpochV74)) {
         try {
           await fetchCurrentTokenBalance()
-        } catch (error) {
-          const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
-          setTokenBalance(Math.max(Number(tokenBalance || 0) || 0, localTokens))
+        } catch (_) {
+          // V74: po zmianie konta nie przywracamy tokenów z potencjalnie starego local cache.
         }
       }
     }
 
+    if (!isActiveAccountRequestV74(requestedUserIdV74, email, requestEpochV74)) return
     combined.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
     setNotifications(combined)
   }
 
   async function ensureUserWalletAndWelcome(user = sessionUser) {
-    const email = normalizeEmail(user?.email || accountProfile?.email || '')
-    if (!email || !isSupabaseConfigured || !supabase) return
-
+    const email = normalizeEmail(user?.email || '')
     const userId = String(user?.id || '')
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
+    if (!email || !userId || !isSupabaseConfigured || !supabase) return
+    if (!isActiveAccountRequestV74(userId, email, requestEpochV74)) return
+
     const guardKey = `${email}:${userId}`
     if (welcomeCheckStartedRefV51.current.has(guardKey)) return
     welcomeCheckStartedRefV51.current.add(guardKey)
@@ -36410,6 +36610,7 @@ function App() {
         bonusHistoryRequest
       ])
 
+      if (!isActiveAccountRequestV74(userId, email, requestEpochV74)) return
       if (walletError) throw walletError
       if (bonusHistoryError) console.warn('V51 welcome bonus history read skipped', bonusHistoryError)
 
@@ -36535,20 +36736,22 @@ function App() {
 
             wallet = { ...wallet, balance: correctedBalance, welcome_bonus_claimed: true, updated_at: correctedAt }
             forcedBalanceAfterRepairV51 = correctedBalance
-            setTokenBalance(correctedBalance)
-            try {
-              localStorage.setItem('betai_tokens_' + email, String(correctedBalance))
-              localStorage.removeItem('betai_reward_balance_lock_' + email)
-              window.dispatchEvent(new CustomEvent('betai-token-balance-changed', {
-                detail: { email, balance: correctedBalance, reason: 'welcome_bonus_reversal_v51' }
-              }))
-            } catch (_) {}
+            if (isActiveAccountRequestV74(userId, email, requestEpochV74)) {
+              setTokenBalance(correctedBalance)
+              try {
+                localStorage.setItem('betai_tokens_' + email, String(correctedBalance))
+                localStorage.removeItem('betai_reward_balance_lock_' + email)
+                window.dispatchEvent(new CustomEvent('betai-token-balance-changed', {
+                  detail: { email, balance: correctedBalance, reason: 'welcome_bonus_reversal_v51', user_id: userId }
+                }))
+              } catch (_) {}
 
-            showToast({
-              type: 'info',
-              title: 'Korekta bonusu powitalnego',
-              message: `Cofnięto ${correction} coinów przyznanych omyłkowo staremu kontu.`
-            })
+              showToast({
+                type: 'info',
+                title: 'Korekta bonusu powitalnego',
+                message: `Cofnięto ${correction} coinów przyznanych omyłkowo staremu kontu.`
+              })
+            }
           }
         }
       }
@@ -36584,12 +36787,14 @@ function App() {
           is_read: false
         })
 
-        setTokenBalance(nextBalance)
-        try {
-          localStorage.setItem('betai_tokens_' + email, String(nextBalance))
-          localStorage.removeItem('betai_reward_balance_lock_' + email)
-        } catch (_) {}
-        showToast({ type: 'success', title: 'Witaj w BetAI 👋', message: 'Dodaliśmy 100 coinów na start.' })
+        if (isActiveAccountRequestV74(userId, email, requestEpochV74)) {
+          setTokenBalance(nextBalance)
+          try {
+            localStorage.setItem('betai_tokens_' + email, String(nextBalance))
+            localStorage.removeItem('betai_reward_balance_lock_' + email)
+          } catch (_) {}
+          showToast({ type: 'success', title: 'Witaj w BetAI 👋', message: 'Dodaliśmy 100 coinów na start.' })
+        }
         return nextBalance
       }
 
@@ -36613,11 +36818,13 @@ function App() {
             updated_at: new Date().toISOString()
           }, { onConflict: 'email' })
           wallet = { email, user_id: userId || null, balance: restoredBalance, welcome_bonus_claimed: true }
-          setTokenBalance(restoredBalance)
-          try {
-            localStorage.setItem('betai_tokens_' + email, String(restoredBalance))
-            localStorage.removeItem('betai_reward_balance_lock_' + email)
-          } catch (_) {}
+          if (isActiveAccountRequestV74(userId, email, requestEpochV74)) {
+            setTokenBalance(restoredBalance)
+            try {
+              localStorage.setItem('betai_tokens_' + email, String(restoredBalance))
+              localStorage.removeItem('betai_reward_balance_lock_' + email)
+            } catch (_) {}
+          }
         }
       } else {
         const balance = Math.max(0, Number(wallet.balance || 0) || 0)
@@ -36638,12 +36845,12 @@ function App() {
         }
 
         const remoteBalance = Math.max(0, Number(wallet.balance || 0) || 0)
-        const localBalance = (() => {
-          try { return Math.max(0, Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0) } catch (_) { return 0 }
-        })()
+        // V74: istniejący wallet z Supabase jest źródłem prawdy. Nie bierzemy Math.max
+        // ze starego localStorage ani z tokenBalance poprzedniego konta.
         const displayBalance = forcedBalanceAfterRepairV51 != null
           ? Math.max(0, Number(forcedBalanceAfterRepairV51 || 0) || 0)
-          : Math.max(remoteBalance, localBalance, Number(tokenBalance || 0) || 0)
+          : remoteBalance
+        if (!isActiveAccountRequestV74(userId, email, requestEpochV74)) return
         setTokenBalance(displayBalance)
         try { localStorage.setItem('betai_tokens_' + email, String(displayBalance)) } catch (_) {}
 
@@ -36658,13 +36865,15 @@ function App() {
         }
       }
 
-      await fetchNotifications(userId)
+      if (isActiveAccountRequestV74(userId, email, requestEpochV74)) await fetchNotifications(userId)
     } catch (error) {
       console.warn('ensure wallet/welcome V51 skipped', error)
       welcomeCheckStartedRefV51.current.delete(guardKey)
       try {
-        const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
-        setTokenBalance(localTokens)
+        if (isActiveAccountRequestV74(userId, email, requestEpochV74) && Date.now() - Number(accountSwitchAtRefV74.current || 0) >= 30000) {
+          const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
+          setTokenBalance(localTokens)
+        }
       } catch (_) {}
     }
   }
@@ -36923,24 +37132,29 @@ function App() {
   }, [sessionUser?.id])
 
   async function fetchRankingChallengeClaims(userId = sessionUser?.id) {
-    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
-    if ((!userId && !email) || !isSupabaseConfigured || !supabase) {
-      setRankingChallengeClaims([])
+    const requestedUserIdV74 = String(userId || '').trim()
+    const requestV74 = getAccountRequestSnapshotV74()
+    const email = normalizeEmail(requestV74.id === requestedUserIdV74 ? requestV74.email : '')
+    const requestEpochV74 = requestV74.epoch
+    if ((!requestedUserIdV74 && !email) || !isSupabaseConfigured || !supabase) {
+      if (!activeAccountRefV74.current?.id) setRankingChallengeClaims([])
       return []
     }
+    if (!isActiveAccountRequestV74(requestedUserIdV74, email, requestEpochV74)) return []
     try {
       let query = supabase
         .from('betai_ranking_challenge_claims')
         .select('challenge_key,period_key,created_at,reward_tokens,email,user_id')
-      if (userId && email) {
-        query = query.or(`user_id.eq.${userId},email.eq.${email}`)
-      } else if (userId) {
-        query = query.eq('user_id', userId)
+      if (requestedUserIdV74 && email) {
+        query = query.or(`user_id.eq.${requestedUserIdV74},email.eq.${email}`)
+      } else if (requestedUserIdV74) {
+        query = query.eq('user_id', requestedUserIdV74)
       } else {
         query = query.eq('email', email)
       }
       const { data, error } = await query
       if (error) throw error
+      if (!isActiveAccountRequestV74(requestedUserIdV74, email, requestEpochV74)) return []
       const rows = Array.from(new Map((Array.isArray(data) ? data : []).map(row => [`${row.challenge_key}_${row.period_key}`, row])).values())
       setRankingChallengeClaims(rows)
       return rows
@@ -37144,8 +37358,7 @@ function App() {
             if (!response.ok) throw new Error(data.error || 'Nie udało się zsynchronizować subskrypcji profilu.')
             if (data?.user_mismatch) {
               if (supabase) await supabase.auth.signOut()
-              setSessionUser(null)
-              setWalletBalance(0)
+              commitSessionUserV74(null, 'profile-sub-user-mismatch')
               setUnlockedTips(new Set())
               clearGuestUnlockedTips()
               showToast({
@@ -37252,18 +37465,22 @@ function App() {
   // V50: jednorazowe naprawy V48/V49 są już zapisane w bazie i nie są uruchamiane przy każdym wejściu.
 
   async function fetchStripeConnectStatus(userId = sessionUser?.id) {
+    const requestedUserIdV74 = String(userId || '').trim()
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
     try {
-      if (!isSupabaseConfigured || !supabase || !userId) {
-        setStripeConnectStatus(null)
+      if (!isSupabaseConfigured || !supabase || !requestedUserIdV74) {
+        if (!activeAccountRefV74.current?.id) setStripeConnectStatus(null)
         return
       }
+      if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
 
       const { data, error } = await supabase
         .from('user_stripe_accounts')
         .select('stripe_account_id,charges_enabled,payouts_enabled,details_submitted,connect_status,created_at,updated_at')
-        .eq('user_id', userId)
+        .eq('user_id', requestedUserIdV74)
         .maybeSingle()
 
+      if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
       if (error) {
         console.warn('fetchStripeConnectStatus warning', error.message || error)
         return
@@ -37360,17 +37577,21 @@ function App() {
   }
 
   async function fetchUnlockedTips(userId = sessionUser?.id) {
+    const requestedUserIdV74 = String(userId || '').trim()
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
     try {
-    if (!isSupabaseConfigured || !supabase || !userId) {
-      setUnlockedTips(new Set())
+    if (!isSupabaseConfigured || !supabase || !requestedUserIdV74) {
+      if (!activeAccountRefV74.current?.id) setUnlockedTips(new Set())
       return
     }
+    if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
 
     const { data, error } = await supabase
       .from('unlocked_tips')
       .select('tip_id')
-      .eq('user_id', userId)
+      .eq('user_id', requestedUserIdV74)
 
+    if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
     if (!error && Array.isArray(data)) {
       setUnlockedTips(new Set(data.map(row => row.tip_id)))
     } else {
@@ -37378,7 +37599,7 @@ function App() {
     }
     } catch (error) {
       console.error('fetchUnlockedTips error', error)
-      setUnlockedTips(new Set())
+      if (isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) setUnlockedTips(new Set())
     }
   }
 
@@ -37661,12 +37882,17 @@ function App() {
   }
 
   async function fetchWalletBalance(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !userId) {
-      setWalletBalance(0)
+    const requestedUserIdV74 = String(userId || '').trim()
+    const requestV74 = getAccountRequestSnapshotV74()
+    if (!isSupabaseConfigured || !supabase || !requestedUserIdV74) {
+      if (!requestedUserIdV74 || isActiveAccountRequestV74(requestedUserIdV74, '', requestV74.epoch)) setWalletBalance(0)
       return
     }
+    if (!isActiveAccountRequestV74(requestedUserIdV74)) return
 
-    const { data, error } = await supabase.rpc('get_wallet_balance', { p_user_id: userId })
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
+    const { data, error } = await supabase.rpc('get_wallet_balance', { p_user_id: requestedUserIdV74 })
+    if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
 
     if (error || data === null || data === undefined) {
       setWalletBalance(0)
@@ -37676,57 +37902,72 @@ function App() {
     setWalletBalance(Math.max(0, Number(data || 0)))
   }
 
-  async function fetchUserPlan(userId = sessionUser?.id) {
-    const currentEmail = normalizeEmail(sessionUser?.email)
-    if (BETAI_PREMIUM_EMAILS.includes(currentEmail)) {
-      // WERSJA 1806: konto smilhytv ma stały Premium/Admin, ale nadal MUSIMY
-      // pobrać pełny rekord profiles. Poprzedni skrót tworzył profil tylko z
-      // emailem i planem, przez co po dodaniu typu znikały imported_* oraz
-      // statystyki Betfolio i profil pokazywał wyłącznie świeży typ.
-      let fullPremiumProfile = null
-      if (isSupabaseConfigured && supabase && userId) {
-        try {
-          const { data, error } = await supabase
-            .from('profiles').select('*')
-            .eq('id', userId)
-            .maybeSingle()
-          if (!error && data) fullPremiumProfile = data
-        } catch (error) {
-          console.warn('Premium profile hydration skipped:', error)
-        }
-      }
-
-      const hydratedPremiumProfile = buildEffectiveAccountProfile({
-        ...(fullPremiumProfile || {}),
-        id: fullPremiumProfile?.id || userId || null,
-        email: fullPremiumProfile?.email || currentEmail,
-        username: fullPremiumProfile?.username || currentEmail.split('@')[0],
-        role: BETAI_ADMIN_EMAILS.includes(currentEmail) ? 'admin' : fullPremiumProfile?.role,
-        is_admin: BETAI_ADMIN_EMAILS.includes(currentEmail) || Boolean(fullPremiumProfile?.is_admin),
-        is_premium: true,
-        plan: 'premium',
-        subscription_status: 'active',
-        current_period_end: fullPremiumProfile?.current_period_end || '2099-12-31T23:59:59Z'
-      }, sessionUser)
-
-      setUserPlan('premium')
-      setAccountProfile(prev => ({ ...(prev || {}), ...hydratedPremiumProfile }))
+  async function fetchUserPlan(userId = sessionUser?.id, userSnapshotV74 = null) {
+    const requestedUserIdV74 = String(userId || userSnapshotV74?.id || '').trim()
+    if (!requestedUserIdV74) {
+      setAccountProfile(null)
+      setUserPlan('free')
       return
     }
+    if (!isActiveAccountRequestV74(requestedUserIdV74)) return
 
-    if (!isSupabaseConfigured || !supabase || !userId) {
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
+    const activeUserV74 = activeAccountRefV74.current?.user
+    const requestedUserV74 = String(userSnapshotV74?.id || '') === requestedUserIdV74
+      ? userSnapshotV74
+      : (String(activeUserV74?.id || '') === requestedUserIdV74 ? activeUserV74 : null)
+
+    if (!isSupabaseConfigured || !supabase) {
+      if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
       setAccountProfile(null)
       setUserPlan('free')
       return
     }
 
-    let subscriptionData = null
+    // V74: najpierw pobieramy profil po ID. Email NIE może pochodzić z closure
+    // sessionUser utworzonego przy starcie aplikacji, bo po zmianie konta był stary.
     let profileData = null
+    try {
+      const { data, error } = await supabase
+        .from('profiles').select('*')
+        .eq('id', requestedUserIdV74)
+        .maybeSingle()
+      if (!error && data) profileData = data
+    } catch (error) {
+      console.warn('V74 profile identity hydration skipped:', error)
+    }
 
+    if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
+
+    const currentEmail = normalizeEmail(profileData?.email || requestedUserV74?.email || '')
+    if (currentEmail && !isActiveAccountRequestV74(requestedUserIdV74, currentEmail, requestEpochV74)) return
+
+    if (BETAI_PREMIUM_EMAILS.includes(currentEmail)) {
+      const hydratedPremiumProfile = buildEffectiveAccountProfile({
+        ...(profileData || {}),
+        id: profileData?.id || requestedUserIdV74 || null,
+        email: profileData?.email || currentEmail,
+        username: profileData?.username || currentEmail.split('@')[0],
+        role: BETAI_ADMIN_EMAILS.includes(currentEmail) ? 'admin' : profileData?.role,
+        is_admin: BETAI_ADMIN_EMAILS.includes(currentEmail) || Boolean(profileData?.is_admin),
+        is_premium: true,
+        plan: 'premium',
+        subscription_status: 'active',
+        current_period_end: profileData?.current_period_end || '2099-12-31T23:59:59Z'
+      }, requestedUserV74)
+
+      if (!isActiveAccountRequestV74(requestedUserIdV74, currentEmail, requestEpochV74)) return
+      setUserPlan('premium')
+      // V74: REPLACE, nie merge z prev. Merge zachowywał pola poprzedniego konta.
+      setAccountProfile(hydratedPremiumProfile)
+      return
+    }
+
+    let subscriptionData = null
     let subResult = await supabase
       .from('user_subscriptions')
       .select('plan,status,current_period_end,cancel_at_period_end,stripe_subscription_id,stripe_customer_id')
-      .eq('user_id', userId)
+      .eq('user_id', requestedUserIdV74)
       .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -37735,19 +37976,13 @@ function App() {
       subResult = await supabase
         .from('user_subscriptions')
         .select('plan,status,current_period_end')
-        .eq('user_id', userId)
+        .eq('user_id', requestedUserIdV74)
         .limit(1)
         .maybeSingle()
     }
 
     if (!subResult.error) subscriptionData = subResult.data
-
-    const { data: profData, error: profileError } = await supabase
-      .from('profiles').select('*')
-      .eq('id', userId)
-      .maybeSingle()
-
-    if (!profileError) profileData = profData
+    if (!isActiveAccountRequestV74(requestedUserIdV74, currentEmail, requestEpochV74)) return
 
     const subscriptionPeriodActive = hasFuturePremiumEnd(subscriptionData?.current_period_end)
     const subPremium = Boolean(subscriptionData) && subscriptionPeriodActive && (
@@ -37759,21 +37994,22 @@ function App() {
 
     const effectiveProfile = buildEffectiveAccountProfile({
       ...(profileData || {}),
-      id: profileData?.id || userId,
-      email: profileData?.email || currentEmail || sessionUser?.email || '',
+      id: profileData?.id || requestedUserIdV74,
+      email: profileData?.email || currentEmail || requestedUserV74?.email || '',
       username: profileData?.username || (currentEmail ? currentEmail.split('@')[0] : ''),
       current_period_end: effectivePeriodEnd,
       is_premium: effectivePremium,
       plan: effectivePremium ? 'premium' : 'free',
       role: isAdminUser(profileData) || isSmilhytvLifetimePremium(profileData) ? 'admin' : profileData?.role,
       subscription_status: effectivePremium ? 'active' : 'free'
-    }, sessionUser)
+    }, requestedUserV74)
 
+    if (!isActiveAccountRequestV74(requestedUserIdV74, normalizeEmail(effectiveProfile.email || currentEmail), requestEpochV74)) return
     setAccountProfile(effectiveProfile)
 
     try {
       await supabase.from('profiles').upsert({
-        id: userId,
+        id: requestedUserIdV74,
         email: effectiveProfile.email,
         username: effectiveProfile.username || effectiveProfile.email?.split('@')?.[0] || 'user',
         is_admin: Boolean(effectiveProfile.is_admin),
@@ -37789,23 +38025,22 @@ function App() {
       console.warn('Profile sync skipped:', syncError)
     }
 
-    if (hasUnlimitedTipAccess(effectiveProfile, effectiveProfile.plan)) {
-      setUserPlan('premium')
-      return
-    }
-
-    setUserPlan('free')
+    if (!isActiveAccountRequestV74(requestedUserIdV74, normalizeEmail(effectiveProfile.email || currentEmail), requestEpochV74)) return
+    setUserPlan(hasUnlimitedTipAccess(effectiveProfile, effectiveProfile.plan) ? 'premium' : 'free')
   }
 
   async function fetchPayoutRequests(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !userId) return
+    const requestedUserIdV74 = String(userId || '').trim()
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
+    if (!isSupabaseConfigured || !supabase || !requestedUserIdV74 || !isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
 
     const { data, error } = await supabase
       .from('payout_requests')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', requestedUserIdV74)
       .order('created_at', { ascending: false })
 
+    if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
     if (!error) setPayoutRequests(data || [])
     else setPayoutRequests([])
   }
@@ -37933,35 +38168,42 @@ function App() {
   }
 
   async function fetchPaymentHistory(userId = sessionUser?.id) {
+    const requestedUserIdV74 = String(userId || '').trim()
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
     try {
-    if (!isSupabaseConfigured || !supabase || !userId) return
+    if (!isSupabaseConfigured || !supabase || !requestedUserIdV74 || !isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
 
     const { data, error } = await supabase
       .from('payments')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', requestedUserIdV74)
       .order('created_at', { ascending: false })
       .limit(20)
 
+    if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
     if (!error) setPaymentHistory(data || [])
     } catch (error) {
       console.error('fetchPaymentHistory error', error)
-      setPaymentHistory([])
+      if (isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) setPaymentHistory([])
     }
   }
 
   async function fetchTipsterEarnings(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !userId) {
-      setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
+    const requestedUserIdV74 = String(userId || '').trim()
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
+    if (!isSupabaseConfigured || !supabase || !requestedUserIdV74) {
+      if (!activeAccountRefV74.current?.id) setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
       return
     }
+    if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
 
     try {
       const timeout = new Promise(resolve => setTimeout(() => resolve({ data: null, error: { message: 'timeout' } }), 4500))
       const { data, error } = await Promise.race([
-        supabase.rpc('get_tipster_earnings', { p_user_id: userId }),
+        supabase.rpc('get_tipster_earnings', { p_user_id: requestedUserIdV74 }),
         timeout
       ])
+      if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
       if (!error && data) {
         const row = Array.isArray(data) ? data[0] : data
         const history = Array.isArray(row?.history) ? row.history.slice(0, 30) : []
@@ -37977,6 +38219,7 @@ function App() {
       console.warn('fetchTipsterEarnings rpc skipped:', error)
     }
 
+    if (!isActiveAccountRequestV74(requestedUserIdV74, '', requestEpochV74)) return
     // WERSJA 1428: nie robimy już fallbacku po tips/payments,
     // bo generował wiele 400 i spowalniał admin/finanse.
     setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
@@ -37987,18 +38230,27 @@ function App() {
     const startupTimersV57 = new Set()
     const initialLoadAtV57 = new Map()
 
-    const scheduleInitialTaskV57 = (label, task, mobileDelay, desktopDelay = 0) => {
+    const scheduleInitialTaskV57 = (label, task, mobileDelay, desktopDelay = 0, ownerUserIdV74 = '') => {
+      const ownerId = String(ownerUserIdV74 || '')
+      const ownerEpoch = Number(activeAccountRefV74.current?.epoch || 0)
       const timer = scheduleBetaiMobileStartupV57(() => {
         startupTimersV57.delete(timer)
+        if (ownerId && !isActiveAccountRequestV74(ownerId, '', ownerEpoch)) {
+          console.info(`V74 skipped stale startup task: ${label}`, ownerId)
+          return
+        }
         Promise.resolve().then(task).catch(error => console.warn(`V57 ${label} skipped`, error))
       }, mobileDelay, desktopDelay)
       if (timer) startupTimersV57.add(timer)
       return timer
     }
 
-    async function safeInitialLoad(userId) {
-      const cleanUserId = String(userId || '')
-      if (!cleanUserId) return
+    async function safeInitialLoad(userLikeV74) {
+      const snapshotUserV74 = userLikeV74 && typeof userLikeV74 === 'object'
+        ? userLikeV74
+        : (String(activeAccountRefV74.current?.id || '') === String(userLikeV74 || '') ? activeAccountRefV74.current?.user : null)
+      const cleanUserId = String(snapshotUserV74?.id || userLikeV74 || '')
+      if (!cleanUserId || !isActiveAccountRequestV74(cleanUserId)) return
       const now = Date.now()
       const previous = Number(initialLoadAtV57.get(cleanUserId) || 0)
       if (now - previous < 8000) return
@@ -38006,18 +38258,18 @@ function App() {
 
       // Krytyczne dla nagłówka/portfela — tylko dwa lekkie odczyty na starcie.
       Promise.allSettled([
-        fetchUserPlan(cleanUserId),
+        fetchUserPlan(cleanUserId, snapshotUserV74),
         fetchWalletBalance(cleanUserId),
       ]).catch(() => {})
 
-      // Reszta nie jest potrzebna do pierwszego renderu Dashboardu.
-      scheduleInitialTaskV57('ranking', () => fetchRealRanking(), 1700, 200)
-      scheduleInitialTaskV57('payments', () => fetchPaymentHistory(cleanUserId), 3800, 300)
-      scheduleInitialTaskV57('payouts', () => fetchPayoutRequests(cleanUserId), 4500, 450)
-      scheduleInitialTaskV57('earnings', () => fetchTipsterEarnings(cleanUserId), 5200, 650)
-      scheduleInitialTaskV57('referrals', () => fetchReferralData(cleanUserId), 6000, 800)
-      scheduleInitialTaskV57('register-referral', () => registerReferralFromStoredCode({ id: cleanUserId, email: sessionUser?.email }), 6800, 1000)
-      scheduleInitialTaskV57('stripe-connect', () => fetchStripeConnectStatus(cleanUserId), 7600, 1200)
+      // V74: każda opóźniona praca ma właściciela. Po zmianie konta stary timer nic nie zapisze.
+      scheduleInitialTaskV57('ranking', () => fetchRealRanking(), 1700, 200, cleanUserId)
+      scheduleInitialTaskV57('payments', () => fetchPaymentHistory(cleanUserId), 3800, 300, cleanUserId)
+      scheduleInitialTaskV57('payouts', () => fetchPayoutRequests(cleanUserId), 4500, 450, cleanUserId)
+      scheduleInitialTaskV57('earnings', () => fetchTipsterEarnings(cleanUserId), 5200, 650, cleanUserId)
+      scheduleInitialTaskV57('referrals', () => fetchReferralData(cleanUserId), 6000, 800, cleanUserId)
+      scheduleInitialTaskV57('register-referral', () => registerReferralFromStoredCode({ id: cleanUserId, email: snapshotUserV74?.email || activeAccountRefV74.current?.email || '' }), 6800, 1000, cleanUserId)
+      scheduleInitialTaskV57('stripe-connect', () => fetchStripeConnectStatus(cleanUserId), 7600, 1200, cleanUserId)
     }
 
     async function loadSession() {
@@ -38029,8 +38281,7 @@ function App() {
 
         const cachedUserV50 = readCachedSupabaseUserV50()
         if (cachedUserV50?.id) {
-          setSessionUser(cachedUserV50)
-          setWalletBalance(0)
+          commitSessionUserV74(cachedUserV50, 'fast-cache')
           setAuthLoading(false)
         }
 
@@ -38052,8 +38303,8 @@ function App() {
             const lateUser = data?.session?.user || null
             if (lateUser?.id) {
               persistFastCachedUserV57(lateUser)
-              setSessionUser(lateUser)
-              safeInitialLoad(lateUser.id)
+              commitSessionUserV74(lateUser, 'late-getSession')
+              safeInitialLoad(lateUser)
               ensureUserWalletAndWelcome(lateUser)
             }
           }).catch(error => console.warn('V57 late session refresh skipped', error))
@@ -38067,11 +38318,10 @@ function App() {
           }
           if (user?.id) persistFastCachedUserV57(user)
           else persistFastCachedUserV57(null)
-          setSessionUser(user)
-          setWalletBalance(0)
+          commitSessionUserV74(user, 'getSession')
 
           if (user?.id && !recoveryFromUrl) {
-            safeInitialLoad(user.id)
+            safeInitialLoad(user)
             ensureUserWalletAndWelcome(user)
           }
         }
@@ -38086,23 +38336,20 @@ function App() {
             persistFastCachedUserV57(nextUser)
             setPasswordRecoveryMode(true)
             setPasswordRecoveryUser(nextUser)
-            setSessionUser(nextUser)
+            commitSessionUserV74(nextUser, 'password-recovery')
             try { localStorage.setItem('betai_password_recovery_active', '1') } catch (_) {}
             return
           }
 
           if (tokenOnlyRefresh && nextUser?.id) {
             persistFastCachedUserV57(nextUser)
-            setSessionUser(nextUser)
+            commitSessionUserV74(nextUser, 'token-refreshed')
             return
           }
 
           if (nextUser?.id) persistFastCachedUserV57(nextUser)
           else persistFastCachedUserV57(null)
-          setSessionUser(nextUser)
-          setWalletBalance(0)
-          setTipsterEarnings({ total: 0, sales: 0, history: [] })
-          setStripeConnectStatus(null)
+          commitSessionUserV74(nextUser, `auth-${eventName || 'change'}`)
 
           if (!nextUser?.id) {
             setPasswordRecoveryMode(false)
@@ -38117,7 +38364,7 @@ function App() {
           }
 
           setUnlockedTips(new Set())
-          safeInitialLoad(nextUser.id)
+          safeInitialLoad(nextUser)
           ensureUserWalletAndWelcome(nextUser)
         })
 
@@ -38162,8 +38409,7 @@ function App() {
           if (!response.ok) throw new Error(syncData.error || 'Nie udało się zsynchronizować zakupu typu.')
           if (syncData?.user_mismatch) {
             if (supabase) await supabase.auth.signOut()
-            setSessionUser(null)
-            setWalletBalance(0)
+            commitSessionUserV74(null, 'payment-user-mismatch')
             setUnlockedTips(new Set())
             clearGuestUnlockedTips()
             showToast({
@@ -38324,10 +38570,7 @@ function App() {
     } catch (_) {}
     if (supabase) await supabase.auth.signOut()
     persistFastCachedUserV57(null)
-    setSessionUser(null)
-    setWalletBalance(0)
-    setTipsterEarnings({ total: 0, sales: 0, history: [] })
-    setStripeConnectStatus(null)
+    commitSessionUserV74(null, 'logout')
     setUnlockedTips(new Set())
     clearGuestUnlockedTips()
     try { localStorage.removeItem('betai_unlocked_tips_v1') } catch {}
@@ -38368,21 +38611,24 @@ function App() {
   // V6: disabled automatic Stripe account refresh on every return to avoid UI/profile resets.
 
   useEffect(() => {
-    const currentEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
-    if (!currentEmail) return undefined
+    const currentUserIdV74 = String(sessionUser?.id || '').trim()
+    const currentEmail = normalizeEmail(sessionUser?.email || '')
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
+    if (!currentUserIdV74 || !currentEmail || !isActiveAccountRequestV74(currentUserIdV74, currentEmail, requestEpochV74)) return undefined
 
     let stopped = false
     receivedTipNotificationPollReadyRef.current = false
     lastReceivedTipNotificationKeyRef.current = ''
 
     const refreshTokens = async () => {
-      if (stopped || !canRunBetaiHeavyTaskV29()) return
+      if (stopped || !canRunBetaiHeavyTaskV29() || !isActiveAccountRequestV74(currentUserIdV74, currentEmail, requestEpochV74)) return
       await fetchCurrentTokenBalance()
-      await fetchNotifications(sessionUser?.id, { skipBalanceRefresh: true })
+      if (!isActiveAccountRequestV74(currentUserIdV74, currentEmail, requestEpochV74)) return
+      await fetchNotifications(currentUserIdV74, { skipBalanceRefresh: true })
     }
 
     const pollTipNotifications = async () => {
-      if (stopped || !canRunBetaiHeavyTaskV29() || !isSupabaseConfigured || !supabase || !currentEmail) return
+      if (stopped || !canRunBetaiHeavyTaskV29() || !isSupabaseConfigured || !supabase || !currentEmail || !isActiveAccountRequestV74(currentUserIdV74, currentEmail, requestEpochV74)) return
       try {
         const { data, error } = await supabase
           .from('betai_system_notifications')
@@ -38391,7 +38637,7 @@ function App() {
           .order('created_at', { ascending: false })
           .limit(5)
 
-        if (error || !Array.isArray(data)) return
+        if (error || !Array.isArray(data) || !isActiveAccountRequestV74(currentUserIdV74, currentEmail, requestEpochV74)) return
         const newestTipNotification = data.find(row => isTipNotification(row))
         const newestKey = newestTipNotification ? String(newestTipNotification.id || `${newestTipNotification.created_at || ''}_${newestTipNotification.title || ''}_${newestTipNotification.body || newestTipNotification.message || ''}`) : ''
 
@@ -38421,12 +38667,14 @@ function App() {
         walletChannel = supabase
           .channel(`betai-token-wallet-live-${currentEmail}`)
           .on('postgres_changes', { event: '*', schema: 'public', table: 'betai_token_wallets', filter: `email=eq.${currentEmail}` }, payload => {
+            if (!isActiveAccountRequestV74(currentUserIdV74, currentEmail, requestEpochV74)) return
             const nextBalance = Number(payload?.new?.balance || 0) || 0
             setTokenBalance(nextBalance)
             try { localStorage.setItem('betai_tokens_' + currentEmail, String(nextBalance)) } catch (_) {}
-            fetchNotifications(sessionUser?.id, { skipBalanceRefresh: true })
+            fetchNotifications(currentUserIdV74, { skipBalanceRefresh: true })
           })
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'betai_system_notifications', filter: `recipient_email=eq.${currentEmail}` }, payload => {
+            if (!isActiveAccountRequestV74(currentUserIdV74, currentEmail, requestEpochV74)) return
             const row = payload?.new || {}
             if (isTipNotification(row)) showReceivedTipFromNotification(row, false)
             refreshTokens()
@@ -38448,7 +38696,7 @@ function App() {
         try { supabase.removeChannel(walletChannel) } catch (_) {}
       }
     }
-  }, [sessionUser?.id, sessionUser?.email, accountProfile?.email])
+  }, [sessionUser?.id, sessionUser?.email])
 
   useEffect(() => {
     if (view === 'notifications' && sessionUser?.id) {
@@ -38594,15 +38842,16 @@ function App() {
   ]
 
   useEffect(() => {
-    const currentUserId = sessionUser?.id || ''
-    const currentEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
-    if ((!currentUserId && !currentEmail) || !isSupabaseConfigured || !supabase) return undefined
+    const currentUserId = String(sessionUser?.id || '').trim()
+    const currentEmail = normalizeEmail(sessionUser?.email || '')
+    const requestEpochV74 = Number(activeAccountRefV74.current?.epoch || 0)
+    if ((!currentUserId && !currentEmail) || !isSupabaseConfigured || !supabase || !isActiveAccountRequestV74(currentUserId, currentEmail, requestEpochV74)) return undefined
 
     receivedTipPollReadyRef.current = false
     lastReceivedTipPollKeyRef.current = ''
 
     const showTipTransferRow = (row, silent = false) => {
-      if (!row) return
+      if (!row || !isActiveAccountRequestV74(currentUserId, currentEmail, requestEpochV74)) return
       const matchesUserId = currentUserId && String(row.receiver_id || '') === String(currentUserId)
       const matchesEmail = currentEmail && normalizeEmail(row.receiver_email || '') === currentEmail
       if (!matchesUserId && !matchesEmail) return
@@ -38626,6 +38875,7 @@ function App() {
 
     const pollTipTransfers = async () => {
       try {
+        if (!isActiveAccountRequestV74(currentUserId, currentEmail, requestEpochV74)) return
         let rows = []
 
         if (currentUserId) {
@@ -38711,7 +38961,7 @@ function App() {
         try { supabase.removeChannel(channel) } catch (_) {}
       })
     }
-  }, [sessionUser?.id, sessionUser?.email, accountProfile?.email])
+  }, [sessionUser?.id, sessionUser?.email])
 
 
   useEffect(() => {
@@ -38768,19 +39018,19 @@ function App() {
         onComplete={(user) => {
           setPasswordRecoveryMode(false)
           setPasswordRecoveryUser(null)
-          setSessionUser(user || sessionUser)
+          commitSessionUserV74(user || sessionUser, 'password-reset-complete')
         }}
         onCancel={() => {
           setPasswordRecoveryMode(false)
           setPasswordRecoveryUser(null)
-          setSessionUser(null)
+          commitSessionUserV74(null, 'password-reset-cancel')
         }}
       />
     )
   }
 
   if (!sessionUser) {
-    return <AuthView onAuth={(user) => setSessionUser(user)} />
+    return <AuthView onAuth={(user) => commitSessionUserV74(user, 'auth-view')} />
   }
 
   return (
