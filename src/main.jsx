@@ -16350,16 +16350,16 @@ function getKickoffFlameStateV79(tip = {}, nowMs = Date.now()) {
 
 function TipKickoffFlameV80({ state }) {
   if (!state?.visible) return null
+  const level = state.level || 'dim'
+  const title = state.title || 'Zbliża się start meczu'
   return (
     <i
-      className={`ticket-kickoff-flame-v80 is-${state.level || 'dim'}`}
-      title={state.title || 'Zbliża się start meczu'}
-      aria-label={state.title || 'Zbliża się start meczu'}
+      className={`ticket-kickoff-flame-v80 is-${level}`}
+      title={title}
+      aria-label={title}
+      role="img"
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path className="flame-outer" d="M13.7 2.4c.45 2.85-1.55 4.2-2.45 5.65-.8 1.28-.57 2.47.35 3.4.18-1.72 1.13-2.66 2.26-3.6 2.15 2.04 3.67 4.15 3.67 7.05A5.54 5.54 0 0 1 12 20.45a5.54 5.54 0 0 1-5.53-5.55c0-3.47 2.04-5.74 4.06-8.08.38 1.2.82 2.15 1.45 2.83.2-2.48 1.98-4.24 1.72-7.25Z"/>
-        <path className="flame-inner" d="M12.25 11.25c1.36 1.37 2.18 2.52 2.18 4.02A2.46 2.46 0 0 1 12 17.78a2.46 2.46 0 0 1-2.43-2.5c0-1.2.67-2.25 1.55-3.26.05.82.37 1.47.88 1.9.08-1.12.25-1.8.25-2.67Z"/>
-      </svg>
+      🔥
     </i>
   )
 }

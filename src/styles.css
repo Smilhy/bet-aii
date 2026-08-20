@@ -83075,15 +83075,16 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 }
 
 
-/* WERSJA 80 — FIX: płomień nie może dziedziczyć zielonego badge ze statusu.
-   V79 używała <span>, a globalny .profile-ticket-v6-buy span dodawał mu padding/tło
-   i ucinał SVG. V80 używa osobnego DIV + I i twardo resetuje style. */
+/* WERSJA 81 — flame only final fix.
+   Zostawiamy cały layout bez zmian i poprawiamy tylko sam płomień.
+   Ikona jest teraz renderowana jako czysty emoji 🔥, więc nie znika przez SVG/CSS,
+   a poziom świecenia nadal zależy od czasu do kickoffu. */
 .profile-ticket-v6-buy > .ticket-status-heat-wrap-v80{
   display:inline-flex!important;
   align-items:center!important;
   justify-content:center!important;
   justify-self:center!important;
-  gap:9px!important;
+  gap:8px!important;
   width:auto!important;
   max-width:none!important;
   min-width:0!important;
@@ -83104,16 +83105,17 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
   text-overflow:clip!important;
 }
 .ticket-kickoff-flame-v80{
-  --flame-main:#7b5a38;
-  --flame-core:#b68a50;
   --flame-opacity:.42;
   --flame-scale:.92;
-  display:inline-grid!important;
-  place-items:center!important;
+  --flame-filter:drop-shadow(0 0 3px rgba(255,145,31,.18));
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
   position:relative!important;
-  width:27px!important;
-  height:31px!important;
-  flex:0 0 27px!important;
+  width:19px!important;
+  min-width:19px!important;
+  height:19px!important;
+  flex:0 0 19px!important;
   padding:0!important;
   margin:0!important;
   border:0!important;
@@ -83121,53 +83123,89 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
   background:transparent!important;
   box-shadow:none!important;
   overflow:visible!important;
-  opacity:var(--flame-opacity)!important;
-  transform:scale(var(--flame-scale));
-  transform-origin:50% 78%;
   font-style:normal!important;
+  font-size:18px!important;
+  line-height:1!important;
+  opacity:var(--flame-opacity)!important;
+  transform:translateY(-1px) scale(var(--flame-scale))!important;
+  transform-origin:50% 78%!important;
+  filter:var(--flame-filter)!important;
   z-index:2!important;
+  user-select:none!important;
 }
-.ticket-kickoff-flame-v80 svg{
-  display:block!important;
-  width:27px!important;
-  height:31px!important;
-  max-width:none!important;
-  overflow:visible!important;
-  filter:drop-shadow(0 0 3px rgba(255,142,24,.22));
+.ticket-kickoff-flame-v80::before{
+  content:'';
+  position:absolute;
+  left:50%;
+  top:55%;
+  width:13px;
+  height:13px;
+  transform:translate(-50%,-50%);
+  border-radius:999px;
+  background:radial-gradient(circle,rgba(255,211,84,.34) 0%,rgba(255,145,31,.18) 48%,rgba(255,72,0,0) 74%);
+  filter:blur(4px);
+  pointer-events:none;
+  z-index:-1;
 }
-.ticket-kickoff-flame-v80 .flame-outer{fill:var(--flame-main)!important}
-.ticket-kickoff-flame-v80 .flame-inner{fill:var(--flame-core)!important}
 .ticket-kickoff-flame-v80.is-dim{
-  --flame-main:#77583c;--flame-core:#a47b50;--flame-opacity:.42;--flame-scale:.90;
+  --flame-opacity:.34;
+  --flame-scale:.88;
+  --flame-filter:drop-shadow(0 0 2px rgba(167,110,42,.12));
 }
 .ticket-kickoff-flame-v80.is-mild{
-  --flame-main:#d56f10;--flame-core:#ffba39;--flame-opacity:.68;--flame-scale:.96;
+  --flame-opacity:.58;
+  --flame-scale:.94;
+  --flame-filter:drop-shadow(0 0 4px rgba(255,145,31,.28));
   animation:betaiKickoffFlameSoftV80 2.8s ease-in-out infinite!important;
 }
 .ticket-kickoff-flame-v80.is-warm{
-  --flame-main:#f28212;--flame-core:#ffd04d;--flame-opacity:.82;--flame-scale:1;
+  --flame-opacity:.76;
+  --flame-scale:.98;
+  --flame-filter:drop-shadow(0 0 6px rgba(255,145,31,.38));
   animation:betaiKickoffFlameWarmV80 2.15s ease-in-out infinite!important;
 }
 .ticket-kickoff-flame-v80.is-hot{
-  --flame-main:#ff8610;--flame-core:#ffe35c;--flame-opacity:.94;--flame-scale:1.04;
+  --flame-opacity:.88;
+  --flame-scale:1.02;
+  --flame-filter:drop-shadow(0 0 8px rgba(255,135,16,.5));
   animation:betaiKickoffFlameHotV80 1.55s ease-in-out infinite!important;
 }
 .ticket-kickoff-flame-v80.is-urgent{
-  --flame-main:#ff5b1d;--flame-core:#ffe04e;--flame-opacity:1;--flame-scale:1.08;
+  --flame-opacity:1;
+  --flame-scale:1.08;
+  --flame-filter:drop-shadow(0 0 10px rgba(255,102,26,.66));
   animation:betaiKickoffFlameUrgentV80 1.08s ease-in-out infinite!important;
 }
 .ticket-kickoff-flame-v80.is-critical{
-  --flame-main:#ff351f;--flame-core:#fff376;--flame-opacity:1;--flame-scale:1.13;
+  --flame-opacity:1;
+  --flame-scale:1.14;
+  --flame-filter:drop-shadow(0 0 12px rgba(255,66,24,.84));
   animation:betaiKickoffFlameCriticalV80 .76s ease-in-out infinite!important;
 }
-@keyframes betaiKickoffFlameSoftV80{0%,100%{transform:scale(.94);filter:drop-shadow(0 0 3px rgba(255,128,20,.25))}50%{transform:scale(1);filter:drop-shadow(0 0 7px rgba(255,170,35,.52))}}
-@keyframes betaiKickoffFlameWarmV80{0%,100%{transform:scale(.98) rotate(-1deg);filter:drop-shadow(0 0 5px rgba(255,126,15,.38))}50%{transform:scale(1.06) rotate(1deg);filter:drop-shadow(0 0 10px rgba(255,194,45,.68))}}
-@keyframes betaiKickoffFlameHotV80{0%,100%{transform:scale(1.02);filter:drop-shadow(0 0 7px rgba(255,112,16,.55))}50%{transform:scale(1.11);filter:drop-shadow(0 0 13px rgba(255,210,50,.82))}}
-@keyframes betaiKickoffFlameUrgentV80{0%,100%{transform:scale(1.05) rotate(-1.5deg);filter:drop-shadow(0 0 9px rgba(255,78,20,.68))}50%{transform:scale(1.17) rotate(1.5deg);filter:drop-shadow(0 0 16px rgba(255,205,42,.95))}}
-@keyframes betaiKickoffFlameCriticalV80{0%,100%{transform:scale(1.09) rotate(-2deg);filter:drop-shadow(0 0 11px rgba(255,50,20,.82))}50%{transform:scale(1.24) rotate(2deg);filter:drop-shadow(0 0 20px rgba(255,220,55,1))}}
+@keyframes betaiKickoffFlameSoftV80{
+  0%,100%{transform:translateY(-1px) scale(.92)}
+  50%{transform:translateY(-1px) scale(.99)}
+}
+@keyframes betaiKickoffFlameWarmV80{
+  0%,100%{transform:translateY(-1px) scale(.97) rotate(-1deg)}
+  50%{transform:translateY(-1px) scale(1.05) rotate(1deg)}
+}
+@keyframes betaiKickoffFlameHotV80{
+  0%,100%{transform:translateY(-1px) scale(1.01)}
+  50%{transform:translateY(-1px) scale(1.1)}
+}
+@keyframes betaiKickoffFlameUrgentV80{
+  0%,100%{transform:translateY(-1px) scale(1.04) rotate(-1.5deg)}
+  50%{transform:translateY(-1px) scale(1.16) rotate(1.5deg)}
+}
+@keyframes betaiKickoffFlameCriticalV80{
+  0%,100%{transform:translateY(-1px) scale(1.08) rotate(-2deg)}
+  50%{transform:translateY(-1px) scale(1.22) rotate(2deg)}
+}
 @media(max-width:700px){
   .profile-ticket-v6-buy > .ticket-status-heat-wrap-v80{gap:6px!important}
-  .ticket-kickoff-flame-v80,.ticket-kickoff-flame-v80 svg{width:23px!important;height:27px!important}
-  .ticket-kickoff-flame-v80{flex-basis:23px!important}
+  .ticket-kickoff-flame-v80{width:17px!important;min-width:17px!important;height:17px!important;flex-basis:17px!important;font-size:16px!important}
+  .ticket-kickoff-flame-v80::before{width:11px!important;height:11px!important}
 }
 @media(prefers-reduced-motion:reduce){.ticket-kickoff-flame-v80{animation:none!important}}
+
