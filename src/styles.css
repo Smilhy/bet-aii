@@ -83209,3 +83209,64 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 }
 @media(prefers-reduced-motion:reduce){.ticket-kickoff-flame-v80{animation:none!important}}
 
+
+
+/* WERSJA 82 — dashboard: węższa analiza, więcej miejsca dla statusu Oczekujący + płomyka */
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6.profile-ticket-v6{
+  grid-template-columns:292px minmax(320px,1.20fr) minmax(146px,.43fr) minmax(130px,.31fr) minmax(92px,.23fr) minmax(128px,.28fr) 186px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-analysis{
+  padding:12px 8px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-analysis p{
+  max-width:108px!important;
+  font-size:11.1px!important;
+  line-height:1.18!important;
+  -webkit-line-clamp:3!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-analysis button{
+  font-size:10.8px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-buy{
+  min-width:186px!important;
+  padding:46px 10px 14px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-buy > .ticket-status-heat-wrap-v80{
+  gap:10px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-buy > .ticket-status-heat-wrap-v80 > span[class^="status-"]{
+  max-width:none!important;
+  font-size:13px!important;
+  padding:6px 12px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-kickoff-flame-v80{
+  width:20px!important;
+  min-width:20px!important;
+  height:20px!important;
+  flex-basis:20px!important;
+  font-size:19px!important;
+}
+
+@media (max-width:1600px){
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6.profile-ticket-v6{
+    grid-template-columns:280px minmax(300px,1.14fr) minmax(136px,.40fr) minmax(124px,.30fr) minmax(84px,.22fr) minmax(120px,.24fr) 178px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-analysis p{
+    max-width:100px!important;
+    font-size:10.9px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-buy{
+    min-width:178px!important;
+    padding:44px 8px 14px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-buy > .ticket-status-heat-wrap-v80{
+    gap:8px!important;
+  }
+}
