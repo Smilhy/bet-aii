@@ -83073,3 +83073,101 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 @media(prefers-reduced-motion:reduce){
   .ticket-kickoff-flame-v79{animation:none!important}
 }
+
+
+/* WERSJA 80 — FIX: płomień nie może dziedziczyć zielonego badge ze statusu.
+   V79 używała <span>, a globalny .profile-ticket-v6-buy span dodawał mu padding/tło
+   i ucinał SVG. V80 używa osobnego DIV + I i twardo resetuje style. */
+.profile-ticket-v6-buy > .ticket-status-heat-wrap-v80{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  justify-self:center!important;
+  gap:9px!important;
+  width:auto!important;
+  max-width:none!important;
+  min-width:0!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  white-space:nowrap!important;
+}
+.profile-ticket-v6-buy > .ticket-status-heat-wrap-v80 > span[class^="status-"]{
+  justify-self:auto!important;
+  width:max-content!important;
+  max-width:none!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+.ticket-kickoff-flame-v80{
+  --flame-main:#7b5a38;
+  --flame-core:#b68a50;
+  --flame-opacity:.42;
+  --flame-scale:.92;
+  display:inline-grid!important;
+  place-items:center!important;
+  position:relative!important;
+  width:27px!important;
+  height:31px!important;
+  flex:0 0 27px!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  opacity:var(--flame-opacity)!important;
+  transform:scale(var(--flame-scale));
+  transform-origin:50% 78%;
+  font-style:normal!important;
+  z-index:2!important;
+}
+.ticket-kickoff-flame-v80 svg{
+  display:block!important;
+  width:27px!important;
+  height:31px!important;
+  max-width:none!important;
+  overflow:visible!important;
+  filter:drop-shadow(0 0 3px rgba(255,142,24,.22));
+}
+.ticket-kickoff-flame-v80 .flame-outer{fill:var(--flame-main)!important}
+.ticket-kickoff-flame-v80 .flame-inner{fill:var(--flame-core)!important}
+.ticket-kickoff-flame-v80.is-dim{
+  --flame-main:#77583c;--flame-core:#a47b50;--flame-opacity:.42;--flame-scale:.90;
+}
+.ticket-kickoff-flame-v80.is-mild{
+  --flame-main:#d56f10;--flame-core:#ffba39;--flame-opacity:.68;--flame-scale:.96;
+  animation:betaiKickoffFlameSoftV80 2.8s ease-in-out infinite!important;
+}
+.ticket-kickoff-flame-v80.is-warm{
+  --flame-main:#f28212;--flame-core:#ffd04d;--flame-opacity:.82;--flame-scale:1;
+  animation:betaiKickoffFlameWarmV80 2.15s ease-in-out infinite!important;
+}
+.ticket-kickoff-flame-v80.is-hot{
+  --flame-main:#ff8610;--flame-core:#ffe35c;--flame-opacity:.94;--flame-scale:1.04;
+  animation:betaiKickoffFlameHotV80 1.55s ease-in-out infinite!important;
+}
+.ticket-kickoff-flame-v80.is-urgent{
+  --flame-main:#ff5b1d;--flame-core:#ffe04e;--flame-opacity:1;--flame-scale:1.08;
+  animation:betaiKickoffFlameUrgentV80 1.08s ease-in-out infinite!important;
+}
+.ticket-kickoff-flame-v80.is-critical{
+  --flame-main:#ff351f;--flame-core:#fff376;--flame-opacity:1;--flame-scale:1.13;
+  animation:betaiKickoffFlameCriticalV80 .76s ease-in-out infinite!important;
+}
+@keyframes betaiKickoffFlameSoftV80{0%,100%{transform:scale(.94);filter:drop-shadow(0 0 3px rgba(255,128,20,.25))}50%{transform:scale(1);filter:drop-shadow(0 0 7px rgba(255,170,35,.52))}}
+@keyframes betaiKickoffFlameWarmV80{0%,100%{transform:scale(.98) rotate(-1deg);filter:drop-shadow(0 0 5px rgba(255,126,15,.38))}50%{transform:scale(1.06) rotate(1deg);filter:drop-shadow(0 0 10px rgba(255,194,45,.68))}}
+@keyframes betaiKickoffFlameHotV80{0%,100%{transform:scale(1.02);filter:drop-shadow(0 0 7px rgba(255,112,16,.55))}50%{transform:scale(1.11);filter:drop-shadow(0 0 13px rgba(255,210,50,.82))}}
+@keyframes betaiKickoffFlameUrgentV80{0%,100%{transform:scale(1.05) rotate(-1.5deg);filter:drop-shadow(0 0 9px rgba(255,78,20,.68))}50%{transform:scale(1.17) rotate(1.5deg);filter:drop-shadow(0 0 16px rgba(255,205,42,.95))}}
+@keyframes betaiKickoffFlameCriticalV80{0%,100%{transform:scale(1.09) rotate(-2deg);filter:drop-shadow(0 0 11px rgba(255,50,20,.82))}50%{transform:scale(1.24) rotate(2deg);filter:drop-shadow(0 0 20px rgba(255,220,55,1))}}
+@media(max-width:700px){
+  .profile-ticket-v6-buy > .ticket-status-heat-wrap-v80{gap:6px!important}
+  .ticket-kickoff-flame-v80,.ticket-kickoff-flame-v80 svg{width:23px!important;height:27px!important}
+  .ticket-kickoff-flame-v80{flex-basis:23px!important}
+}
+@media(prefers-reduced-motion:reduce){.ticket-kickoff-flame-v80{animation:none!important}}
