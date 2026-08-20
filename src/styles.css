@@ -82963,3 +82963,113 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
   }
   .ranking-yield-name-v19{margin-top:19px!important}
 }
+
+/* WERSJA 79 — Dashboard: płomień pilności przed startem meczu */
+.ticket-status-heat-wrap-v79{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  white-space:nowrap!important;
+}
+.ticket-kickoff-flame-v79{
+  --flame-main:#7d6042;
+  --flame-core:#a88355;
+  --flame-opacity:.26;
+  --flame-glow:0px;
+  --flame-scale:.88;
+  display:inline-grid!important;
+  place-items:center!important;
+  width:24px!important;
+  height:29px!important;
+  flex:0 0 24px!important;
+  opacity:var(--flame-opacity)!important;
+  transform:scale(var(--flame-scale));
+  transform-origin:50% 80%;
+  filter:drop-shadow(0 0 var(--flame-glow) color-mix(in srgb,var(--flame-main) 68%,transparent));
+  transition:opacity .35s ease,filter .35s ease,transform .35s ease!important;
+}
+.ticket-kickoff-flame-v79 svg{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  overflow:visible!important;
+}
+.ticket-kickoff-flame-v79 .flame-outer{fill:var(--flame-main)!important}
+.ticket-kickoff-flame-v79 .flame-inner{fill:var(--flame-core)!important}
+
+/* > 6 h — prawie wygaszony */
+.ticket-kickoff-flame-v79.is-dim{
+  --flame-main:#725744;
+  --flame-core:#94715a;
+  --flame-opacity:.28;
+  --flame-glow:1px;
+  --flame-scale:.86;
+}
+/* 6–3 h */
+.ticket-kickoff-flame-v79.is-mild{
+  --flame-main:#b46a19;
+  --flame-core:#e09a32;
+  --flame-opacity:.48;
+  --flame-glow:3px;
+  --flame-scale:.91;
+  animation:betaiKickoffFlameSoftV79 3.2s ease-in-out infinite!important;
+}
+/* 3–1 h */
+.ticket-kickoff-flame-v79.is-warm{
+  --flame-main:#ef8517;
+  --flame-core:#ffc04e;
+  --flame-opacity:.70;
+  --flame-glow:5px;
+  --flame-scale:.96;
+  animation:betaiKickoffFlameWarmV79 2.35s ease-in-out infinite!important;
+}
+/* 60–30 min */
+.ticket-kickoff-flame-v79.is-hot{
+  --flame-main:#ff9418;
+  --flame-core:#ffe061;
+  --flame-opacity:.86;
+  --flame-glow:7px;
+  --flame-scale:1;
+  animation:betaiKickoffFlameHotV79 1.75s ease-in-out infinite!important;
+}
+/* 30–10 min */
+.ticket-kickoff-flame-v79.is-urgent{
+  --flame-main:#ff681f;
+  --flame-core:#ffd744;
+  --flame-opacity:.96;
+  --flame-glow:10px;
+  --flame-scale:1.05;
+  animation:betaiKickoffFlameUrgentV79 1.25s ease-in-out infinite!important;
+}
+/* <= 10 min — najmocniejszy */
+.ticket-kickoff-flame-v79.is-critical{
+  --flame-main:#ff3f22;
+  --flame-core:#fff06a;
+  --flame-opacity:1;
+  --flame-glow:13px;
+  --flame-scale:1.10;
+  animation:betaiKickoffFlameCriticalV79 .82s ease-in-out infinite!important;
+}
+@keyframes betaiKickoffFlameSoftV79{
+  0%,100%{transform:scale(.91);opacity:.42}50%{transform:scale(.96);opacity:.58}
+}
+@keyframes betaiKickoffFlameWarmV79{
+  0%,100%{transform:scale(.95) rotate(-1deg);opacity:.64}50%{transform:scale(1.01) rotate(1deg);opacity:.82}
+}
+@keyframes betaiKickoffFlameHotV79{
+  0%,100%{transform:scale(.98);opacity:.80}50%{transform:scale(1.07);opacity:1}
+}
+@keyframes betaiKickoffFlameUrgentV79{
+  0%,100%{transform:scale(1.02) rotate(-1.5deg);filter:drop-shadow(0 0 7px rgba(255,112,24,.58))}50%{transform:scale(1.13) rotate(1.5deg);filter:drop-shadow(0 0 13px rgba(255,190,37,.82))}
+}
+@keyframes betaiKickoffFlameCriticalV79{
+  0%,100%{transform:scale(1.05) rotate(-2deg);filter:drop-shadow(0 0 9px rgba(255,65,25,.72))}50%{transform:scale(1.19) rotate(2deg);filter:drop-shadow(0 0 17px rgba(255,214,52,.98))}
+}
+@media(max-width:700px){
+  .ticket-status-heat-wrap-v79{gap:5px!important}
+  .ticket-kickoff-flame-v79{width:20px!important;height:24px!important;flex-basis:20px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .ticket-kickoff-flame-v79{animation:none!important}
+}

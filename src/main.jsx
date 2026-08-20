@@ -16324,7 +16324,47 @@ function TipAnalysisModalPortal({ onClose, children }) {
   )
 }
 
-function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast, allTips = [], startedReadOnly = false }) {
+// WERSJA 79 — wizualny „heat flame” przy oczekującym typie.
+// Im bliżej kickoffu, tym płomień jest jaśniejszy i mocniej pulsuje.
+function getKickoffFlameStateV79(tip = {}, nowMs = Date.now()) {
+  const kickoffTs = getTipKickoffTimestamp(tip)
+  if (!Number.isFinite(kickoffTs)) return { visible: false, level: 'off', minutes: null, title: '' }
+  const diffMs = kickoffTs - Number(nowMs || Date.now())
+  if (diffMs <= 0) return { visible: false, level: 'off', minutes: 0, title: '' }
+
+  const minutes = Math.max(0, diffMs / 60000)
+  let level = 'dim'
+  if (minutes <= 10) level = 'critical'
+  else if (minutes <= 30) level = 'urgent'
+  else if (minutes <= 60) level = 'hot'
+  else if (minutes <= 180) level = 'warm'
+  else if (minutes <= 360) level = 'mild'
+
+  const rounded = Math.max(1, Math.ceil(minutes))
+  const title = rounded < 60
+    ? `Start za ${rounded} min`
+    : `Start za ${Math.floor(rounded / 60)} h ${rounded % 60} min`
+
+  return { visible: true, level, minutes, title }
+}
+
+function TipKickoffFlameV79({ state }) {
+  if (!state?.visible) return null
+  return (
+    <span
+      className={`ticket-kickoff-flame-v79 is-${state.level || 'dim'}`}
+      title={state.title || 'Zbliża się start meczu'}
+      aria-label={state.title || 'Zbliża się start meczu'}
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path className="flame-outer" d="M13.7 2.4c.45 2.85-1.55 4.2-2.45 5.65-.8 1.28-.57 2.47.35 3.4.18-1.72 1.13-2.66 2.26-3.6 2.15 2.04 3.67 4.15 3.67 7.05A5.54 5.54 0 0 1 12 20.45a5.54 5.54 0 0 1-5.53-5.55c0-3.47 2.04-5.74 4.06-8.08.38 1.2.82 2.15 1.45 2.83.2-2.48 1.98-4.24 1.72-7.25Z"/>
+        <path className="flame-inner" d="M12.25 11.25c1.36 1.37 2.18 2.52 2.18 4.02A2.46 2.46 0 0 1 12 17.78a2.46 2.46 0 0 1-2.43-2.5c0-1.2.67-2.25 1.55-3.26.05.82.37 1.47.88 1.9.08-1.12.25-1.8.25-2.67Z"/>
+      </svg>
+    </span>
+  )
+}
+
+function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast, allTips = [], startedReadOnly = false, nowMs = Date.now() }) {
   const lang = useBetaiLanguageState()
   const t = (value) => translateBetaiTextValue(value, lang)
   const isPremium = tip.access_type === 'premium'
@@ -16449,6 +16489,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardAnalysis = cleanAkoAnalysisText(tip.analysis || tip.description || '')
   const cardMatchLabel = formatBetaiTipCardWallTimeV1719(tip)
   const cardStatusLabel = startedReadOnly ? 'Rozpoczęty' : (tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący')
+  const kickoffFlameStateV79 = cardStatusLabel === 'Oczekujący'
+    ? getKickoffFlameStateV79(tip, nowMs)
+    : { visible: false, level: 'off', minutes: null, title: '' }
   const createdAgo = formatRelativeAddedTime(tip?.created_at, lang)
   const dashboardBotStatsV1794 = useBetaiBotDashboardStatsV1794(tip)
   const isDashboardBotV1794 = isBetaiMultisportRecordV1794(tip)
@@ -16701,7 +16744,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
             </div>
           )}
         </div>
-        <span className={`status-${cardStatusLabel.toLowerCase()}`}>✓ {t(cardStatusLabel)}</span>
+        <span className="ticket-status-heat-wrap-v79">
+          <TipKickoffFlameV79 state={kickoffFlameStateV79} />
+          <span className={`status-${cardStatusLabel.toLowerCase()}`}>✓ {t(cardStatusLabel)}</span>
+        </span>
         {effectiveIsLocked && !startedReadOnly ? (
           <>
             <button type="button" onClick={() => onUnlock(tip)}>{t(isAkoCard ? 'Kup kupon AKO' : 'Kup singiel')}</button>
@@ -39512,7 +39558,7 @@ function App() {
             ) : null}
 
             <div className="feed">
-              {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} allTips={tips} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={openTipsterProfile} onToast={showToast} startedReadOnly={activeFilter === 'started'} />) : (
+              {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} allTips={tips} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={openTipsterProfile} onToast={showToast} startedReadOnly={activeFilter === 'started'} nowMs={dashboardNow} />) : (
                 <div className="empty-state">{tApp(activeFilter === 'started' ? 'Brak rozpoczętych typów na dziś.' : 'Brak typów typerów na dziś.')}</div>
               )}
             </div>
