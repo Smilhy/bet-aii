@@ -20,6 +20,8 @@ const COPY = {
     real: 'API-Football LIVE',
     odds: 'Realne kursy',
     noOdds: 'Brak kursów',
+    nearest: 'NAJBLIŻSZY MECZ',
+    startsIn: 'Start za',
   },
   en: {
     title: 'Matches of the day',
@@ -38,6 +40,8 @@ const COPY = {
     real: 'API-Football LIVE',
     odds: 'Real odds',
     noOdds: 'No odds',
+    nearest: 'NEXT MATCH',
+    startsIn: 'Starts in',
   }
 }
 
@@ -128,6 +132,16 @@ function statusText(row = {}) {
   return row.status_long || short
 }
 
+function formatKickoffCountdown(startMs, nowMs, copy) {
+  const diff = Math.max(0, Number(startMs) - Number(nowMs))
+  const totalMinutes = Math.floor(diff / 60000)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  const seconds = Math.floor((diff % 60000) / 1000)
+  if (hours > 0) return `${copy.startsIn} ${hours}h ${String(minutes).padStart(2, '0')}m`
+  return `${copy.startsIn} ${minutes}m ${String(seconds).padStart(2, '0')}s`
+}
+
 function getReal1X2(row = {}) {
   if (!row.hasRealOdds || !Array.isArray(row.markets)) return null
   const items = row.markets.filter(item => String(item.market || '').toLowerCase() === '1x2')
@@ -201,7 +215,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   }, [])
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNowMs(Date.now()), 10000)
+    const timer = window.setInterval(() => setNowMs(Date.now()), 1000)
     return () => window.clearInterval(timer)
   }, [])
 
@@ -214,6 +228,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     if (!q) return availableMatches
     return availableMatches.filter(match => [match.home, match.away, match.league, match.country].join(' ').toLowerCase().includes(q))
   }, [query, availableMatches])
+
+  const nearestKey = availableMatches.length ? fixtureKey(availableMatches[0]) : ''
 
   const handleSelect = (match) => {
     if (!isPreMatchFixture(match, Date.now())) {
@@ -256,10 +272,13 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           {!loading && !error && filteredMatches.map((match) => {
             const odds = getReal1X2(match)
             const key = fixtureKey(match)
+            const startMs = getFixtureStartMs(match)
+            const isNearest = key === nearestKey
             return (
-              <article key={key} className={`sim-day-matchrow-v98 sim-day-realrow-v99 ${selectedId === key ? 'selected' : ''}`}>
+              <article key={key} className={`sim-day-matchrow-v98 sim-day-realrow-v99 ${isNearest ? 'nearest-v116' : ''} ${selectedId === key ? 'selected' : ''}`}>
                 <div className="sim-day-matchmeta-v98">
                   <small>⚽ {match.league} <em>• {match.country || 'Świat'}</em></small>
+                  {isNearest ? <strong className="sim-day-nearest-badge-v116">⚡ {copy.nearest}</strong> : null}
                 </div>
                 <div className="sim-day-matchcontent-v98">
                   <div className="sim-day-teamblock-v98 sim-day-teamblock-real-v99">
@@ -267,7 +286,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                       {match.homeLogo ? <img src={match.homeLogo} alt="" /> : <i>⚽</i>}
                       <strong>{match.home}</strong>
                     </div>
-                    <span>{copy.today}<b>{match.time || '—'}</b></span>
+                    <span className="sim-day-kickoff-v116">{copy.today}<b>{match.time || '—'}</b><small>{formatKickoffCountdown(startMs, nowMs, copy)}</small></span>
                     <div className="sim-day-team-v99 away">
                       {match.awayLogo ? <img src={match.awayLogo} alt="" /> : <i>⚽</i>}
                       <strong>{match.away}</strong>
