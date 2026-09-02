@@ -587,9 +587,9 @@ function LineupPanel({ title, lineup }) {
   )
 }
 
-export default function MatchSimulatorView({ lang = 'pl' }) {
+export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }) {
   const isEn = lang === 'en'
-  const [query, setQuery] = useState('Udinese Venezia')
+  const [query, setQuery] = useState(selectedMatch ? `${selectedMatch.home} ${selectedMatch.away}` : 'Udinese Venezia')
   const [fixtures, setFixtures] = useState([])
   const [selected, setSelected] = useState(null)
   const [data, setData] = useState(null)
@@ -695,8 +695,10 @@ export default function MatchSimulatorView({ lang = 'pl' }) {
   useEffect(() => {
     if (autoLoaded.current) return
     autoLoaded.current = true
-    searchMatches('Udinese Venezia')
-  }, [])
+    const initialQuery = selectedMatch ? `${selectedMatch.home} ${selectedMatch.away}` : 'Udinese Venezia'
+    setQuery(initialQuery)
+    searchMatches(initialQuery)
+  }, [selectedMatch])
 
   const winnerLabel = model && data
     ? (model.probabilities.home > model.probabilities.away && model.probabilities.home > model.probabilities.draw
