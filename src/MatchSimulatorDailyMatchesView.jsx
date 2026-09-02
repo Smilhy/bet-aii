@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
 
-const APP_TIMEZONE = 'Europe/Warsaw'
 
 const COPY = {
   pl: {
@@ -45,20 +44,44 @@ const COPY = {
   }
 }
 
-function getWarsawDateKey() {
+function getBrowserTimeZone() {
   try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/London'
+  } catch (_) {
+    return 'Europe/London'
+  }
+}
+
+function getDateKeyInTimeZone(value = Date.now(), timeZone = getBrowserTimeZone()) {
+  try {
+    const date = value instanceof Date ? value : new Date(value)
     const parts = new Intl.DateTimeFormat('en-CA', {
-      timeZone: APP_TIMEZONE,
+      timeZone,
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
-    }).formatToParts(new Date())
+    }).formatToParts(date)
     const y = parts.find(part => part.type === 'year')?.value
     const m = parts.find(part => part.type === 'month')?.value
     const d = parts.find(part => part.type === 'day')?.value
     if (y && m && d) return `${y}-${m}-${d}`
   } catch (_) {}
-  return new Date().toISOString().slice(0, 10)
+  const fallback = value instanceof Date ? value : new Date(value)
+  return `${fallback.getFullYear()}-${String(fallback.getMonth() + 1).padStart(2, '0')}-${String(fallback.getDate()).padStart(2, '0')}`
+}
+
+function formatKickoffTime(startMs, timeZone = getBrowserTimeZone()) {
+  if (!Number.isFinite(startMs)) return '—'
+  try {
+    return new Intl.DateTimeFormat('pl-PL', {
+      timeZone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(new Date(startMs))
+  } catch (_) {
+    return new Date(startMs).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+  }
 }
 
 function formatDateLabel(dateKey) {
@@ -95,7 +118,7 @@ function getFixtureStartMs(row = {}) {
     const utcGuess = Date.UTC(year, month - 1, day, hour, minute, 0)
     try {
       const parts = new Intl.DateTimeFormat('en-CA', {
-        timeZone: APP_TIMEZONE,
+        timeZone: getBrowserTimeZone(),
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
       }).formatToParts(new Date(utcGuess))
@@ -165,7 +188,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   const [sourceMessage, setSourceMessage] = useState('')
   const [selectedId, setSelectedId] = useState('')
   const [nowMs, setNowMs] = useState(() => Date.now())
-  const todayKey = useMemo(() => getWarsawDateKey(), [])
+  const clientTimeZone = useMemo(() => getBrowserTimeZone(), [])
+  const todayKey = useMemo(() => getDateKeyInTimeZone(nowMs, clientTimeZone), [nowMs, clientTimeZone])
 
   const loadMatches = async () => {
     setLoading(true)
@@ -180,7 +204,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         allLeagues: '1',
         mode: 'all-today',
         realOnly: '1',
-        forceRefresh: '1'
+        forceRefresh: '1',
+        timezone: clientTimeZone
       })
       const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`, { cache: 'no-store' })
       const payload = await response.json().catch(() => ({}))
@@ -191,6 +216,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       const realRows = (Array.isArray(payload.fixtures) ? payload.fixtures : [])
         .filter(isRealApiFootballFixture)
         .filter(row => isPreMatchFixture(row, requestNowMs))
+        .filter(row => getDateKeyInTimeZone(getFixtureStartMs(row), clientTimeZone) === todayKey)
         .filter(row => {
           const key = fixtureKey(row)
           if (seen.has(key)) return false
@@ -212,7 +238,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
   useEffect(() => {
     loadMatches()
-  }, [])
+  }, [todayKey, clientTimeZone])
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowMs(Date.now()), 1000)
@@ -221,7 +247,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
   const availableMatches = useMemo(() => matches
     .filter(match => isPreMatchFixture(match, nowMs))
-    .sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b)), [matches, nowMs])
+    .filter(match => getDateKeyInTimeZone(getFixtureStartMs(match), clientTimeZone) === todayKey)
+    .sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b)), [matches, nowMs, todayKey, clientTimeZone])
 
   const filteredMatches = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -288,7 +315,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                       {match.homeLogo ? <img src={match.homeLogo} alt="" /> : <i>⚽</i>}
                       <strong>{match.home}</strong>
                     </div>
-                    <span>{copy.today}<b>{match.time || '—'}</b></span>
+                    <span>{copy.today}<b>{formatKickoffTime(startMs, clientTimeZone)}</b></span>
                     <div className="sim-day-team-v99 away">
                       {match.awayLogo ? <img src={match.awayLogo} alt="" /> : <i>⚽</i>}
                       <strong>{match.away}</strong>

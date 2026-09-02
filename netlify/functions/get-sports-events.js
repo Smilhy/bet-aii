@@ -34,7 +34,15 @@ exports.handler = async function(event) {
     'Access-Control-Allow-Origin': '*'
   }
 
-  const APP_TIMEZONE = process.env.APP_TIMEZONE || 'Europe/Warsaw'
+  const DEFAULT_APP_TIMEZONE = process.env.APP_TIMEZONE || 'Europe/Warsaw'
+  const requestedTimeZone = String(qs.timezone || '').trim()
+  let APP_TIMEZONE = DEFAULT_APP_TIMEZONE
+  if (requestedTimeZone) {
+    try {
+      new Intl.DateTimeFormat('en-GB', { timeZone: requestedTimeZone }).format(new Date())
+      APP_TIMEZONE = requestedTimeZone
+    } catch (_) {}
+  }
   const FIXTURE_CACHE_HOURS = Math.max(1, Math.min(72, Number(process.env.FIXTURE_CACHE_HOURS || 24) || 24))
   // Dodaj typ ma pokazywać pełną listę meczów z API, a nie TOP-y z Typów AI.
   // Limit zostawiamy tylko techniczny, żeby nie zabić Netlify/UI przy tysiącach rekordów.
