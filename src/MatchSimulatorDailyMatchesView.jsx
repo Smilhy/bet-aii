@@ -224,10 +224,6 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
               <article key={key} className={`sim-day-matchrow-v98 sim-day-realrow-v99 ${selectedId === key ? 'selected' : ''}`}>
                 <div className="sim-day-matchmeta-v98">
                   <small>⚽ {match.league} <em>• {match.country || 'Świat'}</em></small>
-                  <div className="sim-day-realbadges-v99">
-                    <span>{statusText(match)}</span>
-                    <span className="api">✓ API #{match.apiFixtureId}</span>
-                  </div>
                 </div>
                 <div className="sim-day-matchcontent-v98">
                   <div className="sim-day-teamblock-v98 sim-day-teamblock-real-v99">
