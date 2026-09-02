@@ -89,31 +89,22 @@ export default function MatchSimulatorIntroView({ lang = 'pl', onComplete }) {
         <small>{copy.kicker}</small>
       </div>
 
-      <div className="simulator-splash-dock-v92">
-        <div className="simulator-splash-loader-v87 simulator-splash-loader-large-v91 simulator-splash-loader-docked-v92">
-          <div className="simulator-splash-loader-top-v87">
-            <div>
-              <small>BET+AI • MATCH ENGINE</small>
-              <strong>{progress >= 100 ? copy.ready : copy.loading}</strong>
-            </div>
-            <b>{Math.round(progress)}%</b>
-          </div>
+      <div className="simulator-splash-simple-loader-v95">
+        <div className="simulator-splash-simple-head-v95">
+          <strong>{progress >= 100 ? copy.ready : (lang === 'en' ? 'Loading Match Engine...' : 'Ładowanie silnika meczu...')}</strong>
+          <b>{Math.round(progress)}%</b>
+        </div>
 
-          <div className="simulator-splash-track-v87">
-            <i style={{ width: `${progress}%` }} />
-          </div>
+        <div className="simulator-splash-simple-track-v95">
+          <i style={{ width: `${progress}%` }} />
+        </div>
 
-          <div className="simulator-splash-loader-bottom-v87">
-            <span className="simulator-splash-dot-v87" />
-            <strong>{copy.steps[stepIndex]}</strong>
-            <em>{progress >= 100 ? '✓' : '•••'}</em>
-          </div>
-
-          <div className="simulator-splash-steps-v91 simulator-splash-steps-v92">
-            {copy.steps.map((step, index) => (
-              <span key={step} className={index <= stepIndex ? 'active' : ''}>{step}</span>
-            ))}
-          </div>
+        <div className="simulator-splash-simple-steps-v95">
+          {copy.steps.map((step, index) => (
+            <span key={step} className={index <= stepIndex ? 'active' : ''}>
+              <i>›</i>{step}
+            </span>
+          ))}
         </div>
       </div>
 
