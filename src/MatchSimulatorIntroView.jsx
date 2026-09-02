@@ -5,10 +5,10 @@ const COMPLETE_HOLD_MS = 420
 
 const COPY = {
   pl: {
-    loading: 'Ładowanie Bet+AI Football Manager',
+    loading: 'Ładowanie Bet+AI Piłka nożna Manager',
     ready: 'Silnik gotowy',
     kicker: 'BET+AI FOOTBALL MANAGER',
-    tagline: 'Symulator AI • etap startowy',
+    tagline: 'Duże intro startowe • po 100% automatyczne przejście do meczu',
     steps: [
       'Inicjalizacja modeli AI',
       'Synchronizacja danych meczu',
@@ -21,7 +21,7 @@ const COPY = {
     loading: 'Loading Bet+AI Football Manager',
     ready: 'Match Engine ready',
     kicker: 'BET+AI FOOTBALL MANAGER',
-    tagline: 'AI Simulator • startup stage',
+    tagline: 'Large startup intro • auto transition to the match screen at 100%',
     steps: [
       'Initializing AI models',
       'Syncing match data',
@@ -50,6 +50,7 @@ export default function MatchSimulatorIntroView({ lang = 'pl', onComplete }) {
 
   useEffect(() => {
     completedRef.current = false
+    startRef.current = 0
     const animate = (now) => {
       if (!startRef.current) startRef.current = now
       const elapsed = now - startRef.current
@@ -78,37 +79,40 @@ export default function MatchSimulatorIntroView({ lang = 'pl', onComplete }) {
   }, [onComplete])
 
   return (
-    <section className={`simulator-splash-v87 simulator-splash-compact-v88 ${finishing ? 'is-finishing' : ''}`}>
+    <section className={`simulator-splash-v87 simulator-splash-large-v91 ${finishing ? 'is-finishing' : ''}`}>
       <img className="simulator-splash-image-v87" src="/betai-symulator-loading-v1.png" alt="Bet+AI Football Manager" />
       <div className="simulator-splash-vignette-v87" aria-hidden="true" />
       <div className="simulator-splash-light-v87" aria-hidden="true" />
       <div className="simulator-splash-scan-v87" aria-hidden="true" />
 
-      <div className="simulator-splash-content-v88">
-        <div className="simulator-splash-copy-v88">
-          <small>{copy.kicker}</small>
-          <h2>Bet+AI Football Manager</h2>
-          <p>{copy.tagline}</p>
+      <div className="simulator-splash-topcopy-v91">
+        <small>{copy.kicker}</small>
+        <p>{copy.tagline}</p>
+      </div>
+
+      <div className="simulator-splash-loader-v87 simulator-splash-loader-large-v91">
+        <div className="simulator-splash-loader-top-v87">
+          <div>
+            <small>BET+AI • MATCH ENGINE</small>
+            <strong>{progress >= 100 ? copy.ready : copy.loading}</strong>
+          </div>
+          <b>{Math.round(progress)}%</b>
         </div>
 
-        <div className="simulator-splash-loader-v87 simulator-splash-loader-compact-v88">
-          <div className="simulator-splash-loader-top-v87">
-            <div>
-              <small>BET+AI • MATCH ENGINE</small>
-              <strong>{progress >= 100 ? copy.ready : copy.loading}</strong>
-            </div>
-            <b>{Math.round(progress)}%</b>
-          </div>
+        <div className="simulator-splash-track-v87">
+          <i style={{ width: `${progress}%` }} />
+        </div>
 
-          <div className="simulator-splash-track-v87">
-            <i style={{ width: `${progress}%` }} />
-          </div>
+        <div className="simulator-splash-loader-bottom-v87">
+          <span className="simulator-splash-dot-v87" />
+          <strong>{copy.steps[stepIndex]}</strong>
+          <em>{progress >= 100 ? '✓' : '•••'}</em>
+        </div>
 
-          <div className="simulator-splash-loader-bottom-v87">
-            <span className="simulator-splash-dot-v87" />
-            <strong>{copy.steps[stepIndex]}</strong>
-            <em>{progress >= 100 ? '✓' : '•••'}</em>
-          </div>
+        <div className="simulator-splash-steps-v91">
+          {copy.steps.map((step, index) => (
+            <span key={step} className={index <= stepIndex ? 'active' : ''}>{step}</span>
+          ))}
         </div>
       </div>
 
