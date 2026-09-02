@@ -83496,3 +83496,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 
 /* WERSJA 102 — zmiana napisu hero i usunięcie prawej nakładki */
 .sim-day-hero-overlay-v101{justify-content:flex-start!important}
+
+
+/* WERSJA 103 — czystszy hero bez górnego pill badge */
+.sim-day-hero-overlay-v101{display:none!important}
