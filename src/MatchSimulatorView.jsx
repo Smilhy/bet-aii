@@ -351,19 +351,7 @@ function parseGridPositions(lineup = {}, side = 'home') {
     }).filter(Boolean)
   }
 
-  const fallback = [
-    [6, 50],
-    [21, 16], [21, 38], [21, 62], [21, 84],
-    [37, 24], [39, 50], [37, 76],
-    [55, 18], [57, 50], [55, 82]
-  ]
-
-  return fallback.map(([x, y], index) => ({
-    ...(players[index] || { name: '', number: index + 1 }),
-    index,
-    x: side === 'home' ? x : 100 - x,
-    y
-  }))
+  return []
 }
 
 function buildLiveAnimationState({ clockSec, timeline, model, fixture }) {
@@ -518,6 +506,8 @@ function MatchPitch({ data, model, clockSec, timeline }) {
     return classes.join(' ')
   }
 
+  const hasOfficialPlayers = homeBase.length >= 11 && awayBase.length >= 11
+
   return (
     <div className="sim-pitch-wrap">
       <div className="sim-scoreboard-overlay">
@@ -538,6 +528,7 @@ function MatchPitch({ data, model, clockSec, timeline }) {
         <div className="sim-goal left" />
         <div className="sim-goal right" />
         <div className="sim-action-banner">{live.commentary}</div>
+        {!hasOfficialPlayers ? <div className="fm119-pitch-data-warning"><strong>Brak pełnych oficjalnych XI z pozycjami</strong><span>Boisko nie pokazuje fikcyjnych zawodników.</span></div> : null}
         {live.flashMode === 'shot' ? <div className="sim-shot-flash" /> : null}
         {live.flashMode === 'goal' ? <div className="sim-goal-flash">GOOOL!</div> : null}
 
@@ -587,6 +578,108 @@ function LineupPanel({ title, lineup }) {
   )
 }
 
+
+function formationBoardPositions(lineup = {}) {
+  const players = Array.isArray(lineup?.startXI) ? lineup.startXI.filter(player => player?.name) : []
+  if (players.length < 11 || !players.some(player => /^\d+:\d+$/.test(player.grid || ''))) return []
+  const rows = new Map()
+  players.forEach((player, index) => {
+    const [r, c] = String(player.grid || '').split(':').map(Number)
+    if (!r || !c) return
+    if (!rows.has(r)) rows.set(r, [])
+    rows.get(r).push({ player, index, c })
+  })
+  if (!rows.size) return []
+  const maxRow = Math.max(...rows.keys())
+  return players.map((player, index) => {
+    const [r, c] = String(player.grid || '').split(':').map(Number)
+    if (!r || !c) return null
+    const rowPlayers = rows.get(r) || []
+    const maxCol = Math.max(...rowPlayers.map(item => item.c), 1)
+    const x = maxCol === 1 ? 50 : 12 + ((c - 1) / (maxCol - 1)) * 76
+    const depth = maxRow <= 1 ? 0 : (r - 1) / (maxRow - 1)
+    const y = 88 - depth * 76
+    return { ...player, index, x, y }
+  }).filter(Boolean)
+}
+
+function FormationBoard({ teamName, lineup, tone = 'home' }) {
+  const positions = useMemo(() => formationBoardPositions(lineup), [lineup])
+  const official = (lineup?.startXI?.length || 0) >= 11
+  const hasGrid = positions.length >= 11
+  return (
+    <aside className={`fm119-formation-panel ${tone}`}>
+      <div className="fm119-formation-head">
+        <div><strong>{teamName}</strong><span>{official ? (lineup?.formation || 'Oficjalne XI') : 'Brak oficjalnego XI'}</span></div>
+        <em>{official ? 'LIVE XI' : 'API'}</em>
+      </div>
+      {official && hasGrid ? (
+        <div className="fm119-mini-pitch">
+          <div className="fm119-mini-half" />
+          <div className="fm119-mini-box top" />
+          <div className="fm119-mini-box bottom" />
+          {positions.map((player, index) => (
+            <div className="fm119-mini-player" key={player.id || `${player.name}-${index}`} style={{ left: `${player.x}%`, top: `${player.y}%` }} title={`${player.number || ''} ${player.name}`}>
+              <b>{player.number || '•'}</b>
+              <span>{shortPlayerName(player.name)}</span>
+              <small>{player.pos || ''}</small>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="fm119-no-lineup">
+          <strong>{official ? 'Brak pozycji boiskowych w API' : 'Oczekiwanie na oficjalny skład'}</strong>
+          <span>Bet+AI nie generuje fikcyjnych nazwisk ani ustawienia.</span>
+          {official ? <div className="fm119-real-xi-list">{lineup.startXI.map((player, index) => <em key={player.id || index}>{player.number || '•'} {player.name}</em>)}</div> : null}
+        </div>
+      )}
+      <div className="fm119-formation-footer"><span>Trener</span><b>{lineup?.coach || '—'}</b></div>
+    </aside>
+  )
+}
+
+function StatCompare({ label, home, away, suffix = '', max = null }) {
+  const hv = safeNum(home)
+  const av = safeNum(away)
+  const scale = max || Math.max(hv, av, 1)
+  return (
+    <div className="fm119-stat-compare">
+      <b>{home}{suffix}</b>
+      <div><span>{label}</span><i><em className="home" style={{ width: `${clamp(hv / scale * 100, 0, 100)}%` }} /><em className="away" style={{ width: `${clamp(av / scale * 100, 0, 100)}%` }} /></i></div>
+      <b>{away}{suffix}</b>
+    </div>
+  )
+}
+
+function MomentumChart({ timeline = [], clockSec = 0 }) {
+  const buckets = 18
+  const end = Math.max(clockSec, 1)
+  const values = Array.from({ length: buckets }, (_, idx) => {
+    const from = idx * end / buckets
+    const to = (idx + 1) * end / buckets
+    return timeline.filter(event => event.second >= from && event.second < to).reduce((score, event) => {
+      const weight = event.type === 'goal' ? 3.5 : event.type === 'shot' ? 1.8 : event.type === 'corner' ? 1.1 : event.type === 'card' ? 0.35 : 0
+      return score + (event.team === 'home' ? weight : event.team === 'away' ? -weight : 0)
+    }, 0)
+  })
+  let carry = 0
+  const cumulative = values.map(value => {
+    carry = carry * 0.56 + value
+    return carry
+  })
+  const peak = Math.max(2.5, ...cumulative.map(Math.abs))
+  const points = cumulative.map((value, idx) => `${idx * (100 / (buckets - 1))},${50 - (value / peak) * 35}`).join(' ')
+  return (
+    <div className="fm119-momentum-chart">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Momentum symulacji">
+        <line x1="0" y1="50" x2="100" y2="50" className="baseline" />
+        <polyline points={points} fill="none" className="momentum-line" />
+      </svg>
+      <div className="fm119-momentum-legend"><span>● {timeline[0]?.team === 'away' ? 'Goście' : 'Gospodarze'}</span><em>momentum symulacji</em></div>
+    </div>
+  )
+}
+
 export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }) {
   const isEn = lang === 'en'
   const [query, setQuery] = useState(selectedMatch ? `${selectedMatch.home} ${selectedMatch.away}` : 'Udinese Venezia')
@@ -600,6 +693,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
   const [running, setRunning] = useState(false)
   const [speed, setSpeed] = useState(1)
   const autoLoaded = useRef(false)
+  const autoStarted = useRef(false)
   const tickRef = useRef(null)
 
   const model = useMemo(() => data ? buildSimulationModel(data) : null, [data])
@@ -676,6 +770,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
     setSelected(fixture)
     setDataLoading(true)
     setRunning(false)
+    autoStarted.current = false
     setClockSec(0)
     tickRef.current = null
     setError('')
@@ -693,6 +788,16 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
   }
 
   useEffect(() => {
+    if (!data || !model || dataLoading || autoStarted.current) return
+    autoStarted.current = true
+    const timer = window.setTimeout(() => {
+      tickRef.current = null
+      setRunning(true)
+    }, 650)
+    return () => window.clearTimeout(timer)
+  }, [data, model, dataLoading])
+
+  useEffect(() => {
     if (autoLoaded.current) return
     autoLoaded.current = true
     const initialQuery = selectedMatch ? `${selectedMatch.home} ${selectedMatch.away}` : 'Udinese Venezia'
@@ -706,104 +811,118 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
     searchMatches(initialQuery)
   }, [selectedMatch])
 
-  const winnerLabel = model && data
-    ? (model.probabilities.home > model.probabilities.away && model.probabilities.home > model.probabilities.draw
-      ? data.fixture.home.name
-      : model.probabilities.away > model.probabilities.home && model.probabilities.away > model.probabilities.draw
-        ? data.fixture.away.name
-        : 'Remis')
-    : ''
+  const liveCards = useMemo(() => ({
+    home: timeline.filter(event => event.type === 'card' && event.team === 'home' && event.second <= clockSec).length,
+    away: timeline.filter(event => event.type === 'card' && event.team === 'away' && event.second <= clockSec).length
+  }), [timeline, clockSec])
+  const elapsedRatio = clamp(clockSec / MATCH_TOTAL_SECONDS, 0, 1)
+  const xgLive = {
+    home: Math.round(model?.xg?.home * elapsedRatio * 100) / 100 || 0,
+    away: Math.round(model?.xg?.away * elapsedRatio * 100) / 100 || 0
+  }
+  const shotsOnTarget = {
+    home: Math.min(liveCounters.homeShots, currentScore.home + Math.floor(liveCounters.homeShots * 0.38)),
+    away: Math.min(liveCounters.awayShots, currentScore.away + Math.floor(liveCounters.awayShots * 0.38))
+  }
+  const latestEvent = visibleEvents[0]
+  const homeLineupOfficial = (data?.lineups?.home?.startXI?.length || 0) >= 11
+  const awayLineupOfficial = (data?.lineups?.away?.startXI?.length || 0) >= 11
 
   return (
-    <section className="match-sim-page match-sim-page-v88">
-      <section className="sim-search-panel sim-search-panel-v88">
-        <form onSubmit={event => { event.preventDefault(); searchMatches() }}>
-          <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Np. Udinese Venezia" />
-          <button disabled={searchLoading}>{searchLoading ? 'Szukam…' : 'Szukaj meczu'}</button>
-        </form>
-        {fixtures.length ? <div className="sim-fixture-results">{fixtures.map(fixture => <button key={fixture.apiFixtureId || fixture.id} className={(selected?.apiFixtureId || selected?.id) === (fixture.apiFixtureId || fixture.id) ? 'active' : ''} onClick={() => loadMatchData(fixture)}><span>{fixture.home} <b>vs</b> {fixture.away}</span><small>{fixture.league} • {fixture.date} {fixture.time}</small></button>)}</div> : null}
-      </section>
-
+    <section className="match-sim-page match-sim-fm119">
       {error ? <div className="sim-error">⚠ {error}</div> : null}
-      {dataLoading ? <div className="sim-loading"><i /><strong>Pobieram prawdziwe dane meczu…</strong><span>Prognoza • H2H • ostatnie mecze • absencje • tabela • składy</span></div> : null}
+      {dataLoading ? <div className="sim-loading fm119-loading"><i /><strong>Pobieram realne dane meczu…</strong><span>Oficjalne XI • formacje • H2H • forma • tabela • model Bet+AI</span></div> : null}
 
       {data && model ? <>
-        <section className="sim-match-head">
-          <div className="sim-team home">{data.fixture.home.logo ? <img src={data.fixture.home.logo} alt="" /> : null}<div><small>GOSPODARZE</small><strong>{data.fixture.home.name}</strong><TeamForm rows={data.recent.home} /></div></div>
-          <div className="sim-versus"><small>{data.fixture.league} • {data.fixture.round || 'Mecz'}</small><b>{model.topScore.text}</b><span>najczęstszy wynik w {model.samples.toLocaleString('pl-PL')} symulacjach</span></div>
-          <div className="sim-team away"><div><small>GOŚCIE</small><strong>{data.fixture.away.name}</strong><TeamForm rows={data.recent.away} /></div>{data.fixture.away.logo ? <img src={data.fixture.away.logo} alt="" /> : null}</div>
+        <header className="fm119-scorebar">
+          <div className="fm119-score-meta">
+            <div><span>BET+AI SIMULATOR</span><em className={running ? 'live' : ''}>{running ? 'LIVE' : clockSec >= MATCH_TOTAL_SECONDS ? 'FT' : 'PAUZA'}</em></div>
+            <small>{data.fixture.league} • {data.fixture.round || 'Mecz'}</small>
+          </div>
+          <div className="fm119-score-team home">
+            <div><strong>{data.fixture.home.name}</strong><TeamForm rows={data.recent.home} /></div>
+            {data.fixture.home.logo ? <img src={data.fixture.home.logo} alt="" /> : null}
+          </div>
+          <div className="fm119-score-center">
+            <div className="fm119-score-numbers"><b>{currentScore.home}</b><span>:</span><b>{currentScore.away}</b></div>
+            <strong>{clockSec >= MATCH_TOTAL_SECONDS ? '90:00' : formatClock(clockSec)}</strong>
+            <small>{getPhaseLabel(clockSec)}</small>
+          </div>
+          <div className="fm119-score-team away">
+            {data.fixture.away.logo ? <img src={data.fixture.away.logo} alt="" /> : null}
+            <div><strong>{data.fixture.away.name}</strong><TeamForm rows={data.recent.away} /></div>
+          </div>
+        </header>
+
+        <section className="fm119-top-panels">
+          <article className="fm119-stat-card">
+            <h3>STATYSTYKI MECZU</h3>
+            <StatCompare label="Strzały" home={liveCounters.homeShots} away={liveCounters.awayShots} />
+            <StatCompare label="Strzały celne" home={shotsOnTarget.home} away={shotsOnTarget.away} />
+            <StatCompare label="Posiadanie piłki" home={model.possession.home} away={model.possession.away} suffix="%" max={100} />
+            <StatCompare label="Rzuty rożne" home={liveCounters.homeCorners} away={liveCounters.awayCorners} />
+            <StatCompare label="Kartki" home={liveCards.home} away={liveCards.away} />
+          </article>
+
+          <article className="fm119-stat-card fm119-xg-card">
+            <h3>XG (OCZEKIWANE BRAMKI)</h3>
+            <div className="fm119-xg-main"><b>{xgLive.home.toFixed(2)}</b><span>bieżące xG</span><b>{xgLive.away.toFixed(2)}</b></div>
+            <div className="fm119-xg-track"><i style={{ width: `${clamp(model.xg.home / Math.max(model.xg.home + model.xg.away, .1) * 100, 0, 100)}%` }} /><em /></div>
+            <div className="fm119-xg-foot"><span>Model przedmeczowy</span><b>{model.xg.home.toFixed(2)} – {model.xg.away.toFixed(2)}</b></div>
+          </article>
+
+          <article className="fm119-stat-card fm119-momentum-card">
+            <h3>MOMENTUM</h3>
+            <MomentumChart timeline={timeline} clockSec={clockSec} />
+          </article>
+
+          <article className="fm119-stat-card">
+            <h3>KLUCZOWE DANE</h3>
+            <StatCompare label="Forma" home={model.strength.home.form} away={model.strength.away.form} max={100} />
+            <StatCompare label="Atak modelu" home={model.strength.home.attack} away={model.strength.away.attack} max={100} />
+            <StatCompare label="Obrona modelu" home={model.strength.home.defence} away={model.strength.away.defence} max={100} />
+            <StatCompare label="Tabela" home={data.standings.home?.rank || 0} away={data.standings.away?.rank || 0} />
+            <StatCompare label="Absencje" home={data.injuries.homeCount || 0} away={data.injuries.awayCount || 0} />
+          </article>
+
+          <article className="fm119-stat-card fm119-events-top">
+            <h3>OSTATNIE WYDARZENIA</h3>
+            <div className="fm119-event-mini-list">
+              {visibleEvents.length ? visibleEvents.slice(0, 5).map((event, index) => <div key={`${event.second}-${event.type}-${index}`} className={event.type}><b>{formatEventTime(event)}</b><span>{event.label}</span></div>) : <p>Symulacja rozpoczyna się od 00:00.</p>}
+            </div>
+          </article>
         </section>
 
-        <section className="sim-dashboard-grid">
-          <aside className="sim-data-card">
-            <h3>Realne dane wejściowe</h3>
-            <div className="sim-strength">
-              <span>Forma<b>{model.strength.home.form}</b><em>{model.strength.away.form}</em></span>
-              <span>Atak<b>{model.strength.home.attack}</b><em>{model.strength.away.attack}</em></span>
-              <span>Obrona<b>{model.strength.home.defence}</b><em>{model.strength.away.defence}</em></span>
-              <span>xG model<b>{model.xg.home}</b><em>{model.xg.away}</em></span>
-            </div>
-            <div className="sim-mini-kpis">
-              <span><small>H2H</small><b>{data.h2h.summary?.homeWins || 0}-{data.h2h.summary?.draws || 0}-{data.h2h.summary?.awayWins || 0}</b></span>
-              <span><small>Śr. gole H2H</small><b>{data.h2h.summary?.avgGoals || '—'}</b></span>
-              <span><small>Absencje</small><b>{data.injuries.homeCount}:{data.injuries.awayCount}</b></span>
-              <span><small>Tabela</small><b>{data.standings.home?.rank || '—'} / {data.standings.away?.rank || '—'}</b></span>
-            </div>
-            {data.prediction.advice ? <div className="sim-api-advice"><small>API PRE-MATCH</small><strong>{data.prediction.advice}</strong></div> : null}
-            {data.partial ? <p className="sim-partial">Część danych jest chwilowo niedostępna: {data.errors.join(' • ')}</p> : null}
-          </aside>
+        <section className="fm119-match-layout">
+          <FormationBoard teamName={data.fixture.home.name} lineup={data.lineups.home} tone="home" />
 
-          <main className="sim-engine-card">
-            <div className="sim-engine-top">
-              <div>
-                <small>BET+AI PREDICTION</small>
-                <strong>{winnerLabel}</strong>
-                <span>Pewność modelu: {model.confidence}% • pełne rozegranie: 2 minuty przy x1</span>
-              </div>
-              <div className="sim-engine-actions">
-                <button onClick={() => {
-                  if (clockSec >= MATCH_TOTAL_SECONDS) setClockSec(0)
-                  tickRef.current = null
-                  setRunning(value => !value)
-                }}>{running ? '❚❚ Pauza' : clockSec > 0 && clockSec < MATCH_TOTAL_SECONDS ? '▶ Wznów mecz' : '▶ Rozegraj mecz'}</button>
-                <button className="secondary" onClick={() => { setRunning(false); setClockSec(0); tickRef.current = null }}>↺ Reset</button>
+          <main className="fm119-pitch-stage">
+            <div className="fm119-pitch-toolbar">
+              <div><button className="active">WIDOK MECZU</button><button disabled>ANALIZA</button><button disabled>STREFY BOISKOWE</button><button disabled>SIATKA PODAŃ</button></div>
+              <div className="fm119-controls">
+                <button className="view active">2D</button>
+                <button className="view" disabled>3D</button>
+                <button onClick={() => { tickRef.current = null; setRunning(value => !value) }}>{running ? '❚❚' : '▶'}</button>
                 <select value={speed} onChange={event => { tickRef.current = null; setSpeed(Number(event.target.value)) }}>
-                  <option value={1}>x1 • 2 min</option>
-                  <option value={2}>x2 • 1 min</option>
-                  <option value={4}>x4 • 30 s</option>
-                  <option value={8}>x8 • 15 s</option>
+                  <option value={1}>x1</option><option value={2}>x2</option><option value={4}>x4</option><option value={8}>x8</option>
                 </select>
+                <button onClick={() => { setRunning(false); setClockSec(0); tickRef.current = null; autoStarted.current = true }}>↺</button>
               </div>
-            </div>
-            <div className="sim-probs">
-              <ProbabilityBar label={data.fixture.home.name} value={model.probabilities.home} tone="home" />
-              <ProbabilityBar label="Remis" value={model.probabilities.draw} tone="draw" />
-              <ProbabilityBar label={data.fixture.away.name} value={model.probabilities.away} tone="away" />
             </div>
             <MatchPitch data={data} model={model} clockSec={clockSec} timeline={timeline} />
-            <div className="sim-live-strip"><b>{clockSec >= MATCH_TOTAL_SECONDS ? 'FT' : formatClock(clockSec)}</b><span>{data.fixture.home.name} <strong>{currentScore.home} : {currentScore.away}</strong> {data.fixture.away.name}</span><em>{visibleEvents[0]?.label || 'Gotowy do rozpoczęcia symulacji'}</em></div>
+            <div className="fm119-pitch-legend"><span className="home">● {data.fixture.home.name}</span><span className="away">● {data.fixture.away.name}</span></div>
           </main>
 
-          <aside className="sim-events-card">
-            <h3>Przebieg meczu</h3>
-            <div className="sim-events-list">{visibleEvents.length ? visibleEvents.map((event, index) => <div key={`${event.second}-${event.type}-${index}`} className={`event ${event.type} ${event.team}`}><b>{formatEventTime(event)}</b><span>{event.label}</span></div>) : <div className="sim-events-empty">Kliknij „Rozegraj mecz”. Zdarzenia będą wynikać z modelu przedmeczowego i będą animowane na boisku 2D.</div>}</div>
-            <div className="sim-expected">
-              <span>Strzały live<b>{liveCounters.homeShots}:{liveCounters.awayShots}</b></span>
-              <span>Rożne live<b>{liveCounters.homeCorners}:{liveCounters.awayCorners}</b></span>
-              <span>Posiadanie<b>{model.possession.home}:{model.possession.away}</b></span>
-            </div>
-          </aside>
+          <FormationBoard teamName={data.fixture.away.name} lineup={data.lineups.away} tone="away" />
         </section>
 
-        <section className="sim-lineups-section">
-          <LineupPanel title={data.fixture.home.name} lineup={data.lineups.home} />
-          <LineupPanel title={data.fixture.away.name} lineup={data.lineups.away} />
-        </section>
-
-        <section className="sim-h2h-section">
-          <div><span>H2H • ostatnie {data.h2h.summary?.count || 0}</span><b>{data.h2h.summary?.homeWins || 0} wygr. {data.fixture.home.name}</b><b>{data.h2h.summary?.draws || 0} remisów</b><b>{data.h2h.summary?.awayWins || 0} wygr. {data.fixture.away.name}</b></div>
-          <div><span>Model</span><b>BTTS H2H {data.h2h.summary?.bttsPct || 0}%</b><b>Over 2.5 H2H {data.h2h.summary?.over25Pct || 0}%</b><b>xG {model.xg.home} – {model.xg.away}</b></div>
-          <p><strong>Jak liczymy:</strong> główny ciężar ma prawdziwa prognoza API-Football, forma ostatnich meczów, atak/obrona, H2H, średnie bramek, dom/wyjazd i absencje. Następnie Bet+AI wykonuje 6000 ważonych symulacji Poissona/Monte Carlo. Animacja nie pokazuje losowego tła — wizualizuje scenariusz zgodny z wyliczonym modelem przedmeczowym.</p>
+        <section className="fm119-commentary-strip">
+          <div className="fm119-commentary-time"><b>{clockSec >= MATCH_TOTAL_SECONDS ? '90\'' : `${Math.floor(clockSec / 60)}'`}</b><span>{running ? 'NA ŻYWO' : clockSec >= MATCH_TOTAL_SECONDS ? 'KONIEC' : 'PAUZA'}</span></div>
+          <div className="fm119-commentary-text">
+            <strong>{latestEvent?.label || (homeLineupOfficial && awayLineupOfficial ? 'Mecz gotowy. Silnik wykorzystuje oficjalne składy i formacje z API.' : 'Silnik nie wyświetla fikcyjnych zawodników — czeka na oficjalne XI.')}</strong>
+            <span>{data.prediction.advice || `Model xG: ${model.xg.home} – ${model.xg.away} • H2H: ${data.h2h.summary?.homeWins || 0}-${data.h2h.summary?.draws || 0}-${data.h2h.summary?.awayWins || 0}`}</span>
+          </div>
+          <div className="fm119-sound-wave"><i/><i/><i/><i/><i/></div>
         </section>
       </> : null}
     </section>

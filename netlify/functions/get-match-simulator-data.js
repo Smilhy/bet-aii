@@ -168,10 +168,10 @@ function normalizeLineups(rows = [], homeId, awayId) {
     teamId: clean(row?.team?.id), team: clean(row?.team?.name), logo: clean(row?.team?.logo),
     formation: clean(row?.formation),
     coach: clean(row?.coach?.name),
-    startXI: (row?.startXI || []).map((entry, index) => ({
-      id: clean(entry?.player?.id), name: clean(entry?.player?.name, `Zawodnik ${index + 1}`),
+    startXI: (row?.startXI || []).map((entry) => ({
+      id: clean(entry?.player?.id), name: clean(entry?.player?.name),
       number: num(entry?.player?.number, 0), pos: clean(entry?.player?.pos), grid: clean(entry?.player?.grid)
-    })),
+    })).filter(player => player.id || player.name),
     substitutes: (row?.substitutes || []).map(entry => ({
       id: clean(entry?.player?.id), name: clean(entry?.player?.name), number: num(entry?.player?.number, 0), pos: clean(entry?.player?.pos)
     }))
