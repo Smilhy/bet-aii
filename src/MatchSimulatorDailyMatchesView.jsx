@@ -190,20 +190,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
   return (
     <section className="sim-day-page-v98 sim-day-real-v99">
-      <header className="sim-day-topbar-v98">
-        <div>
-          <span className="sim-day-kicker-v98">BET+AI • {copy.real}</span>
-          <h2>{copy.title}</h2>
-          <p>{copy.subtitle}</p>
-        </div>
-        <div className="sim-day-date-wrap-v99">
-          <div className="sim-day-datebadge-v98">{copy.top} • {formatDateLabel(todayKey)}</div>
-          <button type="button" className="sim-day-refresh-v99" onClick={loadMatches} disabled={loading}>↻ {copy.refresh}</button>
-        </div>
-      </header>
-
       <section className="sim-day-hero-v100" aria-label="Symulator AI hero">
-        <img src="/symulator-ai-hero-banner-v100.png" alt="Symulator AI – realna symulacja meczu" />
+        <img src="/symulator-ai-hero-banner-v100.png" alt="Bet+AI Football Manager – realna symulacja meczu" />
       </section>
 
       <div className="sim-day-layout-v98">
