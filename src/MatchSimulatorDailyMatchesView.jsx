@@ -202,6 +202,10 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         </div>
       </header>
 
+      <section className="sim-day-hero-v100" aria-label="Symulator AI hero">
+        <img src="/symulator-ai-hero-banner-v100.png" alt="Symulator AI – realna symulacja meczu" />
+      </section>
+
       <div className="sim-day-layout-v98">
         <aside className="sim-day-sidebar-v98">
           <div className="sim-day-searchbox-v98">
