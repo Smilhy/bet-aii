@@ -191,7 +191,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   return (
     <section className="sim-day-page-v98 sim-day-real-v99">
       <section className="sim-day-hero-v100" aria-label="Symulator AI hero">
-        <img src="/symulator-ai-hero-banner-v100.png" alt="Bet+AI Football Manager – realna symulacja meczu" />
+        <img src="/symulator-ai-hero-banner-v100.png" alt="Bet+AI Football Manager AI – realna symulacja meczu" />
       </section>
 
       <div className="sim-day-layout-v98">

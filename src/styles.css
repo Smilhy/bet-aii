@@ -83485,3 +83485,9 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 .sim-day-hero-v100{position:relative;overflow:hidden;margin:0 0 16px;border-radius:26px;border:1px solid rgba(52,224,236,.18);background:linear-gradient(180deg,rgba(6,20,35,.96),rgba(4,15,28,.98));box-shadow:0 18px 38px rgba(0,0,0,.16)}
 .sim-day-hero-v100 img{display:block;width:100%;height:auto;aspect-ratio:3/1;object-fit:cover}
 @media(max-width:900px){.sim-day-hero-v100{margin-bottom:14px;border-radius:20px}}
+
+
+/* WERSJA 109 — nowy hero od zera, baza W100 */
+.sim-day-real-v99{gap:14px!important}
+.sim-day-hero-v100{margin:0 0 16px!important;border-radius:26px!important;overflow:hidden!important}
+.sim-day-hero-v100 img{display:block!important;width:100%!important;height:auto!important;aspect-ratio:3/1!important;object-fit:cover!important;object-position:center center!important}
