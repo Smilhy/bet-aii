@@ -587,12 +587,12 @@ function LineupPanel({ title, lineup }) {
   )
 }
 
-export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, initialData = null, autoStart = false, onBack = null }) {
+export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }) {
   const isEn = lang === 'en'
   const [query, setQuery] = useState(selectedMatch ? `${selectedMatch.home} ${selectedMatch.away}` : 'Udinese Venezia')
-  const [fixtures, setFixtures] = useState(selectedMatch ? [selectedMatch] : [])
-  const [selected, setSelected] = useState(selectedMatch || null)
-  const [data, setData] = useState(initialData || null)
+  const [fixtures, setFixtures] = useState([])
+  const [selected, setSelected] = useState(null)
+  const [data, setData] = useState(null)
   const [searchLoading, setSearchLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(false)
   const [error, setError] = useState('')
@@ -600,9 +600,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
   const [running, setRunning] = useState(false)
   const [speed, setSpeed] = useState(1)
   const autoLoaded = useRef(false)
-  const autoStarted = useRef(false)
   const tickRef = useRef(null)
-  const preparedMode = Boolean(initialData && selectedMatch)
 
   const model = useMemo(() => data ? buildSimulationModel(data) : null, [data])
   const timeline = useMemo(() => data && model ? buildTimeline(data, model) : [], [data, model])
@@ -643,17 +641,6 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
 
     return () => window.clearInterval(timer)
   }, [running, speed])
-
-  useEffect(() => {
-    if (!autoStart || !initialData || !model || autoStarted.current) return undefined
-    autoStarted.current = true
-    const timer = window.setTimeout(() => {
-      tickRef.current = null
-      setClockSec(0)
-      setRunning(true)
-    }, 650)
-    return () => window.clearTimeout(timer)
-  }, [autoStart, initialData, model])
 
   async function searchMatches(searchText = query) {
     const clean = String(searchText || '').trim()
@@ -710,12 +697,6 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
     autoLoaded.current = true
     const initialQuery = selectedMatch ? `${selectedMatch.home} ${selectedMatch.away}` : 'Udinese Venezia'
     setQuery(initialQuery)
-    if (selectedMatch && initialData) {
-      setFixtures([selectedMatch])
-      setSelected(selectedMatch)
-      setData(initialData)
-      return
-    }
     if (selectedMatch?.apiFixtureId) {
       setFixtures([selectedMatch])
       setSelected(selectedMatch)
@@ -723,7 +704,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
       return
     }
     searchMatches(initialQuery)
-  }, [selectedMatch, initialData])
+  }, [selectedMatch])
 
   const winnerLabel = model && data
     ? (model.probabilities.home > model.probabilities.away && model.probabilities.home > model.probabilities.draw
@@ -735,17 +716,13 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
 
   return (
     <section className="match-sim-page match-sim-page-v88">
-      {preparedMode ? <section className="sim-prepared-bar-v116">
-        <button type="button" onClick={onBack}>← Wróć do meczów</button>
-        <div><small>BET+AI MATCH ENGINE</small><strong>{selectedMatch?.home} <b>vs</b> {selectedMatch?.away}</strong><span>✓ Dane przygotowane • symulacja predykcyjna • 90 min = 2 min przy x1</span></div>
-        <em className={running ? 'live' : ''}>{running ? '● SYMULACJA LIVE' : 'GOTOWY'}</em>
-      </section> : <section className="sim-search-panel sim-search-panel-v88">
+      <section className="sim-search-panel sim-search-panel-v88">
         <form onSubmit={event => { event.preventDefault(); searchMatches() }}>
           <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Np. Udinese Venezia" />
           <button disabled={searchLoading}>{searchLoading ? 'Szukam…' : 'Szukaj meczu'}</button>
         </form>
         {fixtures.length ? <div className="sim-fixture-results">{fixtures.map(fixture => <button key={fixture.apiFixtureId || fixture.id} className={(selected?.apiFixtureId || selected?.id) === (fixture.apiFixtureId || fixture.id) ? 'active' : ''} onClick={() => loadMatchData(fixture)}><span>{fixture.home} <b>vs</b> {fixture.away}</span><small>{fixture.league} • {fixture.date} {fixture.time}</small></button>)}</div> : null}
-      </section>}
+      </section>
 
       {error ? <div className="sim-error">⚠ {error}</div> : null}
       {dataLoading ? <div className="sim-loading"><i /><strong>Pobieram prawdziwe dane meczu…</strong><span>Prognoza • H2H • ostatnie mecze • absencje • tabela • składy</span></div> : null}

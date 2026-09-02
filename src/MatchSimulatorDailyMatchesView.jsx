@@ -275,10 +275,12 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
             const startMs = getFixtureStartMs(match)
             const isNearest = key === nearestKey
             return (
-              <article key={key} className={`sim-day-matchrow-v98 sim-day-realrow-v99 ${isNearest ? 'nearest-v116' : ''} ${selectedId === key ? 'selected' : ''}`}>
+              <article key={key} className={`sim-day-matchrow-v98 sim-day-realrow-v99 ${isNearest ? 'nearest-v117' : ''} ${selectedId === key ? 'selected' : ''}`}>
                 <div className="sim-day-matchmeta-v98">
-                  <small>⚽ {match.league} <em>• {match.country || 'Świat'}</em></small>
-                  {isNearest ? <strong className="sim-day-nearest-badge-v116">⚡ {copy.nearest}</strong> : null}
+                  <div className="sim-day-matchmeta-left-v117">
+                    <small>⚽ {match.league} <em>• {match.country || 'Świat'}</em></small>
+                    {isNearest ? <div className="sim-day-nearest-line-v117"><strong>⚡ {copy.nearest}</strong><span>{formatKickoffCountdown(startMs, nowMs, copy)}</span></div> : null}
+                  </div>
                 </div>
                 <div className="sim-day-matchcontent-v98">
                   <div className="sim-day-teamblock-v98 sim-day-teamblock-real-v99">
@@ -286,7 +288,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                       {match.homeLogo ? <img src={match.homeLogo} alt="" /> : <i>⚽</i>}
                       <strong>{match.home}</strong>
                     </div>
-                    <span className="sim-day-kickoff-v116">{copy.today}<b>{match.time || '—'}</b><small>{formatKickoffCountdown(startMs, nowMs, copy)}</small></span>
+                    <span>{copy.today}<b>{match.time || '—'}</b></span>
                     <div className="sim-day-team-v99 away">
                       {match.awayLogo ? <img src={match.awayLogo} alt="" /> : <i>⚽</i>}
                       <strong>{match.away}</strong>
