@@ -83485,3 +83485,10 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 .sim-day-hero-v100{position:relative;overflow:hidden;margin:0 0 16px;border-radius:26px;border:1px solid rgba(52,224,236,.18);background:linear-gradient(180deg,rgba(6,20,35,.96),rgba(4,15,28,.98));box-shadow:0 18px 38px rgba(0,0,0,.16)}
 .sim-day-hero-v100 img{display:block;width:100%;height:auto;aspect-ratio:3/1;object-fit:cover}
 @media(max-width:900px){.sim-day-hero-v100{margin-bottom:14px;border-radius:20px}}
+
+
+/* WERSJA 101 — usuwa duplikat nagłówka i zmniejsza hero */
+.sim-day-page-v101{gap:12px!important}.sim-day-layout-v101{margin-top:2px!important}.sim-day-hero-v101{margin:0 0 10px!important;border-radius:24px!important}.sim-day-hero-v101 img{aspect-ratio:4.4/1!important;max-height:400px!important;object-fit:cover!important;object-position:center center!important}
+.sim-day-hero-overlay-v101{position:absolute!important;inset:0!important;display:flex!important;align-items:flex-start!important;justify-content:space-between!important;padding:18px 18px 0!important;pointer-events:none!important}.sim-day-hero-overlay-v101 .sim-day-refresh-v99,.sim-day-hero-overlay-v101 .sim-day-datebadge-v98,.sim-day-hero-overlay-v101 .sim-day-kicker-v98{pointer-events:auto!important}.sim-day-hero-kicker-v101{background:rgba(4,27,42,.72)!important;border-color:rgba(74,232,242,.22)!important;backdrop-filter:blur(8px)!important}.sim-day-hero-actions-v101{justify-content:flex-end!important;gap:8px!important}
+@media(max-width:1200px){.sim-day-hero-v101 img{aspect-ratio:4/1!important;max-height:360px!important}}
+@media(max-width:900px){.sim-day-hero-v101{border-radius:20px!important;margin-bottom:12px!important}.sim-day-hero-v101 img{aspect-ratio:2.35/1!important;max-height:none!important}.sim-day-hero-overlay-v101{padding:12px 12px 0!important;flex-direction:column!important;gap:8px!important}.sim-day-hero-actions-v101{justify-content:flex-start!important}}
