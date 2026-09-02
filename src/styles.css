@@ -83455,3 +83455,15 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 .simulator-splash-simple-steps-v95{margin-top:8px!important;opacity:.96!important}
 .simulator-splash-simple-steps-v95 span{font-size:10px!important}
 @media(max-width:900px){.simulator-splash-large-v91{padding-bottom:132px!important}.simulator-splash-simple-loader-v95{left:14px!important;right:14px!important;bottom:8px!important}.simulator-splash-simple-head-v95 strong{font-size:14px!important}.simulator-splash-simple-head-v95 b{font-size:20px!important}.simulator-splash-simple-track-v95{height:10px!important}.simulator-splash-simple-steps-v95 span{font-size:9px!important}}
+
+
+/* WERSJA 97 — loader jeszcze śmielej niżej, przy samej dolnej krawędzi intro */
+.simulator-splash-large-v91{padding-bottom:58px!important}
+.simulator-splash-simple-loader-v95{left:5.2%!important;right:5.2%!important;bottom:.15%!important;transform:none!important}
+.simulator-splash-simple-head-v95{margin-bottom:6px!important}
+.simulator-splash-simple-head-v95 strong{font-size:17px!important;line-height:1.1!important}
+.simulator-splash-simple-head-v95 b{font-size:25px!important}
+.simulator-splash-simple-track-v95{height:10px!important}
+.simulator-splash-simple-steps-v95{margin-top:6px!important;gap:6px 12px!important}
+.simulator-splash-simple-steps-v95 span{font-size:9px!important;opacity:.92!important}
+@media(max-width:900px){.simulator-splash-large-v91{padding-bottom:122px!important}.simulator-splash-simple-loader-v95{left:12px!important;right:12px!important;bottom:4px!important}.simulator-splash-simple-head-v95 strong{font-size:13px!important}.simulator-splash-simple-head-v95 b{font-size:19px!important}.simulator-splash-simple-track-v95{height:9px!important}.simulator-splash-simple-steps-v95{gap:5px 8px!important}.simulator-splash-simple-steps-v95 span{font-size:8px!important}}
