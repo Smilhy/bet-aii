@@ -83443,3 +83443,15 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 .simulator-splash-simple-steps-v95 span i{font-style:normal!important;color:#2fe7f0!important;font-size:18px!important;line-height:1!important;opacity:.6!important}
 .simulator-splash-simple-steps-v95 span.active{color:#dffeff!important}.simulator-splash-simple-steps-v95 span.active i{opacity:1!important;text-shadow:0 0 10px rgba(47,231,240,.42)!important}
 @media(max-width:900px){.simulator-splash-large-v91{padding-bottom:154px!important}.simulator-splash-simple-loader-v95{left:16px!important;right:16px!important;bottom:16px!important}.simulator-splash-simple-head-v95 strong{font-size:16px!important}.simulator-splash-simple-head-v95 b{font-size:23px!important}.simulator-splash-simple-track-v95{height:12px!important}.simulator-splash-simple-steps-v95{gap:8px 12px!important;margin-top:10px!important}.simulator-splash-simple-steps-v95 span{font-size:9px!important}}
+
+
+/* WERSJA 96 — loader w intro jeszcze niżej, prawie przy samym dole */
+.simulator-splash-large-v91{padding-bottom:78px!important}
+.simulator-splash-simple-loader-v95{left:5.2%!important;right:5.2%!important;bottom:1.15%!important}
+.simulator-splash-simple-head-v95{margin-bottom:8px!important}
+.simulator-splash-simple-head-v95 strong{font-size:18px!important}
+.simulator-splash-simple-head-v95 b{font-size:26px!important}
+.simulator-splash-simple-track-v95{height:11px!important}
+.simulator-splash-simple-steps-v95{margin-top:8px!important;opacity:.96!important}
+.simulator-splash-simple-steps-v95 span{font-size:10px!important}
+@media(max-width:900px){.simulator-splash-large-v91{padding-bottom:132px!important}.simulator-splash-simple-loader-v95{left:14px!important;right:14px!important;bottom:8px!important}.simulator-splash-simple-head-v95 strong{font-size:14px!important}.simulator-splash-simple-head-v95 b{font-size:20px!important}.simulator-splash-simple-track-v95{height:10px!important}.simulator-splash-simple-steps-v95 span{font-size:9px!important}}
