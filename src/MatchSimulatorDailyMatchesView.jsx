@@ -2,23 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react'
 
 const APP_TIMEZONE = 'Europe/Warsaw'
 
-const TOP_LEAGUE_RULES = [
-  { re: /champions league|liga mistrz[oó]w/i, score: 100 },
-  { re: /europa league|liga europy/i, score: 96 },
-  { re: /conference league|liga konferencji/i, score: 93 },
-  { re: /world cup|mistrzostwa [sś]wiata/i, score: 92 },
-  { re: /premier league/i, score: 90 },
-  { re: /la liga|primera division/i, score: 88 },
-  { re: /serie a/i, score: 87 },
-  { re: /bundesliga/i, score: 86 },
-  { re: /ligue 1/i, score: 84 },
-  { re: /eredivisie/i, score: 80 },
-  { re: /primeira liga/i, score: 79 },
-  { re: /ekstraklasa/i, score: 78 },
-  { re: /coppa italia|copa del rey|fa cup|dfb pokal|coupe de france|puchar/i, score: 77 },
-  { re: /mls/i, score: 70 },
-]
-
 const COPY = {
   pl: {
     title: 'Mecze dnia',
@@ -32,7 +15,7 @@ const COPY = {
     more: 'Więcej',
     refresh: 'Odśwież API',
     loading: 'Pobieram realne mecze dnia z API-Football…',
-    empty: 'API-Football nie zwróciło realnych meczów na dzisiaj.',
+    empty: 'Brak kolejnych nierozpoczętych meczów na dzisiaj.',
     error: 'Nie udało się pobrać realnych meczów.',
     real: 'API-Football LIVE',
     odds: 'Realne kursy',
@@ -50,7 +33,7 @@ const COPY = {
     more: 'More',
     refresh: 'Refresh API',
     loading: 'Loading real fixtures from API-Football…',
-    empty: 'API-Football returned no real fixtures for today.',
+    empty: 'No more upcoming real fixtures today.',
     error: 'Could not load real fixtures.',
     real: 'API-Football LIVE',
     odds: 'Real odds',
@@ -83,10 +66,51 @@ function fixtureKey(row = {}) {
   return String(row.apiFixtureId || row.id || `${row.home}|${row.away}|${row.commence_time}`)
 }
 
-function leaguePriority(row = {}) {
-  const text = `${row.league || ''} ${row.country || ''}`
-  const matched = TOP_LEAGUE_RULES.find(rule => rule.re.test(text))
-  return matched?.score || 25
+function getFixtureStartMs(row = {}) {
+  const directCandidates = [
+    row.commence_time,
+    row.fixture_date,
+    row.start_time,
+    row.start,
+    row.kickoff,
+    row.timestamp ? Number(row.timestamp) * 1000 : null,
+  ]
+  for (const value of directCandidates) {
+    if (!value) continue
+    if (typeof value === 'number' && Number.isFinite(value)) return value
+    const parsed = Date.parse(String(value))
+    if (Number.isFinite(parsed)) return parsed
+  }
+
+  const date = String(row.date || '').trim()
+  const time = String(row.time || '').trim()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{1,2}:\d{2}/.test(time)) {
+    const [year, month, day] = date.split('-').map(Number)
+    const [hour, minute] = time.split(':').map(Number)
+    // Convert a Europe/Warsaw wall-clock kickoff to UTC without relying on browser timezone.
+    const utcGuess = Date.UTC(year, month - 1, day, hour, minute, 0)
+    try {
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: APP_TIMEZONE,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
+      }).formatToParts(new Date(utcGuess))
+      const values = Object.fromEntries(parts.map(part => [part.type, part.value]))
+      const asUtc = Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day), Number(values.hour), Number(values.minute), Number(values.second || 0))
+      const zoneOffsetMs = asUtc - utcGuess
+      return utcGuess - zoneOffsetMs
+    } catch (_) {
+      return utcGuess
+    }
+  }
+  return NaN
+}
+
+function isPreMatchFixture(row = {}, nowMs = Date.now()) {
+  const short = String(row.status_short || row.status || '').toUpperCase()
+  if (['1H', 'HT', '2H', 'ET', 'BT', 'P', 'FT', 'AET', 'PEN', 'CANC', 'PST', 'ABD', 'AWD', 'WO'].includes(short)) return false
+  const startMs = getFixtureStartMs(row)
+  return Number.isFinite(startMs) && startMs > nowMs
 }
 
 function isRealApiFootballFixture(row = {}) {
@@ -126,6 +150,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   const [error, setError] = useState('')
   const [sourceMessage, setSourceMessage] = useState('')
   const [selectedId, setSelectedId] = useState('')
+  const [nowMs, setNowMs] = useState(() => Date.now())
   const todayKey = useMemo(() => getWarsawDateKey(), [])
 
   const loadMatches = async () => {
@@ -148,22 +173,20 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       if (!response.ok || payload.ok === false) throw new Error(payload.message || payload.error || copy.error)
 
       const seen = new Set()
+      const requestNowMs = Date.now()
       const realRows = (Array.isArray(payload.fixtures) ? payload.fixtures : [])
         .filter(isRealApiFootballFixture)
+        .filter(row => isPreMatchFixture(row, requestNowMs))
         .filter(row => {
           const key = fixtureKey(row)
           if (seen.has(key)) return false
           seen.add(key)
           return true
         })
-        .sort((a, b) => {
-          const priorityDiff = leaguePriority(b) - leaguePriority(a)
-          if (priorityDiff) return priorityDiff
-          return Date.parse(a.commence_time || '') - Date.parse(b.commence_time || '')
-        })
+        .sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b))
 
       setMatches(realRows)
-      setSourceMessage(payload.message || `${realRows.length} realnych meczów z API-Football`)
+      setSourceMessage(`${realRows.length} realnych, nierozpoczętych meczów • kolejność wg kickoffu`)
     } catch (err) {
       setMatches([])
       setError(err?.message || copy.error)
@@ -177,13 +200,26 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     loadMatches()
   }, [])
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowMs(Date.now()), 10000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const availableMatches = useMemo(() => matches
+    .filter(match => isPreMatchFixture(match, nowMs))
+    .sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b)), [matches, nowMs])
+
   const filteredMatches = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return matches
-    return matches.filter(match => [match.home, match.away, match.league, match.country].join(' ').toLowerCase().includes(q))
-  }, [query, matches])
+    if (!q) return availableMatches
+    return availableMatches.filter(match => [match.home, match.away, match.league, match.country].join(' ').toLowerCase().includes(q))
+  }, [query, availableMatches])
 
   const handleSelect = (match) => {
+    if (!isPreMatchFixture(match, Date.now())) {
+      setNowMs(Date.now())
+      return
+    }
     setSelectedId(fixtureKey(match))
     onSelectMatch?.(match)
   }
@@ -207,7 +243,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           </div>
           <div className="sim-day-api-state-v99">
             <span className="live">● LIVE API</span>
-            <b>{matches.length}</b>
+            <b>{availableMatches.length}</b>
             <small>{sourceMessage || (loading ? copy.loading : copy.real)}</small>
           </div>
         </aside>
