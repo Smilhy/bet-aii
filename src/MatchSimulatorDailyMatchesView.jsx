@@ -12,6 +12,7 @@ const MATCHES = [
   { id: 'lev-union', league: 'Bundesliga', country: 'Niemcy', sport: 'Piłka nożna', home: 'Bayer Leverkusen', away: 'Union Berlin', time: '14:30', note: 'Dziś' },
 ]
 
+const SPORTS = ['Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'MMA', 'E-sport', 'Siatkówka', 'Boks', 'Piłka ręczna']
 
 const COPY = {
   pl: {
