@@ -5094,12 +5094,30 @@ function LockedSidebarMenuButton({ item, view, setView }) {
   const handleClick = () => {
     if (item.clearTipster) window.dispatchEvent(new CustomEvent('betai:clear-selected-tipster'))
     setView(item.id)
+
+    // WERSJA 89 — po kliknięciu „Symulator AI” zawsze pokaż początek środkowej sekcji.
+    // Użytkownik nie musi ręcznie przewijać strony z dołu menu do góry.
+    if (item.id === 'matchSimulator') {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          try {
+            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
+            if (document.scrollingElement) document.scrollingElement.scrollTop = 0
+            const mainSection = document.querySelector('.app-shell > .main')
+            if (mainSection && typeof mainSection.scrollTo === 'function') mainSection.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+          } catch (_) {
+            window.scrollTo(0, 0)
+          }
+        })
+      })
+    }
   }
 
   return (
     <button className={activeViews.includes(view) ? 'active' : ''} onClick={handleClick}>
       <span className="betai-sidebar-nav-icon" aria-hidden="true"><span>{icon}</span></span>
       <span className="betai-sidebar-nav-label">{translateBetaiTextValue(text, lang)}</span>
+      {item.id === 'matchSimulator' ? <span className="betai-sidebar-new-badge-v90">NEW</span> : null}
     </button>
   )
 }

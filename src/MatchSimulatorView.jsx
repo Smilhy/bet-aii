@@ -707,17 +707,8 @@ export default function MatchSimulatorView({ lang = 'pl' }) {
     : ''
 
   return (
-    <section className="match-sim-page">
-      <header className="match-sim-hero">
-        <div>
-          <span className="sim-kicker">BET+AI MATCH ENGINE • V2</span>
-          <h1>⚽ {isEn ? 'AI Match Simulator' : 'Symulator AI'}</h1>
-          <p>{isEn ? 'A live 2D match animation driven by real form, H2H, prediction data and official lineups.' : 'Żywa animacja meczu 2D napędzana realnymi danymi: forma, H2H, prognoza, statystyki i oficjalne składy.'}</p>
-        </div>
-        <div className="sim-source-badges"><span className="live">● API-Football LIVE</span><span>H2H</span><span>FORMA</span><span>SKŁADY XI</span><span>MECZ 2 MIN</span><span>MONTE CARLO ×6000</span></div>
-      </header>
-
-      <section className="sim-search-panel">
+    <section className="match-sim-page match-sim-page-v88">
+      <section className="sim-search-panel sim-search-panel-v88">
         <form onSubmit={event => { event.preventDefault(); searchMatches() }}>
           <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Np. Udinese Venezia" />
           <button disabled={searchLoading}>{searchLoading ? 'Szukam…' : 'Szukaj meczu'}</button>
