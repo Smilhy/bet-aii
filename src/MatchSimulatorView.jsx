@@ -697,6 +697,12 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
     autoLoaded.current = true
     const initialQuery = selectedMatch ? `${selectedMatch.home} ${selectedMatch.away}` : 'Udinese Venezia'
     setQuery(initialQuery)
+    if (selectedMatch?.apiFixtureId) {
+      setFixtures([selectedMatch])
+      setSelected(selectedMatch)
+      loadMatchData(selectedMatch)
+      return
+    }
     searchMatches(initialQuery)
   }, [selectedMatch])
 
