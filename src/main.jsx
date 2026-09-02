@@ -36,7 +36,7 @@ import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 import './mobile-fix-v1.css'
 import AlgorithmView from './AlgorithmView'
-import MatchSimulatorIntroView from './MatchSimulatorIntroView'
+import MatchSimulatorFlowView from './MatchSimulatorFlowView'
 import achievementFanatykV1772 from './assets/achievements-v1772/fanatyk.svg'
 import achievementWinnerV1772 from './assets/achievements-v1772/prawdziwy-wygrany.svg'
 import achievementFearlessV1772 from './assets/achievements-v1772/nieustraszony.svg'
@@ -39378,7 +39378,7 @@ function App() {
         )}
 
         {view === 'matchSimulator' && (
-          <MatchSimulatorIntroView lang={appLang} />
+          <MatchSimulatorFlowView lang={appLang} />
         )}
 
         {view === 'aiStats' && (

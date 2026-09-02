@@ -1,148 +1,106 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
-const PROGRESS_TICK_MS = 70
-const STEP_BREAKPOINTS = [18, 42, 66, 86, 100]
+const INTRO_DURATION_MS = 5200
+const COMPLETE_HOLD_MS = 420
 
-const STRINGS = {
+const COPY = {
   pl: {
-    kicker: 'BET+AI FOOTBALL MANAGER',
-    titlePrimary: 'Bet+AI',
-    titleSecondary: 'Football Manager',
-    subtitle: 'Symulator AI • ekran startowy. To jest animowane wejście do nowej zakładki, stylowo dopasowane do Twojej strony.',
-    feature1: 'Strategia AI',
-    feature1Sub: 'Adaptacyjne taktyki',
-    feature2: 'Silnik meczu',
-    feature2Sub: 'Symulacje w czasie rzeczywistym',
-    feature3: 'Dane i analizy',
-    feature3Sub: 'Inteligentne decyzje',
-    loadingTitle: 'Ładowanie modułu Symulator AI...',
-    loadingHint: 'Animacja startowa • etap 1',
-    step1: 'Inicjalizacja modeli AI',
-    step2: 'Synchronizacja danych meczu',
-    step3: 'Budowanie taktyki',
-    step4: 'Uruchamianie silnika meczu',
-    step5: 'Prawie gotowe',
-    rightTitle: 'Etap 1',
-    rightBody: 'Po kliknięciu w zakładkę „Symulator AI” użytkownik widzi żywy ekran ładowania z neonowym postępem, pulsującym tłem i statusem uruchamiania modułu.',
-    rightTag1: 'Zakładka gotowa do rozbudowy',
-    rightTag2: 'Kolory 1:1 pod Bet+AI',
-    rightTag3: 'Następny krok: prawdziwe dane meczu',
+    loading: 'Ładowanie Bet+AI Football Manager',
+    ready: 'Silnik gotowy',
+    steps: [
+      'Inicjalizacja modeli AI',
+      'Synchronizacja danych meczu',
+      'Budowanie taktyki',
+      'Ładowanie Match Engine',
+      'Uruchamianie symulatora'
+    ]
   },
   en: {
-    kicker: 'BET+AI FOOTBALL MANAGER',
-    titlePrimary: 'Bet+AI',
-    titleSecondary: 'Football Manager',
-    subtitle: 'AI Simulator • splash screen. This is the animated entry screen for the new tab, styled to match your platform.',
-    feature1: 'AI Strategy',
-    feature1Sub: 'Adaptive tactics',
-    feature2: 'Match Engine',
-    feature2Sub: 'Real-time simulations',
-    feature3: 'Data & analysis',
-    feature3Sub: 'Smarter decisions',
-    loadingTitle: 'Loading AI Simulator module...',
-    loadingHint: 'Start animation • step 1',
-    step1: 'Initializing AI models',
-    step2: 'Syncing match data',
-    step3: 'Building tactics',
-    step4: 'Starting match engine',
-    step5: 'Almost ready',
-    rightTitle: 'Step 1',
-    rightBody: 'When the user clicks the “AI Simulator” tab, they see a live loading screen with neon progress, a pulsing background, and module startup status.',
-    rightTag1: 'Tab ready for expansion',
-    rightTag2: 'Colors matched to Bet+AI',
-    rightTag3: 'Next step: real match data',
+    loading: 'Loading Bet+AI Football Manager',
+    ready: 'Match Engine ready',
+    steps: [
+      'Initializing AI models',
+      'Syncing match data',
+      'Building tactics',
+      'Loading Match Engine',
+      'Starting simulator'
+    ]
   }
 }
 
-function useLoopingProgress() {
+export default function MatchSimulatorIntroView({ lang = 'pl', onComplete }) {
+  const copy = COPY[lang] || COPY.pl
   const [progress, setProgress] = useState(0)
+  const [finishing, setFinishing] = useState(false)
+  const frameRef = useRef(0)
+  const startRef = useRef(0)
+  const completedRef = useRef(false)
+
+  const stepIndex = useMemo(() => {
+    if (progress < 20) return 0
+    if (progress < 42) return 1
+    if (progress < 65) return 2
+    if (progress < 86) return 3
+    return 4
+  }, [progress])
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setProgress(prev => {
-        const next = prev + (prev < 70 ? 2 : prev < 92 ? 1 : 0.5)
-        if (next >= 100) return 0
-        return next
-      })
-    }, PROGRESS_TICK_MS)
+    completedRef.current = false
+    const animate = (now) => {
+      if (!startRef.current) startRef.current = now
+      const elapsed = now - startRef.current
+      const raw = Math.min(1, elapsed / INTRO_DURATION_MS)
+      const eased = 1 - Math.pow(1 - raw, 2.15)
+      const next = Math.min(100, Math.round(eased * 1000) / 10)
+      setProgress(next)
 
-    return () => window.clearInterval(timer)
-  }, [])
+      if (raw < 1) {
+        frameRef.current = window.requestAnimationFrame(animate)
+        return
+      }
 
-  return progress
-}
+      if (!completedRef.current) {
+        completedRef.current = true
+        setProgress(100)
+        setFinishing(true)
+        window.setTimeout(() => onComplete?.(), COMPLETE_HOLD_MS)
+      }
+    }
 
-export default function MatchSimulatorIntroView({ lang = 'pl' }) {
-  const copy = STRINGS[lang] || STRINGS.pl
-  const progress = useLoopingProgress()
-  const steps = useMemo(() => [copy.step1, copy.step2, copy.step3, copy.step4, copy.step5], [copy])
-  const activeStepIndex = useMemo(() => STEP_BREAKPOINTS.findIndex(limit => progress <= limit), [progress])
+    frameRef.current = window.requestAnimationFrame(animate)
+    return () => {
+      if (frameRef.current) window.cancelAnimationFrame(frameRef.current)
+    }
+  }, [onComplete])
 
   return (
-    <section className="simulator-intro-page-v1">
-      <div className="simulator-intro-hero-v1">
-        <div className="simulator-intro-bg-v1" aria-hidden="true" />
-        <div className="simulator-intro-overlay-v1" aria-hidden="true" />
-        <div className="simulator-intro-grid-v1" aria-hidden="true" />
-        <div className="simulator-intro-scan-v1" aria-hidden="true" />
+    <section className={`simulator-splash-v87 ${finishing ? 'is-finishing' : ''}`}>
+      <img className="simulator-splash-image-v87" src="/betai-symulator-loading-v1.png" alt="Bet+AI Football Manager" />
+      <div className="simulator-splash-vignette-v87" aria-hidden="true" />
+      <div className="simulator-splash-light-v87" aria-hidden="true" />
+      <div className="simulator-splash-scan-v87" aria-hidden="true" />
 
-        <div className="simulator-intro-copy-v1">
-          <span className="simulator-intro-kicker-v1">{copy.kicker}</span>
-          <h1>
-            <span>{copy.titlePrimary}</span>
-            <strong>{copy.titleSecondary}</strong>
-          </h1>
-          <p>{copy.subtitle}</p>
-
-          <div className="simulator-intro-features-v1">
-            <article>
-              <i>🧠</i>
-              <strong>{copy.feature1}</strong>
-              <span>{copy.feature1Sub}</span>
-            </article>
-            <article>
-              <i>⚽</i>
-              <strong>{copy.feature2}</strong>
-              <span>{copy.feature2Sub}</span>
-            </article>
-            <article>
-              <i>🛡️</i>
-              <strong>{copy.feature3}</strong>
-              <span>{copy.feature3Sub}</span>
-            </article>
+      <div className="simulator-splash-loader-v87">
+        <div className="simulator-splash-loader-top-v87">
+          <div>
+            <small>BET+AI • MATCH ENGINE</small>
+            <strong>{progress >= 100 ? copy.ready : copy.loading}</strong>
           </div>
-
-          <div className="simulator-intro-loader-v1">
-            <div className="simulator-intro-loader-head-v1">
-              <strong>{copy.loadingTitle}</strong>
-              <span>{Math.round(progress)}%</span>
-            </div>
-            <div className="simulator-intro-loader-bar-v1">
-              <i style={{ width: `${progress}%` }} />
-            </div>
-            <div className="simulator-intro-loader-meta-v1">
-              <small>{copy.loadingHint}</small>
-              <small>{steps[activeStepIndex] || steps[steps.length - 1]}</small>
-            </div>
-            <div className="simulator-intro-steps-v1">
-              {steps.map((step, index) => (
-                <span key={step} className={index <= activeStepIndex ? 'active' : ''}>{step}</span>
-              ))}
-            </div>
-          </div>
+          <b>{Math.round(progress)}%</b>
         </div>
 
-        <aside className="simulator-intro-sidecard-v1">
-          <div className="simulator-intro-chip-v1">AI MATCH ENGINE</div>
-          <h3>{copy.rightTitle}</h3>
-          <p>{copy.rightBody}</p>
-          <div className="simulator-intro-tags-v1">
-            <span>{copy.rightTag1}</span>
-            <span>{copy.rightTag2}</span>
-            <span>{copy.rightTag3}</span>
-          </div>
-        </aside>
+        <div className="simulator-splash-track-v87">
+          <i style={{ width: `${progress}%` }} />
+        </div>
+
+        <div className="simulator-splash-loader-bottom-v87">
+          <span className="simulator-splash-dot-v87" />
+          <strong>{copy.steps[stepIndex]}</strong>
+          <em>{progress >= 100 ? '✓' : '•••'}</em>
+        </div>
       </div>
+
+      <div className="simulator-splash-corner-v87">AI SIMULATOR</div>
     </section>
   )
 }
