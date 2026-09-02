@@ -87,7 +87,6 @@ export default function MatchSimulatorIntroView({ lang = 'pl', onComplete }) {
 
       <div className="simulator-splash-topcopy-v91">
         <small>{copy.kicker}</small>
-        <p>{copy.tagline}</p>
       </div>
 
       <div className="simulator-splash-dock-v92">

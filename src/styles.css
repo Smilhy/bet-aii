@@ -83398,3 +83398,17 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 .simulator-splash-loader-docked-v92 .simulator-splash-track-v87{height:13px!important;margin:12px 0 10px!important}
 .simulator-splash-steps-v92{margin-top:12px!important;gap:8px!important}.simulator-splash-steps-v92 span{font-size:11px!important;padding:8px 10px!important;background:rgba(9,30,44,.88)!important}
 @media(max-width:900px){.simulator-splash-large-v91{padding-bottom:182px!important}.simulator-splash-dock-v92{padding:14px 0 14px!important}.simulator-splash-loader-docked-v92{width:calc(100% - 32px)!important;padding:16px 14px 14px!important}.simulator-splash-loader-docked-v92 .simulator-splash-loader-top-v87 strong{font-size:15px!important}.simulator-splash-loader-docked-v92 .simulator-splash-loader-top-v87 b{font-size:24px!important}.simulator-splash-steps-v92{gap:6px!important}}
+
+
+/* WERSJA 93 — loader niżej, czyściej, bez dodatkowego napisu u góry */
+.simulator-splash-topcopy-v91{max-width:260px!important;gap:0!important}
+.simulator-splash-topcopy-v91 p{display:none!important}
+.simulator-splash-large-v91{padding-bottom:156px!important}
+.simulator-splash-dock-v92{padding:0 0 12px!important;background:linear-gradient(180deg,rgba(1,9,17,0) 0%,rgba(1,9,17,.08) 32%,rgba(1,9,17,.52) 72%,rgba(1,9,17,.86) 100%)!important;backdrop-filter:none!important}
+.simulator-splash-loader-docked-v92{width:min(68%,1120px)!important;padding:16px 18px 14px!important;border-radius:22px!important;box-shadow:0 14px 28px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.03)!important}
+.simulator-splash-loader-docked-v92 .simulator-splash-loader-top-v87 strong{font-size:17px!important}
+.simulator-splash-loader-docked-v92 .simulator-splash-loader-top-v87 b{font-size:28px!important}
+.simulator-splash-loader-docked-v92 .simulator-splash-track-v87{height:12px!important;margin:10px 0 8px!important}
+.simulator-splash-loader-docked-v92 .simulator-splash-loader-bottom-v87 strong{font-size:11px!important}
+@media(max-width:1200px){.simulator-splash-loader-docked-v92{width:min(84%,980px)!important}}
+@media(max-width:900px){.simulator-splash-large-v91{padding-bottom:174px!important}.simulator-splash-topcopy-v91{left:16px!important;top:16px!important;max-width:220px!important}.simulator-splash-dock-v92{padding:0 0 12px!important}.simulator-splash-loader-docked-v92{width:calc(100% - 32px)!important;padding:14px 14px 12px!important}.simulator-splash-loader-docked-v92 .simulator-splash-loader-top-v87 strong{font-size:14px!important}.simulator-splash-loader-docked-v92 .simulator-splash-loader-top-v87 b{font-size:22px!important}}
