@@ -323,6 +323,81 @@ function buildPredictedLineup(history = [], injuries = [], teamId = '') {
   }
 }
 
+function normalizePlayerPool(rows = []) {
+  return (rows || []).map(row => {
+    const stat = Array.isArray(row?.statistics) ? row.statistics[0] || {} : {}
+    const games = stat?.games || {}
+    return {
+      id: clean(row?.player?.id),
+      name: clean(row?.player?.name),
+      number: num(games?.number, 0),
+      pos: clean(games?.position).toUpperCase(),
+      appearances: num(games?.appearences, 0),
+      starts: num(games?.lineups, 0),
+      minutes: num(games?.minutes, 0),
+      rating: num(games?.rating, 0)
+    }
+  }).filter(player => player.id || player.name)
+}
+
+function predictedGridForFormation(players = [], formation = '4-3-3') {
+  const byPos = {
+    G: players.filter(p => p.pos === 'GOALKEEPER' || p.pos === 'G'),
+    D: players.filter(p => p.pos === 'DEFENDER' || p.pos === 'D'),
+    M: players.filter(p => p.pos === 'MIDFIELDER' || p.pos === 'M'),
+    F: players.filter(p => p.pos === 'ATTACKER' || p.pos === 'F')
+  }
+  const score = p => p.starts * 16 + p.appearances * 5 + p.minutes / 90 + p.rating * 1.5
+  Object.values(byPos).forEach(list => list.sort((a,b)=>score(b)-score(a)))
+  const taken = new Set()
+  const pick = (group, count) => {
+    const out=[]
+    for (const p of byPos[group] || []) {
+      const key=clean(p.id)||normalizeNameKey(p.name)
+      if (!key || taken.has(key)) continue
+      taken.add(key); out.push(p)
+      if (out.length>=count) break
+    }
+    return out
+  }
+  const gk=pick('G',1), def=pick('D',4), mid=pick('M',3), fwd=pick('F',3)
+  const all=[...gk,...def,...mid,...fwd]
+  if (all.length < 11) {
+    const leftovers=players.slice().sort((a,b)=>score(b)-score(a)).filter(p=>{
+      const key=clean(p.id)||normalizeNameKey(p.name); return key && !taken.has(key)
+    })
+    while(all.length<11 && leftovers.length){ const p=leftovers.shift(); taken.add(clean(p.id)||normalizeNameKey(p.name)); all.push(p) }
+  }
+  if (all.length < 11) return null
+  const grid=[]
+  const add=(arr,row)=>arr.forEach((p,i)=>grid.push({...p, grid:`${row}:${i+1}`}))
+  add(gk,1); add(def,2); add(mid,3); add(fwd,4)
+  if (grid.length < 11) {
+    const present=new Set(grid.map(p=>clean(p.id)||normalizeNameKey(p.name)))
+    all.filter(p=>!present.has(clean(p.id)||normalizeNameKey(p.name))).forEach((p,i)=>grid.push({...p,grid:`3:${Math.min(5,i+1)}`}))
+  }
+  return grid.slice(0,11).map(p=>({id:p.id,name:p.name,number:p.number,pos:p.pos?.startsWith('GOAL')?'G':p.pos?.startsWith('DEF')?'D':p.pos?.startsWith('MID')?'M':p.pos?.startsWith('ATT')?'F':p.pos,grid:p.grid}))
+}
+
+function buildPredictedLineupFromPlayerStats(rows = [], injuries = [], teamId = '') {
+  const injured = new Set((injuries || []).filter(item => String(item.teamId || '') === String(teamId || '')).map(item => normalizeNameKey(item.player)).filter(Boolean))
+  const pool = normalizePlayerPool(rows).filter(player => !injured.has(normalizeNameKey(player.name)))
+  const startXI = predictedGridForFormation(pool)
+  if (!startXI) return null
+  const starters = new Set(startXI.map(p => clean(p.id)||normalizeNameKey(p.name)))
+  const substitutes = pool.filter(p => !starters.has(clean(p.id)||normalizeNameKey(p.name))).sort((a,b)=>(b.starts*16+b.appearances*5+b.minutes/90)-(a.starts*16+a.appearances*5+a.minutes/90)).slice(0,9).map(p=>({id:p.id,name:p.name,number:p.number,pos:p.pos}))
+  const avgStarts = startXI.reduce((sum,p)=>{
+    const raw=pool.find(x=>(clean(x.id)||normalizeNameKey(x.name))===(clean(p.id)||normalizeNameKey(p.name)))
+    return sum + (raw ? raw.starts : 0)
+  },0)/11
+  const confidence = Math.max(58, Math.min(82, Math.round(58 + Math.min(12, avgStarts*1.7) + Math.min(12, pool.length/2))))
+  return {
+    available:true, official:false, predicted:true, predictionSource:'season-player-stats', predictionConfidence:confidence, sourceMatches:0,
+    teamId:String(teamId||''), team:'', logo:'', colors:{player:{primary:'',number:'',border:''},goalkeeper:{primary:'',number:'',border:''}},
+    formation:'4-3-3', coach:'', startXI, substitutes
+  }
+}
+
 function hasUsableGrid(lineup = {}) {
   return (lineup?.startXI || []).filter(player => /^\d+:\d+$/.test(player.grid || '')).length >= 9
 }
@@ -331,7 +406,8 @@ function lineupIsReliable(lineup = {}) {
   const hasXI = (lineup?.startXI?.length || 0) >= 11 && hasUsableGrid(lineup)
   if (!hasXI) return false
   if (!lineup?.predicted) return true
-  return Number(lineup?.predictionConfidence || 0) >= 65 && Number(lineup?.sourceMatches || 0) >= 2
+  if (lineup?.predictionSource === 'season-player-stats') return Number(lineup?.predictionConfidence || 0) >= 58
+  return Number(lineup?.predictionConfidence || 0) >= 60 && Number(lineup?.sourceMatches || 0) >= 1
 }
 
 function buildSimulationQuality({ prediction, h2h, injuriesFetchOk, lineups, standings, recent, teamStats }) {
@@ -486,6 +562,23 @@ exports.handler = async function(event) {
     if ((lineups.away.startXI.length || 0) < 11) {
       const predictedAway = buildPredictedLineup(awayHistoryR.rows, injuries.items, fixture.away.id)
       if (predictedAway) lineups.away = predictedAway
+    }
+
+    if ((lineups.home.startXI.length || 0) < 11 || (lineups.away.startXI.length || 0) < 11) {
+      const [homePlayersR, awayPlayersR] = await Promise.all([
+        (lineups.home.startXI.length || 0) < 11 && fixture.home.id && fixture.season ? apiGet('/players', { team: fixture.home.id, season: fixture.season, page: 1 }) : Promise.resolve({ ok: false, data: [], error: '' }),
+        (lineups.away.startXI.length || 0) < 11 && fixture.away.id && fixture.season ? apiGet('/players', { team: fixture.away.id, season: fixture.season, page: 1 }) : Promise.resolve({ ok: false, data: [], error: '' })
+      ])
+      if ((lineups.home.startXI.length || 0) < 11 && homePlayersR.ok) {
+        const fallback = buildPredictedLineupFromPlayerStats(homePlayersR.data || [], injuries.items, fixture.home.id)
+        if (fallback) { fallback.team = fixture.home.name; fallback.logo = fixture.home.logo; lineups.home = fallback }
+      }
+      if ((lineups.away.startXI.length || 0) < 11 && awayPlayersR.ok) {
+        const fallback = buildPredictedLineupFromPlayerStats(awayPlayersR.data || [], injuries.items, fixture.away.id)
+        if (fallback) { fallback.team = fixture.away.name; fallback.logo = fixture.away.logo; lineups.away = fallback }
+      }
+      if (!homePlayersR.ok && homePlayersR.error) historicalErrors.push(`Zawodnicy gospodarzy: ${homePlayersR.error}`)
+      if (!awayPlayersR.ok && awayPlayersR.error) historicalErrors.push(`Zawodnicy gości: ${awayPlayersR.error}`)
     }
     lineups.available = lineups.home.startXI.length >= 11 || lineups.away.startXI.length >= 11
   }

@@ -167,6 +167,18 @@ function buildSimulationModel(data = {}) {
   const injuries = data.injuries || {}
   const h2h = data.h2h?.summary || {}
   const apiPercent = normalizeOutcomePercent(prediction.percent)
+  const externalConsensus = data.externalConsensus?.consensus || {}
+  const externalPercent = externalConsensus?.available ? normalizeOutcomePercent(externalConsensus.percent) : null
+  const externalReliability = externalPercent
+    ? clamp((safeNum(externalConsensus.confidence, 50) / 100) * Math.min(1, safeNum(externalConsensus.sourceCount, 0) / 4), 0.12, 1)
+    : 0
+  const signalPercent = apiPercent && externalPercent
+    ? {
+      home: apiPercent.home * (1 - 0.35 * externalReliability) + externalPercent.home * (0.35 * externalReliability),
+      draw: apiPercent.draw * (1 - 0.35 * externalReliability) + externalPercent.draw * (0.35 * externalReliability),
+      away: apiPercent.away * (1 - 0.35 * externalReliability) + externalPercent.away * (0.35 * externalReliability)
+    }
+    : (externalPercent || apiPercent)
 
   const homeForm = safeNum(last.home?.form, recentScore(data.recent?.home))
   const awayForm = safeNum(last.away?.form, recentScore(data.recent?.away))
@@ -180,9 +192,9 @@ function buildSimulationModel(data = {}) {
   const homeGA = safeNum(stats.home?.goalsAgainstAvg, safeNum(last.home?.goalsAgainst, 1.18)) || 1.18
   const awayGA = safeNum(stats.away?.goalsAgainstAvg, safeNum(last.away?.goalsAgainst, 1.35)) || 1.35
 
-  const apiHome = apiPercent?.home ?? 40
-  const apiDraw = apiPercent?.draw ?? 29
-  const apiAway = apiPercent?.away ?? 31
+  const apiHome = signalPercent?.home ?? 40
+  const apiDraw = signalPercent?.draw ?? 29
+  const apiAway = signalPercent?.away ?? 31
   const homeInjuryPenalty = clamp(safeNum(injuries.homeCount) * 0.045, 0, 0.28)
   const awayInjuryPenalty = clamp(safeNum(injuries.awayCount) * 0.045, 0, 0.28)
 
@@ -205,7 +217,7 @@ function buildSimulationModel(data = {}) {
 
   const seed = hashString(`${fixture.id}|${fixture.home?.name}|${fixture.away?.name}`)
   const random = mulberry32(seed)
-  const samples = 6000
+  const samples = 10000
   let homeWins = 0
   let draws = 0
   let awayWins = 0
@@ -222,7 +234,7 @@ function buildSimulationModel(data = {}) {
   }
 
   const mc = { home: homeWins * 100 / samples, draw: draws * 100 / samples, away: awayWins * 100 / samples }
-  const blended = apiPercent
+  const blended = signalPercent
     ? {
       home: apiHome * 0.62 + mc.home * 0.38,
       draw: apiDraw * 0.62 + mc.draw * 0.38,
@@ -247,6 +259,8 @@ function buildSimulationModel(data = {}) {
     samples,
     probabilities,
     apiPercent,
+    externalPercent,
+    signalPercent,
     xg: { home: Math.round(homeXg * 100) / 100, away: Math.round(awayXg * 100) / 100 },
     topScore: { home: homeGoals, away: awayGoals, text: topScoreText },
     confidence,
@@ -970,12 +984,12 @@ function MomentumChart({ timeline = [], clockSec = 0 }) {
   )
 }
 
-export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }) {
+export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, preparedData = null }) {
   const isEn = lang === 'en'
   const [query, setQuery] = useState(selectedMatch ? `${selectedMatch.home} ${selectedMatch.away}` : 'Udinese Venezia')
   const [fixtures, setFixtures] = useState([])
   const [selected, setSelected] = useState(null)
-  const [data, setData] = useState(null)
+  const [data, setData] = useState(preparedData || null)
   const [searchLoading, setSearchLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(false)
   const [error, setError] = useState('')
@@ -1094,6 +1108,12 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
   useEffect(() => {
     if (autoLoaded.current) return
     autoLoaded.current = true
+    if (preparedData?.fixture) {
+      setSelected(selectedMatch || null)
+      setData(preparedData)
+      setDataLoading(false)
+      return
+    }
     const initialQuery = selectedMatch ? `${selectedMatch.home} ${selectedMatch.away}` : 'Udinese Venezia'
     setQuery(initialQuery)
     if (selectedMatch?.apiFixtureId) {
@@ -1103,7 +1123,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
       return
     }
     searchMatches(initialQuery)
-  }, [selectedMatch])
+  }, [selectedMatch, preparedData])
 
   const liveCards = useMemo(() => ({
     home: timeline.filter(event => event.type === 'card' && event.team === 'home' && event.second <= clockSec).length,
@@ -1132,7 +1152,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
       {data && model ? <>
         <header className="fm119-scorebar">
           <div className="fm119-score-meta">
-            <div><span>BET+AI SIMULATOR</span><em className={running ? 'live' : ''}>{running ? 'LIVE' : clockSec >= MATCH_TOTAL_SECONDS ? 'FT' : 'PAUZA'}</em></div>
+            <div><span>BET+AI SIMULATOR</span><em className={running ? 'live' : ''}>{running ? 'LIVE' : clockSec >= MATCH_TOTAL_SECONDS ? 'FT' : 'PAUZA'}</em>{data?.externalConsensus?.consensus?.available ? <em className="multi-source-v128">MULTI-SOURCE {data.externalConsensus.consensus.sourceCount}</em> : null}</div>
             <small>{data.fixture.league} • {data.fixture.round || 'Mecz'}</small>
           </div>
           <div className="fm119-score-team home">

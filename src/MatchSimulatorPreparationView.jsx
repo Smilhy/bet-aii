@@ -7,7 +7,7 @@ const COPY = {
     subtitle: 'Pobieramy prawdziwe dane przed uruchomieniem silnika meczu.',
     loading: 'Analizuję dane meczu…',
     ready: 'Dane gotowe',
-    source: 'Źródło: API-Football / API-Sports',
+    source: 'Baza: API-Football / API-Sports • Multi-Source Web Intelligence',
     start: 'Uruchom symulację',
     back: '← Wróć do meczów',
     retry: 'Spróbuj ponownie',
@@ -36,6 +36,11 @@ const COPY = {
     noH2H: 'Brak historii H2H',
     noInjuries: 'Brak zgłoszonych absencji',
     partial: 'Część źródeł chwilowo nie odpowiedziała. Model użyje wyłącznie dostępnych danych.',
+    webIntel: 'Bet+AI Web Intelligence',
+    webIntelLoading: 'Przeszukuję źródła i prognozy ekspertów…',
+    webIntelOff: 'Web Intelligence wyłączone — dodaj OPENAI_API_KEY w Netlify.',
+    consensus: 'Konsensus zewnętrzny',
+    sourcesFound: 'źródeł znalezionych',
   },
   en: {
     eyebrow: 'BET+AI • SIMULATION PREPARATION',
@@ -43,14 +48,14 @@ const COPY = {
     subtitle: 'Fetching real match data before starting the match engine.',
     loading: 'Analysing match data…',
     ready: 'Data ready',
-    source: 'Source: API-Football / API-Sports',
+    source: 'Base: API-Football / API-Sports • Multi-Source Web Intelligence',
     start: 'Start simulation',
     back: '← Back to matches',
     retry: 'Try again',
     completeness: 'Data completeness',
     predictive: 'Predictive simulation — this is not the actual future match result.',
     odds: '1X2 odds', form: 'Team form', h2h: 'H2H', injuries: 'Injuries', lineups: 'Starting XI', standings: 'Standings', teamStats: 'Team statistics', prediction: 'API prediction/model',
-    checked: 'Checked', unavailable: 'Unavailable', official: 'Official XI', lineupsPending: 'Could not build XI', predicted: 'Predicted XI', qualified: 'MATCH QUALIFIED', qualifiedDesc: 'The match meets Bet+AI strict data requirements.', rejected: 'MATCH REJECTED — INSUFFICIENT DATA', rejectedDesc: 'Simulation is blocked because key data is missing:', rejectedButton: 'Simulation blocked', noOdds: 'No real odds', liveOdds: 'Real odds available', noH2H: 'No H2H history', noInjuries: 'No reported absences', partial: 'Some sources did not answer. The model will only use available data.'
+    checked: 'Checked', unavailable: 'Unavailable', official: 'Official XI', lineupsPending: 'Could not build XI', predicted: 'Predicted XI', qualified: 'MATCH QUALIFIED', qualifiedDesc: 'The match meets Bet+AI strict data requirements.', rejected: 'MATCH REJECTED — INSUFFICIENT DATA', rejectedDesc: 'Simulation is blocked because key data is missing:', rejectedButton: 'Simulation blocked', noOdds: 'No real odds', liveOdds: 'Real odds available', noH2H: 'No H2H history', noInjuries: 'No reported absences', partial: 'Some sources did not answer. The model will only use available data.', webIntel: 'Bet+AI Web Intelligence', webIntelLoading: 'Searching public sources and expert predictions…', webIntelOff: 'Web Intelligence disabled — add OPENAI_API_KEY in Netlify.', consensus: 'External consensus', sourcesFound: 'sources found'
   }
 }
 
@@ -77,7 +82,8 @@ function buildChecks(match, data, copy) {
     const ready = (lineup?.startXI?.length || 0) >= 11 && lineupHasGrid(lineup)
     if (!ready) return false
     if (!lineup?.predicted) return true
-    return Number(lineup?.predictionConfidence || 0) >= 65 && Number(lineup?.sourceMatches || 0) >= 2
+    if (lineup?.predictionSource === 'season-player-stats') return Number(lineup?.predictionConfidence || 0) >= 58
+    return Number(lineup?.predictionConfidence || 0) >= 60 && Number(lineup?.sourceMatches || 0) >= 1
   }
   const lineupsReady = lineupReliable(homeXI) && lineupReliable(awayXI)
   const bothOfficial = lineupsReady && homeXI.official !== false && awayXI.official !== false && !homeXI.predicted && !awayXI.predicted
@@ -125,9 +131,39 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   const phases = lang === 'en' ? LOAD_PHASES_EN : LOAD_PHASES_PL
   const [progress, setProgress] = useState(4)
   const [data, setData] = useState(null)
+  const [consensus, setConsensus] = useState(null)
+  const [consensusLoading, setConsensusLoading] = useState(false)
+  const [consensusError, setConsensusError] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const mountedRef = useRef(true)
+
+  const loadConsensus = async (payload) => {
+    const fixture = payload?.fixture || {}
+    const params = new URLSearchParams({
+      home: fixture?.home?.name || match?.home || '',
+      away: fixture?.away?.name || match?.away || '',
+      league: fixture?.league || match?.league || '',
+      country: fixture?.country || match?.country || '',
+      date: fixture?.date || match?.rawDate || match?.date || ''
+    })
+    setConsensusLoading(true)
+    setConsensusError('')
+    try {
+      const response = await fetch(`/.netlify/functions/get-match-consensus?${params.toString()}`, { cache: 'no-store' })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok || !result?.ok) throw new Error(result?.error || 'Błąd Web Intelligence')
+      if (!mountedRef.current) return
+      setConsensus(result)
+      if (result?.error) setConsensusError(result.error)
+    } catch (err) {
+      if (!mountedRef.current) return
+      setConsensus(null)
+      setConsensusError(err?.message || 'Błąd Web Intelligence')
+    } finally {
+      if (mountedRef.current) setConsensusLoading(false)
+    }
+  }
 
   const load = async () => {
     const id = match?.apiFixtureId || match?.id
@@ -139,6 +175,8 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
     setLoading(true)
     setError('')
     setData(null)
+    setConsensus(null)
+    setConsensusError('')
     setProgress(4)
     try {
       const response = await fetch(`/.netlify/functions/get-match-simulator-data?fixture=${encodeURIComponent(id)}`, { cache: 'no-store' })
@@ -147,6 +185,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
       if (!mountedRef.current) return
       setData(payload)
       setProgress(100)
+      loadConsensus(payload)
     } catch (err) {
       if (!mountedRef.current) return
       setError(err?.message || 'Błąd danych symulacji')
@@ -177,6 +216,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
     return Math.round(required.filter(item => item.ready).length * 100 / Math.max(1, required.length))
   }, [checks, data])
   const eligibility = useMemo(() => data ? buildEligibility(match, data, checks) : { eligible: false, reasons: [] }, [match, data, checks])
+  const preparedData = useMemo(() => data ? { ...data, externalConsensus: consensus || null } : null, [data, consensus])
   const phaseIndex = Math.min(phases.length - 1, Math.floor(progress / (100 / phases.length)))
 
   return (
@@ -230,6 +270,31 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
           </article>)}
         </div>
 
+        <div className="sim-prep-webintel-v128">
+          <div className="sim-prep-webintel-head-v128">
+            <div><small>BET+AI MULTI-SOURCE</small><strong>{copy.webIntel}</strong></div>
+            {consensusLoading ? <span className="loading">● LIVE RESEARCH</span> : consensus?.enabled ? <span>✓ WEB SEARCH</span> : <span className="off">API OFF</span>}
+          </div>
+          {consensusLoading ? <p>{copy.webIntelLoading}</p> : consensus?.enabled ? <>
+            {consensus?.consensus?.available ? <div className="sim-prep-consensus-v128">
+              <div><small>{copy.consensus}</small><b>1&nbsp; {consensus.consensus.percent.home}%</b></div>
+              <div><small>REMIS</small><b>X&nbsp; {consensus.consensus.percent.draw}%</b></div>
+              <div><small>GOŚCIE</small><b>2&nbsp; {consensus.consensus.percent.away}%</b></div>
+              <em>{consensus.consensus.sourceCount} {copy.sourcesFound} • zgodność {consensus.consensus.agreement || 0}%</em>
+            </div> : <p>{consensusError || consensus?.consensus?.summary || 'Nie znaleziono wystarczającej liczby niezależnych prognoz dla tego meczu.'}</p>}
+            <div className="sim-prep-source-grid-v128">
+              {(consensus?.sourceRegistry || []).map(source => {
+                const found = (consensus?.sources || []).find(item => String(item.name || '').toLowerCase().includes(String(source.name || '').toLowerCase()) || String(item.url || '').includes(new URL(source.url).hostname))
+                return <a key={source.key} href={source.url} target="_blank" rel="noreferrer" className={found?.status === 'found' ? 'found' : found?.status === 'blocked' ? 'blocked' : ''} title={found?.note || source.role}><i>{found?.status === 'found' ? '✓' : found?.status === 'blocked' ? '!' : '○'}</i><span>{source.name}</span></a>
+              })}
+            </div>
+            {consensus?.consensus?.summary ? <p className="summary">{consensus.consensus.summary}</p> : null}
+          </> : <>
+            <p>{consensusError || copy.webIntelOff}</p>
+            <div className="sim-prep-source-grid-v128">{(consensus?.sourceRegistry || []).map(source => <a key={source.key} href={source.url} target="_blank" rel="noreferrer"><i>○</i><span>{source.name}</span></a>)}</div>
+          </>}
+        </div>
+
         <div className={`sim-prep-quality-gate-v126 ${eligibility.eligible ? 'accepted' : 'rejected'}`}>
           <div>
             <strong>{eligibility.eligible ? `✓ ${copy.qualified}` : `✕ ${copy.rejected}`}</strong>
@@ -240,7 +305,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
         {data.partial && eligibility.eligible ? <div className="sim-prep-partial-v116">ℹ Część danych dodatkowych jest niedostępna, ale wymagane statystyki sportowe spełniają próg jakości.</div> : null}
         <div className="sim-prep-footer-v116">
           <p>{copy.predictive}</p>
-          <button type="button" disabled={!eligibility.eligible} className={!eligibility.eligible ? 'blocked-v126' : ''} onClick={() => eligibility.eligible && onStart?.(match, data)}>{eligibility.eligible ? `▶ ${copy.start}` : `✕ ${copy.rejectedButton}`}</button>
+          <button type="button" disabled={!eligibility.eligible} className={!eligibility.eligible ? 'blocked-v126' : ''} onClick={() => eligibility.eligible && onStart?.(match, preparedData)}>{eligibility.eligible ? `▶ ${copy.start}` : `✕ ${copy.rejectedButton}`}</button>
         </div>
       </> : null}
     </section>
