@@ -507,6 +507,11 @@ function MatchPitch({ data, model, clockSec, timeline }) {
   }
 
   const hasOfficialPlayers = homeBase.length >= 11 && awayBase.length >= 11
+  const trajectoryTargetX = clamp(live.ball.x + (live.possessionTeam === 'home' ? 18 : -18), 5, 95)
+  const trajectoryTargetY = clamp(live.laneY + Math.sin(clockSec * 0.05) * 8, 8, 92)
+  const trajectoryControlX = (live.ball.x + trajectoryTargetX) / 2
+  const trajectoryControlY = clamp(Math.min(live.ball.y, trajectoryTargetY) - 9, 5, 95)
+  const trajectoryPath = `M ${live.ball.x} ${live.ball.y} Q ${trajectoryControlX} ${trajectoryControlY} ${trajectoryTargetX} ${trajectoryTargetY}`
 
   return (
     <div className="sim-pitch-wrap">
@@ -527,6 +532,9 @@ function MatchPitch({ data, model, clockSec, timeline }) {
         <div className="sim-box right" />
         <div className="sim-goal left" />
         <div className="sim-goal right" />
+        <svg className={`fm121-action-path ${live.possessionTeam}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path d={trajectoryPath} />
+        </svg>
         <div className="sim-action-banner">{live.commentary}</div>
         {!hasOfficialPlayers ? <div className="fm119-pitch-data-warning"><strong>Brak pełnych oficjalnych XI z pozycjami</strong><span>Boisko nie pokazuje fikcyjnych zawodników.</span></div> : null}
         {live.flashMode === 'shot' ? <div className="sim-shot-flash" /> : null}
@@ -627,13 +635,18 @@ function FormationBoard({ teamName, lineup, tone = 'home' }) {
           ))}
         </div>
       ) : (
-        <div className="fm119-no-lineup">
-          <strong>{official ? 'Brak pozycji boiskowych w API' : 'Oczekiwanie na oficjalny skład'}</strong>
-          <span>Bet+AI nie generuje fikcyjnych nazwisk ani ustawienia.</span>
-          {official ? <div className="fm119-real-xi-list">{lineup.startXI.map((player, index) => <em key={player.id || index}>{player.number || '•'} {player.name}</em>)}</div> : null}
+        <div className="fm119-mini-pitch fm121-empty-pitch">
+          <div className="fm119-mini-half" />
+          <div className="fm119-mini-box top" />
+          <div className="fm119-mini-box bottom" />
+          <div className="fm119-no-lineup">
+            <strong>{official ? 'Brak pozycji boiskowych w API' : 'Oczekiwanie na oficjalny skład'}</strong>
+            <span>Bet+AI nie generuje fikcyjnych nazwisk ani ustawienia.</span>
+            {official ? <div className="fm119-real-xi-list">{lineup.startXI.map((player, index) => <em key={player.id || index}>{player.number || '•'} {player.name}</em>)}</div> : null}
+          </div>
         </div>
       )}
-      <div className="fm119-formation-footer"><span>Trener</span><b>{lineup?.coach || '—'}</b></div>
+      <div className="fm119-formation-footer"><span>{official ? `${lineup.startXI.length} zawodników • Trener` : 'Dane API • Trener'}</span><b>{lineup?.coach || '—'}</b></div>
     </aside>
   )
 }
@@ -672,7 +685,14 @@ function MomentumChart({ timeline = [], clockSec = 0 }) {
   return (
     <div className="fm119-momentum-chart">
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Momentum symulacji">
+        <defs>
+          <linearGradient id="fm121MomentumFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#4b83ff" stopOpacity="0.42" />
+            <stop offset="100%" stopColor="#35e1ea" stopOpacity="0.03" />
+          </linearGradient>
+        </defs>
         <line x1="0" y1="50" x2="100" y2="50" className="baseline" />
+        <polygon points={`0,50 ${points} 100,50`} className="momentum-area" />
         <polyline points={points} fill="none" className="momentum-line" />
       </svg>
       <div className="fm119-momentum-legend"><span>● {timeline[0]?.team === 'away' ? 'Goście' : 'Gospodarze'}</span><em>momentum symulacji</em></div>
@@ -862,6 +882,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
             <StatCompare label="Posiadanie piłki" home={model.possession.home} away={model.possession.away} suffix="%" max={100} />
             <StatCompare label="Rzuty rożne" home={liveCounters.homeCorners} away={liveCounters.awayCorners} />
             <StatCompare label="Kartki" home={liveCards.home} away={liveCards.away} />
+            <div className="fm121-card-footer">Pełne statystyki</div>
           </article>
 
           <article className="fm119-stat-card fm119-xg-card">
@@ -869,11 +890,13 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
             <div className="fm119-xg-main"><b>{xgLive.home.toFixed(2)}</b><span>bieżące xG</span><b>{xgLive.away.toFixed(2)}</b></div>
             <div className="fm119-xg-track"><i style={{ width: `${clamp(model.xg.home / Math.max(model.xg.home + model.xg.away, .1) * 100, 0, 100)}%` }} /><em /></div>
             <div className="fm119-xg-foot"><span>Model przedmeczowy</span><b>{model.xg.home.toFixed(2)} – {model.xg.away.toFixed(2)}</b></div>
+            <div className="fm121-card-footer">Szczegóły xG</div>
           </article>
 
           <article className="fm119-stat-card fm119-momentum-card">
             <h3>MOMENTUM</h3>
             <MomentumChart timeline={timeline} clockSec={clockSec} />
+            <div className="fm121-card-footer">Zobacz analizę</div>
           </article>
 
           <article className="fm119-stat-card">
@@ -883,6 +906,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
             <StatCompare label="Obrona modelu" home={model.strength.home.defence} away={model.strength.away.defence} max={100} />
             <StatCompare label="Tabela" home={data.standings.home?.rank || 0} away={data.standings.away?.rank || 0} />
             <StatCompare label="Absencje" home={data.injuries.homeCount || 0} away={data.injuries.awayCount || 0} />
+            <div className="fm121-card-footer">Więcej statystyk</div>
           </article>
 
           <article className="fm119-stat-card fm119-events-top">
@@ -890,6 +914,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
             <div className="fm119-event-mini-list">
               {visibleEvents.length ? visibleEvents.slice(0, 5).map((event, index) => <div key={`${event.second}-${event.type}-${index}`} className={event.type}><b>{formatEventTime(event)}</b><span>{event.label}</span></div>) : <p>Symulacja rozpoczyna się od 00:00.</p>}
             </div>
+            <div className="fm121-card-footer">Pełny przebieg</div>
           </article>
         </section>
 
