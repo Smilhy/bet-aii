@@ -125,6 +125,144 @@ function lambdaFromOver25Probability(percent) {
   return (low + high) / 2
 }
 
+const REAL_MATCH_AUDIO = {
+  // Real football supporters at The New Den — public domain, Wikimedia Commons.
+  crowd: 'https://upload.wikimedia.org/wikipedia/commons/0/07/Noonelikesus.ogg',
+  // Real human crowd reaction — public domain, Wikimedia Commons / PDSounds.
+  attack: 'https://upload.wikimedia.org/wikipedia/commons/0/0f/Ohhh_ahhh.ogg',
+  // Real applause / cheering crowd — public domain, Wikimedia Commons / PDSounds.
+  goal: 'https://upload.wikimedia.org/wikipedia/commons/a/a3/Slow_starting_applause.ogg',
+  // Real sharp whistle recording — CC BY 4.0, Work With Sounds / Wikimedia Commons.
+  whistle: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/WWS_Policewhistle.ogg'
+}
+
+function createMatchAudio(src, { loop = false } = {}) {
+  if (typeof Audio === 'undefined') return null
+  const audio = new Audio(src)
+  audio.preload = 'auto'
+  audio.loop = loop
+  audio.playsInline = true
+  return audio
+}
+
+function ensureRealAudioBank(ref) {
+  if (typeof window === 'undefined') return null
+  if (!ref.current) {
+    ref.current = {
+      crowd: createMatchAudio(REAL_MATCH_AUDIO.crowd, { loop: true }),
+      attack: createMatchAudio(REAL_MATCH_AUDIO.attack),
+      goal: createMatchAudio(REAL_MATCH_AUDIO.goal),
+      whistle: createMatchAudio(REAL_MATCH_AUDIO.whistle),
+      timers: new Set()
+    }
+  }
+  return ref.current
+}
+
+function safeMediaPlay(audio, volume = .4, { restart = true, playbackRate = 1 } = {}) {
+  if (!audio) return false
+  try {
+    audio.volume = clamp(volume, 0, 1)
+    audio.playbackRate = playbackRate
+    if (restart) audio.currentTime = 0
+    const promise = audio.play()
+    if (promise?.catch) promise.catch(() => {})
+    return true
+  } catch {
+    return false
+  }
+}
+
+function playAudioSlice(bank, key, volume, { duration = null, delay = 0, playbackRate = 1 } = {}) {
+  if (!bank?.[key]) return
+  const run = () => {
+    try {
+      const clip = bank[key].cloneNode(true)
+      clip.volume = clamp(volume, 0, 1)
+      clip.playbackRate = playbackRate
+      clip.currentTime = 0
+      const promise = clip.play()
+      if (promise?.catch) promise.catch(() => {})
+      if (duration) {
+        const stopTimer = window.setTimeout(() => {
+          try { clip.pause(); clip.currentTime = 0 } catch {}
+          bank.timers?.delete(stopTimer)
+        }, duration * 1000)
+        bank.timers?.add(stopTimer)
+      }
+    } catch {}
+  }
+  if (delay > 0) {
+    const timer = window.setTimeout(() => {
+      bank.timers?.delete(timer)
+      run()
+    }, delay * 1000)
+    bank.timers?.add(timer)
+  } else run()
+}
+
+function setRealCrowd(bank, { enabled, running, volume, danger = 0 } = {}) {
+  const crowd = bank?.crowd
+  if (!crowd) return
+  if (!enabled) {
+    try { crowd.pause() } catch {}
+    return
+  }
+  const base = running ? .115 : .055
+  const target = clamp(volume * (base + clamp(danger, 0, 1) * .18), 0, .36)
+  crowd.volume = target
+  crowd.playbackRate = .98
+  if (crowd.paused) safeMediaPlay(crowd, target, { restart: false, playbackRate: .98 })
+}
+
+function stopRealAudioBank(bank) {
+  if (!bank) return
+  for (const key of ['crowd','attack','goal','whistle']) {
+    try { bank[key]?.pause?.(); if (bank[key]) bank[key].currentTime = 0 } catch {}
+  }
+  for (const timer of bank.timers || []) window.clearTimeout(timer)
+  bank.timers?.clear?.()
+}
+
+function playRealMatchCue(ref, type, volume = .42) {
+  const bank = ensureRealAudioBank(ref)
+  if (!bank) return
+  const v = clamp(volume, 0, 1)
+  if (type === 'start') {
+    playAudioSlice(bank, 'whistle', .64 * v, { duration: .72, playbackRate: 1.04 })
+    return
+  }
+  if (type === 'halftime') {
+    playAudioSlice(bank, 'whistle', .62 * v, { duration: .62 })
+    playAudioSlice(bank, 'whistle', .58 * v, { duration: .62, delay: .72 })
+    return
+  }
+  if (type === 'fulltime') {
+    playAudioSlice(bank, 'whistle', .65 * v, { duration: .62 })
+    playAudioSlice(bank, 'whistle', .61 * v, { duration: .62, delay: .72 })
+    playAudioSlice(bank, 'whistle', .67 * v, { duration: .86, delay: 1.44 })
+    playAudioSlice(bank, 'goal', .42 * v, { duration: 4.8, delay: .25 })
+    return
+  }
+  if (type === 'foul') {
+    playAudioSlice(bank, 'whistle', .56 * v, { duration: .52, playbackRate: 1.03 })
+    return
+  }
+  if (type === 'goal') {
+    playAudioSlice(bank, 'attack', .70 * v, { duration: 3.2 })
+    playAudioSlice(bank, 'goal', .92 * v, { duration: 7.5, delay: .18 })
+    playAudioSlice(bank, 'whistle', .34 * v, { duration: .42, delay: .72 })
+    return
+  }
+  if (type === 'attack') {
+    playAudioSlice(bank, 'attack', .48 * v, { duration: 2.8 })
+    return
+  }
+  if (type === 'corner') {
+    playAudioSlice(bank, 'attack', .38 * v, { duration: 2.25 })
+  }
+}
+
 function ensureAudioEngine(ref) {
   if (typeof window === 'undefined') return null
   const Ctx = window.AudioContext || window.webkitAudioContext
@@ -1215,11 +1353,13 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
   const [running, setRunning] = useState(false)
   const [speed, setSpeed] = useState(1)
   const [soundEnabled, setSoundEnabled] = useState(true)
-  const [soundVolume, setSoundVolume] = useState(.42)
+  const [soundVolume, setSoundVolume] = useState(.52)
+  const [audioUnlocked, setAudioUnlocked] = useState(false)
   const autoLoaded = useRef(false)
   const autoStarted = useRef(false)
   const tickRef = useRef(null)
   const audioEngineRef = useRef(null)
+  const realAudioBankRef = useRef(null)
   const soundClockRef = useRef(0)
   const startCuePlayedRef = useRef(false)
   const halftimeCuePlayedRef = useRef(false)
@@ -1357,38 +1497,47 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
       fulltimeCuePlayedRef.current = false
       if (!running) startCuePlayedRef.current = false
     }
-    if (!soundEnabled) {
+    if (!soundEnabled || !audioUnlocked) {
       soundClockRef.current = clockSec
       return
     }
     if (running && !startCuePlayedRef.current && clockSec < 8) {
       startCuePlayedRef.current = true
-      playMatchCue(audioEngineRef, 'start', soundVolume)
+      playRealMatchCue(realAudioBankRef, 'start', soundVolume)
     }
     const previous = soundClockRef.current
     if (!halftimeCuePlayedRef.current && previous < HALF_SECONDS && clockSec >= HALF_SECONDS) {
       halftimeCuePlayedRef.current = true
-      playMatchCue(audioEngineRef, 'halftime', soundVolume)
+      playRealMatchCue(realAudioBankRef, 'halftime', soundVolume)
     }
     if (!fulltimeCuePlayedRef.current && previous < MATCH_TOTAL_SECONDS && clockSec >= MATCH_TOTAL_SECONDS) {
       fulltimeCuePlayedRef.current = true
-      playMatchCue(audioEngineRef, 'fulltime', soundVolume)
+      playRealMatchCue(realAudioBankRef, 'fulltime', soundVolume)
     }
     const approaching = timeline.filter(event => ['goal', 'shot', 'corner'].includes(event.type) && event.second - 65 > previous && event.second - 65 <= clockSec)
-    approaching.forEach(() => playMatchCue(audioEngineRef, 'attack', soundVolume * .78))
+    approaching.forEach(() => playRealMatchCue(realAudioBankRef, 'attack', soundVolume * .78))
     const crossed = timeline.filter(event => event.second > previous && event.second <= clockSec)
     crossed.forEach(event => {
-      if (event.type === 'goal') playMatchCue(audioEngineRef, 'goal', soundVolume)
-      else if (event.type === 'card') playMatchCue(audioEngineRef, 'foul', soundVolume)
-      else if (event.type === 'corner') playMatchCue(audioEngineRef, 'corner', soundVolume)
-      else if (event.type === 'shot') playMatchCue(audioEngineRef, 'attack', soundVolume * .9)
+      if (event.type === 'goal') playRealMatchCue(realAudioBankRef, 'goal', soundVolume)
+      else if (event.type === 'card') playRealMatchCue(realAudioBankRef, 'foul', soundVolume)
+      else if (event.type === 'corner') playRealMatchCue(realAudioBankRef, 'corner', soundVolume)
+      else if (event.type === 'shot') playRealMatchCue(realAudioBankRef, 'attack', soundVolume * .9)
     })
     soundClockRef.current = clockSec
-  }, [Math.floor(clockSec), running, soundEnabled, soundVolume, timeline])
+  }, [Math.floor(clockSec), running, soundEnabled, soundVolume, timeline, audioUnlocked])
+
+  useEffect(() => {
+    const bank = ensureRealAudioBank(realAudioBankRef)
+    if (!bank) return
+    const imminent = timeline.some(event => ['goal','shot','corner'].includes(event.type) && event.second > clockSec && event.second <= clockSec + 95)
+    setRealCrowd(bank, { enabled: soundEnabled && audioUnlocked && clockSec < MATCH_TOTAL_SECONDS, running, volume: soundVolume, danger: imminent ? 1 : 0 })
+  }, [soundEnabled, audioUnlocked, soundVolume, running, Math.floor(clockSec / 5), timeline])
 
   useEffect(() => () => {
     try { audioEngineRef.current?.close?.() } catch {}
     audioEngineRef.current = null
+    stopRealAudioBank(realAudioBankRef.current)
+    realAudioBankRef.current = null
   }, [])
 
   const liveCards = useMemo(() => ({
@@ -1510,21 +1659,28 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
             <span>{data.prediction.advice || `Model xG: ${model.xg.home} – ${model.xg.away} • H2H: ${data.h2h.summary?.homeWins || 0}-${data.h2h.summary?.draws || 0}-${data.h2h.summary?.awayWins || 0}`}</span>
           </div>
           <div className="fm129-sound-control">
-            <button type="button" className={soundEnabled ? 'on' : 'off'} onClick={() => {
+            <button type="button" className={`${soundEnabled ? 'on' : 'off'} ${!audioUnlocked ? 'needs-unlock' : ''}`} onClick={() => {
+              if (!audioUnlocked) {
+                const bank = ensureRealAudioBank(realAudioBankRef)
+                setAudioUnlocked(true)
+                setSoundEnabled(true)
+                setRealCrowd(bank, { enabled: true, running, volume: soundVolume, danger: 0 })
+                playRealMatchCue(realAudioBankRef, 'start', soundVolume * .72)
+                return
+              }
               const next = !soundEnabled
               setSoundEnabled(next)
-              if (next) {
-                ensureAudioEngine(audioEngineRef)
-                playMatchCue(audioEngineRef, 'attack', soundVolume * .45)
-              }
-            }} title={soundEnabled ? 'Wycisz dźwięki meczu' : 'Włącz dźwięki meczu'} aria-label={soundEnabled ? 'Wycisz dźwięki meczu' : 'Włącz dźwięki meczu'}>
-              <SpeakerIcon muted={!soundEnabled} />
+              const bank = ensureRealAudioBank(realAudioBankRef)
+              if (next) setRealCrowd(bank, { enabled: true, running, volume: soundVolume, danger: 0 })
+              else setRealCrowd(bank, { enabled: false })
+            }} title={!audioUnlocked ? 'Kliknij, aby aktywować prawdziwe audio stadionu' : soundEnabled ? 'Wycisz dźwięki meczu' : 'Włącz dźwięki meczu'} aria-label={!audioUnlocked ? 'Aktywuj prawdziwe audio stadionu' : soundEnabled ? 'Wycisz dźwięki meczu' : 'Włącz dźwięki meczu'}>
+              <SpeakerIcon muted={!soundEnabled || !audioUnlocked} />
             </button>
-            <div className="fm129-sound-meta"><strong>DŹWIĘK MECZU</strong><span>Kibice • gwizdek • gol</span></div>
+            <div className="fm129-sound-meta"><strong>{!audioUnlocked ? 'AKTYWUJ AUDIO' : 'DŹWIĘK MECZU'}</strong><span>{!audioUnlocked ? '1 klik • wymóg przeglądarki' : 'Realni kibice • reakcje • gwizdek • gol'}</span></div>
             <input aria-label="Głośność dźwięków meczu" type="range" min="0" max="1" step="0.05" value={soundVolume} onChange={event => {
               const value = Number(event.target.value)
               setSoundVolume(value)
-              if (value > 0 && soundEnabled) ensureAudioEngine(audioEngineRef)
+              if (audioUnlocked && soundEnabled) setRealCrowd(ensureRealAudioBank(realAudioBankRef), { enabled: true, running, volume: value, danger: 0 })
             }} />
           </div>
         </section>

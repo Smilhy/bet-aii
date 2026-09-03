@@ -1,0 +1,32 @@
+Bet+AI Match Engine v132 — audio sources
+
+The website uses genuine recorded audio hosted by Wikimedia Commons. Audio is loaded by the browser at runtime; no synthetic explosion/noise generator is used for match reactions.
+
+1) Football supporters / stadium background
+   File: Noonelikesus.ogg
+   Description: Millwall supporters recorded at The New Den.
+   Author: NoOneLikesUs / BillyBatty
+   License: Public Domain
+   Source: https://commons.wikimedia.org/wiki/File:Noonelikesus.ogg
+
+2) Crowd reaction for dangerous attacks
+   File: Ohhh ahhh.ogg
+   Author: starlite
+   License: Public Domain
+   Source: https://commons.wikimedia.org/wiki/File:Ohhh_ahhh.ogg
+
+3) Applause / crowd reaction after goals
+   File: Slow starting applause.ogg
+   Author: stephan
+   License: Public Domain
+   Source: https://commons.wikimedia.org/wiki/File:Slow_starting_applause.ogg
+
+4) Sharp whistle
+   File: WWS Policewhistle.ogg
+   Author: Work With Sounds / Konrad Gutkowski / Jonathan Nicolai / Anna Pietzuch
+   License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+   Source: https://commons.wikimedia.org/wiki/File:WWS_Policewhistle.ogg
+   License: https://creativecommons.org/licenses/by/4.0/
+
+Browser autoplay note:
+Modern Chrome/Opera/Edge browsers do not allow websites to start audible media automatically before a user gesture. For this reason the Match Engine shows an AKTYWUJ AUDIO control. One click unlocks the real stadium audio for the match.

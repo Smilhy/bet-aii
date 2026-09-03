@@ -83993,3 +83993,52 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 
 /* v131 — persistent Supabase match snapshot status */
 .sim-prep-snapshot-note-v131{display:block;margin-top:5px;font-size:10px;font-style:normal;color:#74dfe8;opacity:.9;letter-spacing:.01em}
+
+/* WERSJA_132 — +30% MATCH/FORMATION AREA + REAL STADIUM AUDIO UX */
+.match-sim-page.match-sim-fm119{width:100%!important;max-width:none!important;padding-left:4px!important;padding-right:4px!important}
+.fm119-match-layout{
+  grid-template-columns:minmax(350px,385px) minmax(850px,990px) minmax(350px,385px)!important;
+  gap:12px!important;
+  max-width:1770px!important;
+  width:100%!important;
+  margin-inline:auto!important;
+}
+.fm119-pitch-stage{max-width:990px!important;grid-template-rows:52px minmax(0,1fr) 40px!important}
+.match-sim-fm119 .sim-pitch-wrap{padding:13px 14px!important}
+.match-sim-fm119 .sim-pitch{
+  width:100%!important;
+  max-width:960px!important;
+  min-height:545px!important;
+  aspect-ratio:1.76/1!important;
+}
+.fm119-mini-pitch,.fm121-empty-pitch{min-height:625px!important;height:625px!important}
+.fm119-formation-panel{padding:13px!important}
+.fm119-formation-head{min-height:54px!important;padding-bottom:10px!important}
+.fm119-formation-head strong{font-size:15px!important;max-width:300px!important}
+.fm119-formation-head span{font-size:11px!important}
+.fm119-mini-player{min-width:62px!important}
+.fm119-mini-player b{width:33px!important;height:33px!important;font-size:10px!important;border-width:2px!important}
+.fm119-mini-player span{font-size:10px!important;max-width:108px!important;padding:3px 6px!important}
+.fm119-mini-player small{font-size:8px!important}
+.fm119-formation-footer{min-height:42px!important}.fm119-formation-footer span,.fm119-formation-footer b{font-size:9px!important}
+.match-sim-fm119 .sim-player{width:32px!important;height:32px!important;font-size:10px!important;border-width:2px!important}
+.match-sim-fm119 .sim-player>span{font-size:10px!important}.match-sim-fm119 .sim-player small{top:34px!important;font-size:8.2px!important;max-width:88px!important}
+.match-sim-fm119 .sim-ball{width:19px!important;height:19px!important}.match-sim-fm119 .sim-ball.is-shot,.match-sim-fm119 .sim-ball.is-goal{width:21px!important;height:21px!important}
+.fm129-sound-control{position:relative!important;overflow:visible!important;grid-template-columns:46px minmax(0,1fr)!important;padding:9px 11px!important}
+.fm129-sound-control button{width:46px!important;height:46px!important}
+.fm129-sound-control button.needs-unlock{animation:fm132AudioPulse 1.35s ease-in-out infinite!important;border-color:rgba(65,235,243,.7)!important;background:rgba(7,86,102,.72)!important}
+.fm129-sound-meta strong{font-size:10px!important}.fm129-sound-meta span{font-size:8px!important;color:#89a9b5!important}
+@keyframes fm132AudioPulse{0%,100%{box-shadow:0 0 0 0 rgba(65,235,243,.08),0 0 12px rgba(65,235,243,.08)}50%{box-shadow:0 0 0 5px rgba(65,235,243,.04),0 0 22px rgba(65,235,243,.22)}}
+
+@media(max-width:1780px) and (min-width:1501px){
+  .fm119-match-layout{grid-template-columns:325px minmax(760px,900px) 325px!important;max-width:1568px!important;gap:10px!important}
+  .fm119-pitch-stage{max-width:900px!important}.match-sim-fm119 .sim-pitch{max-width:870px!important;min-height:500px!important}
+  .fm119-mini-pitch,.fm121-empty-pitch{min-height:570px!important;height:570px!important}
+}
+@media(max-width:1500px) and (min-width:1181px){
+  .fm119-match-layout{grid-template-columns:275px minmax(600px,760px) 275px!important;max-width:1325px!important;gap:8px!important}
+  .fm119-pitch-stage{max-width:760px!important}.match-sim-fm119 .sim-pitch{max-width:730px!important;min-height:425px!important}
+  .fm119-mini-pitch,.fm121-empty-pitch{min-height:485px!important;height:485px!important}
+  .fm119-mini-player b{width:29px!important;height:29px!important}.fm119-mini-player span{font-size:8.5px!important}.fm119-formation-head strong{font-size:13px!important}
+}
+@media(prefers-reduced-motion:reduce){.fm129-sound-control button.needs-unlock{animation:none!important}}
