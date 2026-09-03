@@ -85,6 +85,19 @@ function safeParsedResult(value = {}) {
     confidence: clamp(row?.confidence, 0, 100),
     note: clean(row?.note).slice(0, 280)
   })) : []
+  const goals = value?.goals || {}
+  const over25 = clamp(goals.over25, 0, 100)
+  const under25 = clamp(goals.under25, 0, 100)
+  const total25 = over25 + under25
+  const normalizedGoals25 = total25 > 0
+    ? { over25: Math.round(over25 * 1000 / total25) / 10, under25: Math.round((100 - (over25 * 100 / total25)) * 10) / 10 }
+    : { over25: 0, under25: 0 }
+  const bttsYes = clamp(goals.bttsYes, 0, 100)
+  const bttsNo = clamp(goals.bttsNo, 0, 100)
+  const totalBtts = bttsYes + bttsNo
+  const normalizedBtts = totalBtts > 0
+    ? { yes: Math.round(bttsYes * 1000 / totalBtts) / 10, no: Math.round((100 - (bttsYes * 100 / totalBtts)) * 10) / 10 }
+    : { yes: 0, no: 0 }
   return {
     consensus: {
       available: percent.home + percent.draw + percent.away > 0 && sources.some(row => row.status === 'found'),
@@ -93,6 +106,16 @@ function safeParsedResult(value = {}) {
       sourceCount: sources.filter(row => row.status === 'found').length,
       agreement: clamp(consensus.agreement, 0, 100),
       summary: clean(consensus.summary).slice(0, 600)
+    },
+    goals: {
+      available: normalizedGoals25.over25 + normalizedGoals25.under25 > 0,
+      ...normalizedGoals25,
+      bttsAvailable: normalizedBtts.yes + normalizedBtts.no > 0,
+      bttsYes: normalizedBtts.yes,
+      bttsNo: normalizedBtts.no,
+      confidence: clamp(goals.confidence, 0, 100),
+      sourceCount: Math.max(0, Math.round(Number(goals.sourceCount) || 0)),
+      summary: clean(goals.summary).slice(0, 500)
     },
     sources,
     keyFactors: Array.isArray(value?.keyFactors) ? value.keyFactors.map(item => clean(item)).filter(Boolean).slice(0, 8) : [],
@@ -107,6 +130,7 @@ async function researchWithOpenAI({ home, away, league, date, country }) {
       model: '',
       error: 'Brak OPENAI_API_KEY',
       consensus: { available: false, percent: { home: 0, draw: 0, away: 0 }, confidence: 0, sourceCount: 0, agreement: 0, summary: '' },
+      goals: { available: false, over25: 0, under25: 0, bttsAvailable: false, bttsYes: 0, bttsNo: 0, confidence: 0, sourceCount: 0, summary: '' },
       sources: [], keyFactors: [], teamNews: [], webSources: []
     }
   }
@@ -124,7 +148,9 @@ Zasady:
 5. ZuluBet/VitiSport wykorzystuj jako sygnał predykcyjny tylko, jeśli znalazłeś konkretny wpis dla meczu.
 6. Konsensus 1/X/2 ma być syntezą znalezionych, niezależnych publicznych sygnałów. Jeśli sygnałów jest za mało, ustaw available=false przez zwrócenie 0/0/0 i wyjaśnij to w summary.
 7. Każda pozycja sources musi zawierać prawdziwy URL znalezionej strony albo bazowy URL źródła i status no_match/blocked/unavailable.
-8. Nie przedstawiaj wyniku jako pewnego. To ma być dodatkowy sygnał dla modelu probabilistycznego.`
+8. Nie przedstawiaj wyniku jako pewnego. To ma być dodatkowy sygnał dla modelu probabilistycznego.
+9. Osobno zbierz publiczne sygnały dla rynku goli: Over 2.5 / Under 2.5 oraz BTTS, ale tylko jeśli rzeczywiście znalazłeś takie prognozy lub analizy dla tego meczu. Nie wyprowadzaj ich wyłącznie z kursów 1X2.
+10. Dla goals.sourceCount policz tylko niezależne źródła, w których faktycznie znalazłeś sygnał dotyczący liczby goli/BTTS. Jeśli takich danych nie ma, zwróć 0/0 i sourceCount=0.`
 
   const schema = {
     type: 'object',
@@ -137,6 +163,15 @@ Zasady:
           confidence: { type: 'number' }, agreement: { type: 'number' }, summary: { type: 'string' }
         },
         required: ['home', 'draw', 'away', 'confidence', 'agreement', 'summary']
+      },
+      goals: {
+        type: 'object', additionalProperties: false,
+        properties: {
+          over25: { type: 'number' }, under25: { type: 'number' },
+          bttsYes: { type: 'number' }, bttsNo: { type: 'number' },
+          confidence: { type: 'number' }, sourceCount: { type: 'number' }, summary: { type: 'string' }
+        },
+        required: ['over25', 'under25', 'bttsYes', 'bttsNo', 'confidence', 'sourceCount', 'summary']
       },
       sources: {
         type: 'array',
@@ -154,7 +189,7 @@ Zasady:
       keyFactors: { type: 'array', items: { type: 'string' } },
       teamNews: { type: 'array', items: { type: 'string' } }
     },
-    required: ['consensus', 'sources', 'keyFactors', 'teamNews']
+    required: ['consensus', 'goals', 'sources', 'keyFactors', 'teamNews']
   }
 
   const controller = new AbortController()
@@ -187,6 +222,7 @@ Zasady:
       model: OPENAI_WEB_MODEL,
       error: error?.name === 'AbortError' ? 'Przekroczono czas Web Intelligence' : clean(error?.message, 'Błąd Web Intelligence'),
       consensus: { available: false, percent: { home: 0, draw: 0, away: 0 }, confidence: 0, sourceCount: 0, agreement: 0, summary: '' },
+      goals: { available: false, over25: 0, under25: 0, bttsAvailable: false, bttsYes: 0, bttsNo: 0, confidence: 0, sourceCount: 0, summary: '' },
       sources: [], keyFactors: [], teamNews: [], webSources: []
     }
   } finally {

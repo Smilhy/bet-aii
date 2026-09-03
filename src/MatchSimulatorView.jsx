@@ -68,14 +68,152 @@ function formationKitVariables(lineup = {}, tone = 'home') {
 
 function FootballBallIcon() {
   return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-      <circle cx="16" cy="16" r="14.4" fill="#f8fbff" stroke="#0c1720" strokeWidth="1.5" />
-      <path d="M16 7.1 20.7 10.6 18.9 16.1H13.1L11.3 10.6Z" fill="#111b24" />
-      <path d="M16 7.1 16 2.1M20.7 10.6 26.2 8.6M18.9 16.1 22.5 21.3M13.1 16.1 9.5 21.3M11.3 10.6 5.8 8.6" fill="none" stroke="#111b24" strokeWidth="1.25" strokeLinecap="round" />
-      <path d="M13.5 2.2 18.5 2.2 20 5.2 16 7.1 12 5.2ZM25.6 7.2 29.3 10.2 28.4 15 24.2 14.5 20.7 10.6ZM24.6 22.4 21.2 26.3 16.4 27.8 14.9 23.7 18.9 16.1 22.5 21.3ZM7.4 22.4 10.8 26.3 15.6 27.8 17.1 23.7 13.1 16.1 9.5 21.3ZM2.7 10.2 6.4 7.2 11.3 10.6 7.8 14.5 3.6 15Z" fill="#111b24" opacity=".94" />
-      <circle cx="11" cy="8" r="2.2" fill="#ffffff" opacity=".72" />
+    <svg className="fm129-ball-svg" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+      <defs>
+        <radialGradient id="fm129BallSphere" cx="31%" cy="24%" r="76%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="46%" stopColor="#f7f9fc" />
+          <stop offset="78%" stopColor="#d9e0e8" />
+          <stop offset="100%" stopColor="#aab4c0" />
+        </radialGradient>
+        <radialGradient id="fm129BallShine" cx="35%" cy="24%" r="42%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity=".95" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <circle cx="20" cy="20" r="17.4" fill="url(#fm129BallSphere)" stroke="#18212b" strokeWidth="1.25" />
+      <g className="fm129-ball-panels" fill="#111820" stroke="#111820" strokeWidth=".55" strokeLinejoin="round">
+        <path d="M20 11.2 25.1 14.9 23.2 21H16.8l-1.9-6.1z" />
+        <path d="m7.2 12.2 5.6-2.2 2.1 4.9-4.4 4.3-5-2.4z" />
+        <path d="m32.8 12.2-5.6-2.2-2.1 4.9 4.4 4.3 5-2.4z" />
+        <path d="m11.1 28.7 4.6-4.9 5.1 2.1-.7 6.2-6 1.5z" />
+        <path d="m28.9 28.7-4.6-4.9-5.1 2.1.7 6.2 6 1.5z" />
+      </g>
+      <g className="fm129-ball-seams" fill="none" stroke="#303944" strokeWidth=".7" opacity=".9">
+        <path d="M20 11.2 18.8 4.1M25.1 14.9l6-4.3M23.2 21l5.7 7.7M16.8 21l-5.7 7.7M14.9 14.9l-6-4.3" />
+      </g>
+      <circle cx="14.2" cy="11.7" r="7.4" fill="url(#fm129BallShine)" opacity=".72" />
     </svg>
   )
+}
+
+function SpeakerIcon({ muted = false }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
+      {!muted ? <><path d="M16 8.2c1.2 1 1.8 2.2 1.8 3.8s-.6 2.8-1.8 3.8" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M18.4 5.8c2 1.7 3 3.8 3 6.2s-1 4.5-3 6.2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity=".75"/></> : <><path d="m16 9 5 6M21 9l-5 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></>}
+    </svg>
+  )
+}
+
+function poissonOver25Probability(lambda) {
+  const l = clamp(lambda, .05, 6)
+  const underOrEqual2 = Math.exp(-l) * (1 + l + (l * l) / 2)
+  return clamp((1 - underOrEqual2) * 100, 0, 100)
+}
+
+function lambdaFromOver25Probability(percent) {
+  const target = clamp(percent, 2, 98) / 100
+  let low = .25
+  let high = 5.5
+  for (let i = 0; i < 30; i += 1) {
+    const mid = (low + high) / 2
+    const over = 1 - Math.exp(-mid) * (1 + mid + (mid * mid) / 2)
+    if (over < target) low = mid
+    else high = mid
+  }
+  return (low + high) / 2
+}
+
+function ensureAudioEngine(ref) {
+  if (typeof window === 'undefined') return null
+  const Ctx = window.AudioContext || window.webkitAudioContext
+  if (!Ctx) return null
+  if (!ref.current) ref.current = new Ctx()
+  const ctx = ref.current
+  if (ctx.state === 'suspended') ctx.resume().catch(() => {})
+  return ctx
+}
+
+function audioTone(ctx, frequency = 1000, duration = .12, gain = .05, startOffset = 0, type = 'sine', endFrequency = null) {
+  if (!ctx) return
+  const start = ctx.currentTime + startOffset
+  const osc = ctx.createOscillator()
+  const amp = ctx.createGain()
+  osc.type = type
+  osc.frequency.setValueAtTime(frequency, start)
+  if (endFrequency) osc.frequency.exponentialRampToValueAtTime(Math.max(40, endFrequency), start + duration)
+  amp.gain.setValueAtTime(.0001, start)
+  amp.gain.exponentialRampToValueAtTime(Math.max(.0002, gain), start + .012)
+  amp.gain.exponentialRampToValueAtTime(.0001, start + duration)
+  osc.connect(amp).connect(ctx.destination)
+  osc.start(start)
+  osc.stop(start + duration + .03)
+}
+
+function audioNoise(ctx, duration = .5, gain = .04, startOffset = 0, filterFrequency = 900) {
+  if (!ctx) return
+  const sampleRate = ctx.sampleRate
+  const length = Math.max(1, Math.floor(sampleRate * duration))
+  const buffer = ctx.createBuffer(1, length, sampleRate)
+  const channel = buffer.getChannelData(0)
+  for (let i = 0; i < length; i += 1) channel[i] = (Math.random() * 2 - 1) * (1 - i / length * .3)
+  const source = ctx.createBufferSource()
+  const filter = ctx.createBiquadFilter()
+  const amp = ctx.createGain()
+  const start = ctx.currentTime + startOffset
+  filter.type = 'bandpass'
+  filter.frequency.value = filterFrequency
+  filter.Q.value = .55
+  amp.gain.setValueAtTime(.0001, start)
+  amp.gain.exponentialRampToValueAtTime(Math.max(.0002, gain), start + .03)
+  amp.gain.exponentialRampToValueAtTime(.0001, start + duration)
+  source.buffer = buffer
+  source.connect(filter).connect(amp).connect(ctx.destination)
+  source.start(start)
+  source.stop(start + duration + .02)
+}
+
+function playMatchCue(ref, type, volume = .42) {
+  const ctx = ensureAudioEngine(ref)
+  if (!ctx) return
+  const v = clamp(volume, 0, 1)
+  if (type === 'start') {
+    audioTone(ctx, 1750, .18, .07 * v, 0, 'sine', 2350)
+    audioTone(ctx, 1900, .12, .05 * v, .20, 'sine', 2250)
+    return
+  }
+  if (type === 'halftime') {
+    audioTone(ctx, 1850, .16, .065 * v, 0, 'sine', 2300)
+    audioTone(ctx, 1850, .16, .065 * v, .24, 'sine', 2300)
+    return
+  }
+  if (type === 'fulltime') {
+    audioTone(ctx, 1800, .16, .065 * v, 0, 'sine', 2250)
+    audioTone(ctx, 1800, .16, .065 * v, .23, 'sine', 2250)
+    audioTone(ctx, 1800, .22, .075 * v, .46, 'sine', 2450)
+    return
+  }
+  if (type === 'foul') {
+    audioTone(ctx, 2050, .12, .06 * v, 0, 'square', 2400)
+    audioTone(ctx, 2050, .1, .05 * v, .15, 'square', 2300)
+    return
+  }
+  if (type === 'goal') {
+    audioNoise(ctx, 1.45, .115 * v, 0, 1150)
+    audioNoise(ctx, 1.25, .085 * v, .18, 650)
+    audioTone(ctx, 950, .11, .035 * v, .02, 'triangle', 1250)
+    audioTone(ctx, 2050, .13, .055 * v, .72, 'sine', 2350)
+    return
+  }
+  if (type === 'attack') {
+    audioNoise(ctx, .48, .045 * v, 0, 1050)
+    return
+  }
+  if (type === 'corner') {
+    audioNoise(ctx, .58, .052 * v, 0, 950)
+    audioTone(ctx, 1100, .07, .02 * v, .08, 'triangle', 1300)
+  }
 }
 
 function hashString(value = '') {
@@ -168,9 +306,13 @@ function buildSimulationModel(data = {}) {
   const h2h = data.h2h?.summary || {}
   const apiPercent = normalizeOutcomePercent(prediction.percent)
   const externalConsensus = data.externalConsensus?.consensus || {}
+  const externalGoals = data.externalConsensus?.goals || {}
   const externalPercent = externalConsensus?.available ? normalizeOutcomePercent(externalConsensus.percent) : null
   const externalReliability = externalPercent
     ? clamp((safeNum(externalConsensus.confidence, 50) / 100) * Math.min(1, safeNum(externalConsensus.sourceCount, 0) / 4), 0.12, 1)
+    : 0
+  const goalMarketReliability = externalGoals?.available && safeNum(externalGoals.sourceCount, 0) > 0
+    ? clamp((safeNum(externalGoals.confidence, 50) / 100) * Math.min(1, safeNum(externalGoals.sourceCount, 0) / 4), .08, 1)
     : 0
   const signalPercent = apiPercent && externalPercent
     ? {
@@ -207,6 +349,31 @@ function buildSimulationModel(data = {}) {
   if (h2hAvg > 0) {
     const currentTotal = Math.max(0.4, homeXg + awayXg)
     const targetTotal = clamp(h2hAvg * 0.32 + currentTotal * 0.68, 1.2, 4.2)
+    const scale = targetTotal / currentTotal
+    homeXg *= scale
+    awayXg *= scale
+  }
+
+  // Public expert/web consensus for the goals market is only an additional signal.
+  // It never replaces real team statistics; it gently moves the expected total-goals profile.
+  const apiGoalText = String(prediction.underOver || '').toLowerCase()
+  if (apiGoalText) {
+    const currentTotal = Math.max(.45, homeXg + awayXg)
+    const apiTarget = /over|\+\s*2[.,]5|powy/.test(apiGoalText)
+      ? Math.max(currentTotal, 2.82)
+      : /under|-\s*2[.,]5|poni/.test(apiGoalText)
+        ? Math.min(currentTotal, 2.28)
+        : currentTotal
+    const scale = (currentTotal * .88 + apiTarget * .12) / currentTotal
+    homeXg *= scale
+    awayXg *= scale
+  }
+
+  if (goalMarketReliability > 0 && safeNum(externalGoals.over25, 0) > 0) {
+    const currentTotal = Math.max(.45, homeXg + awayXg)
+    const marketTarget = clamp(lambdaFromOver25Probability(externalGoals.over25), 1.05, 4.65)
+    const weight = clamp(.08 + goalMarketReliability * .24, .08, .32)
+    const targetTotal = currentTotal * (1 - weight) + marketTarget * weight
     const scale = targetTotal / currentTotal
     homeXg *= scale
     awayXg *= scale
@@ -262,6 +429,16 @@ function buildSimulationModel(data = {}) {
     externalPercent,
     signalPercent,
     xg: { home: Math.round(homeXg * 100) / 100, away: Math.round(awayXg * 100) / 100 },
+    goalsMarket: {
+      available: Boolean(externalGoals?.available),
+      over25: safeNum(externalGoals?.over25, 0),
+      under25: safeNum(externalGoals?.under25, 0),
+      bttsYes: safeNum(externalGoals?.bttsYes, 0),
+      bttsNo: safeNum(externalGoals?.bttsNo, 0),
+      confidence: safeNum(externalGoals?.confidence, 0),
+      sourceCount: safeNum(externalGoals?.sourceCount, 0),
+      impliedOver25: Math.round(poissonOver25Probability(homeXg + awayXg) * 10) / 10
+    },
     topScore: { home: homeGoals, away: awayGoals, text: topScoreText },
     confidence,
     possession: { home: Math.round(possessionHome), away: Math.round(100 - possessionHome) },
@@ -452,7 +629,7 @@ function buildLiveAnimationState({ clockSec, timeline, model, fixture, lineups }
   const lastEvent = [...playable].reverse().find(event => event.second <= clockSec && clockSec - event.second <= 105) || null
   const featuredEvent = nextEvent || lastEvent
 
-  const flowSpan = 250
+  const flowSpan = 180
   const cycleIndex = Math.floor(clockSec / flowSpan)
   const phase = clamp((clockSec % flowSpan) / flowSpan, 0, .999)
   const flowSeed = hashString(`${fixture?.id || ''}|flow|${cycleIndex}`)
@@ -601,21 +778,39 @@ function buildLiveAnimationState({ clockSec, timeline, model, fixture, lineups }
     if (clockSec <= featuredEvent.second) {
       const p = clamp((clockSec - (featuredEvent.second - beforeWindow)) / beforeWindow, 0, 1)
       const e = easeInOut(p)
-      const startX = possessionTeam === 'home' ? 68 : 32
-      const finalThirdX = possessionTeam === 'home' ? 86 : 14
-      const split = .66
-      if (p < split) {
-        const p1 = easeInOut(p / split)
+      const startX = possessionTeam === 'home' ? 64 : 36
+      const receiveX = possessionTeam === 'home' ? 76 : 24
+      const finalThirdX = possessionTeam === 'home' ? 87 : 13
+      const assistLane = clamp(eventLane + ((((flowSeed >> 5) % 19) - 9)), 24, 76)
+
+      if (eventAssist && p < .34) {
+        // FM-like final-third combination: assist player releases the ball into the scorer's path.
+        carrier = eventAssist
+        receiver = eventActor || receiver
+        const p1 = easeInOut(p / .34)
+        ballAttached = p < .08
+        showTrajectory = p >= .08
+        actionPhase = 'pass'
+        ball = { x: lerp(startX, receiveX, p1), y: lerp(assistLane, eventLane, p1) }
+        trajectoryTarget = { x: receiveX, y: eventLane }
+        commentary = `${shortPlayerName(carrier?.name || teamName)} zagrywa do ${shortPlayerName(receiver?.name || teamName)}`
+      } else if (p < .72) {
+        const p2 = easeInOut((p - (eventAssist ? .34 : 0)) / (eventAssist ? .38 : .72))
+        carrier = eventActor || carrier
+        receiver = eventAssist || receiver
         ballAttached = true
         showTrajectory = false
-        ball = { x: lerp(startX, finalThirdX, p1), y: lerp(50, eventLane, p1) }
+        actionPhase = 'chance'
+        ball = { x: lerp(eventAssist ? receiveX : startX, finalThirdX, clamp(p2, 0, 1)), y: lerp(eventLane, clamp(eventLane + (random() - .5) * 5, 38, 62), clamp(p2, 0, 1)) }
         commentary = `${shortPlayerName(carrier?.name || teamName)} prowadzi piłkę pod pole karne`
       } else {
-        const p2 = easeInOut((p - split) / (1 - split))
+        const p3 = easeInOut((p - .72) / .28)
+        carrier = eventActor || carrier
         ballAttached = false
         showTrajectory = true
         actionPhase = featuredEvent.type
-        ball = { x: lerp(finalThirdX, targetX, p2), y: lerp(eventLane, eventLane, p2) }
+        ball = { x: lerp(finalThirdX, targetX, p3), y: lerp(eventLane, eventLane, p3) }
+        trajectoryTarget = { x: targetX, y: eventLane }
         commentary = featuredEvent.type === 'goal'
           ? `${shortPlayerName(carrier?.name || teamName)} składa się do strzału…`
           : featuredEvent.type === 'shot'
@@ -624,7 +819,6 @@ function buildLiveAnimationState({ clockSec, timeline, model, fixture, lineups }
               ? `${teamName} wrzuca piłkę z narożnika`
               : `${featuredEvent.label}`
       }
-      trajectoryTarget = { x: targetX, y: eventLane }
       pressure = .72 + e * .26
       compactness = .78
     } else {
@@ -948,38 +1142,38 @@ function buildDisplayKeyStats({ data, model, clockSec, liveCounters = {}, shotsO
   }
 }
 
-function MomentumChart({ timeline = [], clockSec = 0 }) {
-  const buckets = 18
-  const end = Math.max(clockSec, 1)
+function MomentumChart({ timeline = [], clockSec = 0, model = null, homeName = 'Gospodarze', awayName = 'Goście' }) {
+  const buckets = 30
+  const bucketSeconds = MATCH_TOTAL_SECONDS / buckets
+  const homeBias = clamp(((model?.possession?.home || 50) - 50) / 18 + ((model?.xg?.home || 1) - (model?.xg?.away || 1)) * .26, -1.2, 1.2)
   const values = Array.from({ length: buckets }, (_, idx) => {
-    const from = idx * end / buckets
-    const to = (idx + 1) * end / buckets
-    return timeline.filter(event => event.second >= from && event.second < to).reduce((score, event) => {
-      const weight = event.type === 'goal' ? 3.5 : event.type === 'shot' ? 1.8 : event.type === 'corner' ? 1.1 : event.type === 'card' ? 0.35 : 0
+    const from = idx * bucketSeconds
+    const to = (idx + 1) * bucketSeconds
+    const eventScore = timeline.filter(event => event.second >= from && event.second < to).reduce((score, event) => {
+      const weight = event.type === 'goal' ? 4.4 : event.type === 'shot' ? 1.7 : event.type === 'corner' ? 1.15 : event.type === 'card' ? -.3 : 0
       return score + (event.team === 'home' ? weight : event.team === 'away' ? -weight : 0)
     }, 0)
+    const wave = Math.sin(idx * .82 + hashString(homeName) % 11) * .25
+    return clamp(eventScore + homeBias + wave, -5.2, 5.2)
   })
-  let carry = 0
-  const cumulative = values.map(value => {
-    carry = carry * 0.56 + value
-    return carry
-  })
-  const peak = Math.max(2.5, ...cumulative.map(Math.abs))
-  const points = cumulative.map((value, idx) => `${idx * (100 / (buckets - 1))},${50 - (value / peak) * 35}`).join(' ')
+  const peak = Math.max(2, ...values.map(value => Math.abs(value)))
+  const width = 100 / buckets
+  const nowX = clamp((clockSec / MATCH_TOTAL_SECONDS) * 100, 0, 100)
   return (
-    <div className="fm119-momentum-chart">
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Momentum symulacji">
-        <defs>
-          <linearGradient id="fm121MomentumFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#4b83ff" stopOpacity="0.42" />
-            <stop offset="100%" stopColor="#35e1ea" stopOpacity="0.03" />
-          </linearGradient>
-        </defs>
-        <line x1="0" y1="50" x2="100" y2="50" className="baseline" />
-        <polygon points={`0,50 ${points} 100,50`} className="momentum-area" />
-        <polyline points={points} fill="none" className="momentum-line" />
+    <div className="fm129-momentum-bars">
+      <svg viewBox="0 0 100 70" preserveAspectRatio="none" aria-label="Momentum gospodarze kontra goście">
+        <line x1="0" y1="35" x2="100" y2="35" className="baseline" />
+        {values.map((value, idx) => {
+          const magnitude = Math.max(1.4, Math.abs(value) / peak * 29)
+          const x = idx * width + .45
+          return value >= 0
+            ? <rect key={idx} className="home-bar" x={x} y={35 - magnitude} width={Math.max(.8, width - .9)} height={magnitude} rx=".35" />
+            : <rect key={idx} className="away-bar" x={x} y="35" width={Math.max(.8, width - .9)} height={magnitude} rx=".35" />
+        })}
+        <line x1={nowX} y1="2" x2={nowX} y2="68" className="now-line" />
       </svg>
-      <div className="fm119-momentum-legend"><span>● {timeline[0]?.team === 'away' ? 'Goście' : 'Gospodarze'}</span><em>momentum symulacji</em></div>
+      <div className="fm129-momentum-axis"><span>0'</span><span>15'</span><span>30'</span><span>HT</span><span>60'</span><span>75'</span><span>90'</span></div>
+      <div className="fm129-momentum-legend"><span className="home"><i />{homeName}</span><span className="away"><i />{awayName}</span></div>
     </div>
   )
 }
@@ -996,9 +1190,16 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
   const [clockSec, setClockSec] = useState(0)
   const [running, setRunning] = useState(false)
   const [speed, setSpeed] = useState(1)
+  const [soundEnabled, setSoundEnabled] = useState(true)
+  const [soundVolume, setSoundVolume] = useState(.42)
   const autoLoaded = useRef(false)
   const autoStarted = useRef(false)
   const tickRef = useRef(null)
+  const audioEngineRef = useRef(null)
+  const soundClockRef = useRef(0)
+  const startCuePlayedRef = useRef(false)
+  const halftimeCuePlayedRef = useRef(false)
+  const fulltimeCuePlayedRef = useRef(false)
 
   const model = useMemo(() => data ? buildSimulationModel(data) : null, [data])
   const timeline = useMemo(() => data && model ? buildTimeline(data, model) : [], [data, model])
@@ -1125,6 +1326,47 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
     searchMatches(initialQuery)
   }, [selectedMatch, preparedData])
 
+  useEffect(() => {
+    if (clockSec < 1) {
+      soundClockRef.current = 0
+      halftimeCuePlayedRef.current = false
+      fulltimeCuePlayedRef.current = false
+      if (!running) startCuePlayedRef.current = false
+    }
+    if (!soundEnabled) {
+      soundClockRef.current = clockSec
+      return
+    }
+    if (running && !startCuePlayedRef.current && clockSec < 8) {
+      startCuePlayedRef.current = true
+      playMatchCue(audioEngineRef, 'start', soundVolume)
+    }
+    const previous = soundClockRef.current
+    if (!halftimeCuePlayedRef.current && previous < HALF_SECONDS && clockSec >= HALF_SECONDS) {
+      halftimeCuePlayedRef.current = true
+      playMatchCue(audioEngineRef, 'halftime', soundVolume)
+    }
+    if (!fulltimeCuePlayedRef.current && previous < MATCH_TOTAL_SECONDS && clockSec >= MATCH_TOTAL_SECONDS) {
+      fulltimeCuePlayedRef.current = true
+      playMatchCue(audioEngineRef, 'fulltime', soundVolume)
+    }
+    const approaching = timeline.filter(event => ['goal', 'shot', 'corner'].includes(event.type) && event.second - 65 > previous && event.second - 65 <= clockSec)
+    approaching.forEach(() => playMatchCue(audioEngineRef, 'attack', soundVolume * .78))
+    const crossed = timeline.filter(event => event.second > previous && event.second <= clockSec)
+    crossed.forEach(event => {
+      if (event.type === 'goal') playMatchCue(audioEngineRef, 'goal', soundVolume)
+      else if (event.type === 'card') playMatchCue(audioEngineRef, 'foul', soundVolume)
+      else if (event.type === 'corner') playMatchCue(audioEngineRef, 'corner', soundVolume)
+      else if (event.type === 'shot') playMatchCue(audioEngineRef, 'attack', soundVolume * .9)
+    })
+    soundClockRef.current = clockSec
+  }, [Math.floor(clockSec), running, soundEnabled, soundVolume, timeline])
+
+  useEffect(() => () => {
+    try { audioEngineRef.current?.close?.() } catch {}
+    audioEngineRef.current = null
+  }, [])
+
   const liveCards = useMemo(() => ({
     home: timeline.filter(event => event.type === 'card' && event.team === 'home' && event.second <= clockSec).length,
     away: timeline.filter(event => event.type === 'card' && event.team === 'away' && event.second <= clockSec).length
@@ -1186,12 +1428,13 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
             <div className="fm119-xg-main"><b>{xgLive.home.toFixed(2)}</b><span>bieżące xG</span><b>{xgLive.away.toFixed(2)}</b></div>
             <div className="fm119-xg-track"><i style={{ width: `${clamp(model.xg.home / Math.max(model.xg.home + model.xg.away, .1) * 100, 0, 100)}%` }} /><em /></div>
             <div className="fm119-xg-foot"><span>Model przedmeczowy</span><b>{model.xg.home.toFixed(2)} – {model.xg.away.toFixed(2)}</b></div>
+            {model.goalsMarket?.available ? <div className="fm129-goals-signal"><span>Consensus O2.5</span><b>{model.goalsMarket.over25.toFixed(0)}%</b><em>{model.goalsMarket.sourceCount} źr.</em></div> : null}
             <div className="fm121-card-footer">Szczegóły xG</div>
           </article>
 
           <article className="fm119-stat-card fm119-momentum-card">
             <h3>MOMENTUM</h3>
-            <MomentumChart timeline={timeline} clockSec={clockSec} />
+            <MomentumChart timeline={timeline} clockSec={clockSec} model={model} homeName={data.fixture.home.name} awayName={data.fixture.away.name} />
             <div className="fm121-card-footer">Zobacz analizę</div>
           </article>
 
@@ -1242,7 +1485,24 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
             <strong>{latestEvent?.label || (homeLineupReady && awayLineupReady ? (usesPredictedXI ? 'Mecz gotowy. Skład przewidywany z ostatnich realnych XI; formacja i zawodnicy pochodzą z danych API.' : 'Mecz gotowy. Silnik wykorzystuje oficjalne składy i formacje z API.') : 'Mecz nie spełnia warunków jakości danych.')}</strong>
             <span>{data.prediction.advice || `Model xG: ${model.xg.home} – ${model.xg.away} • H2H: ${data.h2h.summary?.homeWins || 0}-${data.h2h.summary?.draws || 0}-${data.h2h.summary?.awayWins || 0}`}</span>
           </div>
-          <div className="fm119-sound-wave"><i/><i/><i/><i/><i/></div>
+          <div className="fm129-sound-control">
+            <button type="button" className={soundEnabled ? 'on' : 'off'} onClick={() => {
+              const next = !soundEnabled
+              setSoundEnabled(next)
+              if (next) {
+                ensureAudioEngine(audioEngineRef)
+                playMatchCue(audioEngineRef, 'attack', soundVolume * .45)
+              }
+            }} title={soundEnabled ? 'Wycisz dźwięki meczu' : 'Włącz dźwięki meczu'} aria-label={soundEnabled ? 'Wycisz dźwięki meczu' : 'Włącz dźwięki meczu'}>
+              <SpeakerIcon muted={!soundEnabled} />
+            </button>
+            <div className="fm129-sound-meta"><strong>DŹWIĘK MECZU</strong><span>Kibice • gwizdek • gol</span></div>
+            <input aria-label="Głośność dźwięków meczu" type="range" min="0" max="1" step="0.05" value={soundVolume} onChange={event => {
+              const value = Number(event.target.value)
+              setSoundVolume(value)
+              if (value > 0 && soundEnabled) ensureAudioEngine(audioEngineRef)
+            }} />
+          </div>
         </section>
       </> : null}
     </section>

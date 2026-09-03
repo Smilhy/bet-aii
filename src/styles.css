@@ -83842,3 +83842,102 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 .sim-prep-source-grid-v128{display:flex;gap:7px;flex-wrap:wrap}.sim-prep-source-grid-v128 a{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:0 9px;border-radius:9px;border:1px solid rgba(71,145,164,.13);background:rgba(8,27,41,.72);color:#819eaa;text-decoration:none;font-size:8px;font-weight:900;transition:border-color .15s ease,background .15s ease,color .15s ease}.sim-prep-source-grid-v128 a:hover{border-color:rgba(51,224,235,.3);color:#cbeaf0}.sim-prep-source-grid-v128 a i{font-style:normal;color:#527989}.sim-prep-source-grid-v128 a.found{border-color:rgba(61,235,181,.22);background:rgba(20,97,75,.16);color:#9de8cf}.sim-prep-source-grid-v128 a.found i{color:#4ceeb8}.sim-prep-source-grid-v128 a.blocked{border-color:rgba(255,181,81,.2);color:#d4ad6b}.sim-prep-source-grid-v128 a.blocked i{color:#e8b655}
 @media(max-width:760px){.sim-prep-consensus-v128{grid-template-columns:repeat(3,1fr)}.sim-prep-consensus-v128 em{grid-column:1/-1;text-align:left}.sim-prep-source-grid-v128 a{font-size:7.5px}}
 .fm119-score-meta em.multi-source-v128{background:rgba(41,111,134,.18)!important;border:1px solid rgba(67,220,233,.2)!important;color:#7eeaf0!important}
+
+/* WERSJA_129 — FM-LIKE REAL FLOW / OLED / MOMENTUM / MATCH AUDIO */
+.match-sim-page.match-sim-fm119{
+  --fm129-cyan:#35edf3;
+  --fm129-cyan-soft:rgba(53,237,243,.18);
+  --fm129-panel:#061725;
+  --fm129-panel2:#03111d;
+  --fm129-text:#f4fbff;
+  --fm129-muted:#94acb9;
+  max-width:none!important;
+  width:100%!important;
+  padding:0 8px 34px!important;
+  font-feature-settings:"tnum" 1,"ss01" 1;
+}
+.fm119-scorebar,.fm119-stat-card,.fm119-formation-panel,.fm119-pitch-stage,.fm119-commentary-strip{
+  border-color:rgba(53,220,234,.32)!important;
+  background:linear-gradient(180deg,rgba(5,24,38,.995),rgba(2,13,23,.995))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 0 0 1px rgba(18,103,121,.08),0 12px 34px rgba(0,0,0,.18),0 0 22px rgba(28,210,225,.035)!important;
+}
+.fm119-scorebar{min-height:108px!important;padding:14px 20px!important}
+.fm119-score-team strong{font-size:18px!important;font-weight:950!important;letter-spacing:-.015em!important;color:#f6fbff!important}
+.fm119-score-team img{width:58px!important;height:58px!important;filter:drop-shadow(0 6px 10px rgba(0,0,0,.26))!important}
+.fm119-score-numbers b{font-size:54px!important;line-height:.9!important;text-shadow:0 0 18px rgba(255,255,255,.07)!important}
+.fm119-score-center>strong{font-size:17px!important;color:var(--fm129-cyan)!important;text-shadow:0 0 12px rgba(53,237,243,.2)!important}
+.fm119-score-meta span{font-size:13px!important}.fm119-score-meta small{font-size:10px!important}
+
+.fm119-top-panels{gap:10px!important}
+.fm119-stat-card{min-height:178px!important;padding:14px 14px 43px!important;position:relative!important;overflow:hidden!important}
+.fm119-stat-card:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(100deg,transparent 0 48%,rgba(74,235,244,.035) 55%,transparent 63%);transform:translateX(-110%);animation:fm129OledScan 8s ease-in-out infinite}
+.fm119-stat-card h3{font-size:12px!important;line-height:1.1!important;color:#e2f1f7!important;letter-spacing:.045em!important;text-shadow:0 0 8px rgba(78,230,240,.11)!important}
+.fm119-stat-compare{grid-template-columns:48px 1fr 48px!important;gap:9px!important;min-height:28px!important}
+.fm119-stat-compare>b{font-size:14px!important;font-weight:950!important;color:#fff!important}
+.fm119-stat-compare span{font-size:10.5px!important;color:#a9c1cb!important}
+.fm119-stat-compare i{height:4px!important;background:rgba(106,139,154,.13)!important}
+.fm119-stat-compare i em.home{background:#38e9ee!important;box-shadow:0 0 9px rgba(56,233,238,.35)!important}
+.fm119-stat-compare i em.away{background:#728eff!important;box-shadow:0 0 9px rgba(114,142,255,.3)!important}
+.fm119-xg-main b{font-size:31px!important}.fm119-xg-main span{font-size:10px!important;color:#9fb4bf!important}
+.fm129-goals-signal{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(83,154,170,.11);color:#93abb6;font-size:9px!important}
+.fm129-goals-signal b{color:#ffe066;font-size:12px!important;text-shadow:0 0 10px rgba(255,224,102,.16)}.fm129-goals-signal em{margin-left:auto;font-size:8px;font-style:normal;color:#667f8c}
+
+/* two-sided momentum: home above baseline, away below */
+.fm129-momentum-bars{display:grid;grid-template-rows:96px 13px 22px;gap:2px;min-height:130px}
+.fm129-momentum-bars svg{width:100%;height:96px;overflow:visible;border-radius:8px;background:linear-gradient(180deg,rgba(255,205,41,.018),transparent 49%,rgba(78,102,255,.02) 51%,transparent)}
+.fm129-momentum-bars .baseline{stroke:rgba(187,212,222,.26);stroke-width:.65}
+.fm129-momentum-bars .home-bar{fill:#ffd126;filter:drop-shadow(0 0 1.6px rgba(255,209,38,.55))}
+.fm129-momentum-bars .away-bar{fill:#4f6eff;filter:drop-shadow(0 0 1.6px rgba(79,110,255,.55))}
+.fm129-momentum-bars .now-line{stroke:#ff4b59;stroke-width:.55;filter:drop-shadow(0 0 1px rgba(255,75,89,.65))}
+.fm129-momentum-axis{display:flex;justify-content:space-between;color:#617c8a;font-size:7px;font-weight:850}
+.fm129-momentum-legend{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;font-size:8px;font-weight:900;color:#9bb2bd}
+.fm129-momentum-legend span{display:flex;align-items:center;gap:5px;min-width:0;max-width:49%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fm129-momentum-legend i{width:7px;height:7px;border-radius:50%}.fm129-momentum-legend .home i{background:#ffd126;box-shadow:0 0 8px rgba(255,209,38,.4)}.fm129-momentum-legend .away i{background:#4f6eff;box-shadow:0 0 8px rgba(79,110,255,.4)}
+
+/* slightly narrower pitch: formation boards remain prominent */
+.fm119-match-layout{grid-template-columns:minmax(270px,300px) minmax(620px,860px) minmax(270px,300px)!important;gap:12px!important;justify-content:center!important;align-items:stretch!important}
+.fm119-pitch-stage{max-width:860px!important;width:100%!important;justify-self:center!important;grid-template-rows:48px minmax(0,1fr) 35px!important}
+.match-sim-fm119 .sim-pitch-wrap{padding:10px 12px!important;background:linear-gradient(180deg,rgba(4,18,29,.64),rgba(2,13,22,.55))!important}
+.match-sim-fm119 .sim-pitch{width:100%!important;max-width:830px!important;min-height:355px!important;aspect-ratio:1.86/1!important;margin:auto!important;border:1px solid rgba(240,255,245,.62)!important;border-radius:7px!important;background:linear-gradient(180deg,rgba(255,255,255,.018),rgba(0,0,0,.04)),repeating-linear-gradient(90deg,rgba(61,147,72,.99) 0 12.5%,rgba(49,133,65,.99) 12.5% 25%)!important;box-shadow:inset 0 0 52px rgba(0,0,0,.16),0 0 0 1px rgba(58,239,241,.035),0 8px 24px rgba(0,0,0,.16)!important}
+.match-sim-fm119 .sim-player{width:27px!important;height:27px!important;transition:left .19s linear,top .19s linear,transform .12s ease,box-shadow .14s ease!important;will-change:left,top!important}
+.match-sim-fm119 .sim-player>span{font-size:9px!important}.match-sim-fm119 .sim-player small{top:29px!important;max-width:76px!important;font-size:7px!important;font-weight:900!important;letter-spacing:-.01em!important}
+.fm119-formation-head strong{font-size:12px!important}.fm119-formation-head span{font-size:9px!important}.fm119-mini-player span{font-size:8.5px!important}.fm119-mini-player small{font-size:7px!important}
+.fm119-mini-pitch,.fm121-empty-pitch{min-height:420px!important;height:420px!important}
+
+/* premium 3D-ish football: panel pattern rotates inside the sphere while outer position stays stable */
+.match-sim-fm119 .sim-ball{z-index:19!important;width:17px!important;height:17px!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;filter:drop-shadow(0 4px 4px rgba(0,0,0,.38))!important;overflow:visible!important}
+.match-sim-fm119 .sim-ball:after{content:"";position:absolute;left:50%;top:86%;width:12px;height:4px;transform:translate(-50%,-50%);border-radius:50%;background:rgba(0,0,0,.28);filter:blur(1.4px);z-index:-1}
+.match-sim-fm119 .sim-ball .fm129-ball-svg{display:block!important;width:100%!important;height:100%!important;transform-origin:50% 50%;will-change:transform}
+.match-sim-fm119 .sim-ball.is-carried .fm129-ball-svg{animation:fm129Dribble .30s ease-in-out infinite alternate}
+.match-sim-fm119 .sim-ball.is-travelling .fm129-ball-svg{animation:fm129BallFlight .33s linear infinite}
+.match-sim-fm119 .sim-ball.is-shot .fm129-ball-svg,.match-sim-fm119 .sim-ball.is-goal .fm129-ball-svg{animation:fm129BallFlight .19s linear infinite}
+.match-sim-fm119 .sim-ball.is-shot,.match-sim-fm119 .sim-ball.is-goal{width:18px!important;height:18px!important}
+.match-sim-fm119 .sim-ball.is-carried.home{transform:translate(-50%,-50%) translate(14px,8px) scale(.9)!important}.match-sim-fm119 .sim-ball.is-carried.away{transform:translate(-50%,-50%) translate(-14px,8px) scale(.9)!important}
+.fm121-action-path path{stroke-width:.63!important;stroke-dasharray:2.5 1.35!important;opacity:.88!important;animation:fm123-dash .72s linear infinite!important}
+.match-sim-fm119 .sim-player.has-ball:after{border-color:rgba(255,255,255,.65)!important;box-shadow:0 0 12px rgba(255,255,255,.12)!important}
+
+/* OLED typography / tabs */
+.fm119-pitch-toolbar>div:first-child button{font-size:10.5px!important;letter-spacing:.04em!important}.fm119-pitch-toolbar>div:first-child button.active{color:#44f0f4!important;text-shadow:0 0 9px rgba(68,240,244,.25)!important}
+.fm119-pitch-toolbar .view,.fm119-pitch-toolbar select,.fm119-pitch-toolbar .fm119-controls>button{font-size:10px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 0 9px rgba(44,230,237,.035)!important}
+.fm119-pitch-legend{font-size:10.5px!important;color:#d1e1e8!important}
+
+/* live commentary + real match sound controls */
+.fm119-commentary-strip{grid-template-columns:132px minmax(0,1fr) minmax(250px,310px)!important;min-height:90px!important;padding:12px 16px!important;gap:16px!important}
+.fm119-commentary-time b{font-size:34px!important}.fm119-commentary-time span{font-size:9px!important}.fm119-commentary-text strong{font-size:15px!important;line-height:1.25!important}.fm119-commentary-text span{font-size:10px!important}
+.fm129-sound-control{display:grid;grid-template-columns:42px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;column-gap:10px;row-gap:5px;padding:8px 10px;border:1px solid rgba(51,206,221,.18);border-radius:12px;background:linear-gradient(180deg,rgba(8,31,44,.76),rgba(4,20,31,.72));box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 0 18px rgba(31,220,231,.025)}
+.fm129-sound-control button{grid-row:1/3;width:42px;height:42px;display:grid;place-items:center;border-radius:11px;border:1px solid rgba(65,222,232,.24);background:rgba(10,56,68,.54);color:#41ebf1;cursor:pointer;transition:.16s ease}.fm129-sound-control button:hover{transform:translateY(-1px);border-color:rgba(65,235,243,.48);box-shadow:0 0 14px rgba(65,235,243,.12)}.fm129-sound-control button.off{color:#718b97;background:rgba(35,47,54,.5)}.fm129-sound-control button svg{width:22px;height:22px}
+.fm129-sound-meta{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:0}.fm129-sound-meta strong{font-size:9px!important;color:#d9f6f8!important;letter-spacing:.05em!important}.fm129-sound-meta span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#70909d!important;font-size:7px!important}
+.fm129-sound-control input[type="range"]{width:100%;height:4px;accent-color:#3ce9ef;cursor:pointer}
+
+@keyframes fm129OledScan{0%,72%{transform:translateX(-115%);opacity:0}80%{opacity:.72}100%{transform:translateX(120%);opacity:0}}
+@keyframes fm129Dribble{0%{transform:translateY(0) rotate(-13deg) scaleX(1)}100%{transform:translateY(-2.4px) rotate(18deg) scaleX(.96)}}
+@keyframes fm129BallFlight{0%{transform:translateY(0) rotate(0deg) scaleX(1)}25%{transform:translateY(-2.1px) rotate(90deg) scaleX(.93)}50%{transform:translateY(-.4px) rotate(180deg) scaleX(1)}75%{transform:translateY(-2.4px) rotate(270deg) scaleX(.94)}100%{transform:translateY(0) rotate(360deg) scaleX(1)}}
+
+@media(max-width:1500px) and (min-width:1181px){
+  .fm119-match-layout{grid-template-columns:250px minmax(570px,760px) 250px!important;gap:9px!important}
+  .fm119-pitch-stage{max-width:760px!important}.match-sim-fm119 .sim-pitch{max-width:735px!important;min-height:330px!important}
+  .fm119-mini-pitch,.fm121-empty-pitch{min-height:380px!important;height:380px!important}
+  .fm119-commentary-strip{grid-template-columns:118px minmax(0,1fr) 250px!important}
+}
+@media(max-width:1180px){.fm129-sound-control{display:none!important}}
+@media(prefers-reduced-motion:reduce){.fm119-stat-card:after,.match-sim-fm119 .sim-ball .fm129-ball-svg{animation:none!important}}
+.sim-prep-goals-consensus-v129{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:center;gap:10px;margin:10px 0 12px;padding:10px 12px;border:1px solid rgba(255,215,77,.16);border-radius:12px;background:linear-gradient(135deg,rgba(76,58,13,.16),rgba(8,27,41,.72))}.sim-prep-goals-consensus-v129>div{display:flex;align-items:center;gap:8px;min-width:0}.sim-prep-goals-consensus-v129 small{color:#8fa9b5;font-size:8px;font-weight:950;letter-spacing:.07em}.sim-prep-goals-consensus-v129 b{color:#ffe06b;font-size:12px;font-weight:1000;text-shadow:0 0 10px rgba(255,224,107,.12)}.sim-prep-goals-consensus-v129 span{color:#8fa7b3;font-size:9px;font-weight:850}.sim-prep-goals-consensus-v129 em{font-size:8px;font-style:normal;color:#6f8995;white-space:nowrap}

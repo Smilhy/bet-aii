@@ -282,6 +282,11 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
               <div><small>GOŚCIE</small><b>2&nbsp; {consensus.consensus.percent.away}%</b></div>
               <em>{consensus.consensus.sourceCount} {copy.sourcesFound} • zgodność {consensus.consensus.agreement || 0}%</em>
             </div> : <p>{consensusError || consensus?.consensus?.summary || 'Nie znaleziono wystarczającej liczby niezależnych prognoz dla tego meczu.'}</p>}
+            {consensus?.goals?.available ? <div className="sim-prep-goals-consensus-v129">
+              <div><small>GOLE 2.5</small><b>OVER {consensus.goals.over25}%</b><span>UNDER {consensus.goals.under25}%</span></div>
+              {consensus.goals.bttsAvailable ? <div><small>BTTS</small><b>TAK {consensus.goals.bttsYes}%</b><span>NIE {consensus.goals.bttsNo}%</span></div> : null}
+              <em>{consensus.goals.sourceCount || 0} źródeł • pewność {consensus.goals.confidence || 0}%</em>
+            </div> : null}
             <div className="sim-prep-source-grid-v128">
               {(consensus?.sourceRegistry || []).map(source => {
                 const found = (consensus?.sources || []).find(item => String(item.name || '').toLowerCase().includes(String(source.name || '').toLowerCase()) || String(item.url || '').includes(new URL(source.url).hostname))
