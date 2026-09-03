@@ -259,7 +259,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
 
       {data ? <>
         <div className="sim-prep-score-v116">
-          <div><small>{copy.completeness}</small><strong>{completeness}%</strong><span>{copy.source}</span></div>
+          <div><small>{copy.completeness}</small><strong>{completeness}%</strong><span>{copy.source}{data?.snapshot?.enabled ? ` • ${data.snapshot.reused ? 'Snapshot Supabase' : 'Zapis Supabase'}` : ''}</span>{data?.snapshot?.note ? <em className="sim-prep-snapshot-note-v131">{data.snapshot.note}</em> : null}</div>
           <div className="sim-prep-ring-v116" style={{ '--pct': completeness }}><b>{completeness}</b><small>%</small></div>
         </div>
 

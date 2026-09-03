@@ -1,11 +1,94 @@
+const { createClient } = require('@supabase/supabase-js')
+
 const API_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || ''
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY || ''
+const SNAPSHOT_TABLE = 'match_simulator_snapshots'
+
+function getSupabaseAdmin() {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return null
+  try {
+    return createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, { auth: { persistSession: false, autoRefreshToken: false } })
+  } catch (_) {
+    return null
+  }
+}
+
+const snapshotDb = getSupabaseAdmin()
+
+function snapshotMeta(row = {}, extra = {}) {
+  return {
+    enabled: Boolean(snapshotDb),
+    source: 'supabase',
+    reused: Boolean(extra.reused),
+    fallback: Boolean(extra.fallback),
+    savedAt: row?.updated_at || row?.created_at || '',
+    qualityScore: Number(row?.quality_score || row?.payload?.simulationQuality?.score || 0),
+    eligible: Boolean(row?.eligible ?? row?.payload?.simulationQuality?.eligible),
+    note: extra.note || ''
+  }
+}
+
+async function readSimulatorSnapshot(fixtureId) {
+  if (!snapshotDb || !fixtureId) return null
+  try {
+    const { data, error } = await snapshotDb
+      .from(SNAPSHOT_TABLE)
+      .select('fixture_id,fixture_date,home_team,away_team,quality_score,eligible,payload,created_at,updated_at')
+      .eq('fixture_id', String(fixtureId))
+      .maybeSingle()
+    if (error) throw error
+    return data?.payload ? data : null
+  } catch (error) {
+    console.warn('match simulator snapshot read skipped:', error?.message || error)
+    return null
+  }
+}
+
+async function writeSimulatorSnapshot(payload = {}) {
+  if (!snapshotDb || !payload?.fixture?.id || !payload?.simulationQuality) return false
+  const now = new Date().toISOString()
+  const row = {
+    fixture_id: String(payload.fixture.id),
+    fixture_date: payload.fixture.date || null,
+    home_team: String(payload.fixture.home?.name || ''),
+    away_team: String(payload.fixture.away?.name || ''),
+    quality_score: Number(payload.simulationQuality.score || 0),
+    eligible: Boolean(payload.simulationQuality.eligible),
+    payload: { ...payload, snapshot: undefined },
+    updated_at: now
+  }
+  try {
+    const { error } = await snapshotDb.from(SNAPSHOT_TABLE).upsert(row, { onConflict: 'fixture_id' })
+    if (error) throw error
+    return true
+  } catch (error) {
+    console.warn('match simulator snapshot write skipped:', error?.message || error)
+    return false
+  }
+}
+
+function snapshotNeedsRefresh(row = {}) {
+  const payload = row?.payload || {}
+  const homePredicted = Boolean(payload?.lineups?.home?.predicted)
+  const awayPredicted = Boolean(payload?.lineups?.away?.predicted)
+  if (!homePredicted && !awayPredicted) return false
+  const saved = Date.parse(row?.updated_at || row?.created_at || '')
+  if (!Number.isFinite(saved)) return true
+  return Date.now() - saved > 10 * 60 * 1000
+}
+
+function withSnapshot(payload = {}, row = {}, extra = {}) {
+  return { ...payload, snapshot: snapshotMeta(row, extra) }
+}
 
 function json(statusCode, body) {
   return {
     statusCode,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'public, max-age=180, stale-while-revalidate=420',
+      'Cache-Control': 'no-store, max-age=0',
+      'Netlify-CDN-Cache-Control': 'no-store',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Allow-Methods': 'GET, OPTIONS'
@@ -509,10 +592,23 @@ exports.handler = async function(event) {
   const qs = event.queryStringParameters || {}
   const fixtureId = clean(qs.fixture || qs.fixture_id).replace(/[^0-9A-Za-z_-]/g, '').slice(0, 100)
   if (!fixtureId) return json(400, { error: 'Brak fixture id' })
+  const forceRefresh = ['1', 'true', 'yes'].includes(String(qs.refresh || qs.force_refresh || '').toLowerCase())
+  const cachedSnapshot = await readSimulatorSnapshot(fixtureId)
+
+  // Stabilność przede wszystkim: jeżeli mamy wcześniej zapisany, zakwalifikowany snapshot
+  // i nie trzeba jeszcze próbować podmienić przewidywanego XI na oficjalny, zwracamy go od razu.
+  if (cachedSnapshot?.payload?.simulationQuality?.eligible && !forceRefresh && !snapshotNeedsRefresh(cachedSnapshot)) {
+    return json(200, withSnapshot(cachedSnapshot.payload, cachedSnapshot, { reused: true, note: 'Użyto zapisanego, zweryfikowanego snapshotu meczu.' }))
+  }
 
   const fixtureResponse = await apiGet('/fixtures', { id: fixtureId })
   const fixtureRow = fixtureResponse.data?.[0] || null
-  if (!fixtureRow) return json(404, { error: fixtureResponse.error || 'Nie znaleziono meczu w API-Football' })
+  if (!fixtureRow) {
+    if (cachedSnapshot?.payload) {
+      return json(200, withSnapshot(cachedSnapshot.payload, cachedSnapshot, { reused: true, fallback: true, note: 'API chwilowo nie odpowiedziało — użyto najlepszego zapisanego snapshotu.' }))
+    }
+    return json(404, { error: fixtureResponse.error || 'Nie znaleziono meczu w API-Football' })
+  }
   const fixture = normalizeFixture(fixtureRow)
 
   const common = [
@@ -599,7 +695,7 @@ exports.handler = async function(event) {
     ...historicalErrors
   ].filter(Boolean)
 
-  return json(200, {
+  const livePayload = {
     ok: true,
     generatedAt: new Date().toISOString(),
     source: 'API-Football / API-Sports',
@@ -615,5 +711,28 @@ exports.handler = async function(event) {
     recent,
     teamStats,
     simulationQuality: quality
-  })
+  }
+
+  const cachedScore = Number(cachedSnapshot?.quality_score || cachedSnapshot?.payload?.simulationQuality?.score || 0)
+  const liveScore = Number(quality?.score || 0)
+
+  // Nigdy nie pogarszamy już raz zdobytych danych. Gdy zewnętrzne API przy kolejnym
+  // odczycie odda mniej informacji, użytkownik dostaje poprzedni, lepszy snapshot.
+  if (cachedSnapshot?.payload && !forceRefresh && cachedScore > liveScore) {
+    return json(200, withSnapshot(cachedSnapshot.payload, cachedSnapshot, {
+      reused: true,
+      fallback: true,
+      note: `Świeże źródła zwróciły słabszy zestaw (${liveScore}%). Zachowano wcześniejszy snapshot (${cachedScore}%).`
+    }))
+  }
+
+  // Zapisujemy najlepszy dotychczas zestaw. Snapshot kwalifikowany jest trwały między deployami.
+  if (!cachedSnapshot || liveScore >= cachedScore || quality?.eligible) {
+    const saved = await writeSimulatorSnapshot(livePayload)
+    if (saved) {
+      return json(200, { ...livePayload, snapshot: { enabled: true, source: 'supabase', reused: false, fallback: false, savedAt: new Date().toISOString(), qualityScore: liveScore, eligible: Boolean(quality?.eligible), note: 'Najlepszy zestaw danych zapisano w Supabase.' } })
+    }
+  }
+
+  return json(200, { ...livePayload, snapshot: { enabled: Boolean(snapshotDb), source: 'live-api', reused: false, fallback: false, savedAt: '', qualityScore: liveScore, eligible: Boolean(quality?.eligible), note: snapshotDb ? 'Dane bieżące.' : 'Supabase snapshot niedostępny — sprawdź konfigurację tabeli/ENV.' } })
 }

@@ -83990,3 +83990,6 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
   .match-sim-fm119 .sim-pitch{max-width:790px!important;min-height:410px!important}
   .fm119-mini-pitch,.fm121-empty-pitch{min-height:470px!important;height:470px!important}
 }
+
+/* v131 — persistent Supabase match snapshot status */
+.sim-prep-snapshot-note-v131{display:block;margin-top:5px;font-size:10px;font-style:normal;color:#74dfe8;opacity:.9;letter-spacing:.01em}
