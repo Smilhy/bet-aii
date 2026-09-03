@@ -154,6 +154,7 @@ function ensureRealAudioBank(ref) {
   if (!ref.current) {
     ref.current = {
       crowd: createMatchAudio(REAL_MATCH_AUDIO.crowd, { loop: true }),
+      crowdChant: createMatchAudio(REAL_MATCH_AUDIO.crowd, { loop: true }),
       attack: createMatchAudio(REAL_MATCH_AUDIO.attack),
       goal: createMatchAudio(REAL_MATCH_AUDIO.goal),
       goalShout: createMatchAudio(REAL_MATCH_AUDIO.goalShout),
@@ -209,21 +210,40 @@ function playAudioSlice(bank, key, volume, { duration = null, delay = 0, playbac
 
 function setRealCrowd(bank, { enabled, running, volume, danger = 0 } = {}) {
   const crowd = bank?.crowd
+  const chant = bank?.crowdChant
   if (!crowd) return
   if (!enabled) {
     try { crowd.pause() } catch {}
+    try { chant?.pause?.() } catch {}
     return
   }
-  const base = running ? .115 : .055
-  const target = clamp(volume * (base + clamp(danger, 0, 1) * .18), 0, .36)
+
+  // v134: supporters' singing is intentionally audible throughout the match.
+  // The second copy starts later in the same real stadium recording, creating a fuller terrace ambience
+  // without synthetic noise or generated chants.
+  const intensity = clamp(danger, 0, 1)
+  const base = running ? .23 : .11
+  const target = clamp(volume * (base + intensity * .24), 0, .58)
   crowd.volume = target
-  crowd.playbackRate = .98
-  if (crowd.paused) safeMediaPlay(crowd, target, { restart: false, playbackRate: .98 })
+  crowd.playbackRate = .985
+  if (crowd.paused) safeMediaPlay(crowd, target, { restart: false, playbackRate: .985 })
+
+  if (chant) {
+    const chantTarget = clamp(target * (running ? .62 : .38), 0, .32)
+    chant.volume = chantTarget
+    chant.playbackRate = 1.012
+    if (chant.paused) {
+      try {
+        if (!Number.isFinite(chant.currentTime) || chant.currentTime < 1) chant.currentTime = 7.5
+      } catch {}
+      safeMediaPlay(chant, chantTarget, { restart: false, playbackRate: 1.012 })
+    }
+  }
 }
 
 function stopRealAudioBank(bank) {
   if (!bank) return
-  for (const key of ['crowd','attack','goal','goalShout','boo','whistle']) {
+  for (const key of ['crowd','crowdChant','attack','goal','goalShout','boo','whistle']) {
     try { bank[key]?.pause?.(); if (bank[key]) bank[key].currentTime = 0 } catch {}
   }
   for (const timer of bank.timers || []) window.clearTimeout(timer)
@@ -269,11 +289,11 @@ function playRealMatchCue(ref, type, volume = .42) {
     return
   }
   if (type === 'goal') {
-    // Goal reaction: stadium intake -> emotional GOOOOOOL voice -> large applause/cheer.
-    playAudioSlice(bank, 'attack', .82 * v, { duration: 2.6 })
-    playAudioSlice(bank, 'goalShout', .98 * v, { duration: 10.8, delay: .08, playbackRate: .91 })
-    playAudioSlice(bank, 'goal', .98 * v, { duration: 10.5, delay: .30, playbackRate: 1.0 })
-    playAudioSlice(bank, 'goal', .58 * v, { duration: 8.8, delay: .68, playbackRate: .98 })
+    // v134: same emotional real goal reaction, but short and broadcast-like (about 5-6 seconds).
+    playAudioSlice(bank, 'attack', .78 * v, { duration: 1.55 })
+    playAudioSlice(bank, 'goalShout', .98 * v, { duration: 5.4, delay: .05, playbackRate: 1.02 })
+    playAudioSlice(bank, 'goal', .96 * v, { duration: 5.9, delay: .18, playbackRate: 1.02 })
+    playAudioSlice(bank, 'goal', .46 * v, { duration: 4.4, delay: .56, playbackRate: 1.04 })
     return
   }
   if (type === 'attack') {
@@ -1403,7 +1423,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
   const [running, setRunning] = useState(false)
   const [speed, setSpeed] = useState(1)
   const [soundEnabled, setSoundEnabled] = useState(true)
-  const [soundVolume, setSoundVolume] = useState(.52)
+  const [soundVolume, setSoundVolume] = useState(.62)
   const [audioUnlocked, setAudioUnlocked] = useState(false)
   const autoLoaded = useRef(false)
   const autoStarted = useRef(false)
@@ -1727,7 +1747,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
             }} title={!audioUnlocked ? 'Kliknij, aby aktywować prawdziwe audio stadionu' : soundEnabled ? 'Wycisz dźwięki meczu' : 'Włącz dźwięki meczu'} aria-label={!audioUnlocked ? 'Aktywuj prawdziwe audio stadionu' : soundEnabled ? 'Wycisz dźwięki meczu' : 'Włącz dźwięki meczu'}>
               <SpeakerIcon muted={!soundEnabled || !audioUnlocked} />
             </button>
-            <div className="fm129-sound-meta"><strong>{!audioUnlocked ? 'AKTYWUJ AUDIO' : 'DŹWIĘK MECZU'}</strong><span>{!audioUnlocked ? '1 klik • wymóg przeglądarki' : 'Realni kibice • reakcje • gwizdek • gol'}</span></div>
+            <div className="fm129-sound-meta"><strong>{!audioUnlocked ? 'AKTYWUJ AUDIO' : 'DŹWIĘK MECZU'}</strong><span>{!audioUnlocked ? '1 klik • wymóg przeglądarki' : 'Przyśpiewki • reakcje • gwizdek • gol'}</span></div>
             <input aria-label="Głośność dźwięków meczu" type="range" min="0" max="1" step="0.05" value={soundVolume} onChange={event => {
               const value = Number(event.target.value)
               setSoundVolume(value)
