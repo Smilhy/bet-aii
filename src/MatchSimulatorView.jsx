@@ -618,7 +618,10 @@ function FormationBoard({ teamName, lineup, tone = 'home' }) {
   return (
     <aside className={`fm119-formation-panel ${tone}`}>
       <div className="fm119-formation-head">
-        <div><strong>{teamName}</strong><span>{official ? (lineup?.formation || 'Oficjalne XI') : 'Brak oficjalnego XI'}</span></div>
+        <div className="fm123-formation-team">
+          {lineup?.logo ? <img src={lineup.logo} alt="" /> : <i className="fm123-team-mark">⚽</i>}
+          <div><strong>{teamName}</strong><span>{official ? (lineup?.formation || 'Oficjalne XI') : 'Brak oficjalnego XI'}</span></div>
+        </div>
         <em>{official ? 'LIVE XI' : 'API'}</em>
       </div>
       {official && hasGrid ? (
@@ -662,6 +665,39 @@ function StatCompare({ label, home, away, suffix = '', max = null }) {
       <b>{away}{suffix}</b>
     </div>
   )
+}
+
+function buildDisplayKeyStats({ data, model, clockSec, liveCounters = {}, shotsOnTarget = {} }) {
+  const elapsedRatio = clamp(clockSec / MATCH_TOTAL_SECONDS, 0, 1)
+  const fixtureKey = `${data?.fixture?.id || ''}|${data?.fixture?.home?.name || ''}|${data?.fixture?.away?.name || ''}`
+  const seed = hashString(`kpi|${fixtureKey}`)
+  const homeBias = ((seed % 17) - 8) / 10
+  const awayBias = ((((seed >> 4) % 17) - 8) / 10)
+  const homePoss = clamp(model?.possession?.home || 50, 35, 65)
+  const awayPoss = 100 - homePoss
+
+  const paceBase = 420 + (model?.xg?.home || 1) * 95 + (model?.xg?.away || 1) * 85
+  const livePaceBoost = (liveCounters.homeShots + liveCounters.awayShots) * 6
+  const totalPasses = Math.round((paceBase + livePaceBoost) * (0.42 + elapsedRatio * 0.72))
+  const homePasses = Math.round(totalPasses * (homePoss / 100) + homeBias * 8)
+  const awayPasses = Math.max(0, totalPasses - homePasses)
+
+  const homeAccuracy = clamp(Math.round(74 + homePoss * 0.14 + ((model?.strength?.home?.attack || 50) - 50) * 0.05 + homeBias), 68, 92)
+  const awayAccuracy = clamp(Math.round(74 + awayPoss * 0.14 + ((model?.strength?.away?.attack || 50) - 50) * 0.05 + awayBias), 68, 92)
+
+  const duelSwing = clamp(Math.round((model?.strength?.home?.form || 50) - (model?.strength?.away?.form || 50)) * 0.2, -8, 8)
+  const homeDuels = clamp(50 + duelSwing + Math.round(homeBias), 35, 65)
+  const awayDuels = 100 - homeDuels
+
+  const homeOffsides = clamp(Math.round((liveCounters.homeShots + shotsOnTarget.home * 0.6 + (model?.xg?.home || 0) * 0.75) * elapsedRatio * 0.52), 0, 6)
+  const awayOffsides = clamp(Math.round((liveCounters.awayShots + shotsOnTarget.away * 0.6 + (model?.xg?.away || 0) * 0.75) * elapsedRatio * 0.52), 0, 6)
+
+  return {
+    passes: { home: homePasses, away: awayPasses },
+    accuracy: { home: homeAccuracy, away: awayAccuracy },
+    duels: { home: homeDuels, away: awayDuels },
+    offsides: { home: homeOffsides, away: awayOffsides }
+  }
 }
 
 function MomentumChart({ timeline = [], clockSec = 0 }) {
@@ -844,6 +880,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
     home: Math.min(liveCounters.homeShots, currentScore.home + Math.floor(liveCounters.homeShots * 0.38)),
     away: Math.min(liveCounters.awayShots, currentScore.away + Math.floor(liveCounters.awayShots * 0.38))
   }
+  const displayKeyStats = useMemo(() => buildDisplayKeyStats({ data, model, clockSec, liveCounters, shotsOnTarget }), [data, model, clockSec, liveCounters, shotsOnTarget])
   const latestEvent = visibleEvents[0]
   const homeLineupOfficial = (data?.lineups?.home?.startXI?.length || 0) >= 11
   const awayLineupOfficial = (data?.lineups?.away?.startXI?.length || 0) >= 11
@@ -900,13 +937,12 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
           </article>
 
           <article className="fm119-stat-card">
-            <h3>KLUCZOWE DANE</h3>
-            <StatCompare label="Forma" home={model.strength.home.form} away={model.strength.away.form} max={100} />
-            <StatCompare label="Atak modelu" home={model.strength.home.attack} away={model.strength.away.attack} max={100} />
-            <StatCompare label="Obrona modelu" home={model.strength.home.defence} away={model.strength.away.defence} max={100} />
-            <StatCompare label="Tabela" home={data.standings.home?.rank || 0} away={data.standings.away?.rank || 0} />
-            <StatCompare label="Absencje" home={data.injuries.homeCount || 0} away={data.injuries.awayCount || 0} />
-            <div className="fm121-card-footer">Więcej statystyk</div>
+            <h3>KLUCZOWE STATYSTYKI</h3>
+            <StatCompare label="Podania" home={displayKeyStats.passes.home} away={displayKeyStats.passes.away} />
+            <StatCompare label="Celność podań" home={displayKeyStats.accuracy.home} away={displayKeyStats.accuracy.away} suffix="%" max={100} />
+            <StatCompare label="Pojedynki wygrane" home={displayKeyStats.duels.home} away={displayKeyStats.duels.away} suffix="%" max={100} />
+            <StatCompare label="Spalone" home={displayKeyStats.offsides.home} away={displayKeyStats.offsides.away} />
+            <div className="fm121-card-footer">Pełny raport</div>
           </article>
 
           <article className="fm119-stat-card fm119-events-top">
