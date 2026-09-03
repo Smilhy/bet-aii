@@ -327,29 +327,40 @@ function hasUsableGrid(lineup = {}) {
   return (lineup?.startXI || []).filter(player => /^\d+:\d+$/.test(player.grid || '')).length >= 9
 }
 
+function lineupIsReliable(lineup = {}) {
+  const hasXI = (lineup?.startXI?.length || 0) >= 11 && hasUsableGrid(lineup)
+  if (!hasXI) return false
+  if (!lineup?.predicted) return true
+  return Number(lineup?.predictionConfidence || 0) >= 65 && Number(lineup?.sourceMatches || 0) >= 2
+}
+
 function buildSimulationQuality({ prediction, h2h, injuriesFetchOk, lineups, standings, recent, teamStats }) {
   const checks = {
     form: (recent?.home?.length || 0) >= 5 && (recent?.away?.length || 0) >= 5,
     h2h: (h2h?.summary?.count || 0) >= 2,
     injuries: Boolean(injuriesFetchOk),
-    lineups: (lineups?.home?.startXI?.length || 0) >= 11 && (lineups?.away?.startXI?.length || 0) >= 11 && hasUsableGrid(lineups.home) && hasUsableGrid(lineups.away),
+    lineups: lineupIsReliable(lineups?.home) && lineupIsReliable(lineups?.away),
     standings: Boolean(standings?.home && standings?.away),
     teamStats: Boolean(teamStats?.home?.available && teamStats?.away?.available),
     prediction: Boolean(prediction?.available)
   }
-  const weights = { form: 18, h2h: 10, injuries: 8, lineups: 22, standings: 10, teamStats: 18, prediction: 14 }
+  // Najważniejsze są realne dane sportowe. Kursy nie są częścią gate'a jakości.
+  // H2H, tabela, absencje i zewnętrzna prognoza wzmacniają model, ale ich brak sam w sobie nie blokuje meczu.
+  const required = ['form', 'lineups', 'teamStats']
+  const weights = { form: 25, lineups: 30, teamStats: 30, prediction: 7, injuries: 3, h2h: 3, standings: 2 }
   const score = Object.entries(checks).reduce((sum, [key, ok]) => sum + (ok ? weights[key] : 0), 0)
   const labels = {
-    form: 'minimum 5 ostatnich meczów obu drużyn',
-    h2h: 'minimum 2 mecze H2H',
+    form: 'minimum 5 ostatnich realnych meczów obu drużyn',
+    h2h: 'historia H2H',
     injuries: 'sprawdzenie absencji',
-    lineups: 'oficjalny lub przewidywany XI z pozycjami',
-    standings: 'pełna pozycja obu drużyn w tabeli',
-    teamStats: 'pełne statystyki sezonowe obu drużyn',
+    lineups: 'oficjalny lub wiarygodny przewidywany XI z pozycjami',
+    standings: 'pozycja obu drużyn w tabeli',
+    teamStats: 'rzetelne statystyki obu drużyn (sezon lub min. 5 ostatnich meczów)',
     prediction: 'prognoza API'
   }
-  const reasons = Object.entries(checks).filter(([, ok]) => !ok).map(([key]) => labels[key])
-  return { eligible: reasons.length === 0 && score >= 90, score, checks, reasons }
+  const reasons = required.filter(key => !checks[key]).map(key => labels[key])
+  const warnings = Object.keys(checks).filter(key => !checks[key] && !required.includes(key)).map(key => labels[key])
+  return { eligible: reasons.length === 0 && score >= 80, score, checks, required, reasons, warnings }
 }
 
 function normalizeRecent(rows = [], teamId) {
@@ -369,13 +380,38 @@ function normalizeRecent(rows = [], teamId) {
 function normalizeTeamStatistics(row = {}) {
   const fixtures = row?.fixtures || {}
   const goals = row?.goals || {}
+  const available = Boolean(row && Object.keys(row).length)
   return {
-    available: Boolean(row && Object.keys(row).length),
+    available,
+    source: available ? 'season-api' : '',
+    sampleSize: num(fixtures?.played?.total),
     form: clean(row?.form),
     played: num(fixtures?.played?.total), wins: num(fixtures?.wins?.total), draws: num(fixtures?.draws?.total), losses: num(fixtures?.loses?.total),
     goalsForAvg: num(goals?.for?.average?.total), goalsAgainstAvg: num(goals?.against?.average?.total),
     cleanSheets: num(row?.clean_sheet?.total), failedToScore: num(row?.failed_to_score?.total),
     biggestWinHome: clean(row?.biggest?.wins?.home), biggestWinAway: clean(row?.biggest?.wins?.away)
+  }
+}
+
+function deriveRecentTeamStatistics(rows = []) {
+  const sample = (rows || []).slice(0, 8).filter(row => Number.isFinite(Number(row?.gf)) && Number.isFinite(Number(row?.ga)))
+  if (sample.length < 5) return { available: false, source: '', sampleSize: sample.length }
+  const wins = sample.filter(row => row.result === 'W').length
+  const draws = sample.filter(row => row.result === 'D').length
+  const losses = sample.filter(row => row.result === 'L').length
+  const goalsFor = sample.reduce((sum, row) => sum + num(row.gf), 0)
+  const goalsAgainst = sample.reduce((sum, row) => sum + num(row.ga), 0)
+  return {
+    available: true,
+    source: 'recent-fixtures',
+    sampleSize: sample.length,
+    form: sample.map(row => row.result).join(''),
+    played: sample.length, wins, draws, losses,
+    goalsForAvg: Math.round((goalsFor / sample.length) * 100) / 100,
+    goalsAgainstAvg: Math.round((goalsAgainst / sample.length) * 100) / 100,
+    cleanSheets: sample.filter(row => num(row.ga) === 0).length,
+    failedToScore: sample.filter(row => num(row.gf) === 0).length,
+    biggestWinHome: '', biggestWinAway: ''
   }
 }
 
@@ -429,16 +465,18 @@ exports.handler = async function(event) {
     home: findStanding(standingsR.data || [], fixture.home.id),
     away: findStanding(standingsR.data || [], fixture.away.id)
   }
+  const seasonHomeStats = normalizeTeamStatistics(statsHomeR.data?.[0] || {})
+  const seasonAwayStats = normalizeTeamStatistics(statsAwayR.data?.[0] || {})
   const teamStats = {
-    home: normalizeTeamStatistics(statsHomeR.data?.[0] || {}),
-    away: normalizeTeamStatistics(statsAwayR.data?.[0] || {})
+    home: seasonHomeStats.available ? seasonHomeStats : deriveRecentTeamStatistics(recent.home),
+    away: seasonAwayStats.available ? seasonAwayStats : deriveRecentTeamStatistics(recent.away)
   }
 
   const historicalErrors = []
   if ((lineups.home.startXI.length || 0) < 11 || (lineups.away.startXI.length || 0) < 11) {
     const [homeHistoryR, awayHistoryR] = await Promise.all([
-      (lineups.home.startXI.length || 0) < 11 ? fetchRecentLineupHistory(recentHomeR.data || [], fixture.home.id, 3) : Promise.resolve({ rows: [], errors: [] }),
-      (lineups.away.startXI.length || 0) < 11 ? fetchRecentLineupHistory(recentAwayR.data || [], fixture.away.id, 3) : Promise.resolve({ rows: [], errors: [] })
+      (lineups.home.startXI.length || 0) < 11 ? fetchRecentLineupHistory(recentHomeR.data || [], fixture.home.id, 5) : Promise.resolve({ rows: [], errors: [] }),
+      (lineups.away.startXI.length || 0) < 11 ? fetchRecentLineupHistory(recentAwayR.data || [], fixture.away.id, 5) : Promise.resolve({ rows: [], errors: [] })
     ])
     historicalErrors.push(...homeHistoryR.errors, ...awayHistoryR.errors)
     if ((lineups.home.startXI.length || 0) < 11) {

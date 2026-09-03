@@ -206,7 +206,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       .sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b))
   }
 
-  const requestDailyMatches = async ({ forceRefresh = false, skipOdds = false } = {}) => {
+  const requestDailyMatches = async ({ forceRefresh = false, skipOdds = true } = {}) => {
     const params = new URLSearchParams({
       sport: 'Piłka nożna',
       country: 'Wszystkie',
@@ -236,20 +236,19 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       let usedFallback = false
 
       // 1) Najpierw szybki cache. Jeśli cache istnieje, lista pojawia się bez czekania
-      // na kosztowne odświeżanie wszystkich stron kursów.
+      // na kosztowne pobieranie dodatkowych źródeł.
       try {
-        payload = await requestDailyMatches({ forceRefresh: false, skipOdds: false })
+        payload = await requestDailyMatches({ forceRefresh: false, skipOdds: true })
         realRows = normalizeRealRows(payload, requestNowMs)
       } catch (_) {}
 
       // 2) Jeśli cache nie ma dzisiejszych meczów, pobierz świeże dane z API.
       if (!realRows.length) {
         try {
-          payload = await requestDailyMatches({ forceRefresh: true, skipOdds: false })
+          payload = await requestDailyMatches({ forceRefresh: true, skipOdds: true })
           realRows = normalizeRealRows(payload, requestNowMs)
         } catch (_) {
-          // 3) Ostatni bezpieczny fallback: realne fixture'y bez oczekiwania na /odds.
-          // Brak kursów nie może wycinać całej listy meczów.
+          // 3) Ostatni bezpieczny fallback: ponów pobranie samych realnych fixture'ów.
           payload = await requestDailyMatches({ forceRefresh: true, skipOdds: true })
           realRows = normalizeRealRows(payload, requestNowMs)
           usedFallback = true
@@ -258,7 +257,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
       setMatches(realRows)
       setSourceMessage(realRows.length
-        ? `${realRows.filter(row => Boolean(getReal1X2(row))).length} meczów z realnymi kursami 1X2 • kolejność wg kickoffu${usedFallback ? ' • kursy chwilowo niedostępne' : ''}`
+        ? `${realRows.length} realnych, nierozpoczętych meczów • kolejność wg kickoffu${usedFallback ? ' • kursy pominięte' : ''}`
         : 'Brak kolejnych nierozpoczętych meczów na dzisiaj.')
     } catch (err) {
       setMatches([])
@@ -281,7 +280,6 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   const availableMatches = useMemo(() => matches
     .filter(match => isPreMatchFixture(match, nowMs))
     .filter(match => getDateKeyInTimeZone(getFixtureStartMs(match), clientTimeZone) === todayKey)
-    .filter(match => Boolean(getReal1X2(match)))
     .sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b)), [matches, nowMs, todayKey, clientTimeZone])
 
   const filteredMatches = useMemo(() => {

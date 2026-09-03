@@ -73,7 +73,13 @@ function lineupHasGrid(lineup = {}) {
 function buildChecks(match, data, copy) {
   const homeXI = data?.lineups?.home || {}
   const awayXI = data?.lineups?.away || {}
-  const lineupsReady = (homeXI.startXI?.length || 0) >= 11 && (awayXI.startXI?.length || 0) >= 11 && lineupHasGrid(homeXI) && lineupHasGrid(awayXI)
+  const lineupReliable = lineup => {
+    const ready = (lineup?.startXI?.length || 0) >= 11 && lineupHasGrid(lineup)
+    if (!ready) return false
+    if (!lineup?.predicted) return true
+    return Number(lineup?.predictionConfidence || 0) >= 65 && Number(lineup?.sourceMatches || 0) >= 2
+  }
+  const lineupsReady = lineupReliable(homeXI) && lineupReliable(awayXI)
   const bothOfficial = lineupsReady && homeXI.official !== false && awayXI.official !== false && !homeXI.predicted && !awayXI.predicted
   const predictedSides = [homeXI, awayXI].filter(item => item?.predicted)
   const predictedConfidence = predictedSides.length ? Math.round(predictedSides.reduce((sum, item) => sum + Number(item.predictionConfidence || 0), 0) / predictedSides.length) : 0
@@ -85,6 +91,8 @@ function buildChecks(match, data, copy) {
   const statsReady = Boolean(data?.teamStats?.home?.available && data?.teamStats?.away?.available)
   const injuriesFetchOk = Boolean(data?.simulationQuality?.checks?.injuries ?? !errorHas(data, 'Absencje:'))
   const oddsReady = hasRealOdds(match)
+  const homeStatsSource = data?.teamStats?.home?.source === 'recent-fixtures' ? `${data?.teamStats?.home?.sampleSize || 0} ostatnich` : 'sezon'
+  const awayStatsSource = data?.teamStats?.away?.source === 'recent-fixtures' ? `${data?.teamStats?.away?.sampleSize || 0} ostatnich` : 'sezon'
   const lineupDetail = bothOfficial
     ? copy.official
     : lineupsReady && predictedSides.length
@@ -92,27 +100,24 @@ function buildChecks(match, data, copy) {
       : copy.lineupsPending
 
   return [
-    { key: 'odds', label: copy.odds, ready: oddsReady, score: oddsReady ? 10 : 0, max: 10, detail: oddsReady ? copy.liveOdds : copy.noOdds },
-    { key: 'form', label: copy.form, ready: formReady, score: formReady ? 15 : 0, max: 15, detail: formReady ? `${data.recent.home.length} + ${data.recent.away.length} ${copy.checked.toLowerCase()}` : 'Wymagane min. 5 + 5 meczów' },
-    { key: 'h2h', label: copy.h2h, ready: h2hReady, score: h2hReady ? 10 : 0, max: 10, detail: h2hReady ? `${data.h2h.summary.count} ${copy.checked.toLowerCase()}` : 'Wymagane min. 2 H2H' },
-    { key: 'injuries', label: copy.injuries, ready: injuriesFetchOk, score: injuriesFetchOk ? 10 : 0, max: 10, detail: injuriesFetchOk ? ((data?.injuries?.homeCount || 0) + (data?.injuries?.awayCount || 0) ? `${data.injuries.homeCount}:${data.injuries.awayCount}` : copy.noInjuries) : copy.unavailable },
-    { key: 'lineups', label: copy.lineups, ready: lineupsReady, predicted: lineupsReady && !bothOfficial, score: lineupsReady ? (bothOfficial ? 15 : 13) : 0, max: 15, detail: lineupDetail },
-    { key: 'standings', label: copy.standings, ready: standingsReady, score: standingsReady ? 10 : 0, max: 10, detail: standingsReady ? `${data.standings.home.rank}. / ${data.standings.away.rank}.` : 'Wymagana tabela obu drużyn' },
-    { key: 'teamStats', label: copy.teamStats, ready: statsReady, score: statsReady ? 15 : 0, max: 15, detail: statsReady ? copy.checked : 'Wymagane pełne statystyki obu drużyn' },
-    { key: 'prediction', label: copy.prediction, ready: predictionReady, score: predictionReady ? 15 : 0, max: 15, detail: predictionReady ? copy.checked : copy.unavailable },
+    { key: 'odds', label: copy.odds, ready: oddsReady, required: false, detail: oddsReady ? copy.liveOdds : `${copy.noOdds} • opcjonalne` },
+    { key: 'form', label: copy.form, ready: formReady, required: true, detail: formReady ? `${data.recent.home.length} + ${data.recent.away.length} ${copy.checked.toLowerCase()}` : 'Wymagane min. 5 + 5 realnych meczów' },
+    { key: 'h2h', label: copy.h2h, ready: h2hReady, required: false, detail: h2hReady ? `${data.h2h.summary.count} ${copy.checked.toLowerCase()}` : `${copy.noH2H} • opcjonalne` },
+    { key: 'injuries', label: copy.injuries, ready: injuriesFetchOk, required: false, detail: injuriesFetchOk ? ((data?.injuries?.homeCount || 0) + (data?.injuries?.awayCount || 0) ? `${data.injuries.homeCount}:${data.injuries.awayCount}` : copy.noInjuries) : `${copy.unavailable} • opcjonalne` },
+    { key: 'lineups', label: copy.lineups, ready: lineupsReady, required: true, predicted: lineupsReady && !bothOfficial, detail: lineupDetail },
+    { key: 'standings', label: copy.standings, ready: standingsReady, required: false, detail: standingsReady ? `${data.standings.home.rank}. / ${data.standings.away.rank}.` : 'Brak tabeli • opcjonalne (np. puchar)' },
+    { key: 'teamStats', label: copy.teamStats, ready: statsReady, required: true, detail: statsReady ? `${copy.checked} • ${homeStatsSource} / ${awayStatsSource}` : 'Wymagane: sezonowe lub min. 5 ostatnich meczów obu drużyn' },
+    { key: 'prediction', label: copy.prediction, ready: predictionReady, required: false, detail: predictionReady ? copy.checked : `${copy.unavailable} • opcjonalne` },
   ]
 }
 
 function buildEligibility(match, data, checks) {
-  const oddsReady = hasRealOdds(match)
   const backend = data?.simulationQuality || {}
-  const missingChecks = checks.filter(item => !item.ready).map(item => item.label)
-  const reasons = [...(Array.isArray(backend.reasons) ? backend.reasons : [])]
-  if (!oddsReady) reasons.unshift('realne kursy 1X2')
-  missingChecks.forEach(label => {
-    if (!reasons.some(reason => String(reason).toLowerCase().includes(String(label).toLowerCase()))) reasons.push(label)
-  })
-  return { eligible: Boolean(backend.eligible) && oddsReady && missingChecks.length === 0, reasons: [...new Set(reasons)] }
+  if (typeof backend.eligible === 'boolean') {
+    return { eligible: backend.eligible, reasons: Array.isArray(backend.reasons) ? backend.reasons : [], warnings: Array.isArray(backend.warnings) ? backend.warnings : [] }
+  }
+  const missingRequired = checks.filter(item => item.required && !item.ready).map(item => item.label)
+  return { eligible: missingRequired.length === 0, reasons: missingRequired, warnings: [] }
 }
 
 export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBack, onStart }) {
@@ -166,11 +171,11 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
 
   const checks = useMemo(() => data ? buildChecks(match, data, copy) : [], [match, data, copy])
   const completeness = useMemo(() => {
+    if (Number.isFinite(Number(data?.simulationQuality?.score))) return Math.round(Number(data.simulationQuality.score))
     if (!checks.length) return 0
-    const score = checks.reduce((sum, item) => sum + item.score, 0)
-    const max = checks.reduce((sum, item) => sum + item.max, 0)
-    return Math.round(score * 100 / Math.max(1, max))
-  }, [checks])
+    const required = checks.filter(item => item.required)
+    return Math.round(required.filter(item => item.ready).length * 100 / Math.max(1, required.length))
+  }, [checks, data])
   const eligibility = useMemo(() => data ? buildEligibility(match, data, checks) : { eligible: false, reasons: [] }, [match, data, checks])
   const phaseIndex = Math.min(phases.length - 1, Math.floor(progress / (100 / phases.length)))
 
@@ -219,8 +224,8 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
         </div>
 
         <div className="sim-prep-checks-v116">
-          {checks.map(item => <article key={item.key} className={item.ready ? (item.predicted ? 'predicted' : 'ready') : item.pending ? 'pending' : 'missing'}>
-            <i>{item.ready ? (item.predicted ? 'P' : '✓') : item.pending ? '…' : '!'}</i>
+          {checks.map(item => <article key={item.key} className={item.ready ? (item.predicted ? 'predicted' : 'ready') : !item.required ? 'optional' : item.pending ? 'pending' : 'missing'}>
+            <i>{item.ready ? (item.predicted ? 'P' : '✓') : !item.required ? 'i' : item.pending ? '…' : '!'}</i>
             <div><strong>{item.label}</strong><span>{item.detail}</span></div>
           </article>)}
         </div>
@@ -232,7 +237,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
           </div>
           {!eligibility.eligible && eligibility.reasons.length ? <ul>{eligibility.reasons.slice(0, 6).map(reason => <li key={reason}>{reason}</li>)}</ul> : null}
         </div>
-        {data.partial && eligibility.eligible ? <div className="sim-prep-partial-v116">⚠ Część dodatkowych źródeł nie odpowiedziała, ale wszystkie dane wymagane do symulacji są dostępne.</div> : null}
+        {data.partial && eligibility.eligible ? <div className="sim-prep-partial-v116">ℹ Część danych dodatkowych jest niedostępna, ale wymagane statystyki sportowe spełniają próg jakości.</div> : null}
         <div className="sim-prep-footer-v116">
           <p>{copy.predictive}</p>
           <button type="button" disabled={!eligibility.eligible} className={!eligibility.eligible ? 'blocked-v126' : ''} onClick={() => eligibility.eligible && onStart?.(match, data)}>{eligibility.eligible ? `▶ ${copy.start}` : `✕ ${copy.rejectedButton}`}</button>
