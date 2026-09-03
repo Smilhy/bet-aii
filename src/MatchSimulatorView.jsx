@@ -130,8 +130,12 @@ const REAL_MATCH_AUDIO = {
   crowd: 'https://upload.wikimedia.org/wikipedia/commons/0/07/Noonelikesus.ogg',
   // Real human crowd reaction — public domain, Wikimedia Commons / PDSounds.
   attack: 'https://upload.wikimedia.org/wikipedia/commons/0/0f/Ohhh_ahhh.ogg',
-  // Real applause / cheering crowd — public domain, Wikimedia Commons / PDSounds.
-  goal: 'https://upload.wikimedia.org/wikipedia/commons/a/a3/Slow_starting_applause.ogg',
+  // Strong real applause — public domain, Wikimedia Commons / PDSounds.
+  goal: 'https://upload.wikimedia.org/wikipedia/commons/5/5b/Applause_i.ogg',
+  // Real human commentator-style GOOOOAAAAAALLLL shout — CC BY-SA 3.0, Wikimedia Commons.
+  goalShout: 'https://upload.wikimedia.org/wikipedia/commons/2/28/Goal_Shout.ogg',
+  // Real human "boo" reaction — CC0, Wikimedia Commons. Multiple layers make it feel like a crowd.
+  boo: 'https://upload.wikimedia.org/wikipedia/commons/6/6a/En-us-boo2.ogg',
   // Real sharp whistle recording — CC BY 4.0, Work With Sounds / Wikimedia Commons.
   whistle: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/WWS_Policewhistle.ogg'
 }
@@ -152,6 +156,8 @@ function ensureRealAudioBank(ref) {
       crowd: createMatchAudio(REAL_MATCH_AUDIO.crowd, { loop: true }),
       attack: createMatchAudio(REAL_MATCH_AUDIO.attack),
       goal: createMatchAudio(REAL_MATCH_AUDIO.goal),
+      goalShout: createMatchAudio(REAL_MATCH_AUDIO.goalShout),
+      boo: createMatchAudio(REAL_MATCH_AUDIO.boo),
       whistle: createMatchAudio(REAL_MATCH_AUDIO.whistle),
       timers: new Set()
     }
@@ -217,7 +223,7 @@ function setRealCrowd(bank, { enabled, running, volume, danger = 0 } = {}) {
 
 function stopRealAudioBank(bank) {
   if (!bank) return
-  for (const key of ['crowd','attack','goal','whistle']) {
+  for (const key of ['crowd','attack','goal','goalShout','boo','whistle']) {
     try { bank[key]?.pause?.(); if (bank[key]) bank[key].currentTime = 0 } catch {}
   }
   for (const timer of bank.timers || []) window.clearTimeout(timer)
@@ -244,14 +250,30 @@ function playRealMatchCue(ref, type, volume = .42) {
     playAudioSlice(bank, 'goal', .42 * v, { duration: 4.8, delay: .25 })
     return
   }
+  if (type === 'card') {
+    playAudioSlice(bank, 'whistle', .58 * v, { duration: .50, playbackRate: 1.03 })
+    // Layer several real boos with tiny timing/pitch differences so it sounds like a section of supporters.
+    playAudioSlice(bank, 'boo', .66 * v, { duration: 1.35, delay: .10, playbackRate: .92 })
+    playAudioSlice(bank, 'boo', .52 * v, { duration: 1.35, delay: .22, playbackRate: 1.02 })
+    playAudioSlice(bank, 'boo', .44 * v, { duration: 1.35, delay: .34, playbackRate: 1.10 })
+    playAudioSlice(bank, 'attack', .24 * v, { duration: 1.8, delay: .08 })
+    return
+  }
   if (type === 'foul') {
-    playAudioSlice(bank, 'whistle', .56 * v, { duration: .52, playbackRate: 1.03 })
+    playAudioSlice(bank, 'whistle', .72 * v, { duration: .66, playbackRate: 1.02 })
+    playAudioSlice(bank, 'attack', .42 * v, { duration: 2.2, delay: .03 })
+    playAudioSlice(bank, 'boo', .78 * v, { duration: 1.38, delay: .10, playbackRate: .88 })
+    playAudioSlice(bank, 'boo', .64 * v, { duration: 1.38, delay: .22, playbackRate: .98 })
+    playAudioSlice(bank, 'boo', .55 * v, { duration: 1.38, delay: .36, playbackRate: 1.08 })
+    playAudioSlice(bank, 'boo', .42 * v, { duration: 1.38, delay: .50, playbackRate: 1.16 })
     return
   }
   if (type === 'goal') {
-    playAudioSlice(bank, 'attack', .70 * v, { duration: 3.2 })
-    playAudioSlice(bank, 'goal', .92 * v, { duration: 7.5, delay: .18 })
-    playAudioSlice(bank, 'whistle', .34 * v, { duration: .42, delay: .72 })
+    // Goal reaction: stadium intake -> emotional GOOOOOOL voice -> large applause/cheer.
+    playAudioSlice(bank, 'attack', .82 * v, { duration: 2.6 })
+    playAudioSlice(bank, 'goalShout', .98 * v, { duration: 10.8, delay: .08, playbackRate: .91 })
+    playAudioSlice(bank, 'goal', .98 * v, { duration: 10.5, delay: .30, playbackRate: 1.0 })
+    playAudioSlice(bank, 'goal', .58 * v, { duration: 8.8, delay: .68, playbackRate: .98 })
     return
   }
   if (type === 'attack') {
@@ -693,6 +715,24 @@ function buildTimeline(data, model) {
     }
   }
 
+
+  const addDangerousFouls = (team, count) => {
+    const lineup = team === 'home' ? data.lineups?.home : data.lineups?.away
+    const teamName = team === 'home' ? fixture.home?.name : fixture.away?.name
+    for (let i = 0; i < count; i += 1) {
+      const player = pickLineupPlayer(lineup, random, ['D', 'M'])
+      addEvent({
+        team,
+        type: 'foul',
+        actor: player?.name || '',
+        lane: 28 + random() * 44,
+        minMinute: 10,
+        maxMinute: 84,
+        label: `📣 Groźny faul — ${shortPlayerName(player?.name || teamName)} (${teamName})`
+      })
+    }
+  }
+
   for (let i = 0; i < model.topScore.home; i += 1) addGoal('home')
   for (let i = 0; i < model.topScore.away; i += 1) addGoal('away')
 
@@ -702,6 +742,8 @@ function buildTimeline(data, model) {
   addCorners('away', clamp(Math.round(model.expected.awayCorners * 0.55), 1, 5))
   addCards('home', 1 + Math.round(random()))
   addCards('away', 1 + Math.round(random()))
+  addDangerousFouls('home', 1 + (random() > .58 ? 1 : 0))
+  addDangerousFouls('away', 1 + (random() > .58 ? 1 : 0))
 
   events.push({ second: 1, minute: 0, team: 'none', type: 'info', lane: 50, label: '▶ Początek symulacji' })
   events.push({ second: HALF_SECONDS, minute: 45, team: 'none', type: 'info', lane: 50, label: '⏱ Przerwa' })
@@ -1003,6 +1045,14 @@ function buildLiveAnimationState({ clockSec, timeline, model, fixture, lineups }
         actionPhase = 'card'
         ball = { x: possessionTeam === 'home' ? 61 : 39, y: eventLane }
         pressure = .2
+        commentary = `${featuredEvent.label}`
+      } else if (featuredEvent.type === 'foul') {
+        flashMode = 'foul'
+        actionPhase = 'foul'
+        ballAttached = false
+        showTrajectory = false
+        ball = { x: possessionTeam === 'home' ? 68 : 32, y: eventLane }
+        pressure = .14
         commentary = `${featuredEvent.label}`
       }
     }
@@ -1519,7 +1569,8 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
     const crossed = timeline.filter(event => event.second > previous && event.second <= clockSec)
     crossed.forEach(event => {
       if (event.type === 'goal') playRealMatchCue(realAudioBankRef, 'goal', soundVolume)
-      else if (event.type === 'card') playRealMatchCue(realAudioBankRef, 'foul', soundVolume)
+      else if (event.type === 'card') playRealMatchCue(realAudioBankRef, 'card', soundVolume)
+      else if (event.type === 'foul') playRealMatchCue(realAudioBankRef, 'foul', soundVolume)
       else if (event.type === 'corner') playRealMatchCue(realAudioBankRef, 'corner', soundVolume)
       else if (event.type === 'shot') playRealMatchCue(realAudioBankRef, 'attack', soundVolume * .9)
     })

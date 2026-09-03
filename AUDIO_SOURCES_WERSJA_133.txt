@@ -1,0 +1,41 @@
+Bet+AI Match Engine v133 — audio sources
+
+1) Stadium chant / background supporters
+   File: Noonelikesus.ogg
+   Source: Wikimedia Commons
+   URL: https://commons.wikimedia.org/wiki/File:Noonelikesus.ogg
+   License: Public Domain
+
+2) Crowd danger reaction
+   File: Ohhh ahhh.ogg
+   Source: Wikimedia Commons / PDSounds
+   URL: https://commons.wikimedia.org/wiki/File:Ohhh_ahhh.ogg
+   License: Public Domain
+
+3) Goal applause
+   File: Applause i.ogg
+   Source: Wikimedia Commons / PDSounds
+   URL: https://commons.wikimedia.org/wiki/File:Applause_i.ogg
+   License: Public Domain
+
+4) GOOOOAAAAAALLLL voice
+   File: Goal Shout.ogg
+   Author: Frogfriend99
+   Source: Wikimedia Commons
+   URL: https://commons.wikimedia.org/wiki/File:Goal_Shout.ogg
+   License: CC BY-SA 3.0
+   License URL: https://creativecommons.org/licenses/by-sa/3.0/
+
+5) Boo reaction
+   File: En-us-boo2.ogg
+   Author: Dinoroki
+   Source: Wikimedia Commons
+   URL: https://commons.wikimedia.org/wiki/File:En-us-boo2.ogg
+   License: CC0 1.0
+
+6) Whistle
+   File: WWS Policewhistle.ogg
+   Source: Wikimedia Commons / Work With Sounds
+   License: CC BY 4.0 (see source page already documented in v132)
+
+The v133 interface layers the real boo recording at several very small timing/playback-rate offsets for a stadium-section effect. It does not generate fake spoken commentary.
