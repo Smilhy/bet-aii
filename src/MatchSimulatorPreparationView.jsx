@@ -24,7 +24,13 @@ const COPY = {
     checked: 'Sprawdzone',
     unavailable: 'Brak danych',
     official: 'Oficjalne XI',
-    lineupsPending: 'Oczekiwanie na oficjalne XI',
+    lineupsPending: 'Nie udało się zbudować XI',
+    predicted: 'Przewidywane XI',
+    qualified: 'MECZ ZAKWALIFIKOWANY',
+    qualifiedDesc: 'Dane spełniają rygorystyczne warunki Bet+AI. Symulacja może zostać uruchomiona.',
+    rejected: 'MECZ ODRZUCONY — ZA MAŁO DANYCH',
+    rejectedDesc: 'Ten mecz nie zostanie dopuszczony do symulacji. Brakuje kluczowych danych:',
+    rejectedButton: 'Symulacja zablokowana',
     noOdds: 'Brak realnych kursów',
     liveOdds: 'Realne kursy dostępne',
     noH2H: 'Brak historii H2H',
@@ -44,7 +50,7 @@ const COPY = {
     completeness: 'Data completeness',
     predictive: 'Predictive simulation — this is not the actual future match result.',
     odds: '1X2 odds', form: 'Team form', h2h: 'H2H', injuries: 'Injuries', lineups: 'Starting XI', standings: 'Standings', teamStats: 'Team statistics', prediction: 'API prediction/model',
-    checked: 'Checked', unavailable: 'Unavailable', official: 'Official XI', lineupsPending: 'Waiting for official XI', noOdds: 'No real odds', liveOdds: 'Real odds available', noH2H: 'No H2H history', noInjuries: 'No reported absences', partial: 'Some sources did not answer. The model will only use available data.'
+    checked: 'Checked', unavailable: 'Unavailable', official: 'Official XI', lineupsPending: 'Could not build XI', predicted: 'Predicted XI', qualified: 'MATCH QUALIFIED', qualifiedDesc: 'The match meets Bet+AI strict data requirements.', rejected: 'MATCH REJECTED — INSUFFICIENT DATA', rejectedDesc: 'Simulation is blocked because key data is missing:', rejectedButton: 'Simulation blocked', noOdds: 'No real odds', liveOdds: 'Real odds available', noH2H: 'No H2H history', noInjuries: 'No reported absences', partial: 'Some sources did not answer. The model will only use available data.'
   }
 }
 
@@ -60,27 +66,53 @@ function errorHas(data, prefix) {
   return Array.isArray(data?.errors) && data.errors.some(item => String(item || '').toLowerCase().startsWith(String(prefix).toLowerCase()))
 }
 
+function lineupHasGrid(lineup = {}) {
+  return (lineup?.startXI || []).filter(player => /^\d+:\d+$/.test(String(player?.grid || ''))).length >= 9
+}
+
 function buildChecks(match, data, copy) {
-  const lineupsOfficial = (data?.lineups?.home?.startXI?.length || 0) >= 11 && (data?.lineups?.away?.startXI?.length || 0) >= 11
-  const formReady = (data?.recent?.home?.length || 0) > 0 && (data?.recent?.away?.length || 0) > 0
-  const h2hReady = (data?.h2h?.summary?.count || 0) > 0
+  const homeXI = data?.lineups?.home || {}
+  const awayXI = data?.lineups?.away || {}
+  const lineupsReady = (homeXI.startXI?.length || 0) >= 11 && (awayXI.startXI?.length || 0) >= 11 && lineupHasGrid(homeXI) && lineupHasGrid(awayXI)
+  const bothOfficial = lineupsReady && homeXI.official !== false && awayXI.official !== false && !homeXI.predicted && !awayXI.predicted
+  const predictedSides = [homeXI, awayXI].filter(item => item?.predicted)
+  const predictedConfidence = predictedSides.length ? Math.round(predictedSides.reduce((sum, item) => sum + Number(item.predictionConfidence || 0), 0) / predictedSides.length) : 0
+  const sourceMatches = Math.max(Number(homeXI.sourceMatches || 0), Number(awayXI.sourceMatches || 0))
+  const formReady = (data?.recent?.home?.length || 0) >= 5 && (data?.recent?.away?.length || 0) >= 5
+  const h2hReady = (data?.h2h?.summary?.count || 0) >= 2
   const predictionReady = Boolean(data?.prediction?.available)
-  const standingsReady = Boolean(data?.standings?.home || data?.standings?.away)
-  const statsReady = Boolean(data?.teamStats?.home?.available || data?.teamStats?.away?.available)
-  const injuriesFetchOk = !errorHas(data, 'Absencje:')
-  const lineupFetchOk = !errorHas(data, 'Składy:')
+  const standingsReady = Boolean(data?.standings?.home && data?.standings?.away)
+  const statsReady = Boolean(data?.teamStats?.home?.available && data?.teamStats?.away?.available)
+  const injuriesFetchOk = Boolean(data?.simulationQuality?.checks?.injuries ?? !errorHas(data, 'Absencje:'))
   const oddsReady = hasRealOdds(match)
+  const lineupDetail = bothOfficial
+    ? copy.official
+    : lineupsReady && predictedSides.length
+      ? `${copy.predicted} • ${predictedConfidence || '—'}% • ${sourceMatches || predictedSides[0]?.sourceMatches || 0} ostatnie składy`
+      : copy.lineupsPending
 
   return [
     { key: 'odds', label: copy.odds, ready: oddsReady, score: oddsReady ? 10 : 0, max: 10, detail: oddsReady ? copy.liveOdds : copy.noOdds },
-    { key: 'form', label: copy.form, ready: formReady, score: formReady ? 15 : 0, max: 15, detail: formReady ? `${data.recent.home.length} + ${data.recent.away.length} ${copy.checked.toLowerCase()}` : copy.unavailable },
-    { key: 'h2h', label: copy.h2h, ready: h2hReady, score: h2hReady ? 10 : 4, max: 10, detail: h2hReady ? `${data.h2h.summary.count} ${copy.checked.toLowerCase()}` : copy.noH2H },
+    { key: 'form', label: copy.form, ready: formReady, score: formReady ? 15 : 0, max: 15, detail: formReady ? `${data.recent.home.length} + ${data.recent.away.length} ${copy.checked.toLowerCase()}` : 'Wymagane min. 5 + 5 meczów' },
+    { key: 'h2h', label: copy.h2h, ready: h2hReady, score: h2hReady ? 10 : 0, max: 10, detail: h2hReady ? `${data.h2h.summary.count} ${copy.checked.toLowerCase()}` : 'Wymagane min. 2 H2H' },
     { key: 'injuries', label: copy.injuries, ready: injuriesFetchOk, score: injuriesFetchOk ? 10 : 0, max: 10, detail: injuriesFetchOk ? ((data?.injuries?.homeCount || 0) + (data?.injuries?.awayCount || 0) ? `${data.injuries.homeCount}:${data.injuries.awayCount}` : copy.noInjuries) : copy.unavailable },
-    { key: 'lineups', label: copy.lineups, ready: lineupsOfficial, pending: lineupFetchOk && !lineupsOfficial, score: lineupsOfficial ? 15 : lineupFetchOk ? 5 : 0, max: 15, detail: lineupsOfficial ? copy.official : lineupFetchOk ? copy.lineupsPending : copy.unavailable },
-    { key: 'standings', label: copy.standings, ready: standingsReady, score: standingsReady ? 10 : 0, max: 10, detail: standingsReady ? copy.checked : copy.unavailable },
-    { key: 'teamStats', label: copy.teamStats, ready: statsReady, score: statsReady ? 15 : 0, max: 15, detail: statsReady ? copy.checked : copy.unavailable },
+    { key: 'lineups', label: copy.lineups, ready: lineupsReady, predicted: lineupsReady && !bothOfficial, score: lineupsReady ? (bothOfficial ? 15 : 13) : 0, max: 15, detail: lineupDetail },
+    { key: 'standings', label: copy.standings, ready: standingsReady, score: standingsReady ? 10 : 0, max: 10, detail: standingsReady ? `${data.standings.home.rank}. / ${data.standings.away.rank}.` : 'Wymagana tabela obu drużyn' },
+    { key: 'teamStats', label: copy.teamStats, ready: statsReady, score: statsReady ? 15 : 0, max: 15, detail: statsReady ? copy.checked : 'Wymagane pełne statystyki obu drużyn' },
     { key: 'prediction', label: copy.prediction, ready: predictionReady, score: predictionReady ? 15 : 0, max: 15, detail: predictionReady ? copy.checked : copy.unavailable },
   ]
+}
+
+function buildEligibility(match, data, checks) {
+  const oddsReady = hasRealOdds(match)
+  const backend = data?.simulationQuality || {}
+  const missingChecks = checks.filter(item => !item.ready).map(item => item.label)
+  const reasons = [...(Array.isArray(backend.reasons) ? backend.reasons : [])]
+  if (!oddsReady) reasons.unshift('realne kursy 1X2')
+  missingChecks.forEach(label => {
+    if (!reasons.some(reason => String(reason).toLowerCase().includes(String(label).toLowerCase()))) reasons.push(label)
+  })
+  return { eligible: Boolean(backend.eligible) && oddsReady && missingChecks.length === 0, reasons: [...new Set(reasons)] }
 }
 
 export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBack, onStart }) {
@@ -139,6 +171,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
     const max = checks.reduce((sum, item) => sum + item.max, 0)
     return Math.round(score * 100 / Math.max(1, max))
   }, [checks])
+  const eligibility = useMemo(() => data ? buildEligibility(match, data, checks) : { eligible: false, reasons: [] }, [match, data, checks])
   const phaseIndex = Math.min(phases.length - 1, Math.floor(progress / (100 / phases.length)))
 
   return (
@@ -186,16 +219,23 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
         </div>
 
         <div className="sim-prep-checks-v116">
-          {checks.map(item => <article key={item.key} className={item.ready ? 'ready' : item.pending ? 'pending' : 'missing'}>
-            <i>{item.ready ? '✓' : item.pending ? '…' : '!'}</i>
+          {checks.map(item => <article key={item.key} className={item.ready ? (item.predicted ? 'predicted' : 'ready') : item.pending ? 'pending' : 'missing'}>
+            <i>{item.ready ? (item.predicted ? 'P' : '✓') : item.pending ? '…' : '!'}</i>
             <div><strong>{item.label}</strong><span>{item.detail}</span></div>
           </article>)}
         </div>
 
-        {data.partial ? <div className="sim-prep-partial-v116">⚠ {copy.partial}</div> : null}
+        <div className={`sim-prep-quality-gate-v126 ${eligibility.eligible ? 'accepted' : 'rejected'}`}>
+          <div>
+            <strong>{eligibility.eligible ? `✓ ${copy.qualified}` : `✕ ${copy.rejected}`}</strong>
+            <span>{eligibility.eligible ? copy.qualifiedDesc : copy.rejectedDesc}</span>
+          </div>
+          {!eligibility.eligible && eligibility.reasons.length ? <ul>{eligibility.reasons.slice(0, 6).map(reason => <li key={reason}>{reason}</li>)}</ul> : null}
+        </div>
+        {data.partial && eligibility.eligible ? <div className="sim-prep-partial-v116">⚠ Część dodatkowych źródeł nie odpowiedziała, ale wszystkie dane wymagane do symulacji są dostępne.</div> : null}
         <div className="sim-prep-footer-v116">
           <p>{copy.predictive}</p>
-          <button type="button" onClick={() => onStart?.(match, data)}>▶ {copy.start}</button>
+          <button type="button" disabled={!eligibility.eligible} className={!eligibility.eligible ? 'blocked-v126' : ''} onClick={() => eligibility.eligible && onStart?.(match, data)}>{eligibility.eligible ? `▶ ${copy.start}` : `✕ ${copy.rejectedButton}`}</button>
         </div>
       </> : null}
     </section>

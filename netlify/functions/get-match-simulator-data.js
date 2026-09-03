@@ -162,9 +162,13 @@ function normalizeInjuries(rows = [], homeId, awayId) {
   }
 }
 
-function normalizeLineups(rows = [], homeId, awayId) {
-  const normalizeTeam = row => ({
+function normalizeLineupTeamRow(row = null) {
+  return {
     available: Boolean(row),
+    official: Boolean(row),
+    predicted: false,
+    predictionConfidence: 0,
+    sourceMatches: 0,
     teamId: clean(row?.team?.id), team: clean(row?.team?.name), logo: clean(row?.team?.logo),
     colors: {
       player: {
@@ -186,13 +190,166 @@ function normalizeLineups(rows = [], homeId, awayId) {
     })).filter(player => player.id || player.name),
     substitutes: (row?.substitutes || []).map(entry => ({
       id: clean(entry?.player?.id), name: clean(entry?.player?.name), number: num(entry?.player?.number, 0), pos: clean(entry?.player?.pos)
-    }))
-  })
+    })).filter(player => player.id || player.name)
+  }
+}
+
+function normalizeLineups(rows = [], homeId, awayId) {
   const homeRow = rows.find(row => String(row?.team?.id || '') === String(homeId || '')) || null
   const awayRow = rows.find(row => String(row?.team?.id || '') === String(awayId || '')) || null
-  const home = normalizeTeam(homeRow)
-  const away = normalizeTeam(awayRow)
+  const home = normalizeLineupTeamRow(homeRow)
+  const away = normalizeLineupTeamRow(awayRow)
   return { available: home.startXI.length >= 11 || away.startXI.length >= 11, home, away }
+}
+
+function normalizeNameKey(value = '') {
+  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
+}
+
+function isCompletedFixture(row = {}) {
+  const short = clean(row?.fixture?.status?.short).toUpperCase()
+  return ['FT', 'AET', 'PEN'].includes(short)
+}
+
+async function fetchRecentLineupHistory(recentRows = [], teamId, limit = 3) {
+  const fixtureIds = []
+  for (const row of recentRows || []) {
+    if (!isCompletedFixture(row)) continue
+    const id = clean(row?.fixture?.id)
+    if (!id || fixtureIds.includes(id)) continue
+    fixtureIds.push(id)
+    if (fixtureIds.length >= limit) break
+  }
+  if (!fixtureIds.length) return { rows: [], errors: [] }
+  const responses = await Promise.all(fixtureIds.map(id => apiGet('/fixtures/lineups', { fixture: id })))
+  const history = []
+  const errors = []
+  responses.forEach((response, index) => {
+    if (!response.ok) {
+      errors.push(`Historia składu ${fixtureIds[index]}: ${response.error}`)
+      return
+    }
+    const row = (response.data || []).find(item => String(item?.team?.id || '') === String(teamId || '')) || null
+    const normalized = normalizeLineupTeamRow(row)
+    if (normalized.startXI.length >= 11) history.push(normalized)
+  })
+  return { rows: history, errors }
+}
+
+function buildPredictedLineup(history = [], injuries = [], teamId = '') {
+  const complete = (history || []).filter(item => (item?.startXI?.length || 0) >= 11)
+  if (!complete.length) return null
+  const base = complete.find(item => item.startXI.filter(player => /^\d+:\d+$/.test(player.grid || '')).length >= 9) || complete[0]
+  const injured = new Set((injuries || [])
+    .filter(item => String(item.teamId || '') === String(teamId || ''))
+    .map(item => normalizeNameKey(item.player))
+    .filter(Boolean))
+
+  const candidates = new Map()
+  complete.forEach((lineup, index) => {
+    const recency = Math.max(1, 5 - index * 1.4)
+    lineup.startXI.forEach(player => {
+      const key = clean(player.id) || normalizeNameKey(player.name)
+      if (!key) return
+      const current = candidates.get(key) || { ...player, starts: 0, bench: 0, score: 0, appearances: 0 }
+      current.starts += 1
+      current.appearances += 1
+      current.score += 10 + recency
+      if (!current.grid && player.grid) current.grid = player.grid
+      if (!current.pos && player.pos) current.pos = player.pos
+      if (!current.number && player.number) current.number = player.number
+      candidates.set(key, current)
+    })
+    lineup.substitutes.forEach(player => {
+      const key = clean(player.id) || normalizeNameKey(player.name)
+      if (!key) return
+      const current = candidates.get(key) || { ...player, starts: 0, bench: 0, score: 0, appearances: 0 }
+      current.bench += 1
+      current.appearances += 1
+      current.score += 2 + recency * 0.35
+      candidates.set(key, current)
+    })
+  })
+
+  const used = new Set()
+  let injuryReplacements = 0
+  const predictedXI = base.startXI.map(slot => {
+    const slotPos = clean(slot.pos).toUpperCase()
+    const baseKey = clean(slot.id) || normalizeNameKey(slot.name)
+    const ranked = [...candidates.entries()]
+      .filter(([key, player]) => !used.has(key) && !injured.has(normalizeNameKey(player.name)))
+      .map(([key, player]) => ({
+        key,
+        player,
+        rank: player.score + (clean(player.pos).toUpperCase() === slotPos ? 34 : 0) + (key === baseKey ? 8 : 0)
+      }))
+      .sort((a, b) => b.rank - a.rank)
+    const samePos = ranked.find(item => clean(item.player.pos).toUpperCase() === slotPos)
+    const choice = samePos || ranked[0]
+    if (!choice) return null
+    used.add(choice.key)
+    if (choice.key !== baseKey) injuryReplacements += injured.has(normalizeNameKey(slot.name)) ? 1 : 0
+    return {
+      id: choice.player.id,
+      name: choice.player.name,
+      number: choice.player.number || slot.number,
+      pos: choice.player.pos || slot.pos,
+      grid: slot.grid
+    }
+  }).filter(Boolean)
+
+  if (predictedXI.length < 11) return null
+  const avgStartRate = predictedXI.reduce((sum, player) => {
+    const key = clean(player.id) || normalizeNameKey(player.name)
+    const info = candidates.get(key)
+    return sum + (info ? info.starts / Math.max(1, complete.length) : 0)
+  }, 0) / 11
+  const confidence = Math.max(58, Math.min(91, Math.round(58 + complete.length * 6 + avgStartRate * 22 - injuryReplacements * 3)))
+  const substitutes = [...candidates.entries()]
+    .filter(([key, player]) => !used.has(key) && !injured.has(normalizeNameKey(player.name)))
+    .sort((a, b) => b[1].score - a[1].score)
+    .slice(0, 9)
+    .map(([, player]) => ({ id: player.id, name: player.name, number: player.number, pos: player.pos }))
+
+  return {
+    ...base,
+    available: true,
+    official: false,
+    predicted: true,
+    predictionConfidence: confidence,
+    sourceMatches: complete.length,
+    startXI: predictedXI,
+    substitutes
+  }
+}
+
+function hasUsableGrid(lineup = {}) {
+  return (lineup?.startXI || []).filter(player => /^\d+:\d+$/.test(player.grid || '')).length >= 9
+}
+
+function buildSimulationQuality({ prediction, h2h, injuriesFetchOk, lineups, standings, recent, teamStats }) {
+  const checks = {
+    form: (recent?.home?.length || 0) >= 5 && (recent?.away?.length || 0) >= 5,
+    h2h: (h2h?.summary?.count || 0) >= 2,
+    injuries: Boolean(injuriesFetchOk),
+    lineups: (lineups?.home?.startXI?.length || 0) >= 11 && (lineups?.away?.startXI?.length || 0) >= 11 && hasUsableGrid(lineups.home) && hasUsableGrid(lineups.away),
+    standings: Boolean(standings?.home && standings?.away),
+    teamStats: Boolean(teamStats?.home?.available && teamStats?.away?.available),
+    prediction: Boolean(prediction?.available)
+  }
+  const weights = { form: 18, h2h: 10, injuries: 8, lineups: 22, standings: 10, teamStats: 18, prediction: 14 }
+  const score = Object.entries(checks).reduce((sum, [key, ok]) => sum + (ok ? weights[key] : 0), 0)
+  const labels = {
+    form: 'minimum 5 ostatnich meczów obu drużyn',
+    h2h: 'minimum 2 mecze H2H',
+    injuries: 'sprawdzenie absencji',
+    lineups: 'oficjalny lub przewidywany XI z pozycjami',
+    standings: 'pełna pozycja obu drużyn w tabeli',
+    teamStats: 'pełne statystyki sezonowe obu drużyn',
+    prediction: 'prognoza API'
+  }
+  const reasons = Object.entries(checks).filter(([, ok]) => !ok).map(([key]) => labels[key])
+  return { eligible: reasons.length === 0 && score >= 90, score, checks, reasons }
 }
 
 function normalizeRecent(rows = [], teamId) {
@@ -259,6 +416,44 @@ exports.handler = async function(event) {
   ]
 
   const [predictionR, injuriesR, lineupsR, h2hR, standingsR, recentHomeR, recentAwayR, statsHomeR, statsAwayR] = await Promise.all(common)
+  const prediction = normalizePrediction(predictionR.data?.[0] || {})
+  const h2h = normalizeH2H(h2hR.data || [], fixture.home.id, fixture.away.id)
+  const injuries = normalizeInjuries(injuriesR.data || [], fixture.home.id, fixture.away.id)
+  let lineups = normalizeLineups(lineupsR.data || [], fixture.home.id, fixture.away.id)
+  const recent = {
+    home: normalizeRecent(recentHomeR.data || [], fixture.home.id),
+    away: normalizeRecent(recentAwayR.data || [], fixture.away.id)
+  }
+  const standings = {
+    available: Boolean(standingsR.data?.length),
+    home: findStanding(standingsR.data || [], fixture.home.id),
+    away: findStanding(standingsR.data || [], fixture.away.id)
+  }
+  const teamStats = {
+    home: normalizeTeamStatistics(statsHomeR.data?.[0] || {}),
+    away: normalizeTeamStatistics(statsAwayR.data?.[0] || {})
+  }
+
+  const historicalErrors = []
+  if ((lineups.home.startXI.length || 0) < 11 || (lineups.away.startXI.length || 0) < 11) {
+    const [homeHistoryR, awayHistoryR] = await Promise.all([
+      (lineups.home.startXI.length || 0) < 11 ? fetchRecentLineupHistory(recentHomeR.data || [], fixture.home.id, 3) : Promise.resolve({ rows: [], errors: [] }),
+      (lineups.away.startXI.length || 0) < 11 ? fetchRecentLineupHistory(recentAwayR.data || [], fixture.away.id, 3) : Promise.resolve({ rows: [], errors: [] })
+    ])
+    historicalErrors.push(...homeHistoryR.errors, ...awayHistoryR.errors)
+    if ((lineups.home.startXI.length || 0) < 11) {
+      const predictedHome = buildPredictedLineup(homeHistoryR.rows, injuries.items, fixture.home.id)
+      if (predictedHome) lineups.home = predictedHome
+    }
+    if ((lineups.away.startXI.length || 0) < 11) {
+      const predictedAway = buildPredictedLineup(awayHistoryR.rows, injuries.items, fixture.away.id)
+      if (predictedAway) lineups.away = predictedAway
+    }
+    lineups.available = lineups.home.startXI.length >= 11 || lineups.away.startXI.length >= 11
+  }
+
+  const injuriesFetchOk = injuriesR.ok
+  const quality = buildSimulationQuality({ prediction, h2h, injuriesFetchOk, lineups, standings, recent, teamStats })
   const errors = [
     fixtureResponse.ok ? '' : `Mecz: ${fixtureResponse.error}`,
     predictionR.ok ? '' : `Prognoza: ${predictionR.error}`,
@@ -269,7 +464,8 @@ exports.handler = async function(event) {
     recentHomeR.ok ? '' : `Forma gospodarzy: ${recentHomeR.error}`,
     recentAwayR.ok ? '' : `Forma gości: ${recentAwayR.error}`,
     statsHomeR.ok ? '' : `Statystyki gospodarzy: ${statsHomeR.error}`,
-    statsAwayR.ok ? '' : `Statystyki gości: ${statsAwayR.error}`
+    statsAwayR.ok ? '' : `Statystyki gości: ${statsAwayR.error}`,
+    ...historicalErrors
   ].filter(Boolean)
 
   return json(200, {
@@ -280,22 +476,13 @@ exports.handler = async function(event) {
     partial: errors.length > 0,
     errors,
     fixture,
-    prediction: normalizePrediction(predictionR.data?.[0] || {}),
-    h2h: normalizeH2H(h2hR.data || [], fixture.home.id, fixture.away.id),
-    injuries: normalizeInjuries(injuriesR.data || [], fixture.home.id, fixture.away.id),
-    lineups: normalizeLineups(lineupsR.data || [], fixture.home.id, fixture.away.id),
-    standings: {
-      available: Boolean(standingsR.data?.length),
-      home: findStanding(standingsR.data || [], fixture.home.id),
-      away: findStanding(standingsR.data || [], fixture.away.id)
-    },
-    recent: {
-      home: normalizeRecent(recentHomeR.data || [], fixture.home.id),
-      away: normalizeRecent(recentAwayR.data || [], fixture.away.id)
-    },
-    teamStats: {
-      home: normalizeTeamStatistics(statsHomeR.data?.[0] || {}),
-      away: normalizeTeamStatistics(statsAwayR.data?.[0] || {})
-    }
+    prediction,
+    h2h,
+    injuries,
+    lineups,
+    standings,
+    recent,
+    teamStats,
+    simulationQuality: quality
   })
 }

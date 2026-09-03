@@ -844,7 +844,9 @@ function formationBoardPositions(lineup = {}) {
 
 function FormationBoard({ teamName, lineup, tone = 'home' }) {
   const positions = useMemo(() => formationBoardPositions(lineup), [lineup])
-  const official = (lineup?.startXI?.length || 0) >= 11
+  const ready = (lineup?.startXI?.length || 0) >= 11
+  const predicted = Boolean(lineup?.predicted)
+  const official = ready && !predicted && lineup?.official !== false
   const hasGrid = positions.length >= 11
   const kitVars = useMemo(() => formationKitVariables(lineup, tone), [lineup, tone])
   return (
@@ -852,11 +854,11 @@ function FormationBoard({ teamName, lineup, tone = 'home' }) {
       <div className="fm119-formation-head">
         <div className="fm123-formation-team">
           {lineup?.logo ? <img src={lineup.logo} alt="" /> : <i className="fm123-team-mark">⚽</i>}
-          <div><strong>{teamName}</strong><span>{official ? (lineup?.formation || 'Oficjalne XI') : 'Brak oficjalnego XI'}</span></div>
+          <div><strong>{teamName}</strong><span>{ready ? `${lineup?.formation || 'XI'}${predicted ? ` • przewidywany ${lineup?.predictionConfidence || ''}%` : ' • oficjalny'}` : 'Brak składu'}</span></div>
         </div>
-        <em>{official ? 'LIVE XI' : 'API'}</em>
+        <em>{official ? 'LIVE XI' : predicted ? 'PRED XI' : 'API'}</em>
       </div>
-      {official && hasGrid ? (
+      {ready && hasGrid ? (
         <div className="fm119-mini-pitch">
           <div className="fm119-mini-half" />
           <div className="fm119-mini-box top" />
@@ -875,13 +877,13 @@ function FormationBoard({ teamName, lineup, tone = 'home' }) {
           <div className="fm119-mini-box top" />
           <div className="fm119-mini-box bottom" />
           <div className="fm119-no-lineup">
-            <strong>{official ? 'Brak pozycji boiskowych w API' : 'Oczekiwanie na oficjalny skład'}</strong>
-            <span>Bet+AI nie generuje fikcyjnych nazwisk ani ustawienia.</span>
-            {official ? <div className="fm119-real-xi-list">{lineup.startXI.map((player, index) => <em key={player.id || index}>{player.number || '•'} {player.name}</em>)}</div> : null}
+            <strong>{ready ? 'Brak pozycji boiskowych w API' : 'Brak składu do symulacji'}</strong>
+            <span>{predicted ? 'XI przewidywana z ostatnich realnych składów.' : 'Bet+AI nie generuje przypadkowych nazwisk ani ustawienia.'}</span>
+            {ready ? <div className="fm119-real-xi-list">{lineup.startXI.map((player, index) => <em key={player.id || index}>{player.number || '•'} {player.name}</em>)}</div> : null}
           </div>
         </div>
       )}
-      <div className="fm119-formation-footer"><span>{official ? `${lineup.startXI.length} zawodników • Trener` : 'Dane API • Trener'}</span><b>{lineup?.coach || '—'}</b></div>
+      <div className="fm119-formation-footer"><span>{ready ? `${lineup.startXI.length} zawodników • ${predicted ? `predykcja z ${lineup.sourceMatches || 0} składów` : 'oficjalne XI'} • Trener` : 'Dane API • Trener'}</span><b>{lineup?.coach || '—'}</b></div>
     </aside>
   )
 }
@@ -1066,6 +1068,10 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
       const response = await fetch(`/.netlify/functions/get-match-simulator-data?fixture=${encodeURIComponent(id)}`)
       const payload = await response.json().catch(() => ({}))
       if (!response.ok || !payload.ok) throw new Error(payload.error || 'Nie udało się pobrać danych symulacji')
+      if (payload?.simulationQuality && !payload.simulationQuality.eligible) {
+        const reasons = Array.isArray(payload.simulationQuality.reasons) ? payload.simulationQuality.reasons.slice(0, 3).join(', ') : 'za mało danych'
+        throw new Error(`Mecz odrzucony przez filtr jakości: ${reasons}`)
+      }
       setData(payload)
     } catch (err) {
       setData(null)
@@ -1114,13 +1120,14 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
   }
   const displayKeyStats = useMemo(() => buildDisplayKeyStats({ data, model, clockSec, liveCounters, shotsOnTarget }), [data, model, clockSec, liveCounters, shotsOnTarget])
   const latestEvent = visibleEvents[0]
-  const homeLineupOfficial = (data?.lineups?.home?.startXI?.length || 0) >= 11
-  const awayLineupOfficial = (data?.lineups?.away?.startXI?.length || 0) >= 11
+  const homeLineupReady = (data?.lineups?.home?.startXI?.length || 0) >= 11
+  const awayLineupReady = (data?.lineups?.away?.startXI?.length || 0) >= 11
+  const usesPredictedXI = Boolean(data?.lineups?.home?.predicted || data?.lineups?.away?.predicted)
 
   return (
     <section className="match-sim-page match-sim-fm119">
       {error ? <div className="sim-error">⚠ {error}</div> : null}
-      {dataLoading ? <div className="sim-loading fm119-loading"><i /><strong>Pobieram realne dane meczu…</strong><span>Oficjalne XI • formacje • H2H • forma • tabela • model Bet+AI</span></div> : null}
+      {dataLoading ? <div className="sim-loading fm119-loading"><i /><strong>Pobieram realne dane meczu…</strong><span>XI oficjalne/przewidywane • formacje • H2H • forma • tabela • model Bet+AI</span></div> : null}
 
       {data && model ? <>
         <header className="fm119-scorebar">
@@ -1212,7 +1219,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
         <section className="fm119-commentary-strip">
           <div className="fm119-commentary-time"><b>{clockSec >= MATCH_TOTAL_SECONDS ? '90\'' : `${Math.floor(clockSec / 60)}'`}</b><span>{running ? 'NA ŻYWO' : clockSec >= MATCH_TOTAL_SECONDS ? 'KONIEC' : 'PAUZA'}</span></div>
           <div className="fm119-commentary-text">
-            <strong>{latestEvent?.label || (homeLineupOfficial && awayLineupOfficial ? 'Mecz gotowy. Silnik wykorzystuje oficjalne składy i formacje z API.' : 'Silnik nie wyświetla fikcyjnych zawodników — czeka na oficjalne XI.')}</strong>
+            <strong>{latestEvent?.label || (homeLineupReady && awayLineupReady ? (usesPredictedXI ? 'Mecz gotowy. Skład przewidywany z ostatnich realnych XI; formacja i zawodnicy pochodzą z danych API.' : 'Mecz gotowy. Silnik wykorzystuje oficjalne składy i formacje z API.') : 'Mecz nie spełnia warunków jakości danych.')}</strong>
             <span>{data.prediction.advice || `Model xG: ${model.xg.home} – ${model.xg.away} • H2H: ${data.h2h.summary?.homeWins || 0}-${data.h2h.summary?.draws || 0}-${data.h2h.summary?.awayWins || 0}`}</span>
           </div>
           <div className="fm119-sound-wave"><i/><i/><i/><i/><i/></div>

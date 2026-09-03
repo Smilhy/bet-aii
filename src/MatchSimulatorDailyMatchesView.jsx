@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 const COPY = {
   pl: {
     title: 'Mecze dnia',
-    subtitle: 'Tylko realne mecze pobrane z API-Football. Brak danych = brak meczu na liście.',
+    subtitle: 'Tylko realne mecze z kursami 1X2. Pełna jakość danych jest sprawdzana przed symulacją.',
     search: 'Wyszukaj mecz, ligę lub kraj',
     sport: 'Sport',
     football: 'Piłka nożna',
@@ -24,7 +24,7 @@ const COPY = {
   },
   en: {
     title: 'Matches of the day',
-    subtitle: 'Only real fixtures fetched from API-Football. No API data = no match shown.',
+    subtitle: 'Only real fixtures with 1X2 odds. Full data quality is checked before simulation.',
     search: 'Search match, league or country',
     sport: 'Sport',
     football: 'Football',
@@ -258,7 +258,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
       setMatches(realRows)
       setSourceMessage(realRows.length
-        ? `${realRows.length} realnych, nierozpoczętych meczów • kolejność wg kickoffu${usedFallback ? ' • kursy chwilowo niedostępne' : ''}`
+        ? `${realRows.filter(row => Boolean(getReal1X2(row))).length} meczów z realnymi kursami 1X2 • kolejność wg kickoffu${usedFallback ? ' • kursy chwilowo niedostępne' : ''}`
         : 'Brak kolejnych nierozpoczętych meczów na dzisiaj.')
     } catch (err) {
       setMatches([])
@@ -281,6 +281,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   const availableMatches = useMemo(() => matches
     .filter(match => isPreMatchFixture(match, nowMs))
     .filter(match => getDateKeyInTimeZone(getFixtureStartMs(match), clientTimeZone) === todayKey)
+    .filter(match => Boolean(getReal1X2(match)))
     .sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b)), [matches, nowMs, todayKey, clientTimeZone])
 
   const filteredMatches = useMemo(() => {

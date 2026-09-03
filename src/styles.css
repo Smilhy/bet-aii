@@ -83817,3 +83817,13 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 @keyframes fm125GoalCard{from{opacity:0;transform:translate(-50%,-50%) scale(.86)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 @media(prefers-reduced-motion:reduce){.match-sim-fm119 .sim-ball.is-travelling,.match-sim-fm119 .sim-ball.is-shot,.match-sim-fm119 .sim-ball.is-goal,.match-sim-fm119 .sim-goal.net-hit,.match-sim-fm119 .sim-player.support:after{animation:none!important}}
 .fm125-fulltime-overlay em{margin-top:3px!important;color:#b4c6cf!important;font-size:8px!important;font-style:normal!important;font-weight:800!important;letter-spacing:.02em!important}
+
+/* WERSJA 126 — strict data gate + predicted XI */
+.sim-prep-checks-v116 article.predicted{border-color:rgba(255,209,82,.22)!important;background:linear-gradient(135deg,rgba(71,56,18,.28),rgba(15,31,49,.9))!important}
+.sim-prep-checks-v116 article.predicted>i{color:#ffd35d!important;background:rgba(148,111,28,.2)!important;border:1px solid rgba(255,213,104,.25)!important;font-size:10px!important}
+.sim-prep-checks-v116 article.predicted strong{color:#fff3c7!important}
+.sim-prep-checks-v116 article.predicted span{color:#d1b96f!important}
+.sim-prep-quality-gate-v126{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px;padding:16px 18px;border-radius:18px;border:1px solid transparent;background:rgba(5,21,34,.92)}
+.sim-prep-quality-gate-v126>div{display:grid;gap:5px}.sim-prep-quality-gate-v126 strong{font-size:13px;font-weight:1000;letter-spacing:.035em}.sim-prep-quality-gate-v126 span{font-size:10px;line-height:1.45}.sim-prep-quality-gate-v126.accepted{border-color:rgba(55,237,175,.24);background:linear-gradient(135deg,rgba(14,78,59,.24),rgba(5,26,35,.92))}.sim-prep-quality-gate-v126.accepted strong{color:#52f0bd}.sim-prep-quality-gate-v126.accepted span{color:#9cc9bb}.sim-prep-quality-gate-v126.rejected{border-color:rgba(255,105,88,.26);background:linear-gradient(135deg,rgba(81,27,25,.32),rgba(22,18,26,.94))}.sim-prep-quality-gate-v126.rejected strong{color:#ff9a88}.sim-prep-quality-gate-v126.rejected span{color:#d6a39a}.sim-prep-quality-gate-v126 ul{margin:0;padding:0 0 0 18px;display:grid;gap:3px;min-width:320px;color:#ffc0b4;font-size:9px}
+.sim-prep-footer-v116 button.blocked-v126,.sim-prep-footer-v116 button:disabled{cursor:not-allowed!important;background:linear-gradient(90deg,#354651,#2c3a43)!important;color:#7f98a4!important;box-shadow:none!important;transform:none!important;opacity:.78!important}
+@media(max-width:760px){.sim-prep-quality-gate-v126{grid-template-columns:1fr}.sim-prep-quality-gate-v126 ul{min-width:0}}
