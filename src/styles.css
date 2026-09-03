@@ -83941,3 +83941,52 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 @media(max-width:1180px){.fm129-sound-control{display:none!important}}
 @media(prefers-reduced-motion:reduce){.fm119-stat-card:after,.match-sim-fm119 .sim-ball .fm129-ball-svg{animation:none!important}}
 .sim-prep-goals-consensus-v129{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:center;gap:10px;margin:10px 0 12px;padding:10px 12px;border:1px solid rgba(255,215,77,.16);border-radius:12px;background:linear-gradient(135deg,rgba(76,58,13,.16),rgba(8,27,41,.72))}.sim-prep-goals-consensus-v129>div{display:flex;align-items:center;gap:8px;min-width:0}.sim-prep-goals-consensus-v129 small{color:#8fa9b5;font-size:8px;font-weight:950;letter-spacing:.07em}.sim-prep-goals-consensus-v129 b{color:#ffe06b;font-size:12px;font-weight:1000;text-shadow:0 0 10px rgba(255,224,107,.12)}.sim-prep-goals-consensus-v129 span{color:#8fa7b3;font-size:9px;font-weight:850}.sim-prep-goals-consensus-v129 em{font-size:8px;font-style:normal;color:#6f8995;white-space:nowrap}
+
+/* WERSJA_130 — +30% MATCH AREA + LIVE REVEAL MOMENTUM */
+.fm119-match-layout{
+  grid-template-columns:minmax(315px,350px) minmax(760px,930px) minmax(315px,350px)!important;
+  gap:14px!important;
+  max-width:1660px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+.fm119-pitch-stage{
+  max-width:930px!important;
+  grid-template-rows:50px minmax(0,1fr) 38px!important;
+}
+.match-sim-fm119 .sim-pitch-wrap{padding:12px 14px!important}
+.match-sim-fm119 .sim-pitch{
+  max-width:900px!important;
+  min-height:455px!important;
+  aspect-ratio:1.82/1!important;
+}
+.fm119-mini-pitch,.fm121-empty-pitch{
+  min-height:525px!important;
+  height:525px!important;
+}
+.fm119-formation-panel{padding:12px!important}
+.fm119-formation-head{min-height:48px!important}
+.fm119-formation-head strong{font-size:13px!important;max-width:265px!important}
+.fm119-formation-head span{font-size:10px!important}
+.fm119-mini-player b{width:29px!important;height:29px!important;font-size:9px!important}
+.fm119-mini-player span{font-size:9px!important;max-width:96px!important}
+.fm119-mini-player small{font-size:7.5px!important}
+.match-sim-fm119 .sim-player{width:29px!important;height:29px!important}
+.match-sim-fm119 .sim-player>span{font-size:10px!important}
+.match-sim-fm119 .sim-player small{top:31px!important;font-size:7.5px!important;max-width:86px!important}
+
+.fm130-momentum-live .fm129-momentum-legend{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);display:grid!important;align-items:center!important;gap:8px!important}
+.fm130-momentum-live .fm129-momentum-legend .away{justify-self:end!important}
+.fm130-momentum-live .fm129-momentum-legend em{font-style:normal!important;color:#65dfe6!important;font-size:7px!important;font-weight:950!important;letter-spacing:.045em!important;text-shadow:0 0 8px rgba(53,237,243,.18)!important}
+.fm130-momentum-live .fm129-momentum-legend b{margin-left:3px;color:#f5fbff!important;font-size:8px!important}
+.fm130-momentum-live svg{background:
+  linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px) 0 0/16.666% 100%,
+  linear-gradient(180deg,rgba(255,205,41,.018),transparent 49%,rgba(78,102,255,.02) 51%,transparent)!important
+}
+
+@media(max-width:1650px) and (min-width:1181px){
+  .fm119-match-layout{grid-template-columns:285px minmax(650px,820px) 285px!important;max-width:1450px!important;gap:11px!important}
+  .fm119-pitch-stage{max-width:820px!important}
+  .match-sim-fm119 .sim-pitch{max-width:790px!important;min-height:410px!important}
+  .fm119-mini-pitch,.fm121-empty-pitch{min-height:470px!important;height:470px!important}
+}

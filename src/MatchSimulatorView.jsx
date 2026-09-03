@@ -1146,34 +1146,58 @@ function MomentumChart({ timeline = [], clockSec = 0, model = null, homeName = '
   const buckets = 30
   const bucketSeconds = MATCH_TOTAL_SECONDS / buckets
   const homeBias = clamp(((model?.possession?.home || 50) - 50) / 18 + ((model?.xg?.home || 1) - (model?.xg?.away || 1)) * .26, -1.2, 1.2)
+
+  // Momentum jest LIVE: przyszłe minuty nie są liczone ani rysowane.
   const values = Array.from({ length: buckets }, (_, idx) => {
     const from = idx * bucketSeconds
-    const to = (idx + 1) * bucketSeconds
-    const eventScore = timeline.filter(event => event.second >= from && event.second < to).reduce((score, event) => {
-      const weight = event.type === 'goal' ? 4.4 : event.type === 'shot' ? 1.7 : event.type === 'corner' ? 1.15 : event.type === 'card' ? -.3 : 0
+    const to = Math.min((idx + 1) * bucketSeconds, clockSec)
+    if (clockSec <= from) return null
+
+    const partial = clamp((clockSec - from) / bucketSeconds, 0, 1)
+    const visibleEvents = timeline.filter(event => event.second >= from && event.second < to && event.second <= clockSec)
+    const eventScore = visibleEvents.reduce((score, event) => {
+      const weight = event.type === 'goal' ? 4.4 : event.type === 'shot' ? 1.7 : event.type === 'corner' ? 1.15 : event.type === 'card' ? -.3 : event.type === 'turnover' ? .45 : 0
       return score + (event.team === 'home' ? weight : event.team === 'away' ? -weight : 0)
     }, 0)
+
+    // Delikatny baseline modelu zapobiega martwemu wykresowi, ale ujawnia się dopiero wraz z czasem meczu.
     const wave = Math.sin(idx * .82 + hashString(homeName) % 11) * .25
-    return clamp(eventScore + homeBias + wave, -5.2, 5.2)
+    const value = clamp(eventScore + homeBias + wave, -5.2, 5.2)
+    return { value, partial }
   })
-  const peak = Math.max(2, ...values.map(value => Math.abs(value)))
+
+  const rendered = values.filter(Boolean)
+  const peak = Math.max(2, ...rendered.map(item => Math.abs(item.value)))
   const width = 100 / buckets
   const nowX = clamp((clockSec / MATCH_TOTAL_SECONDS) * 100, 0, 100)
+  const homePressure = rendered.reduce((sum, item) => sum + Math.max(0, item.value) * item.partial, 0)
+  const awayPressure = rendered.reduce((sum, item) => sum + Math.max(0, -item.value) * item.partial, 0)
+  const totalPressure = homePressure + awayPressure
+  const homeDominance = totalPressure > .01 ? Math.round(homePressure / totalPressure * 100) : Math.round(model?.possession?.home || 50)
+  const awayDominance = 100 - homeDominance
+
   return (
-    <div className="fm129-momentum-bars">
-      <svg viewBox="0 0 100 70" preserveAspectRatio="none" aria-label="Momentum gospodarze kontra goście">
+    <div className="fm129-momentum-bars fm130-momentum-live">
+      <svg viewBox="0 0 100 70" preserveAspectRatio="none" aria-label="Momentum na żywo gospodarze kontra goście">
         <line x1="0" y1="35" x2="100" y2="35" className="baseline" />
-        {values.map((value, idx) => {
-          const magnitude = Math.max(1.4, Math.abs(value) / peak * 29)
+        {values.map((item, idx) => {
+          if (!item) return null
+          const { value, partial } = item
+          const magnitude = Math.max(1.4, Math.abs(value) / peak * 29) * partial
           const x = idx * width + .45
+          const opacity = .45 + partial * .55
           return value >= 0
-            ? <rect key={idx} className="home-bar" x={x} y={35 - magnitude} width={Math.max(.8, width - .9)} height={magnitude} rx=".35" />
-            : <rect key={idx} className="away-bar" x={x} y="35" width={Math.max(.8, width - .9)} height={magnitude} rx=".35" />
+            ? <rect key={idx} className="home-bar" x={x} y={35 - magnitude} width={Math.max(.8, width - .9)} height={magnitude} rx=".35" opacity={opacity} />
+            : <rect key={idx} className="away-bar" x={x} y="35" width={Math.max(.8, width - .9)} height={magnitude} rx=".35" opacity={opacity} />
         })}
-        <line x1={nowX} y1="2" x2={nowX} y2="68" className="now-line" />
+        {clockSec > 0 && clockSec < MATCH_TOTAL_SECONDS ? <line x1={nowX} y1="2" x2={nowX} y2="68" className="now-line" /> : null}
       </svg>
       <div className="fm129-momentum-axis"><span>0'</span><span>15'</span><span>30'</span><span>HT</span><span>60'</span><span>75'</span><span>90'</span></div>
-      <div className="fm129-momentum-legend"><span className="home"><i />{homeName}</span><span className="away"><i />{awayName}</span></div>
+      <div className="fm129-momentum-legend">
+        <span className="home"><i />{homeName} <b>{homeDominance}%</b></span>
+        <em>LIVE • {formatClock(clockSec)}</em>
+        <span className="away"><i />{awayName} <b>{awayDominance}%</b></span>
+      </div>
     </div>
   )
 }
