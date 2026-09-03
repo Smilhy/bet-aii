@@ -166,6 +166,18 @@ function normalizeLineups(rows = [], homeId, awayId) {
   const normalizeTeam = row => ({
     available: Boolean(row),
     teamId: clean(row?.team?.id), team: clean(row?.team?.name), logo: clean(row?.team?.logo),
+    colors: {
+      player: {
+        primary: clean(row?.team?.colors?.player?.primary),
+        number: clean(row?.team?.colors?.player?.number),
+        border: clean(row?.team?.colors?.player?.border)
+      },
+      goalkeeper: {
+        primary: clean(row?.team?.colors?.goalkeeper?.primary),
+        number: clean(row?.team?.colors?.goalkeeper?.number),
+        border: clean(row?.team?.colors?.goalkeeper?.border)
+      }
+    },
     formation: clean(row?.formation),
     coach: clean(row?.coach?.name),
     startXI: (row?.startXI || []).map((entry) => ({

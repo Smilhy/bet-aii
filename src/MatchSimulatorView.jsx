@@ -10,6 +10,74 @@ const safeNum = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number
 const lerp = (from, to, t) => from + (to - from) * t
 const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2
 
+
+function normalizeKitColor(value, fallback) {
+  const raw = String(value || '').trim()
+  if (!raw) return fallback
+  if (/^#[0-9a-f]{3,8}$/i.test(raw)) return raw
+  if (/^[0-9a-f]{6}$/i.test(raw)) return `#${raw}`
+  if (/^[0-9a-f]{3}$/i.test(raw)) return `#${raw}`
+  if (/^(rgb|hsl)a?\(/i.test(raw)) return raw
+  return fallback
+}
+
+function lineupKit(lineup = {}, fallback = {}) {
+  return {
+    primary: normalizeKitColor(lineup?.colors?.player?.primary, fallback.primary || '#27dfe2'),
+    number: normalizeKitColor(lineup?.colors?.player?.number, fallback.number || '#06151d'),
+    border: normalizeKitColor(lineup?.colors?.player?.border, fallback.border || '#f3ffff'),
+    goalkeeperPrimary: normalizeKitColor(lineup?.colors?.goalkeeper?.primary, fallback.goalkeeperPrimary || '#f5d443'),
+    goalkeeperNumber: normalizeKitColor(lineup?.colors?.goalkeeper?.number, fallback.goalkeeperNumber || '#07131b'),
+    goalkeeperBorder: normalizeKitColor(lineup?.colors?.goalkeeper?.border, fallback.goalkeeperBorder || '#ffffff')
+  }
+}
+
+function pitchKitVariables(lineups = {}) {
+  const home = lineupKit(lineups?.home, { primary: '#27dfe2', number: '#06151d', border: '#f3ffff', goalkeeperPrimary: '#f0d34b' })
+  const away = lineupKit(lineups?.away, { primary: '#4e78ef', number: '#ffffff', border: '#f6f8ff', goalkeeperPrimary: '#f0d34b' })
+  return {
+    '--home-primary': home.primary,
+    '--home-number': home.number,
+    '--home-border': home.border,
+    '--home-gk-primary': home.goalkeeperPrimary,
+    '--home-gk-number': home.goalkeeperNumber,
+    '--home-gk-border': home.goalkeeperBorder,
+    '--away-primary': away.primary,
+    '--away-number': away.number,
+    '--away-border': away.border,
+    '--away-gk-primary': away.goalkeeperPrimary,
+    '--away-gk-number': away.goalkeeperNumber,
+    '--away-gk-border': away.goalkeeperBorder
+  }
+}
+
+function formationKitVariables(lineup = {}, tone = 'home') {
+  const fallback = tone === 'home'
+    ? { primary: '#27dfe2', number: '#06151d', border: '#f3ffff', goalkeeperPrimary: '#f0d34b' }
+    : { primary: '#4e78ef', number: '#ffffff', border: '#f6f8ff', goalkeeperPrimary: '#f0d34b' }
+  const kit = lineupKit(lineup, fallback)
+  return {
+    '--team-primary': kit.primary,
+    '--team-number': kit.number,
+    '--team-border': kit.border,
+    '--team-gk-primary': kit.goalkeeperPrimary,
+    '--team-gk-number': kit.goalkeeperNumber,
+    '--team-gk-border': kit.goalkeeperBorder
+  }
+}
+
+function FootballBallIcon() {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+      <circle cx="16" cy="16" r="14.4" fill="#f8fbff" stroke="#0c1720" strokeWidth="1.5" />
+      <path d="M16 7.1 20.7 10.6 18.9 16.1H13.1L11.3 10.6Z" fill="#111b24" />
+      <path d="M16 7.1 16 2.1M20.7 10.6 26.2 8.6M18.9 16.1 22.5 21.3M13.1 16.1 9.5 21.3M11.3 10.6 5.8 8.6" fill="none" stroke="#111b24" strokeWidth="1.25" strokeLinecap="round" />
+      <path d="M13.5 2.2 18.5 2.2 20 5.2 16 7.1 12 5.2ZM25.6 7.2 29.3 10.2 28.4 15 24.2 14.5 20.7 10.6ZM24.6 22.4 21.2 26.3 16.4 27.8 14.9 23.7 18.9 16.1 22.5 21.3ZM7.4 22.4 10.8 26.3 15.6 27.8 17.1 23.7 13.1 16.1 9.5 21.3ZM2.7 10.2 6.4 7.2 11.3 10.6 7.8 14.5 3.6 15Z" fill="#111b24" opacity=".94" />
+      <circle cx="11" cy="8" r="2.2" fill="#ffffff" opacity=".72" />
+    </svg>
+  )
+}
+
 function hashString(value = '') {
   let h = 2166136261
   const text = String(value)
@@ -354,93 +422,241 @@ function parseGridPositions(lineup = {}, side = 'home') {
   return []
 }
 
-function buildLiveAnimationState({ clockSec, timeline, model, fixture }) {
+function chooseFlowPlayer(lineup = {}, roles = ['M', 'F', 'D'], seed = 0, excludeKeys = []) {
+  const players = Array.isArray(lineup?.startXI) ? lineup.startXI.filter(player => player?.name) : []
+  if (!players.length) return null
+  const excluded = new Set(excludeKeys.filter(Boolean))
+  const preferred = players.filter(player => roles.includes(String(player.pos || '').toUpperCase()) && !excluded.has(normalizeNameKey(player.name)))
+  const fallback = players.filter(player => !excluded.has(normalizeNameKey(player.name)))
+  const pool = preferred.length ? preferred : (fallback.length ? fallback : players)
+  return pool[Math.abs(seed) % pool.length] || pool[0]
+}
+
+function buildLiveAnimationState({ clockSec, timeline, model, fixture, lineups }) {
   const playable = timeline.filter(event => event.team === 'home' || event.team === 'away')
-  const lastEvent = [...playable].reverse().find(event => event.second <= clockSec && clockSec - event.second <= 70) || null
-  const nextEvent = playable.find(event => event.second > clockSec && event.second - clockSec <= 120) || null
-  const fallbackHome = (Math.sin(clockSec * 0.011 + 0.7) + (model?.possession?.home - 50) * 0.02) >= 0
+  const nextEvent = playable.find(event => event.second > clockSec && event.second - clockSec <= 145) || null
+  const lastEvent = [...playable].reverse().find(event => event.second <= clockSec && clockSec - event.second <= 105) || null
   const featuredEvent = nextEvent || lastEvent
-  const possessionTeam = featuredEvent?.team || (fallbackHome ? 'home' : 'away')
-  const teamName = possessionTeam === 'home' ? fixture?.home?.name : fixture?.away?.name
-  const direction = possessionTeam === 'home' ? 1 : -1
 
-  let ball = {
-    x: clamp(50 + Math.sin(clockSec * 0.028) * 15 + (possessionTeam === 'home' ? 8 : -8), 8, 92),
-    y: clamp(50 + Math.cos(clockSec * 0.036) * 24, 10, 90)
-  }
-  let pressure = 0.26
-  let compactness = 0.3
-  let laneY = ball.y
-  let actorKey = ''
-  let assistKey = ''
+  const flowSpan = 250
+  const cycleIndex = Math.floor(clockSec / flowSpan)
+  const phase = clamp((clockSec % flowSpan) / flowSpan, 0, .999)
+  const flowSeed = hashString(`${fixture?.id || ''}|flow|${cycleIndex}`)
+  const random = mulberry32(flowSeed)
+  const homeChance = clamp((model?.possession?.home || 50) / 100, .34, .66)
+  let possessionTeam = random() <= homeChance ? 'home' : 'away'
+  if (featuredEvent?.team === 'home' || featuredEvent?.team === 'away') possessionTeam = featuredEvent.team
+
+  let lineup = possessionTeam === 'home' ? lineups?.home : lineups?.away
+  let teamName = possessionTeam === 'home' ? fixture?.home?.name : fixture?.away?.name
+  let direction = possessionTeam === 'home' ? 1 : -1
+  const orientX = x => possessionTeam === 'home' ? x : 100 - x
+  const laneA = clamp(22 + random() * 56, 16, 84)
+  const laneB = clamp(laneA + (random() - .5) * 26, 14, 86)
+  const laneC = clamp(laneB + (random() - .5) * 20, 12, 88)
+
+  const defender = chooseFlowPlayer(lineup, ['D'], flowSeed + 3)
+  const midfielder = chooseFlowPlayer(lineup, ['M'], flowSeed + 7, [normalizeNameKey(defender?.name)])
+  const creator = chooseFlowPlayer(lineup, ['M', 'F'], flowSeed + 11, [normalizeNameKey(defender?.name), normalizeNameKey(midfielder?.name)])
+  const attacker = chooseFlowPlayer(lineup, ['F', 'M'], flowSeed + 17, [normalizeNameKey(creator?.name)])
+
+  let carrier = defender || midfielder || creator || attacker
+  let receiver = midfielder || creator || attacker || defender
+  let ball = { x: orientX(24), y: laneA }
+  let trajectoryTarget = { x: orientX(40), y: laneB }
+  let pressure = .28
+  let compactness = .38
+  let showTrajectory = false
+  let ballAttached = true
   let flashMode = ''
-  let commentary = `${teamName} utrzymuje się przy piłce`
+  let actionPhase = 'build'
+  let commentary = `${teamName} spokojnie buduje akcję od tyłu`
 
+  if (phase < .16) {
+    const t = easeInOut(phase / .16)
+    carrier = defender || midfielder || carrier
+    receiver = midfielder || creator || receiver
+    ball = { x: orientX(lerp(20, 33, t)), y: lerp(laneA, laneB, t) }
+    trajectoryTarget = { x: orientX(44), y: laneB }
+    pressure = .24 + t * .12
+    compactness = .4
+    commentary = `${shortPlayerName(carrier?.name || teamName)} wyprowadza piłkę spod pressingu`
+  } else if (phase < .28) {
+    const t = easeInOut((phase - .16) / .12)
+    carrier = defender || carrier
+    receiver = midfielder || creator || receiver
+    ballAttached = false
+    showTrajectory = true
+    actionPhase = 'pass'
+    ball = { x: orientX(lerp(33, 46, t)), y: lerp(laneB, laneB, t) }
+    trajectoryTarget = { x: orientX(46), y: laneB }
+    pressure = .38
+    commentary = `${shortPlayerName(carrier?.name || teamName)} podaje do ${shortPlayerName(receiver?.name || teamName)}`
+  } else if (phase < .46) {
+    const t = easeInOut((phase - .28) / .18)
+    carrier = midfielder || creator || carrier
+    receiver = creator || attacker || receiver
+    ball = { x: orientX(lerp(46, 60, t)), y: lerp(laneB, laneC, t) }
+    trajectoryTarget = { x: orientX(70), y: laneC }
+    pressure = .42 + t * .12
+    compactness = .52
+    commentary = `${shortPlayerName(carrier?.name || teamName)} prowadzi piłkę przez środek`
+  } else if (phase < .58) {
+    const t = easeInOut((phase - .46) / .12)
+    carrier = midfielder || creator || carrier
+    receiver = creator || attacker || receiver
+    ballAttached = false
+    showTrajectory = true
+    actionPhase = 'pass'
+    ball = { x: orientX(lerp(60, 72, t)), y: lerp(laneC, laneA, t) }
+    trajectoryTarget = { x: orientX(72), y: laneA }
+    pressure = .58
+    commentary = `${shortPlayerName(carrier?.name || teamName)} zagrywa piłkę między liniami`
+  } else if (phase < .74) {
+    const t = easeInOut((phase - .58) / .16)
+    carrier = creator || attacker || carrier
+    receiver = attacker || creator || receiver
+    ball = { x: orientX(lerp(72, 84, t)), y: lerp(laneA, laneC, t) }
+    trajectoryTarget = { x: orientX(92), y: laneC }
+    pressure = .66 + t * .16
+    compactness = .68
+    commentary = `${shortPlayerName(carrier?.name || teamName)} rusza w stronę pola karnego`
+  } else if (phase < .87 && !featuredEvent) {
+    const recycle = ((flowSeed >> 7) % 100) < 56
+    const t = easeInOut((phase - .74) / .13)
+    carrier = attacker || creator || carrier
+    receiver = recycle ? (midfielder || creator || receiver) : attacker || receiver
+    if (recycle) {
+      ballAttached = phase < .79
+      showTrajectory = phase >= .79
+      actionPhase = 'recycle'
+      ball = { x: orientX(lerp(84, 63, t)), y: lerp(laneC, laneB, t) }
+      trajectoryTarget = { x: orientX(62), y: laneB }
+      pressure = .48
+      commentary = `${teamName} cofa piłkę i cierpliwie szuka miejsca`
+    } else {
+      ballAttached = false
+      showTrajectory = true
+      actionPhase = 'chance'
+      ball = { x: orientX(lerp(84, 91, t)), y: lerp(laneC, clamp(laneC, 35, 65), t) }
+      trajectoryTarget = { x: orientX(94), y: clamp(laneC, 35, 65) }
+      pressure = .84
+      commentary = `${shortPlayerName(carrier?.name || teamName)} szuka ostatniego podania pod bramką`
+    }
+  }
+
+  if (phase >= .87 && !featuredEvent) {
+    const oldTeam = possessionTeam
+    possessionTeam = oldTeam === 'home' ? 'away' : 'home'
+    lineup = possessionTeam === 'home' ? lineups?.home : lineups?.away
+    teamName = possessionTeam === 'home' ? fixture?.home?.name : fixture?.away?.name
+    direction = possessionTeam === 'home' ? 1 : -1
+    const newCarrier = chooseFlowPlayer(lineup, ['M', 'D'], flowSeed + 29)
+    const newReceiver = chooseFlowPlayer(lineup, ['M', 'F'], flowSeed + 31, [normalizeNameKey(newCarrier?.name)])
+    const t = easeInOut((phase - .87) / .13)
+    carrier = newCarrier || carrier
+    receiver = newReceiver || receiver
+    ball = { x: lerp(oldTeam === 'home' ? 78 : 22, 50 + (possessionTeam === 'home' ? 5 : -5), t), y: lerp(laneC, laneB, t) }
+    trajectoryTarget = { x: possessionTeam === 'home' ? 61 : 39, y: laneB }
+    pressure = .34
+    compactness = .46
+    actionPhase = 'turnover'
+    commentary = `${shortPlayerName(carrier?.name || teamName)} przejmuje piłkę — szybka zmiana kierunku akcji`
+  }
+
+  // Real model event overrides the generic possession flow around shots/goals/corners/cards.
   if (featuredEvent) {
-    actorKey = normalizeNameKey(featuredEvent.actor)
-    assistKey = normalizeNameKey(featuredEvent.assist)
-    laneY = clamp(featuredEvent.lane ?? 50, 12, 88)
-    const beforeWindow = featuredEvent.type === 'goal' ? 125 : featuredEvent.type === 'shot' ? 110 : 90
-    const baseStartX = possessionTeam === 'home' ? 36 : 64
+    possessionTeam = featuredEvent.team
+    lineup = possessionTeam === 'home' ? lineups?.home : lineups?.away
+    teamName = possessionTeam === 'home' ? fixture?.home?.name : fixture?.away?.name
+    direction = possessionTeam === 'home' ? 1 : -1
+    const eventActor = (lineup?.startXI || []).find(player => normalizeNameKey(player.name) === normalizeNameKey(featuredEvent.actor))
+    const eventAssist = (lineup?.startXI || []).find(player => normalizeNameKey(player.name) === normalizeNameKey(featuredEvent.assist))
+    carrier = eventActor || attacker || creator || carrier
+    receiver = eventAssist || attacker || creator || receiver
+    const eventLane = featuredEvent.type === 'goal' ? clamp(featuredEvent.lane ?? 50, 43, 57) : clamp(featuredEvent.lane ?? 50, 22, 78)
     const targetX = featuredEvent.type === 'goal'
-      ? (possessionTeam === 'home' ? 96 : 4)
+      ? (possessionTeam === 'home' ? 99.2 : .8)
       : featuredEvent.type === 'shot'
-        ? (possessionTeam === 'home' ? 90 : 10)
+        ? (possessionTeam === 'home' ? 96 : 4)
         : featuredEvent.type === 'corner'
-          ? (possessionTeam === 'home' ? 96 : 4)
-          : possessionTeam === 'home' ? 72 : 28
-    const buildY = clamp(laneY + Math.sin(featuredEvent.second * 0.07) * 8, 12, 88)
+          ? (possessionTeam === 'home' ? 97 : 3)
+          : (possessionTeam === 'home' ? 70 : 30)
+    const beforeWindow = featuredEvent.type === 'goal' ? 145 : featuredEvent.type === 'shot' ? 125 : 105
 
     if (clockSec <= featuredEvent.second) {
-      const progress = clamp((clockSec - (featuredEvent.second - beforeWindow)) / beforeWindow, 0, 1)
-      const eased = easeInOut(progress)
-      ball = { x: lerp(baseStartX, targetX, eased), y: lerp(50, buildY, eased) }
-      pressure = 0.42 + eased * 0.46
-      compactness = 0.48 + eased * 0.34
-      const actorText = featuredEvent.actor ? shortPlayerName(featuredEvent.actor) : teamName
-      commentary = progress < 0.33
-        ? `${teamName} buduje akcję od tyłu`
-        : progress < 0.68
-          ? `${actorText} prowadzi piłkę do przodu`
-          : featuredEvent.type === 'corner'
-            ? `${teamName} wywalczył rzut rożny`
-            : `${teamName} wchodzi w pole karne`
+      const p = clamp((clockSec - (featuredEvent.second - beforeWindow)) / beforeWindow, 0, 1)
+      const e = easeInOut(p)
+      const startX = possessionTeam === 'home' ? 68 : 32
+      const finalThirdX = possessionTeam === 'home' ? 86 : 14
+      const split = .66
+      if (p < split) {
+        const p1 = easeInOut(p / split)
+        ballAttached = true
+        showTrajectory = false
+        ball = { x: lerp(startX, finalThirdX, p1), y: lerp(50, eventLane, p1) }
+        commentary = `${shortPlayerName(carrier?.name || teamName)} prowadzi piłkę pod pole karne`
+      } else {
+        const p2 = easeInOut((p - split) / (1 - split))
+        ballAttached = false
+        showTrajectory = true
+        actionPhase = featuredEvent.type
+        ball = { x: lerp(finalThirdX, targetX, p2), y: lerp(eventLane, eventLane, p2) }
+        commentary = featuredEvent.type === 'goal'
+          ? `${shortPlayerName(carrier?.name || teamName)} składa się do strzału…`
+          : featuredEvent.type === 'shot'
+            ? `${shortPlayerName(carrier?.name || teamName)} uderza na bramkę!`
+            : featuredEvent.type === 'corner'
+              ? `${teamName} wrzuca piłkę z narożnika`
+              : `${featuredEvent.label}`
+      }
+      trajectoryTarget = { x: targetX, y: eventLane }
+      pressure = .72 + e * .26
+      compactness = .78
     } else {
       const after = clockSec - featuredEvent.second
-      pressure = 0.84
-      compactness = 0.74
       if (featuredEvent.type === 'goal') {
         flashMode = 'goal'
-        if (after < 26) {
-          ball = { x: targetX, y: laneY }
+        actionPhase = 'goal'
+        if (after < 38) {
+          ballAttached = false
+          showTrajectory = false
+          ball = { x: targetX, y: eventLane }
+          commentary = `GOOOL! ${shortPlayerName(featuredEvent.actor || teamName)} trafia do siatki!`
+        } else if (after < 82) {
+          const reset = clamp((after - 38) / 44, 0, 1)
+          ball = { x: lerp(targetX, 50, easeInOut(reset)), y: lerp(eventLane, 50, easeInOut(reset)) }
+          commentary = `${teamName} świętuje bramkę — za chwilę wznowienie od środka`
         } else {
-          const relax = clamp((after - 26) / 40, 0, 1)
-          ball = { x: lerp(targetX, 50, relax), y: lerp(laneY, 50, relax) }
+          possessionTeam = featuredEvent.team === 'home' ? 'away' : 'home'
+          lineup = possessionTeam === 'home' ? lineups?.home : lineups?.away
+          carrier = chooseFlowPlayer(lineup, ['M', 'F'], flowSeed + 61)
+          receiver = chooseFlowPlayer(lineup, ['M', 'D'], flowSeed + 67, [normalizeNameKey(carrier?.name)])
+          ball = { x: 50, y: 50 }
+          flashMode = ''
+          commentary = `${possessionTeam === 'home' ? fixture?.home?.name : fixture?.away?.name} wznawia grę od środka`
         }
-        commentary = `GOOOL! ${featuredEvent.label}`
       } else if (featuredEvent.type === 'shot') {
         flashMode = 'shot'
-        if (after < 16) {
-          ball = { x: targetX, y: laneY }
-        } else {
-          const recoil = clamp((after - 16) / 30, 0, 1)
-          ball = { x: lerp(targetX, possessionTeam === 'home' ? 74 : 26, recoil), y: lerp(laneY, 50, recoil) }
-        }
+        actionPhase = 'shot'
+        ballAttached = false
+        ball = after < 20
+          ? { x: targetX, y: eventLane }
+          : { x: lerp(targetX, possessionTeam === 'home' ? 77 : 23, clamp((after - 20) / 45, 0, 1)), y: lerp(eventLane, 50, clamp((after - 20) / 45, 0, 1)) }
         commentary = `${featuredEvent.label}`
       } else if (featuredEvent.type === 'corner') {
         flashMode = 'corner'
-        if (after < 20) {
-          ball = { x: targetX, y: laneY }
-        } else {
-          const curve = clamp((after - 20) / 36, 0, 1)
-          ball = { x: lerp(targetX, possessionTeam === 'home' ? 84 : 16, curve), y: lerp(laneY, 50, curve) }
-        }
+        actionPhase = 'corner'
+        ballAttached = false
+        showTrajectory = true
+        ball = after < 24 ? { x: targetX, y: eventLane } : { x: possessionTeam === 'home' ? 85 : 15, y: 50 }
+        trajectoryTarget = { x: possessionTeam === 'home' ? 86 : 14, y: 50 }
         commentary = `${featuredEvent.label}`
       } else if (featuredEvent.type === 'card') {
         flashMode = 'card'
-        ball = { x: possessionTeam === 'home' ? 62 : 38, y: laneY }
-        pressure = 0.22
-        compactness = 0.28
+        actionPhase = 'card'
+        ball = { x: possessionTeam === 'home' ? 61 : 39, y: eventLane }
+        pressure = .2
         commentary = `${featuredEvent.label}`
       }
     }
@@ -450,23 +666,29 @@ function buildLiveAnimationState({ clockSec, timeline, model, fixture }) {
     phaseLabel: getPhaseLabel(clockSec),
     possessionTeam,
     ball,
-    pressure: clamp(pressure, 0.15, 1),
-    compactness: clamp(compactness, 0.2, 1),
-    laneY,
-    actorKey,
-    assistKey,
+    pressure: clamp(pressure, .15, 1),
+    compactness: clamp(compactness, .2, 1),
+    laneY: ball.y,
+    actorKey: normalizeNameKey(carrier?.name),
+    receiverKey: normalizeNameKey(receiver?.name),
+    assistKey: normalizeNameKey(receiver?.name),
     flashMode,
     commentary,
-    featuredEvent
+    featuredEvent,
+    ballAttached,
+    showTrajectory,
+    trajectoryTarget,
+    actionPhase
   }
 }
 
 function MatchPitch({ data, model, clockSec, timeline }) {
   const homeBase = useMemo(() => parseGridPositions(data?.lineups?.home, 'home'), [data?.lineups?.home])
   const awayBase = useMemo(() => parseGridPositions(data?.lineups?.away, 'away'), [data?.lineups?.away])
-  const live = useMemo(() => buildLiveAnimationState({ clockSec, timeline, model, fixture: data?.fixture }), [clockSec, timeline, model, data?.fixture])
+  const live = useMemo(() => buildLiveAnimationState({ clockSec, timeline, model, fixture: data?.fixture, lineups: data?.lineups }), [clockSec, timeline, model, data?.fixture, data?.lineups])
   const homeScore = useMemo(() => timeline.filter(event => event.type === 'goal' && event.team === 'home' && event.second <= clockSec).length, [timeline, clockSec])
   const awayScore = useMemo(() => timeline.filter(event => event.type === 'goal' && event.team === 'away' && event.second <= clockSec).length, [timeline, clockSec])
+  const kitVars = useMemo(() => pitchKitVariables(data?.lineups || {}), [data?.lineups])
 
   const getPlayerStyle = (player, side) => {
     const isHome = side === 'home'
@@ -483,7 +705,7 @@ function MatchPitch({ data, model, clockSec, timeline }) {
     if (nameKey && nameKey === live.actorKey) {
       x = lerp(x, live.ball.x - direction * 1.3, 0.68)
       y = lerp(y, live.ball.y, 0.68)
-    } else if (nameKey && nameKey === live.assistKey) {
+    } else if (nameKey && nameKey === live.receiverKey) {
       x = lerp(x, live.ball.x - direction * 6, 0.32)
       y = lerp(y, live.ball.y + 5, 0.32)
     } else if (possession && roleDepth > 0.55) {
@@ -499,22 +721,25 @@ function MatchPitch({ data, model, clockSec, timeline }) {
   const playerClass = (player, side) => {
     const nameKey = normalizeNameKey(player.name)
     const classes = ['sim-player', side]
+    if (String(player.pos || '').toUpperCase() === 'G') classes.push('goalkeeper')
     if (live.possessionTeam === side) classes.push('attacking')
     else classes.push('defending')
-    if (nameKey && nameKey === live.actorKey) classes.push('focus', 'has-ball')
-    else if (nameKey && nameKey === live.assistKey) classes.push('support')
+    if (nameKey && nameKey === live.actorKey) {
+      classes.push('focus')
+      if (live.ballAttached) classes.push('has-ball')
+    } else if (nameKey && nameKey === live.receiverKey) classes.push('support')
     return classes.join(' ')
   }
 
   const hasOfficialPlayers = homeBase.length >= 11 && awayBase.length >= 11
-  const trajectoryTargetX = clamp(live.ball.x + (live.possessionTeam === 'home' ? 18 : -18), 5, 95)
-  const trajectoryTargetY = clamp(live.laneY + Math.sin(clockSec * 0.05) * 8, 8, 92)
+  const trajectoryTargetX = clamp(live.trajectoryTarget?.x ?? (live.ball.x + (live.possessionTeam === 'home' ? 18 : -18)), 1, 99)
+  const trajectoryTargetY = clamp(live.trajectoryTarget?.y ?? (live.laneY + Math.sin(clockSec * 0.05) * 8), 5, 95)
   const trajectoryControlX = (live.ball.x + trajectoryTargetX) / 2
   const trajectoryControlY = clamp(Math.min(live.ball.y, trajectoryTargetY) - 9, 5, 95)
   const trajectoryPath = `M ${live.ball.x} ${live.ball.y} Q ${trajectoryControlX} ${trajectoryControlY} ${trajectoryTargetX} ${trajectoryTargetY}`
 
   return (
-    <div className="sim-pitch-wrap">
+    <div className="sim-pitch-wrap" style={kitVars}>
       <div className="sim-scoreboard-overlay">
         <b>{formatClock(clockSec)}</b>
         <span>{data.fixture?.home?.name}</span>
@@ -525,20 +750,26 @@ function MatchPitch({ data, model, clockSec, timeline }) {
         <span>{live.phaseLabel}</span>
         <em>Pełny mecz: 2 minuty przy prędkości x1</em>
       </div>
-      <div className={`sim-pitch ${live.possessionTeam === 'home' ? 'live-home' : 'live-away'} ${live.flashMode ? `is-${live.flashMode}` : ''}`}>
+      <div className={`sim-pitch ${live.possessionTeam === 'home' ? 'live-home' : 'live-away'} action-${live.actionPhase || 'build'} ${live.flashMode ? `is-${live.flashMode}` : ''}`}>
         <div className="sim-pitch-half" />
         <div className="sim-center-circle" />
         <div className="sim-box left" />
         <div className="sim-box right" />
-        <div className="sim-goal left" />
-        <div className="sim-goal right" />
-        <svg className={`fm121-action-path ${live.possessionTeam}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <div className={`sim-goal left ${live.flashMode === 'goal' && live.possessionTeam === 'away' ? 'net-hit' : ''}`}><i/><i/><i/></div>
+        <div className={`sim-goal right ${live.flashMode === 'goal' && live.possessionTeam === 'home' ? 'net-hit' : ''}`}><i/><i/><i/></div>
+        {live.showTrajectory ? <svg className={`fm121-action-path ${live.possessionTeam} ${live.actionPhase || ''}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <path d={trajectoryPath} />
-        </svg>
+        </svg> : null}
         <div className="sim-action-banner">{live.commentary}</div>
         {!hasOfficialPlayers ? <div className="fm119-pitch-data-warning"><strong>Brak pełnych oficjalnych XI z pozycjami</strong><span>Boisko nie pokazuje fikcyjnych zawodników.</span></div> : null}
         {live.flashMode === 'shot' ? <div className="sim-shot-flash" /> : null}
-        {live.flashMode === 'goal' ? <div className="sim-goal-flash">GOOOL!</div> : null}
+        {live.flashMode === 'goal' && live.featuredEvent ? <div className={`sim-goal-flash ${live.featuredEvent.team}`}>
+          <b>GOOOL!</b>
+          <strong>{shortPlayerName(live.featuredEvent.actor || (live.featuredEvent.team === 'home' ? data.fixture?.home?.name : data.fixture?.away?.name))}</strong>
+          <span>{Math.floor(live.featuredEvent.second / 60)}' • {live.featuredEvent.team === 'home' ? data.fixture?.home?.name : data.fixture?.away?.name}</span>
+        </div> : null}
+        {clockSec >= HALF_SECONDS && clockSec < HALF_SECONDS + 90 ? <div className="fm125-halftime-overlay"><small>PRZERWA</small><b>{homeScore} : {awayScore}</b><span>xG {model?.xg?.home?.toFixed?.(2) || model?.xg?.home || 0} – {model?.xg?.away?.toFixed?.(2) || model?.xg?.away || 0}</span></div> : null}
+        {clockSec >= MATCH_TOTAL_SECONDS ? <div className="fm125-fulltime-overlay"><small>FULL TIME</small><b>{homeScore} : {awayScore}</b><span>{data.fixture?.home?.name} • {data.fixture?.away?.name}</span><em>{model?.samples || 0} symulacji modelu • 1 {model?.probabilities?.home || 0}% • X {model?.probabilities?.draw || 0}% • 2 {model?.probabilities?.away || 0}%</em></div> : null}
 
         {homeBase.map((player, index) => (
           <div key={`h-${player.id || index}`} className={playerClass(player, 'home')} style={getPlayerStyle(player, 'home')} title={player.name || `Gospodarze #${player.number || index + 1}`}>
@@ -554,8 +785,8 @@ function MatchPitch({ data, model, clockSec, timeline }) {
           </div>
         ))}
 
-        <div className={`sim-ball ${live.flashMode ? `is-${live.flashMode}` : ''}`} style={{ left: `${live.ball.x}%`, top: `${live.ball.y}%` }}>
-          ⚽
+        <div className={`sim-ball ${live.possessionTeam} ${live.ballAttached ? 'is-carried' : 'is-travelling'} ${live.flashMode ? `is-${live.flashMode}` : ''}`} style={{ left: `${live.ball.x}%`, top: `${live.ball.y}%` }} aria-label="Piłka">
+          <FootballBallIcon />
         </div>
       </div>
       <div className="sim-possession-bar" style={{ '--home-pos': `${model?.possession?.home || 50}%` }}>
@@ -615,8 +846,9 @@ function FormationBoard({ teamName, lineup, tone = 'home' }) {
   const positions = useMemo(() => formationBoardPositions(lineup), [lineup])
   const official = (lineup?.startXI?.length || 0) >= 11
   const hasGrid = positions.length >= 11
+  const kitVars = useMemo(() => formationKitVariables(lineup, tone), [lineup, tone])
   return (
-    <aside className={`fm119-formation-panel ${tone}`}>
+    <aside className={`fm119-formation-panel ${tone}`} style={kitVars}>
       <div className="fm119-formation-head">
         <div className="fm123-formation-team">
           {lineup?.logo ? <img src={lineup.logo} alt="" /> : <i className="fm123-team-mark">⚽</i>}
@@ -630,7 +862,7 @@ function FormationBoard({ teamName, lineup, tone = 'home' }) {
           <div className="fm119-mini-box top" />
           <div className="fm119-mini-box bottom" />
           {positions.map((player, index) => (
-            <div className="fm119-mini-player" key={player.id || `${player.name}-${index}`} style={{ left: `${player.x}%`, top: `${player.y}%` }} title={`${player.number || ''} ${player.name}`}>
+            <div className={`fm119-mini-player ${String(player.pos || '').toUpperCase() === 'G' ? 'goalkeeper' : ''}`} key={player.id || `${player.name}-${index}`} style={{ left: `${player.x}%`, top: `${player.y}%` }} title={`${player.number || ''} ${player.name}`}>
               <b>{player.number || '•'}</b>
               <span>{shortPlayerName(player.name)}</span>
               <small>{player.pos || ''}</small>
@@ -957,7 +1189,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null }
         <section className="fm119-match-layout">
           <FormationBoard teamName={data.fixture.home.name} lineup={data.lineups.home} tone="home" />
 
-          <main className="fm119-pitch-stage">
+          <main className="fm119-pitch-stage" style={pitchKitVariables(data?.lineups || {})}>
             <div className="fm119-pitch-toolbar">
               <div><button className="active">WIDOK MECZU</button><button disabled>ANALIZA</button><button disabled>STREFY BOISKOWE</button><button disabled>SIATKA PODAŃ</button></div>
               <div className="fm119-controls">

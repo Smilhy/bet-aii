@@ -83629,3 +83629,191 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 @keyframes fm123-ring{0%{transform:scale(.78);opacity:.75}100%{transform:scale(1.45);opacity:0}}
 @keyframes fm123-dash{to{stroke-dashoffset:-9}}
 @media(prefers-reduced-motion:reduce){.fm119-score-meta em.live:before,.match-sim-fm119 .sim-player.has-ball,.match-sim-fm119 .sim-player.has-ball:after,.fm121-action-path path,.fm119-commentary-time span:before{animation:none!important}}
+
+/* WERSJA_124_WIDE_PITCH_REAL_KIT_COLORS_BALL_FIX */
+.match-sim-page.match-sim-fm119{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0 0 32px!important;
+  gap:14px!important;
+}
+.fm119-scorebar,.fm119-top-panels,.fm119-match-layout,.fm119-commentary-strip{width:100%!important;max-width:none!important}
+.fm119-match-layout{
+  grid-template-columns:minmax(278px,300px) minmax(700px,1fr) minmax(278px,300px)!important;
+  gap:12px!important;
+  align-items:stretch!important;
+  justify-content:stretch!important;
+  margin:0!important;
+}
+.fm119-pitch-stage{width:100%!important;max-width:none!important;grid-template-rows:48px minmax(0,1fr) 36px!important;align-self:stretch!important}
+.match-sim-fm119 .sim-pitch-wrap{width:100%!important;max-width:none!important;padding:10px!important;align-self:stretch!important}
+.match-sim-fm119 .sim-pitch{
+  width:100%!important;
+  max-width:none!important;
+  min-height:440px!important;
+  aspect-ratio:1.82/1!important;
+  border-radius:7px!important;
+  border:1px solid rgba(241,255,245,.62)!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.035),rgba(0,0,0,.035)),
+    repeating-linear-gradient(90deg,rgba(62,151,75,.99) 0 12.5%,rgba(48,136,66,.99) 12.5% 25%)!important;
+  box-shadow:inset 0 0 50px rgba(0,0,0,.14),0 0 0 1px rgba(44,229,235,.04)!important;
+}
+.match-sim-fm119 .sim-pitch:before{inset:8px!important;border-color:rgba(246,255,248,.66)!important}
+.match-sim-fm119 .sim-pitch-half{top:8px!important;bottom:8px!important;background:rgba(246,255,248,.66)!important}
+.match-sim-fm119 .sim-center-circle,.match-sim-fm119 .sim-box,.match-sim-fm119 .sim-goal{border-color:rgba(246,255,248,.66)!important}
+
+.fm119-formation-panel{min-width:0!important;align-self:stretch!important}
+.fm119-mini-pitch,.fm121-empty-pitch{
+  min-height:468px!important;
+  height:468px!important;
+  border-radius:8px!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.025)),
+    repeating-linear-gradient(0deg,rgba(23,94,57,.99) 0 16.66%,rgba(17,81,49,.99) 16.66% 33.33%)!important;
+}
+
+/* real kit colours from API-Football; fallback stays consistent when API has no colours */
+.match-sim-fm119 .sim-player.home{
+  background:var(--home-primary,#27dfe2)!important;
+  color:var(--home-number,#06151d)!important;
+  border:2px solid var(--home-border,#f3ffff)!important;
+}
+.match-sim-fm119 .sim-player.away{
+  background:var(--away-primary,#4e78ef)!important;
+  color:var(--away-number,#fff)!important;
+  border:2px solid var(--away-border,#f6f8ff)!important;
+}
+.match-sim-fm119 .sim-player.home.goalkeeper{
+  background:var(--home-gk-primary,#f0d34b)!important;
+  color:var(--home-gk-number,#07131b)!important;
+  border-color:var(--home-gk-border,#fff)!important;
+}
+.match-sim-fm119 .sim-player.away.goalkeeper{
+  background:var(--away-gk-primary,#f0d34b)!important;
+  color:var(--away-gk-number,#07131b)!important;
+  border-color:var(--away-gk-border,#fff)!important;
+}
+.match-sim-fm119 .sim-player.has-ball.home{background:var(--home-primary,#27dfe2)!important}
+.match-sim-fm119 .sim-player.has-ball.away{background:var(--away-primary,#4e78ef)!important}
+.match-sim-fm119 .sim-player{
+  width:29px!important;
+  height:29px!important;
+  font-size:10px!important;
+  box-shadow:0 4px 10px rgba(0,0,0,.30),0 0 0 1px rgba(255,255,255,.35)!important;
+}
+.match-sim-fm119 .sim-player>span{font-size:9px!important;font-weight:1000!important;line-height:1!important}
+.match-sim-fm119 .sim-player small{top:31px!important;max-width:76px!important;font-size:7px!important}
+
+.fm119-formation-panel .fm119-mini-player b{
+  width:30px!important;
+  height:30px!important;
+  background:var(--team-primary,#27dfe2)!important;
+  color:var(--team-number,#06151d)!important;
+  border:2px solid var(--team-border,#f3ffff)!important;
+  font-size:9px!important;
+  box-shadow:0 5px 12px rgba(0,0,0,.30)!important;
+}
+.fm119-formation-panel .fm119-mini-player.goalkeeper b{
+  background:var(--team-gk-primary,#f0d34b)!important;
+  color:var(--team-gk-number,#07131b)!important;
+  border-color:var(--team-gk-border,#fff)!important;
+}
+.fm119-formation-panel.away .fm119-mini-player b{background:var(--team-primary,#4e78ef)!important;color:var(--team-number,#fff)!important;border-color:var(--team-border,#f6f8ff)!important}
+.fm119-formation-panel.away .fm119-mini-player.goalkeeper b{background:var(--team-gk-primary,#f0d34b)!important;color:var(--team-gk-number,#07131b)!important;border-color:var(--team-gk-border,#fff)!important}
+.fm119-mini-player span{font-size:8px!important;max-width:94px!important}
+.fm119-mini-player small{font-size:6.5px!important}
+
+/* trajectory adopts the same team colour as the player markers */
+.fm121-action-path.home path{stroke:var(--home-primary,#27dfe2)!important;filter:drop-shadow(0 0 2px var(--home-primary,#27dfe2))!important}
+.fm121-action-path.away path{stroke:var(--away-primary,#4e78ef)!important;filter:drop-shadow(0 0 2px var(--away-primary,#4e78ef))!important}
+.fm121-action-path path{stroke-width:.72!important;stroke-dasharray:2.8 1.5!important;opacity:.92!important}
+.fm119-pitch-legend .home{color:var(--home-primary,#27dfe2)!important}
+.fm119-pitch-legend .away{color:var(--away-primary,#4e78ef)!important}
+
+/* crisp SVG football instead of browser emoji */
+.match-sim-fm119 .sim-ball{
+  display:grid!important;
+  place-items:center!important;
+  width:19px!important;
+  height:19px!important;
+  margin-left:0!important;
+  margin-top:0!important;
+  padding:0!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:50%!important;
+  color:transparent!important;
+  box-shadow:0 5px 12px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.16)!important;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.28))!important;
+  overflow:visible!important;
+}
+.match-sim-fm119 .sim-ball:before{display:none!important;content:none!important}
+.match-sim-fm119 .sim-ball svg{display:block!important;width:100%!important;height:100%!important;overflow:visible!important}
+.match-sim-fm119 .sim-ball.is-shot,.match-sim-fm119 .sim-ball.is-goal{box-shadow:0 5px 14px rgba(0,0,0,.38),0 0 18px rgba(255,255,255,.35)!important}
+.match-sim-fm119 .sim-ball.is-goal{filter:drop-shadow(0 0 8px rgba(255,211,74,.48))!important}
+
+.fm119-pitch-toolbar{padding-left:12px!important;padding-right:12px!important}
+.fm119-pitch-legend{height:36px!important;padding:8px 12px!important;font-size:11px!important}
+
+@media(max-width:1500px) and (min-width:1181px){
+  .match-sim-page.match-sim-fm119{width:100%!important;max-width:none!important}
+  .fm119-match-layout{grid-template-columns:245px minmax(600px,1fr) 245px!important;gap:10px!important}
+  .fm119-mini-pitch,.fm121-empty-pitch{min-height:420px!important;height:420px!important}
+  .match-sim-fm119 .sim-pitch{min-height:405px!important;aspect-ratio:1.8/1!important}
+  .match-sim-fm119 .sim-player{width:27px!important;height:27px!important}
+}
+
+/* WERSJA_125_LIVE_MATCH_REAL_FLOW */
+.match-sim-fm119 .sim-pitch{transition:transform .65s cubic-bezier(.22,.7,.24,1),filter .3s ease!important;transform-origin:center center!important}
+.match-sim-fm119 .sim-pitch.action-chance,.match-sim-fm119 .sim-pitch.action-shot,.match-sim-fm119 .sim-pitch.action-goal{transform:scale(1.012)!important;filter:saturate(1.04) brightness(1.015)!important}
+.match-sim-fm119 .sim-pitch.action-turnover{filter:saturate(.98) brightness(.99)!important}
+
+/* proper goal frames + visible net */
+.match-sim-fm119 .sim-goal{z-index:3!important;top:39%!important;width:3.2%!important;height:22%!important;border:1px solid rgba(248,255,250,.86)!important;background:
+  repeating-linear-gradient(0deg,rgba(255,255,255,.19) 0 1px,transparent 1px 5px),
+  repeating-linear-gradient(90deg,rgba(255,255,255,.19) 0 1px,transparent 1px 5px)!important;
+  box-shadow:inset 0 0 8px rgba(255,255,255,.07),0 0 5px rgba(0,0,0,.22)!important;overflow:visible!important}
+.match-sim-fm119 .sim-goal.left{left:0!important;border-left:2px solid rgba(255,255,255,.94)!important}
+.match-sim-fm119 .sim-goal.right{right:0!important;border-right:2px solid rgba(255,255,255,.94)!important}
+.match-sim-fm119 .sim-goal i{position:absolute!important;display:block!important;background:rgba(255,255,255,.82)!important;pointer-events:none!important}
+.match-sim-fm119 .sim-goal i:nth-child(1){left:0;right:0;top:-2px;height:2px}
+.match-sim-fm119 .sim-goal i:nth-child(2){left:0;top:0;bottom:0;width:2px}.match-sim-fm119 .sim-goal.right i:nth-child(2){left:auto;right:0}
+.match-sim-fm119 .sim-goal i:nth-child(3){left:0;right:0;bottom:-1px;height:1px;opacity:.45}
+.match-sim-fm119 .sim-goal.net-hit{animation:fm125NetHit .48s ease-out 2!important;box-shadow:inset 0 0 16px rgba(255,222,112,.24),0 0 16px rgba(255,226,119,.24)!important}
+
+/* player motion: carrier, passing receiver and team block shift */
+.match-sim-fm119 .sim-player{transition:left .28s cubic-bezier(.2,.7,.25,1),top .28s cubic-bezier(.2,.7,.25,1),transform .16s ease,box-shadow .16s ease!important;will-change:left,top!important}
+.match-sim-fm119 .sim-player.attacking{box-shadow:0 4px 10px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.43),0 0 10px color-mix(in srgb,currentColor 20%,transparent)!important}
+.match-sim-fm119 .sim-player.has-ball{z-index:14!important}
+.match-sim-fm119 .sim-player.support:after{content:"";position:absolute;inset:-4px;border:1px dashed rgba(255,255,255,.58);border-radius:50%;opacity:.7;animation:fm125Receiver 1s ease-in-out infinite alternate}
+
+/* smaller crisp ball. While carrying it sits beside the player's marker; during a pass/shot it detaches and spins. */
+.match-sim-fm119 .sim-ball{z-index:18!important;width:15px!important;height:15px!important;margin:0!important;transition:left .09s linear,top .09s linear,transform .09s linear!important;box-shadow:0 4px 8px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.38)!important}
+.match-sim-fm119 .sim-ball.is-carried.home{transform:translate(-50%,-50%) translate(13px,8px) scale(.88)!important}
+.match-sim-fm119 .sim-ball.is-carried.away{transform:translate(-50%,-50%) translate(-13px,8px) scale(.88)!important}
+.match-sim-fm119 .sim-ball.is-travelling{animation:fm125BallSpin .42s linear infinite!important;box-shadow:0 5px 10px rgba(0,0,0,.4),0 0 9px rgba(255,255,255,.28)!important}
+.match-sim-fm119 .sim-ball.is-shot,.match-sim-fm119 .sim-ball.is-goal{width:16px!important;height:16px!important;animation:fm125BallSpin .24s linear infinite!important}
+
+/* passing / shot path only appears when the ball is actually traveling */
+.fm121-action-path{opacity:.95!important}.fm121-action-path.pass path,.fm121-action-path.chance path{stroke-width:.58!important}.fm121-action-path.shot path,.fm121-action-path.goal path{stroke-width:.82!important;stroke-dasharray:3.2 1.1!important;filter:drop-shadow(0 0 3px currentColor)!important}
+
+/* goal broadcast card */
+.match-sim-fm119 .sim-goal-flash{display:grid!important;justify-items:center!important;gap:3px!important;min-width:260px!important;padding:17px 26px 15px!important;border:1px solid rgba(255,224,112,.28)!important;border-radius:16px!important;background:linear-gradient(180deg,rgba(4,20,31,.95),rgba(3,14,24,.95))!important;box-shadow:0 18px 50px rgba(0,0,0,.38),0 0 42px rgba(255,210,72,.14)!important;text-align:center!important;animation:fm125GoalCard .52s cubic-bezier(.2,.75,.25,1) both!important}
+.match-sim-fm119 .sim-goal-flash b{color:#ffe277!important;font-size:30px!important;font-weight:1000!important;line-height:1!important;letter-spacing:.08em!important;text-shadow:0 0 18px rgba(255,210,72,.35)!important}
+.match-sim-fm119 .sim-goal-flash strong{max-width:300px!important;color:#fff!important;font-size:18px!important;font-weight:1000!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.match-sim-fm119 .sim-goal-flash span{color:#9db4c0!important;font-size:10px!important;font-weight:850!important}
+.match-sim-fm119 .sim-goal-flash.home{border-bottom:3px solid var(--home-primary,#27dfe2)!important}.match-sim-fm119 .sim-goal-flash.away{border-bottom:3px solid var(--away-primary,#4e78ef)!important}
+
+/* halftime and full-time broadcast overlays */
+.fm125-halftime-overlay,.fm125-fulltime-overlay{position:absolute!important;z-index:20!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;display:grid!important;justify-items:center!important;gap:4px!important;min-width:210px!important;padding:14px 24px!important;border:1px solid rgba(70,220,231,.28)!important;border-radius:15px!important;background:rgba(3,16,27,.94)!important;box-shadow:0 18px 48px rgba(0,0,0,.38)!important;backdrop-filter:blur(7px)!important}
+.fm125-halftime-overlay small,.fm125-fulltime-overlay small{color:#43e9ee!important;font-size:9px!important;font-weight:1000!important;letter-spacing:.13em!important}.fm125-halftime-overlay b,.fm125-fulltime-overlay b{color:#fff!important;font-size:36px!important;font-weight:1000!important;line-height:1!important}.fm125-halftime-overlay span,.fm125-fulltime-overlay span{color:#96aeba!important;font-size:9px!important}
+.fm125-fulltime-overlay{border-color:rgba(255,215,91,.28)!important}.fm125-fulltime-overlay small{color:#ffda68!important}
+
+@keyframes fm125BallSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes fm125NetHit{0%{transform:scaleX(1);filter:brightness(1)}45%{transform:scaleX(1.14);filter:brightness(1.35)}100%{transform:scaleX(1);filter:brightness(1)}}
+@keyframes fm125Receiver{from{transform:scale(.95);opacity:.35}to{transform:scale(1.12);opacity:.85}}
+@keyframes fm125GoalCard{from{opacity:0;transform:translate(-50%,-50%) scale(.86)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@media(prefers-reduced-motion:reduce){.match-sim-fm119 .sim-ball.is-travelling,.match-sim-fm119 .sim-ball.is-shot,.match-sim-fm119 .sim-ball.is-goal,.match-sim-fm119 .sim-goal.net-hit,.match-sim-fm119 .sim-player.support:after{animation:none!important}}
+.fm125-fulltime-overlay em{margin-top:3px!important;color:#b4c6cf!important;font-size:8px!important;font-style:normal!important;font-weight:800!important;letter-spacing:.02em!important}
