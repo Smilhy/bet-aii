@@ -191,42 +191,75 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   const clientTimeZone = useMemo(() => getBrowserTimeZone(), [])
   const todayKey = useMemo(() => getDateKeyInTimeZone(nowMs, clientTimeZone), [nowMs, clientTimeZone])
 
+  const normalizeRealRows = (payload, requestNowMs = Date.now()) => {
+    const seen = new Set()
+    return (Array.isArray(payload?.fixtures) ? payload.fixtures : [])
+      .filter(isRealApiFootballFixture)
+      .filter(row => isPreMatchFixture(row, requestNowMs))
+      .filter(row => getDateKeyInTimeZone(getFixtureStartMs(row), clientTimeZone) === todayKey)
+      .filter(row => {
+        const key = fixtureKey(row)
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      .sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b))
+  }
+
+  const requestDailyMatches = async ({ forceRefresh = false, skipOdds = false } = {}) => {
+    const params = new URLSearchParams({
+      sport: 'Piłka nożna',
+      country: 'Wszystkie',
+      league: 'Wszystkie ligi',
+      date: todayKey,
+      daysAhead: '0',
+      allLeagues: '1',
+      mode: 'all-today',
+      realOnly: '1',
+      forceRefresh: forceRefresh ? '1' : '0',
+      skipOdds: skipOdds ? '1' : '0',
+      timezone: clientTimeZone
+    })
+    const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`, { cache: 'no-store' })
+    const payload = await response.json().catch(() => ({}))
+    if (!response.ok || payload.ok === false) throw new Error(payload.message || payload.error || copy.error)
+    return payload
+  }
+
   const loadMatches = async () => {
     setLoading(true)
     setError('')
     try {
-      const params = new URLSearchParams({
-        sport: 'Piłka nożna',
-        country: 'Wszystkie',
-        league: 'Wszystkie ligi',
-        date: todayKey,
-        daysAhead: '0',
-        allLeagues: '1',
-        mode: 'all-today',
-        realOnly: '1',
-        forceRefresh: '1',
-        timezone: clientTimeZone
-      })
-      const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`, { cache: 'no-store' })
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok || payload.ok === false) throw new Error(payload.message || payload.error || copy.error)
-
-      const seen = new Set()
       const requestNowMs = Date.now()
-      const realRows = (Array.isArray(payload.fixtures) ? payload.fixtures : [])
-        .filter(isRealApiFootballFixture)
-        .filter(row => isPreMatchFixture(row, requestNowMs))
-        .filter(row => getDateKeyInTimeZone(getFixtureStartMs(row), clientTimeZone) === todayKey)
-        .filter(row => {
-          const key = fixtureKey(row)
-          if (seen.has(key)) return false
-          seen.add(key)
-          return true
-        })
-        .sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b))
+      let payload = null
+      let realRows = []
+      let usedFallback = false
+
+      // 1) Najpierw szybki cache. Jeśli cache istnieje, lista pojawia się bez czekania
+      // na kosztowne odświeżanie wszystkich stron kursów.
+      try {
+        payload = await requestDailyMatches({ forceRefresh: false, skipOdds: false })
+        realRows = normalizeRealRows(payload, requestNowMs)
+      } catch (_) {}
+
+      // 2) Jeśli cache nie ma dzisiejszych meczów, pobierz świeże dane z API.
+      if (!realRows.length) {
+        try {
+          payload = await requestDailyMatches({ forceRefresh: true, skipOdds: false })
+          realRows = normalizeRealRows(payload, requestNowMs)
+        } catch (_) {
+          // 3) Ostatni bezpieczny fallback: realne fixture'y bez oczekiwania na /odds.
+          // Brak kursów nie może wycinać całej listy meczów.
+          payload = await requestDailyMatches({ forceRefresh: true, skipOdds: true })
+          realRows = normalizeRealRows(payload, requestNowMs)
+          usedFallback = true
+        }
+      }
 
       setMatches(realRows)
-      setSourceMessage(`${realRows.length} realnych, nierozpoczętych meczów • kolejność wg kickoffu`)
+      setSourceMessage(realRows.length
+        ? `${realRows.length} realnych, nierozpoczętych meczów • kolejność wg kickoffu${usedFallback ? ' • kursy chwilowo niedostępne' : ''}`
+        : 'Brak kolejnych nierozpoczętych meczów na dzisiaj.')
     } catch (err) {
       setMatches([])
       setError(err?.message || copy.error)

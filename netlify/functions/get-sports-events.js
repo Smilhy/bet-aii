@@ -11,6 +11,7 @@ exports.handler = async function(event) {
   const realOnly = String(qs.realOnly || '') === '1'
   const countOnly = String(qs.countOnly || '') === '1'
   const forceRefresh = String(qs.forceRefresh || '') === '1'
+  const skipOdds = String(qs.skipOdds || '') === '1'
   const allLeagues = String(qs.allLeagues || '') === '1' || String(league || '').toLowerCase().includes('wszystkie')
   const addDaysToPlainDate = (dateKey, addDays) => {
     const [year, month, day] = String(dateKey || '').split('-').map(Number)
@@ -1529,7 +1530,11 @@ exports.handler = async function(event) {
     const collected = []
     const errors = []
     let totalPages = 1
-    for (let page = 1; page <= totalPages; page += 1) {
+    // WERSJA 120: globalny widok dnia nie może blokować całej listy meczów
+    // przez dziesiątki/setki stron endpointu /odds. Pobieramy ograniczoną liczbę
+    // stron kursów, a brakujące kursy nie blokują realnych fixture'ów.
+    const maxOddsPages = mode === 'all-today' ? 12 : 50
+    for (let page = 1; page <= totalPages && page <= maxOddsPages; page += 1) {
       try {
         const url = new URL(`${cfg.host}/odds`)
         url.searchParams.set('date', dayKey)
@@ -1548,7 +1553,7 @@ exports.handler = async function(event) {
         const rows = Array.isArray(data?.response) ? data.response : []
         collected.push(...rows)
         const pagingTotal = Number(data?.paging?.total || 1)
-        totalPages = Number.isFinite(pagingTotal) && pagingTotal > 0 ? Math.min(pagingTotal, 200) : 1
+        totalPages = Number.isFinite(pagingTotal) && pagingTotal > 0 ? Math.min(pagingTotal, maxOddsPages) : 1
       } catch (error) {
         errors.push(`odds/${dayKey}: ${error.message}`)
         break
@@ -1558,7 +1563,7 @@ exports.handler = async function(event) {
   }
 
   const enrichFixturesWithApiFootballOdds = async (apiKey, cfg, fixtures, dateKeys) => {
-    if (countOnly || !apiKey || !fixtures.length) return { fixtures, errors: [] }
+    if (countOnly || skipOdds || !apiKey || !fixtures.length) return { fixtures, errors: [] }
     const byFixtureId = new Map()
     const errors = []
     for (const dayKey of [...new Set(dateKeys)]) {
@@ -1742,7 +1747,7 @@ exports.handler = async function(event) {
   }
 
   const enrichSearchFixturesWithApiFootballOdds = async (apiKey, cfg, fixtures) => {
-    if (countOnly || !apiKey || !fixtures.length) return { fixtures, errors: [] }
+    if (countOnly || skipOdds || !apiKey || !fixtures.length) return { fixtures, errors: [] }
     const errors = []
     const enriched = []
     for (const fixture of fixtures.slice(0, 30)) {
