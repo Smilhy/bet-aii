@@ -724,9 +724,9 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
             <div className="sim-lab-test-copy-v152">
               <small>BET+AI PROFESSIONAL PREDICTION LAB • TEST OFFLINE</small>
               <strong>1 mecz testowy • 0 requestów API</strong>
-              <p>Twój limit API może być wyczerpany — ten jeden scenariusz działa lokalnie i pozwala sprawdzić Calibration, Uncertainty, Drift, Trust Score, Shadow Portfolio, Decision Card i pełną symulację 2D.</p>
+              <p>Twój limit API może być wyczerpany — ten jeden scenariusz działa lokalnie i pozwala sprawdzić Calibration, Uncertainty, Drift, Trust Score, Shadow Portfolio, Ensemble, Disagreement, Portfolio Risk, Control Center i pełną symulację 2D.</p>
             </div>
-            <button type="button" onClick={() => handleSelect(labTestMatch)}>▶ URUCHOM TEST V152</button>
+            <button type="button" onClick={() => handleSelect(labTestMatch)}>▶ URUCHOM TEST V158</button>
           </section>
           {loading && <div className="sim-day-loading-v99"><i /><strong>{copy.loading}</strong><span>API-Football • {formatDateLabel(todayKey)}</span></div>}
           {!loading && error && <div className="sim-day-error-v99">⚠ {error}<button type="button" onClick={startLoadMatches}>{copy.refresh}</button></div>}

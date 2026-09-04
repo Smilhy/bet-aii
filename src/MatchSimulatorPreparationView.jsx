@@ -240,8 +240,19 @@ function extractMarketOdds(match = {}) {
 }
 
 
+function displayTextV158(value = '', fallback = '') {
+  if (value == null) return fallback
+  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (typeof value === 'object') {
+    const nested = value?.name ?? value?.label ?? value?.title ?? value?.value
+    if (nested != null && nested !== value) return displayTextV158(nested, fallback)
+    return fallback
+  }
+  return String(value || fallback)
+}
+
 function normalizeName(value = '') {
-  return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim()
+  return displayTextV158(value, '').toLowerCase().replace(/\s+/g, ' ').trim()
 }
 
 function performanceMarketKey(key = '') {
@@ -536,7 +547,7 @@ function buildValueEngineV2({ match = {}, data = {}, probabilities = {}, dataQua
       probability: round1(probability),
       fairOdds: fairOdd(probability),
       bookmakerOdds: round2(price),
-      bookmaker: book?.bookmaker || '',
+      bookmaker: displayTextV158(book?.bookmaker, ''),
       rawImplied: round1(rawImplied),
       noVigImplied: round1(noVigImplied),
       bookmakerMargin: round1(margin),
@@ -584,7 +595,7 @@ function buildValueEngineV2({ match = {}, data = {}, probabilities = {}, dataQua
       if (!probability || !(price > 1)) return
       const raw = 100 / price
       const candidate = {
-        key, marketGroup: 'fallback', probability: round1(probability), fairOdds: fairOdd(probability), bookmakerOdds: round2(price), bookmaker: quote?.bookmaker || '',
+        key, marketGroup: 'fallback', probability: round1(probability), fairOdds: fairOdd(probability), bookmakerOdds: round2(price), bookmaker: displayTextV158(quote?.bookmaker, ''),
         rawImplied: round1(raw), noVigImplied: null, bookmakerMargin: null,
         edgePp: round1(probability - raw), expectedValuePct: round1((probability / 100 * price - 1) * 100), vigAdjusted: false,
         calibration: resolveCalibration(performance, league, key, probability)
@@ -769,7 +780,7 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
   if (sourceCount) factors.push(`Web consensus: ${sourceCount} źródeł • zgodność ${Math.round(agreement)}%`)
 
   const forecast = {
-    version: 'BETAI_FORECAST_V146',
+    version: 'BETAI_FORECAST_V158',
     calibrationVersion: 'BETAI_CALIBRATION_V2',
     weightingVersion: 'BETAI_DYNAMIC_WEIGHTS_V1',
     generatedAt: new Date().toISOString(),
@@ -992,7 +1003,7 @@ function buildBetAiLabTestPerformanceV152() {
     all: { matches: 420, markets, avgBrier: 0.211, rawAvgBrier: 0.226, calibrationBrierLift: 0.015, oneXTwoAccuracy: 58.3, valueRoi: 7.8, valueBets: 128, avgClv: 3.6, clvSamples: 81, calibration: markets[2].calibration },
     last30: { matches: 96, avgBrier: 0.207, valueRoi: 5.9 },
     leagues: [league],
-    versions: [{ name: 'BETAI_FORECAST_V152', matches: 210, avgBrier: 0.204 }],
+    versions: [{ name: 'BETAI_FORECAST_V158', matches: 210, avgBrier: 0.204 }],
     walkForward: {
       samples: 350, rawBrier: 0.228, walkForwardBrier: 0.209, lift: 0.019,
       markets: [
@@ -1016,7 +1027,19 @@ function buildBetAiLabTestPerformanceV152() {
       { key: 'oneXTwo', score: 78, label: 'GOOD', samples: 210 }, { key: 'over15', score: 92, label: 'HIGH', samples: 198 },
       { key: 'over25', score: 89, label: 'HIGH', samples: 196 }, { key: 'over35', score: 74, label: 'GOOD', samples: 187 }, { key: 'btts', score: 84, label: 'HIGH', samples: 193 }
     ] }],
-    paperPortfolio: { bets: 128, settled: 116, pending: 12, wins: 67, losses: 49, profitUnits: 9.05, roi: 7.8, yield: 7.8, maxDrawdownUnits: 7.2, maxWinStreak: 8, maxLoseStreak: 5, avgClv: 3.6, clvSamples: 81 }
+    paperPortfolio: { bets: 128, settled: 116, pending: 12, wins: 67, losses: 49, profitUnits: 9.05, roi: 7.8, yield: 7.8, maxDrawdownUnits: 7.2, maxWinStreak: 8, maxLoseStreak: 5, avgClv: 3.6, clvSamples: 81 },
+    portfolioRisk: { available: true, samples: 116, simulations: 1000, status: 'READY', horizons: [
+      { horizon: 50, medianRoi: 7.4, p10Roi: -7.8, p90Roi: 21.5, medianDrawdown: 4.8, p90Drawdown: 9.6 },
+      { horizon: 100, medianRoi: 7.7, p10Roi: -3.2, p90Roi: 18.4, medianDrawdown: 6.9, p90Drawdown: 12.7 },
+      { horizon: 250, medianRoi: 7.8, p10Roi: 0.8, p90Roi: 14.6, medianDrawdown: 10.6, p90Drawdown: 18.2 }
+    ] },
+    errorAnalysis: { total: 34, categories: [
+      { classification: 'MODEL_DISAGREEMENT', count: 11 },
+      { classification: 'MARKET_MISREAD', count: 9 },
+      { classification: 'NEGATIVE_CLV', count: 6 },
+      { classification: 'HIGH_UNCERTAINTY', count: 5 },
+      { classification: 'LOW_DATA_QUALITY', count: 3 }
+    ] }
   }
 }
 
@@ -1144,11 +1167,247 @@ function buildProfessionalPredictionLabV152({ match = {}, forecast = null, relia
     decisionCard: {
       decision, reason, key: candidate.key, label: forecastLabel(candidate.key), marketGroup: candidate.marketGroup,
       rawProbability: round1(rawProbability), calibratedProbability: round1(calibratedProbability), uncertaintyPp: uncertainty, conservativeProbability,
-      fairOdds: conservativeFairOdds, modelFairOdds: Number(candidate.fairOdds || 0), bookmakerOdds: Number(candidate.bookmakerOdds || 0), bookmaker: candidate.bookmaker || '',
+      fairOdds: conservativeFairOdds, modelFairOdds: Number(candidate.fairOdds || 0), bookmakerOdds: Number(candidate.bookmakerOdds || 0), bookmaker: displayTextV158(candidate.bookmaker, ''),
       noVigProbability: noVig ? round1(noVig) : null, conservativeEdgePp: conservativeEdge, rawEdgePp: Number(candidate.edgePp || 0), expectedValuePct: Number(candidate.expectedValuePct || 0),
       reliability: relScore, dataQuality: quality, leagueTrust: Number(trust?.score || 0), trustLabel: trust?.label || 'PENDING', sampleSize: calibrationSamples,
       driftStatus: drift?.status || 'PENDING', walkForwardSamples: Number(walkForward?.samples || 0), walkForwardBrier: Number(walkForward?.walkForwardBrier || 0),
       clvPct: clv?.clvPct ?? null, stakeUnits: 1
+    }
+  }
+}
+
+// WERSJA 158 — MODEL VALIDATION & RISK LAB (V153–V158)
+// No extra API-Football requests: this layer only uses data already loaded for the match
+// plus Supabase-backed historical performance returned by get-match-prediction-performance.
+function meanV158(values = []) {
+  const rows = values.map(Number).filter(Number.isFinite)
+  return rows.length ? rows.reduce((sum, value) => sum + value, 0) / rows.length : 0
+}
+
+function stdDevV158(values = []) {
+  const rows = values.map(Number).filter(Number.isFinite)
+  if (rows.length < 2) return 0
+  const m = meanV158(rows)
+  return Math.sqrt(meanV158(rows.map(value => Math.pow(value - m, 2))))
+}
+
+function selectedTripletProbabilityV155(triplet = null, key = '') {
+  if (!triplet) return null
+  if (key === 'home') return Number(triplet.home)
+  if (key === 'draw') return Number(triplet.draw)
+  if (key === 'away') return Number(triplet.away)
+  return null
+}
+
+function empiricalProbabilityV155(data = {}, key = '') {
+  const homeRows = Array.isArray(data?.recent?.home) ? data.recent.home.slice(0, 10) : []
+  const awayRows = Array.isArray(data?.recent?.away) ? data.recent.away.slice(0, 10) : []
+  const rows = [...homeRows, ...awayRows]
+  if (!rows.length) return null
+
+  const hitRate = predicate => {
+    const valid = rows.filter(row => Number.isFinite(Number(row?.gf)) && Number.isFinite(Number(row?.ga)))
+    if (valid.length < 5) return null
+    return valid.filter(predicate).length / valid.length * 100
+  }
+
+  if (key === 'over15' || key === 'under15') {
+    const p = hitRate(row => Number(row.gf) + Number(row.ga) >= 2)
+    return p == null ? null : key === 'over15' ? p : 100 - p
+  }
+  if (key === 'over25' || key === 'under25') {
+    const p = hitRate(row => Number(row.gf) + Number(row.ga) >= 3)
+    return p == null ? null : key === 'over25' ? p : 100 - p
+  }
+  if (key === 'over35' || key === 'under35') {
+    const p = hitRate(row => Number(row.gf) + Number(row.ga) >= 4)
+    return p == null ? null : key === 'over35' ? p : 100 - p
+  }
+  if (key === 'btts' || key === 'bttsYes' || key === 'bttsNo') {
+    const p = hitRate(row => Number(row.gf) > 0 && Number(row.ga) > 0)
+    return p == null ? null : key === 'bttsNo' ? 100 - p : p
+  }
+
+  if (['home', 'draw', 'away'].includes(key)) {
+    if (homeRows.length < 5 || awayRows.length < 5) return null
+    const homeForm = formStrength(homeRows)
+    const awayForm = formStrength(awayRows)
+    const homeGd = avg(homeRows, 'gf', 1) - avg(homeRows, 'ga', 1)
+    const awayGd = avg(awayRows, 'gf', 1) - avg(awayRows, 'ga', 1)
+    const strengthGap = (homeForm - awayForm) * 0.22 + (homeGd - awayGd) * 7 + 4.5
+    const home = clampNum(40 + strengthGap * 0.55, 18, 72, 42)
+    const away = clampNum(34 - strengthGap * 0.45, 12, 68, 32)
+    const draw = clampNum(100 - home - away, 18, 34, 26)
+    const triplet = normalizeTriplet({ home, draw, away })
+    return selectedTripletProbabilityV155(triplet, key)
+  }
+  return null
+}
+
+function consensusProbabilityV155(consensus = null, key = '') {
+  if (['home', 'draw', 'away'].includes(key)) {
+    return selectedTripletProbabilityV155(normalizeTriplet(consensus?.consensus?.percent), key)
+  }
+  if (key === 'over25' || key === 'under25') {
+    const p = Number(consensus?.goals?.over25)
+    if (!(p > 0)) return null
+    return key === 'over25' ? p : 100 - p
+  }
+  if (['btts', 'bttsYes', 'bttsNo'].includes(key)) {
+    const p = Number(consensus?.goals?.bttsYes)
+    if (!(p > 0)) return null
+    return key === 'bttsNo' ? 100 - p : p
+  }
+  return null
+}
+
+function apiProbabilityV155(data = {}, key = '') {
+  if (!['home', 'draw', 'away'].includes(key)) return null
+  return selectedTripletProbabilityV155(normalizeTriplet(data?.prediction?.percent), key)
+}
+
+function buildEnsembleModelsV155({ data = {}, forecast = null, professionalLab = null, consensus = null } = {}) {
+  const card = professionalLab?.decisionCard || null
+  const key = card?.key || forecast?.value?.top3?.[0]?.key || forecast?.value?.top?.key || 'over25'
+  const candidate = forecast?.value?.top3?.find(item => item?.key === key) || forecast?.value?.top || null
+  const models = []
+  const add = (id, label, probability, weight, kind) => {
+    const p = Number(probability)
+    if (!Number.isFinite(p) || p <= 0 || p >= 100) return
+    models.push({ id, label, probability: round1(p), weight, kind })
+  }
+
+  add('core', 'Bet+AI Core', Number(card?.calibratedProbability || candidate?.probability || 0), 42, 'model')
+  add('form', 'Form / Home-Away', empiricalProbabilityV155(data, key), 20, 'independent')
+  add('api', 'API Prediction', apiProbabilityV155(data, key), 15, 'external')
+  add('consensus', 'Web Consensus', consensusProbabilityV155(consensus, key), 13, 'external')
+  add('market', 'Market NO-VIG', Number(card?.noVigProbability || candidate?.noVigImplied || 0), 10, 'market')
+
+  const weightSum = models.reduce((sum, row) => sum + Number(row.weight || 0), 0)
+  const ensembleProbability = weightSum
+    ? models.reduce((sum, row) => sum + row.probability * row.weight, 0) / weightSum
+    : Number(card?.calibratedProbability || 0)
+  const probs = models.map(row => row.probability)
+  const spread = probs.length > 1 ? Math.max(...probs) - Math.min(...probs) : 0
+  const stdev = stdDevV158(probs)
+  const agreementScore = Math.round(clampNum(100 - spread * 2.1 - stdev * 1.2, 0, 100, 50))
+  const disagreementStatus = spread >= 20 || stdev >= 9 ? 'SHARP' : spread >= 12 || stdev >= 5.5 ? 'WATCH' : 'STABLE'
+
+  return {
+    version: 'BETAI_ENSEMBLE_V1',
+    key,
+    label: forecastLabel(key),
+    models,
+    ensembleProbability: round1(ensembleProbability),
+    fairOdds: fairOdd(ensembleProbability),
+    spreadPp: round1(spread),
+    stdevPp: round1(stdev),
+    agreementScore,
+    disagreementStatus
+  }
+}
+
+function buildSharpDisagreementV156(ensemble = null, professionalLab = null) {
+  const core = Number(professionalLab?.decisionCard?.calibratedProbability || 0)
+  const ensembleP = Number(ensemble?.ensembleProbability || 0)
+  const delta = core && ensembleP ? Math.abs(core - ensembleP) : 0
+  let status = ensemble?.disagreementStatus || 'PENDING'
+  if (delta >= 12) status = 'SHARP'
+  else if (delta >= 7 && status === 'STABLE') status = 'WATCH'
+  const score = Math.round(clampNum(Number(ensemble?.agreementScore || 50) - delta * 1.4, 0, 100, 50))
+  return {
+    version: 'BETAI_SHARP_DISAGREEMENT_V1', status, score,
+    coreProbability: round1(core), ensembleProbability: round1(ensembleP), deltaPp: round1(delta),
+    message: status === 'SHARP'
+      ? 'Modele niezależne są mocno rozbieżne — rekomendacja zostaje zablokowana.'
+      : status === 'WATCH'
+        ? 'Modele różnią się bardziej niż zwykle — wymagany jest większy margines bezpieczeństwa.'
+        : 'Niezależne modele są wystarczająco zgodne.'
+  }
+}
+
+function buildPortfolioRiskViewV157(performance = null) {
+  const risk = performance?.portfolioRisk || null
+  const portfolio = performance?.paperPortfolio || null
+  if (risk) return risk
+  return {
+    available: false,
+    samples: Number(portfolio?.settled || 0),
+    status: Number(portfolio?.settled || 0) >= 30 ? 'CALCULATING' : 'PENDING',
+    horizons: []
+  }
+}
+
+function buildValidationRiskLabV158({ match = {}, data = {}, forecast = null, professionalLab = null, reliability = null, consensus = null, performance = null } = {}) {
+  if (!forecast || !professionalLab) return null
+  const ensemble = buildEnsembleModelsV155({ data, forecast, professionalLab, consensus })
+  const disagreement = buildSharpDisagreementV156(ensemble, professionalLab)
+  const portfolioRisk = buildPortfolioRiskViewV157(performance)
+  const baseCard = professionalLab?.decisionCard || {}
+  let decision = String(baseCard?.decision || 'NO_BET').toUpperCase()
+  let reason = displayTextV158(baseCard?.reason, 'Brak finalnej decyzji.')
+
+  if (disagreement.status === 'SHARP') {
+    decision = 'NO_BET'
+    reason = 'NO BET: Sharp Disagreement Detector wykrył zbyt dużą rozbieżność niezależnych modeli.'
+  } else if (disagreement.status === 'WATCH' && decision === 'BET') {
+    decision = 'WATCH'
+    reason = 'WATCH: przewaga istnieje, ale modele niezależne nie są wystarczająco zgodne.'
+  }
+
+  const riskHorizon = Array.isArray(portfolioRisk?.horizons) ? portfolioRisk.horizons.find(item => Number(item.horizon) === 100) : null
+  if (decision === 'BET' && Number(riskHorizon?.p10Roi || 0) < -12 && Number(portfolioRisk?.samples || 0) >= 50) {
+    decision = 'WATCH'
+    reason = 'WATCH: historyczna zmienność Shadow Portfolio jest obecnie podwyższona.'
+  }
+
+  const alerts = []
+  if (disagreement.status !== 'STABLE') alerts.push(disagreement.message)
+  if (String(professionalLab?.drift?.status || '').toUpperCase() === 'DRIFT') alerts.push('Model Drift: pogorszenie ostatnich prognoz dla tego rynku.')
+  if (Number(professionalLab?.leagueTrust?.score || 0) < 60 && Number(professionalLab?.leagueTrust?.samples || 0) >= 20) alerts.push('League/Market Trust poniżej 60/100.')
+  if (Number(reliability?.score || 0) < 68) alerts.push('Reliability poniżej poziomu MEDIUM.')
+  if (!alerts.length) alerts.push('Brak krytycznych alarmów walidacyjnych dla tej analizy.')
+
+  const recentErrors = performance?.errorAnalysis || { total: 0, categories: [] }
+  const bestLeague = Array.isArray(performance?.leagueTrust) ? performance.leagueTrust[0] || null : null
+  const worstLeague = Array.isArray(performance?.leagueTrust) && performance.leagueTrust.length
+    ? [...performance.leagueTrust].sort((a, b) => Number(a.overallScore || 0) - Number(b.overallScore || 0))[0]
+    : null
+
+  return {
+    version: 'BETAI_MODEL_VALIDATION_RISK_LAB_V158',
+    auditVersion: 'BETAI_AUDIT_TRAIL_V1',
+    errorAnalysisVersion: 'BETAI_ERROR_ANALYSIS_V1',
+    ensembleVersion: ensemble.version,
+    disagreementVersion: disagreement.version,
+    portfolioRiskVersion: 'BETAI_PORTFOLIO_RISK_V1',
+    controlCenterVersion: 'BETAI_MODEL_CONTROL_CENTER_V1',
+    ensemble,
+    disagreement,
+    portfolioRisk,
+    errorAnalysis: recentErrors,
+    alerts: alerts.slice(0, 5),
+    controlCenter: {
+      modelVersion: 'BETAI_FORECAST_V158',
+      settledPredictions: Number(performance?.all?.matches || 0),
+      brier: Number(performance?.all?.avgBrier || 0),
+      rawBrier: Number(performance?.all?.rawAvgBrier || 0),
+      roi: Number(performance?.paperPortfolio?.roi ?? performance?.all?.valueRoi ?? 0),
+      clv: Number(performance?.paperPortfolio?.avgClv ?? performance?.all?.avgClv ?? 0),
+      drift: displayTextV158(professionalLab?.drift?.status, 'PENDING'),
+      trust: Number(professionalLab?.leagueTrust?.score || 0),
+      bestLeague: bestLeague ? { name: displayTextV158(bestLeague.name), score: Number(bestLeague.overallScore || 0) } : null,
+      weakestLeague: worstLeague ? { name: displayTextV158(worstLeague.name), score: Number(worstLeague.overallScore || 0) } : null
+    },
+    decisionCard: {
+      ...baseCard,
+      decision,
+      reason,
+      validatedBy: 'V153–V158',
+      ensembleProbability: Number(ensemble?.ensembleProbability || 0),
+      ensembleFairOdds: Number(ensemble?.fairOdds || 0),
+      modelAgreement: Number(disagreement?.score || 0),
+      disagreementStatus: disagreement?.status || 'PENDING'
     }
   }
 }
@@ -1320,7 +1579,8 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   const forecast = useMemo(() => data && eligibility.eligible ? buildForecast(match, data, consensus, checks, modelPerformance) : null, [match, data, consensus, checks, eligibility.eligible, modelPerformance])
   const reliability = useMemo(() => forecast ? buildReliabilityEngine({ match, data, forecast, consensus, performance: modelPerformance }) : null, [match, data, forecast, consensus, modelPerformance])
   const professionalLab = useMemo(() => forecast ? buildProfessionalPredictionLabV152({ match, forecast, reliability, performance: modelPerformance, oddsHistory }) : null, [match, forecast, reliability, modelPerformance, oddsHistory])
-  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V152', reliability: reliability || null, professionalLab: professionalLab || null } : null, [forecast, reliability, professionalLab])
+  const validationLab = useMemo(() => forecast && professionalLab ? buildValidationRiskLabV158({ match, data, forecast, professionalLab, reliability, consensus, performance: modelPerformance }) : null, [match, data, forecast, professionalLab, reliability, consensus, modelPerformance])
+  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V158', reliability: reliability || null, professionalLab: professionalLab || null, validationLab: validationLab || null } : null, [forecast, reliability, professionalLab, validationLab])
   const preparedData = useMemo(() => data ? { ...data, externalConsensus: consensus || null, predictionEngine: forecastWithReliability || null } : null, [data, consensus, forecastWithReliability])
   const phaseIndex = Math.min(phases.length - 1, Math.floor(progress / (100 / phases.length)))
 
@@ -1333,7 +1593,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
     const fixtureId = String(match?.apiFixtureId || match?.id || data?.fixture?.id || '')
     if (!fixtureId) return
     const oddsSignature = (forecastWithReliability.value?.top3 || []).map(item => `${item.key}:${item.bookmaker}:${item.bookmakerOdds}`).join(',')
-    const signature = `${fixtureId}|${forecastWithReliability.version}|${forecastWithReliability.dataQuality}|${forecastWithReliability.consensus.sourceCount}|${forecastWithReliability.xg.home}|${forecastWithReliability.xg.away}|${forecastWithReliability.value?.state || ''}|${forecastWithReliability.value?.top?.key || ''}|${forecastWithReliability.reliability?.score || 0}|${oddsSignature}`
+    const signature = `${fixtureId}|${forecastWithReliability.version}|${forecastWithReliability.dataQuality}|${forecastWithReliability.consensus.sourceCount}|${forecastWithReliability.xg.home}|${forecastWithReliability.xg.away}|${forecastWithReliability.value?.state || ''}|${forecastWithReliability.value?.top?.key || ''}|${forecastWithReliability.reliability?.score || 0}|${forecastWithReliability.validationLab?.decisionCard?.decision || ''}|${forecastWithReliability.validationLab?.disagreement?.status || ''}|${oddsSignature}`
     if (forecastSavedRef.current === signature) return
     forecastSavedRef.current = signature
     setForecastSaveState('saving')
@@ -1513,7 +1773,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
             </div>
             <div className="sim-prep-clv-grid-v146">
               {oddsHistory.markets.slice(0, 6).map((row, index) => <article key={`${row.marketKey}-${row.bookmaker}-${index}`}>
-                <header><b>{forecastLabel(row.marketKey)}</b><small>{row.bookmaker}</small></header>
+                <header><b>{forecastLabel(row.marketKey)}</b><small>{displayTextV158(row.bookmaker, 'Bookmaker')}</small></header>
                 <div><span>OPEN <b>{Number(row.openOdds || 0).toFixed(2)}</b></span><i>→</i><span>LAST <b>{Number(row.latestOdds || 0).toFixed(2)}</b></span></div>
                 <footer>{row.clvPct == null ? <em>CLV po kursie blisko kickoffu • {row.snapshots} snapshotów</em> : <strong className={Number(row.clvPct) >= 0 ? 'positive' : 'negative'}>CLV {Number(row.clvPct) > 0 ? '+' : ''}{row.clvPct}%</strong>}</footer>
               </article>)}
@@ -1540,7 +1800,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
                   <span><small>MIN. EDGE</small><b>{item.threshold} pp</b></span>
                 </div>
                 <footer>
-                  <span>{item.bookmaker || 'Bookmaker'}{item.bookmakerMargin == null ? '' : ` • marża ${item.bookmakerMargin}%`}</span>
+                  <span>{displayTextV158(item.bookmaker, 'Bookmaker')}{item.bookmakerMargin == null ? '' : ` • marża ${item.bookmakerMargin}%`}</span>
                   <span className={`cal-${String(item.calibration?.status || 'pending').toLowerCase()}`}>Kalibracja {item.calibration?.status || 'PENDING'} • {item.calibration?.samples || 0} prób • {item.calibration?.source === 'league' ? 'liga' : 'global'}</span>
                 </footer>
                 <p>{item.reason}</p>
@@ -1584,7 +1844,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
             <div className={`sim-pro-lab-decision-v152 ${String(professionalLab?.decisionCard?.decision || '').toLowerCase()}`}><span>BET+AI</span><b>{professionalLab?.decisionCard?.decision === 'BET' ? 'BET' : professionalLab?.decisionCard?.decision === 'WATCH' ? 'WATCH' : 'NO BET'}</b></div>
           </header>
           <div className="sim-pro-lab-main-v152">
-            <article className="pick"><small>RYNEK</small><strong>{professionalLab.decisionCard.label || '—'}</strong><span>{professionalLab.decisionCard.bookmakerOdds ? `@ ${Number(professionalLab.decisionCard.bookmakerOdds).toFixed(2)} • ${professionalLab.decisionCard.bookmaker}` : 'Brak pełnego rynku kursowego'}</span></article>
+            <article className="pick"><small>RYNEK</small><strong>{professionalLab.decisionCard.label || '—'}</strong><span>{professionalLab.decisionCard.bookmakerOdds ? `@ ${Number(professionalLab.decisionCard.bookmakerOdds).toFixed(2)} • ${displayTextV158(professionalLab.decisionCard.bookmaker, 'Bookmaker')}` : 'Brak pełnego rynku kursowego'}</span></article>
             <article><small>RAW MODEL</small><b>{professionalLab.decisionCard.rawProbability || 0}%</b><span>przed kalibracją</span></article>
             <article><small>CALIBRATED</small><b>{professionalLab.decisionCard.calibratedProbability || 0}%</b><span>po historii</span></article>
             <article className="uncertainty"><small>UNCERTAINTY</small><b>±{professionalLab.decisionCard.uncertaintyPp || 0} pp</b><span>margines modelu</span></article>
@@ -1616,6 +1876,68 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
           {isBetAiLabTestV152(match) ? <footer className="sim-pro-lab-test-note-v152">⚠ TRYB TESTOWY: wszystkie dane tego jednego meczu są kontrolne/offline i NIE są zapisywane do realnego backtestu, portfolio ani Supabase.</footer> : null}
         </section> : null}
 
+
+        {validationLab ? <section className={`sim-validation-lab-v158 status-${String(validationLab?.decisionCard?.decision || 'no_bet').toLowerCase()}`}>
+          <header className="sim-validation-head-v158">
+            <div><small>BET+AI MODEL VALIDATION & RISK LAB • V153–V158</small><strong>Walidacja finalnej decyzji</strong><p>Audit Trail • Error Analysis • Ensemble • Sharp Disagreement • Portfolio Risk • Control Center</p></div>
+            <div className={`sim-validation-decision-v158 ${String(validationLab?.decisionCard?.decision || '').toLowerCase()}`}><span>VALIDATED</span><b>{validationLab?.decisionCard?.decision === 'BET' ? 'BET' : validationLab?.decisionCard?.decision === 'WATCH' ? 'WATCH' : 'NO BET'}</b></div>
+          </header>
+
+          <div className="sim-ensemble-v158">
+            <div className="sim-ensemble-summary-v158">
+              <small>ENSEMBLE MODELS V155</small>
+              <strong>{validationLab.ensemble?.label || 'Rynek'}</strong>
+              <div><b>{Number(validationLab.ensemble?.ensembleProbability || 0).toFixed(1)}%</b><span>Fair {Number(validationLab.ensemble?.fairOdds || 0) > 1 ? Number(validationLab.ensemble.fairOdds).toFixed(2) : '—'}</span></div>
+              <em>Zgodność {validationLab.ensemble?.agreementScore || 0}/100 • spread {validationLab.ensemble?.spreadPp || 0} pp</em>
+            </div>
+            <div className="sim-ensemble-models-v158">
+              {(validationLab.ensemble?.models || []).map(model => <article key={model.id}>
+                <header><small>{model.label}</small><b>{Number(model.probability || 0).toFixed(1)}%</b></header>
+                <div><i style={{ width: `${Math.max(0, Math.min(100, Number(model.probability || 0)))}%` }} /></div>
+                <footer><span>{model.kind}</span><em>waga {model.weight}%</em></footer>
+              </article>)}
+            </div>
+          </div>
+
+          <div className="sim-validation-guards-v158">
+            <article className={`disagreement-${String(validationLab.disagreement?.status || 'pending').toLowerCase()}`}>
+              <small>SHARP DISAGREEMENT V156</small><b>{validationLab.disagreement?.status || 'PENDING'}</b><span>{validationLab.disagreement?.message || '—'}</span>
+            </article>
+            <article><small>MODEL AGREEMENT</small><b>{validationLab.disagreement?.score || 0}/100</b><span>Core vs ensemble Δ {validationLab.disagreement?.deltaPp || 0} pp</span></article>
+            <article><small>AUDIT TRAIL V153</small><b>{isBetAiLabTestV152(match) ? 'TEST' : forecastSaveState === 'saved' ? 'ZAPISANY' : forecastSaveState === 'saving' ? 'ZAPISUJĘ' : 'LOCAL'}</b><span>wersja modelu • dane • źródła • kursy • decyzja</span></article>
+            <article><small>ERROR ANALYSIS V154</small><b>{validationLab.errorAnalysis?.total || 0}</b><span>automatycznie po rozliczeniu błędnych prognoz</span></article>
+          </div>
+
+          {validationLab.portfolioRisk ? <div className="sim-portfolio-risk-v157">
+            <header><div><small>PORTFOLIO RISK SIMULATOR V157</small><strong>Shadow Portfolio • stała stawka 1u</strong></div><span>{validationLab.portfolioRisk.available ? `${validationLab.portfolioRisk.samples || 0} rozliczonych` : `PENDING ${validationLab.portfolioRisk.samples || 0}/30`}</span></header>
+            {validationLab.portfolioRisk.available && Array.isArray(validationLab.portfolioRisk.horizons) && validationLab.portfolioRisk.horizons.length ? <div>
+              {validationLab.portfolioRisk.horizons.map(row => <article key={row.horizon}>
+                <small>{row.horizon} TYPÓW</small><b>mediana ROI {Number(row.medianRoi || 0) > 0 ? '+' : ''}{Number(row.medianRoi || 0).toFixed(1)}%</b>
+                <span>P10 {Number(row.p10Roi || 0).toFixed(1)}% • P90 {Number(row.p90Roi || 0).toFixed(1)}%</span>
+                <em>med. DD {Number(row.medianDrawdown || 0).toFixed(1)}u • P90 DD {Number(row.p90Drawdown || 0).toFixed(1)}u</em>
+              </article>)}
+            </div> : <p>Ryzyko portfela pojawi się po minimum 30 rozliczonych paper betach. Nie zwiększamy przez to liczby requestów API-Football.</p>}
+          </div> : null}
+
+          <div className="sim-validation-reason-v158"><b>{validationLab.decisionCard?.reason || '—'}</b><span>Finalna decyzja może zostać obniżona przez disagreement, drift, niski trust lub ryzyko portfela.</span></div>
+          <div className="sim-validation-alerts-v158">{(validationLab.alerts || []).map((alert, index) => <span key={`${index}-${alert}`}>• {alert}</span>)}</div>
+        </section> : null}
+
+        {validationLab?.controlCenter ? <section className="sim-control-center-v158">
+          <header><div><small>BET+AI MODEL CONTROL CENTER • V158</small><strong>Stan modelu prognostycznego</strong></div><span>{isBetAiLabTestV152(match) ? 'OFFLINE TEST DATA' : 'REAL PRE-MATCH HISTORY'}</span></header>
+          <div className="sim-control-kpis-v158">
+            <article><small>MODEL</small><b>{validationLab.controlCenter.modelVersion}</b><span>auditowalna wersja</span></article>
+            <article><small>SETTLED</small><b>{validationLab.controlCenter.settledPredictions || 0}</b><span>zamrożonych prognoz</span></article>
+            <article><small>BRIER</small><b>{Number(validationLab.controlCenter.brier || 0).toFixed(3)}</b><span>RAW {Number(validationLab.controlCenter.rawBrier || 0).toFixed(3)}</span></article>
+            <article><small>SHADOW ROI</small><b className={Number(validationLab.controlCenter.roi || 0) >= 0 ? 'positive' : 'negative'}>{Number(validationLab.controlCenter.roi || 0) > 0 ? '+' : ''}{Number(validationLab.controlCenter.roi || 0).toFixed(1)}%</b><span>paper betting 1u</span></article>
+            <article><small>AVG CLV</small><b className={Number(validationLab.controlCenter.clv || 0) >= 0 ? 'positive' : 'negative'}>{Number(validationLab.controlCenter.clv || 0) > 0 ? '+' : ''}{Number(validationLab.controlCenter.clv || 0).toFixed(1)}%</b><span>closing-line quality</span></article>
+            <article><small>DRIFT</small><b>{validationLab.controlCenter.drift || 'PENDING'}</b><span>30 / 50 / 100</span></article>
+            <article><small>TRUST</small><b>{validationLab.controlCenter.trust || 0}/100</b><span>liga + rynek</span></article>
+            <article><small>BEST LEAGUE</small><b>{displayTextV158(validationLab.controlCenter.bestLeague?.name, '—')}</b><span>{validationLab.controlCenter.bestLeague?.score || 0}/100</span></article>
+            <article><small>WEAKEST LEAGUE</small><b>{displayTextV158(validationLab.controlCenter.weakestLeague?.name, '—')}</b><span>{validationLab.controlCenter.weakestLeague?.score || 0}/100</span></article>
+          </div>
+          {Array.isArray(validationLab.errorAnalysis?.categories) && validationLab.errorAnalysis.categories.length ? <div className="sim-error-categories-v158"><small>NAJCZĘSTSZE PRZYCZYNY BŁĘDÓW</small><div>{validationLab.errorAnalysis.categories.slice(0, 5).map(row => <span key={row.classification}><b>{displayTextV158(row.classification, 'OTHER')}</b><em>{row.count || 0}</em></span>)}</div></div> : null}
+        </section> : null}
         <section className="sim-prep-backtest-v137">
           <div className="sim-prep-backtest-head-v137">
             <div><small>BET+AI BACKTEST & CALIBRATION</small><strong>Rzeczywista skuteczność modelu</strong></div>

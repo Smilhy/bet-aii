@@ -1451,7 +1451,7 @@ function FormationBoard({ teamName, lineup, tone = 'home' }) {
           </div>
         </div>
       )}
-      <div className="fm119-formation-footer"><span>{ready ? `${lineup.startXI.length} zawodników • ${predicted ? `predykcja z ${lineup.sourceMatches || 0} składów` : 'oficjalne XI'} • Trener` : 'Dane API • Trener'}</span><b>{lineup?.coach || '—'}</b></div>
+      <div className="fm119-formation-footer"><span>{ready ? `${lineup.startXI.length} zawodników • ${predicted ? `predykcja z ${lineup.sourceMatches || 0} składów` : 'oficjalne XI'} • Trener` : 'Dane API • Trener'}</span><b>{typeof lineup?.coach === 'object' ? (lineup?.coach?.name || lineup?.coach?.label || '—') : (lineup?.coach || '—')}</b></div>
     </aside>
   )
 }

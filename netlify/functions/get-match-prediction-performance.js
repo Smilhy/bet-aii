@@ -430,6 +430,91 @@ function aggregateShadowPortfolio(rows = []) {
   }
 }
 
+
+function quantileV157(values = [], q = 0.5) {
+  const rows = values.map(Number).filter(Number.isFinite).sort((a, b) => a - b)
+  if (!rows.length) return 0
+  const pos = (rows.length - 1) * Math.max(0, Math.min(1, q))
+  const lo = Math.floor(pos), hi = Math.ceil(pos)
+  if (lo === hi) return rows[lo]
+  return rows[lo] + (rows[hi] - rows[lo]) * (pos - lo)
+}
+
+function seededRandomV157(seed = 123456789) {
+  let state = (Number(seed) >>> 0) || 123456789
+  return () => {
+    state = (1664525 * state + 1013904223) >>> 0
+    return state / 4294967296
+  }
+}
+
+function buildPortfolioRiskSimulatorV157(rows = [], simulations = 1000) {
+  const settled = rows.filter(row => ['won', 'lost'].includes(String(row?.status || '').toLowerCase()))
+  const returns = settled.map(row => {
+    const stake = Math.max(0.01, n(row?.stake_units, 1))
+    return n(row?.profit_units, 0) / stake
+  }).filter(Number.isFinite)
+  if (returns.length < 30) return { available: false, status: 'PENDING', samples: returns.length, simulations: 0, horizons: [] }
+
+  const rng = seededRandomV157(0xB37A1 + returns.length * 97)
+  const horizons = [50, 100, 250].map(horizon => {
+    const rois = [], drawdowns = []
+    for (let sim = 0; sim < simulations; sim += 1) {
+      let equity = 0, peak = 0, maxDrawdown = 0
+      for (let i = 0; i < horizon; i += 1) {
+        const sample = returns[Math.floor(rng() * returns.length)]
+        equity += sample
+        peak = Math.max(peak, equity)
+        maxDrawdown = Math.max(maxDrawdown, peak - equity)
+      }
+      rois.push(equity / horizon * 100)
+      drawdowns.push(maxDrawdown)
+    }
+    return {
+      horizon,
+      medianRoi: round(quantileV157(rois, 0.50), 1),
+      p10Roi: round(quantileV157(rois, 0.10), 1),
+      p90Roi: round(quantileV157(rois, 0.90), 1),
+      medianDrawdown: round(quantileV157(drawdowns, 0.50), 1),
+      p90Drawdown: round(quantileV157(drawdowns, 0.90), 1)
+    }
+  })
+  return { available: true, status: 'READY', samples: returns.length, simulations, horizons, method: 'bootstrap historical 1u returns' }
+}
+
+async function fetchErrorAnalysisV154(supabase, limit = 1000) {
+  const { data, error } = await supabase
+    .from('match_prediction_error_analysis')
+    .select('fixture_id,classification,severity,summary,market_key,league,clv_pct,created_at')
+    .order('created_at', { ascending: false })
+    .limit(Math.max(50, Math.min(5000, limit)))
+  if (error) {
+    if (/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) return { total: 0, categories: [], recent: [] }
+    throw error
+  }
+  const rows = Array.isArray(data) ? data : []
+  const map = new Map()
+  for (const row of rows) {
+    const key = String(row?.classification || 'OTHER')
+    map.set(key, (map.get(key) || 0) + 1)
+  }
+  const categories = [...map.entries()].map(([classification, count]) => ({ classification, count })).sort((a, b) => b.count - a.count)
+  return {
+    total: rows.length,
+    categories,
+    recent: rows.slice(0, 12).map(row => ({
+      fixtureId: row.fixture_id,
+      classification: row.classification,
+      severity: row.severity,
+      summary: row.summary,
+      marketKey: row.market_key,
+      league: row.league,
+      clvPct: row.clv_pct,
+      createdAt: row.created_at
+    }))
+  }
+}
+
 async function fetchShadowBets(supabase, limit = 5000) {
   const { data, error } = await supabase
     .from('match_shadow_bets')
@@ -484,8 +569,16 @@ exports.handler = async function handler(event = {}) {
     const walkForward = walkForwardBacktest(rows)
     const drift = buildDriftDetector(rows)
     const leagueTrust = buildLeagueTrust(rows)
+    let shadowRows = []
     let paperPortfolio = aggregateShadowPortfolio([])
-    try { paperPortfolio = aggregateShadowPortfolio(await fetchShadowBets(supabase, 5000)) } catch (_) {}
+    let portfolioRisk = buildPortfolioRiskSimulatorV157([])
+    try {
+      shadowRows = await fetchShadowBets(supabase, 5000)
+      paperPortfolio = aggregateShadowPortfolio(shadowRows)
+      portfolioRisk = buildPortfolioRiskSimulatorV157(shadowRows, 1000)
+    } catch (_) {}
+    let errorAnalysis = { total: 0, categories: [], recent: [] }
+    try { errorAnalysis = await fetchErrorAnalysisV154(supabase, 1000) } catch (_) {}
     return json(200, {
       ok: true,
       available: true,
@@ -498,11 +591,13 @@ exports.handler = async function handler(event = {}) {
       drift,
       leagueTrust,
       paperPortfolio,
-      note: rows.length < 100 ? 'Mała próbka — wyniki kalibracji, drift i trust score będą stabilniejsze po zebraniu większej liczby meczów.' : ''
+      portfolioRisk,
+      errorAnalysis,
+      note: rows.length < 100 ? 'Mała próbka — wyniki kalibracji, drift, trust score i risk simulator będą stabilniejsze po zebraniu większej liczby meczów.' : ''
     })
   } catch (error) {
     return json(500, { ok: false, available: false, error: error?.message || String(error) })
   }
 }
 
-exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio }
+exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio, buildPortfolioRiskSimulatorV157 }

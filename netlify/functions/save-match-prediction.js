@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const crypto = require('crypto')
 
 function json(statusCode, body) {
   return {
@@ -15,7 +16,9 @@ function json(statusCode, body) {
 }
 
 function clean(value, max = 300) {
-  return String(value == null ? '' : value).trim().slice(0, max)
+  let raw = value
+  if (raw && typeof raw === 'object') raw = raw.name ?? raw.label ?? raw.title ?? raw.value ?? ''
+  return String(raw == null ? '' : raw).trim().slice(0, max)
 }
 
 function getClient() {
@@ -103,7 +106,7 @@ async function getOddsHistorySummary(supabase, fixtureId, fixtureDate) {
 
 
 async function captureShadowBetV151(supabase, fixtureId, fixtureDate, body = {}, forecast = {}) {
-  const card = forecast?.professionalLab?.decisionCard || null
+  const card = forecast?.validationLab?.decisionCard || forecast?.professionalLab?.decisionCard || null
   if (!card || String(card?.decision || '').toUpperCase() !== 'BET') return { captured: false, reason: 'not_a_bet' }
   const marketKey = clean(card?.key, 50)
   const bookmaker = clean(card?.bookmaker || 'Bookmaker', 120)
@@ -120,7 +123,7 @@ async function captureShadowBetV151(supabase, fixtureId, fixtureDate, body = {},
     market_label: clean(card?.label || marketKey, 120),
     bookmaker,
     odds,
-    model_version: clean(forecast?.version || 'BETAI_FORECAST_V152', 80),
+    model_version: clean(forecast?.version || 'BETAI_FORECAST_V158', 80),
     raw_probability: Number(card?.rawProbability || 0),
     calibrated_probability: Number(card?.calibratedProbability || 0),
     uncertainty_pp: Number(card?.uncertaintyPp || 0),
@@ -144,6 +147,65 @@ async function captureShadowBetV151(supabase, fixtureId, fixtureDate, body = {},
     throw error
   }
   return { captured: true, marketKey, bookmaker }
+}
+
+
+function auditSignatureV153(forecast = {}) {
+  const compact = {
+    version: forecast?.version || '',
+    dataQuality: forecast?.dataQuality || 0,
+    oneXTwo: forecast?.oneXTwo || null,
+    goals: forecast?.goals || null,
+    xg: forecast?.xg || null,
+    reliability: forecast?.reliability || null,
+    professionalLab: forecast?.professionalLab?.decisionCard || null,
+    validationLab: forecast?.validationLab?.decisionCard || null,
+    ensemble: forecast?.validationLab?.ensemble || null
+  }
+  return crypto.createHash('sha256').update(JSON.stringify(compact)).digest('hex')
+}
+
+async function captureAuditTrailV153(supabase, fixtureId, fixtureDate, body = {}, forecast = {}) {
+  const signature = auditSignatureV153(forecast)
+  const decision = forecast?.validationLab?.decisionCard || forecast?.professionalLab?.decisionCard || {}
+  const sourceSnapshot = {
+    consensus: body?.consensus && typeof body.consensus === 'object' ? body.consensus : {},
+    sourceWeights: forecast?.sourceWeights || {},
+    factors: Array.isArray(forecast?.factors) ? forecast.factors.slice(0, 12) : [],
+    modelInputs: forecast?.modelInputs || {},
+    odds: Array.isArray(forecast?.value?.top3) ? forecast.value.top3.slice(0, 6).map(item => ({
+      key: clean(item?.key, 50), bookmaker: clean(item?.bookmaker || 'Bookmaker', 120), odds: Number(item?.bookmakerOdds || 0),
+      probability: Number(item?.probability || 0), noVig: item?.noVigImplied == null ? null : Number(item.noVigImplied),
+      edgePp: Number(item?.edgePp || 0), evPct: Number(item?.expectedValuePct || 0)
+    })) : []
+  }
+  const row = {
+    fixture_id: String(fixtureId),
+    fixture_date: fixtureDate || null,
+    home_team: clean(body?.homeTeam, 180),
+    away_team: clean(body?.awayTeam, 180),
+    league: clean(body?.league, 180),
+    country: clean(body?.country, 120),
+    model_version: clean(forecast?.version || 'BETAI_FORECAST_V158', 80),
+    audit_version: 'BETAI_AUDIT_TRAIL_V1',
+    signature,
+    data_quality: Math.max(0, Math.min(100, Math.round(Number(forecast?.dataQuality || 0)))),
+    snapshot: {
+      generatedAt: forecast?.generatedAt || null, xg: forecast?.xg || null, raw: forecast?.raw || null,
+      oneXTwo: forecast?.oneXTwo || null, goals: forecast?.goals || null, fairOdds: forecast?.fairOdds || null,
+      calibration: forecast?.calibration || null, reliability: forecast?.reliability || null,
+      professionalLab: forecast?.professionalLab || null, validationLab: forecast?.validationLab || null
+    },
+    sources: sourceSnapshot,
+    decision,
+    created_at: new Date().toISOString()
+  }
+  const { error } = await supabase.from('match_prediction_audit').upsert(row, { onConflict: 'fixture_id,signature', ignoreDuplicates: true })
+  if (error) {
+    if (/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) return { captured: false, reason: 'table_missing' }
+    throw error
+  }
+  return { captured: true, signature }
 }
 
 exports.handler = async function(event) {
@@ -230,6 +292,8 @@ exports.handler = async function(event) {
   try { oddsHistory = await getOddsHistorySummary(supabase, fixtureId, body.fixtureDate || null) } catch (_) {}
   let shadowBet = null
   try { shadowBet = await captureShadowBetV151(supabase, fixtureId, body.fixtureDate || null, body, forecast) } catch (_) {}
+  let auditTrail = null
+  try { auditTrail = await captureAuditTrailV153(supabase, fixtureId, body.fixtureDate || null, body, forecast) } catch (_) {}
 
-  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality, oddsHistory, shadowBet })
+  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality, oddsHistory, shadowBet, auditTrail })
 }

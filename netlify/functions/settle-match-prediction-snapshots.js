@@ -172,6 +172,92 @@ async function settleShadowBetsV151(supabase, fixtureId, score, clv, now) {
   }
 }
 
+
+function cleanTextV154(value, max = 500) {
+  let raw = value
+  if (raw && typeof raw === 'object') raw = raw.name ?? raw.label ?? raw.title ?? raw.value ?? ''
+  return String(raw == null ? '' : raw).trim().slice(0, max)
+}
+
+function classifyPredictionErrorV154(row = {}, score = null, clv = null) {
+  const forecast = row?.forecast || {}
+  const lab = forecast?.validationLab || {}
+  const card = lab?.decisionCard || forecast?.professionalLab?.decisionCard || null
+  if (!card || String(card?.decision || '').toUpperCase() !== 'BET') return null
+  const marketKey = cleanTextV154(card?.key, 50)
+  const outcome = shadowOutcomeV151(marketKey, score)
+  if (outcome !== false) return null
+
+  const factors = []
+  const disagreement = String(lab?.disagreement?.status || card?.disagreementStatus || '').toUpperCase()
+  const drift = String(card?.driftStatus || forecast?.professionalLab?.drift?.status || '').toUpperCase()
+  const uncertainty = Number(card?.uncertaintyPp || forecast?.professionalLab?.uncertainty?.pp || 0)
+  const quality = Number(card?.dataQuality || forecast?.dataQuality || 0)
+  const reliability = Number(card?.reliability || forecast?.reliability?.score || 0)
+  const edge = Number(card?.conservativeEdgePp || 0)
+  const clvPct = clv && Number.isFinite(Number(clv?.clvPct)) ? Number(clv.clvPct) : null
+
+  let classification = 'MARKET_MISREAD'
+  if (disagreement === 'SHARP' || disagreement === 'WATCH') classification = 'MODEL_DISAGREEMENT'
+  else if (drift === 'DRIFT') classification = 'MODEL_DRIFT'
+  else if (clvPct != null && clvPct <= -2) classification = 'NEGATIVE_CLV'
+  else if (uncertainty >= 6.5) classification = 'HIGH_UNCERTAINTY'
+  else if (quality < 82) classification = 'LOW_DATA_QUALITY'
+
+  if (disagreement) factors.push(`Disagreement: ${disagreement}`)
+  if (drift) factors.push(`Drift: ${drift}`)
+  if (clvPct != null) factors.push(`CLV: ${clvPct > 0 ? '+' : ''}${clvPct.toFixed(1)}%`)
+  factors.push(`Data Quality: ${Math.round(quality)}/100`)
+  factors.push(`Reliability: ${Math.round(reliability)}/100`)
+  factors.push(`Uncertainty: ±${uncertainty.toFixed(1)} pp`)
+  factors.push(`Conservative edge: ${edge > 0 ? '+' : ''}${edge.toFixed(1)} pp`)
+
+  const severity = edge >= 8 && reliability >= 82 ? 'high' : edge >= 5 ? 'medium' : 'low'
+  return {
+    marketKey,
+    marketLabel: cleanTextV154(card?.label || marketKey, 120),
+    decision: 'BET',
+    classification,
+    severity,
+    predictedProbability: Number(card?.conservativeProbability || card?.calibratedProbability || 0),
+    summary: `Prognoza ${cleanTextV154(card?.label || marketKey, 120)} nie weszła przy wyniku ${score.home}:${score.away}. Główna klasyfikacja: ${classification}.`,
+    factors,
+    clvPct
+  }
+}
+
+async function captureErrorAnalysisV154(supabase, row, score, clv, now) {
+  const analysis = classifyPredictionErrorV154(row, score, clv)
+  if (!analysis) return { captured: false, reason: 'no_error' }
+  const payload = {
+    fixture_id: String(row.fixture_id),
+    fixture_date: row.fixture_date || null,
+    home_team: cleanTextV154(row.home_team, 180),
+    away_team: cleanTextV154(row.away_team, 180),
+    league: cleanTextV154(row?.forecast?.league || row.league || '', 180),
+    model_version: cleanTextV154(row.model_version || row?.forecast?.version || 'BETAI_FORECAST_V158', 80),
+    market_key: analysis.marketKey,
+    market_label: analysis.marketLabel,
+    predicted_probability: analysis.predictedProbability,
+    decision: analysis.decision,
+    classification: analysis.classification,
+    severity: analysis.severity,
+    summary: analysis.summary,
+    factors: analysis.factors,
+    actual_home_goals: Number(score.home),
+    actual_away_goals: Number(score.away),
+    clv_pct: analysis.clvPct,
+    created_at: now
+  }
+  const { error } = await supabase.from('match_prediction_error_analysis')
+    .upsert(payload, { onConflict: 'fixture_id,market_key,model_version' })
+  if (error) {
+    if (/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) return { captured: false, reason: 'table_missing' }
+    throw error
+  }
+  return { captured: true, classification: analysis.classification }
+}
+
 async function mapConcurrent(items, limit, mapper) {
   let cursor = 0
   const results = new Array(items.length)
@@ -200,7 +286,7 @@ exports.handler = async function handler(event = {}) {
 
   const { data, error } = await supabase
     .from(TABLE)
-    .select('fixture_id,fixture_date,home_team,away_team,model_version,forecast,settled_at')
+    .select('fixture_id,fixture_date,home_team,away_team,league,country,model_version,forecast,settled_at')
     .is('settled_at', null)
     .lte('fixture_date', cutoff)
     .order('fixture_date', { ascending: true })
@@ -269,6 +355,7 @@ exports.handler = async function handler(event = {}) {
       if (updateError) throw updateError
       try { await markClosingOdds(supabase, row.fixture_id, row.fixture_date) } catch (_) {}
       try { await settleShadowBetsV151(supabase, row.fixture_id, score, clv, now) } catch (_) {}
+      try { await captureErrorAnalysisV154(supabase, row, score, clv, now) } catch (_) {}
       settled += 1
     } catch (err) {
       errors.push({ fixture_id: row.fixture_id, error: err?.message || String(err) })
@@ -285,4 +372,4 @@ exports.handler = async function handler(event = {}) {
   })
 }
 
-exports._test = { fixtureClass, regularTimeScore, shadowOutcomeV151 }
+exports._test = { fixtureClass, regularTimeScore, shadowOutcomeV151, classifyPredictionErrorV154 }
