@@ -521,9 +521,13 @@ function normalizeRecent(rows = [], teamId) {
     const gf = isHome ? num(row?.goals?.home) : num(row?.goals?.away)
     const ga = isHome ? num(row?.goals?.away) : num(row?.goals?.home)
     return {
+      fixtureId: clean(row?.fixture?.id),
       date: clean(row?.fixture?.date), league: clean(row?.league?.name),
       opponent: clean(isHome ? row?.teams?.away?.name : row?.teams?.home?.name),
-      venue: isHome ? 'H' : 'A', gf, ga, result: gf > ga ? 'W' : gf < ga ? 'L' : 'D'
+      venue: isHome ? 'H' : 'A',
+      venueName: clean(row?.fixture?.venue?.name), city: clean(row?.fixture?.venue?.city),
+      statusShort: clean(row?.fixture?.status?.short),
+      gf, ga, result: gf > ga ? 'W' : gf < ga ? 'L' : 'D'
     }
   })
 }
@@ -540,6 +544,7 @@ function normalizeTeamStatistics(row = {}) {
     played: num(fixtures?.played?.total), wins: num(fixtures?.wins?.total), draws: num(fixtures?.draws?.total), losses: num(fixtures?.loses?.total),
     goalsForAvg: num(goals?.for?.average?.total), goalsAgainstAvg: num(goals?.against?.average?.total),
     cleanSheets: num(row?.clean_sheet?.total), failedToScore: num(row?.failed_to_score?.total),
+    penaltiesScored: num(row?.penalty?.scored?.total), penaltiesMissed: num(row?.penalty?.missed?.total), penaltiesTotal: num(row?.penalty?.total),
     biggestWinHome: clean(row?.biggest?.wins?.home), biggestWinAway: clean(row?.biggest?.wins?.away)
   }
 }

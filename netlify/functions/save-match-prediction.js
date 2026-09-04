@@ -306,6 +306,66 @@ async function captureFreezeLedgerV182(supabase, fixtureId, body = {}, forecast 
   return {captured:true,freezeHash}
 }
 
+
+async function persistTeamContextV260(supabase, body = {}, forecast = {}) {
+  const context = forecast?.contextV260 || null
+  const write = context?.registryWrite || null
+  if (!write) return { saved:false, reason:'no_context' }
+  const now = new Date().toISOString()
+  const events = []
+  for (const side of ['home','away']) {
+    const row = write?.[side] || {}
+    const teamId = clean(row?.teamId, 100).replace(/[^0-9A-Za-z_-]/g, '')
+    if (!teamId) continue
+    let previous = null
+    try {
+      const { data } = await supabase.from('match_team_context_registry_v260').select('*').eq('team_id', teamId).maybeSingle()
+      previous = data || null
+    } catch (_) {}
+    const coach = clean(row?.coach, 180)
+    const previousCoach = clean(previous?.current_coach, 180)
+    const coachChanged = Boolean(coach && previousCoach && normIdentityV183(coach) !== normIdentityV183(previousCoach))
+    const previousGk = clean(previous?.last_goalkeeper, 180)
+    const currentGk = clean(row?.goalkeeper, 180)
+    const gkChanged = Boolean(currentGk && previousGk && normIdentityV183(currentGk) !== normIdentityV183(previousGk))
+    const lineup = Array.isArray(row?.lineup) ? row.lineup.slice(0, 20) : []
+    const oldKeys = new Set((Array.isArray(previous?.last_lineup) ? previous.last_lineup : []).map(p => clean(p?.id,80) || normIdentityV183(p?.name)).filter(Boolean))
+    const retained = lineup.filter(p => oldKeys.has(clean(p?.id,80) || normIdentityV183(p?.name))).length
+    const changes = oldKeys.size >= 8 && lineup.length >= 11 ? Math.max(0, 11 - retained) : null
+    const registry = {
+      team_id: teamId,
+      team_name: clean(row?.teamName, 180),
+      league: clean(write?.league || body?.league, 180),
+      season_key: clean(write?.season, 40) || null,
+      current_coach: coach || previousCoach || null,
+      previous_coach: coachChanged ? previousCoach : (previous?.previous_coach || null),
+      coach_changed_at: coachChanged ? now : (previous?.coach_changed_at || null),
+      last_lineup: lineup,
+      last_goalkeeper: currentGk || previousGk || null,
+      last_fixture_id: clean(write?.fixtureId || body?.fixtureId, 100),
+      last_fixture_date: write?.fixtureDate || body?.fixtureDate || null,
+      tracked_matches: Number(previous?.tracked_matches || 0) + 1,
+      first_seen_at: previous?.first_seen_at || now,
+      updated_at: now
+    }
+    try { await supabase.from('match_team_context_registry_v260').upsert(registry, { onConflict:'team_id' }) } catch (_) {}
+    const log = async (eventType, severity, detail) => {
+      try { await supabase.from('match_context_events_v260').insert({ fixture_id:clean(write?.fixtureId || body?.fixtureId,100), team_id:teamId, side, event_type:eventType, severity, detail, created_at:now }) } catch (_) {}
+    }
+    if (coachChanged) { await log('MANAGER_CHANGE','warning',{from:previousCoach,to:coach}); events.push(`${side}:manager_change`) }
+    if (gkChanged) { await log('GOALKEEPER_CHANGE','warning',{from:previousGk,to:currentGk}); events.push(`${side}:gk_change`) }
+    if (changes != null && changes >= 4) { await log('LINEUP_ROTATION', changes >= 6 ? 'critical':'warning',{retained,changes}); events.push(`${side}:lineup_rotation_${changes}`) }
+  }
+  try {
+    await supabase.from('match_context_snapshots_v220').upsert({
+      fixture_id:clean(write?.fixtureId || body?.fixtureId,100), fixture_date:write?.fixtureDate || body?.fixtureDate || null,
+      home_team:clean(body?.homeTeam,180), away_team:clean(body?.awayTeam,180), league:clean(write?.league || body?.league,180),
+      context, base_xg:context?.baseXg || {}, adjusted_xg:context?.adjustedXg || {}, shock_level:clean(context?.shock?.level,40), captured_at:now, updated_at:now
+    },{onConflict:'fixture_id'})
+  } catch (_) {}
+  return { saved:true, events }
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
   if (event.httpMethod !== 'POST') return json(405, { ok: false, error: 'Method not allowed' })
@@ -419,6 +479,8 @@ exports.handler = async function(event) {
   try { audit = await capturePredictionAuditV153(supabase, fixtureId, body.fixtureDate || null, body, forecast) } catch (_) {}
   let modelExperiments = null
   try { modelExperiments = await captureModelExperimentsV160(supabase, fixtureId, body.fixtureDate || null, body, forecast) } catch (_) {}
+  let contextV260 = null
+  try { contextV260 = await persistTeamContextV260(supabase, body, forecast) } catch (_) {}
 
-  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality, oddsHistory, shadowBet, audit, modelExperiments, freezeLedger, integrity:assessment, rescheduled })
+  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality, oddsHistory, shadowBet, audit, modelExperiments, freezeLedger, contextV260, integrity:assessment, rescheduled })
 }

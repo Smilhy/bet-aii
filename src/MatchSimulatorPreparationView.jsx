@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import MatchOperationsV211 from './MatchOperationsV211'
+import MatchIntelligenceV260 from './MatchIntelligenceV260'
+import { applyContextOverlayV220 } from './matchIntelligenceV260'
 import { buildChallengerRawV180, chooseActiveModelV173, buildModelLabV200, adaptiveCalibrateTripletV172, adaptiveCalibrateBinaryV172, applyDataScienceTripletV200, applyDataScienceBinaryV200, applyEnsembleStackingV197, buildReliabilityGuardV190, applyReliabilityDecisionV190 } from './predictionLabV200'
 
 const COPY = {
@@ -761,17 +763,25 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
     for (const key of ['over15','over25','over35','btts']) stackedRawMarkets[key] = applyEnsembleStackingV197(modelPerformance, challengerVariant, key, rawMarkets[key]).value
   }
 
+  // V212–V220 — incremental Match Context Engine 4.0.
+  // Nakładka działa PO wyborze Champion/Challenger i stackingu, ale PRZED kalibracją.
+  // V180 już liczy bazowy fatigue/absencje, więc V220 dodaje tylko nowe sygnały
+  // (poprzedni XI, konkretny starter OUT, GK/trener, venue matchup, context shock).
+  const activeBaseXgV220 = challengerActive ? (challengerVariant?.xg || championVariant.xg) : championVariant.xg
+  const contextOverlayV220 = applyContextOverlayV220({ match, data, rawMarkets: stackedRawMarkets, baseXg: activeBaseXgV220 })
+  const contextRawMarkets = contextOverlayV220?.rawMarkets || stackedRawMarkets
+
   // V160/V166 — Champion remains active until the Challenger has enough paired,
   // settled history and proves a lower Brier Score. Calibration is applied only
   // after model selection, so Value Engine never mixes future outcome data.
-  const oneCalibration = calibrateTripletV2(modelPerformance, league, { home:stackedRawMarkets.home, draw:stackedRawMarkets.draw, away:stackedRawMarkets.away })
+  const oneCalibration = calibrateTripletV2(modelPerformance, league, { home:contextRawMarkets.home, draw:contextRawMarkets.draw, away:contextRawMarkets.away })
   const goalCals = {
-    over15: calibrateProbabilityV2(modelPerformance, league, 'over15', stackedRawMarkets.over15),
-    over25: calibrateProbabilityV2(modelPerformance, league, 'over25', stackedRawMarkets.over25),
-    over35: calibrateProbabilityV2(modelPerformance, league, 'over35', stackedRawMarkets.over35),
-    btts: calibrateProbabilityV2(modelPerformance, league, 'bttsYes', stackedRawMarkets.btts)
+    over15: calibrateProbabilityV2(modelPerformance, league, 'over15', contextRawMarkets.over15),
+    over25: calibrateProbabilityV2(modelPerformance, league, 'over25', contextRawMarkets.over25),
+    over35: calibrateProbabilityV2(modelPerformance, league, 'over35', contextRawMarkets.over35),
+    btts: calibrateProbabilityV2(modelPerformance, league, 'bttsYes', contextRawMarkets.btts)
   }
-  const adaptiveOne = adaptiveCalibrateTripletV172(modelPerformance, league, oneCalibration.calibrated || { home:stackedRawMarkets.home, draw:stackedRawMarkets.draw, away:stackedRawMarkets.away })
+  const adaptiveOne = adaptiveCalibrateTripletV172(modelPerformance, league, oneCalibration.calibrated || { home:contextRawMarkets.home, draw:contextRawMarkets.draw, away:contextRawMarkets.away })
   const adaptiveGoals = {
     over15: adaptiveCalibrateBinaryV172(modelPerformance, league, 'over15', goalCals.over15.calibrated),
     over25: adaptiveCalibrateBinaryV172(modelPerformance, league, 'over25', goalCals.over25.calibrated),
@@ -780,7 +790,7 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
   }
   // V191–V200: drugi, out-of-sample walidowany etap kalibracji. Profil jest zbudowany
   // wyłącznie z wcześniej rozliczonych meczów zwróconych przez performance API.
-  const dataScienceOne = applyDataScienceTripletV200(modelPerformance, league, adaptiveOne.calibrated || oneCalibration.calibrated || activeOneXTwoRaw)
+  const dataScienceOne = applyDataScienceTripletV200(modelPerformance, league, adaptiveOne.calibrated || oneCalibration.calibrated || { home:contextRawMarkets.home, draw:contextRawMarkets.draw, away:contextRawMarkets.away })
   const dataScienceGoals = {
     over15: applyDataScienceBinaryV200(modelPerformance, league, 'over15', adaptiveGoals.over15.calibrated),
     over25: applyDataScienceBinaryV200(modelPerformance, league, 'over25', adaptiveGoals.over25.calibrated),
@@ -788,9 +798,9 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
     btts: applyDataScienceBinaryV200(modelPerformance, league, 'btts', adaptiveGoals.btts.calibrated)
   }
   const markets = {
-    home: round1(dataScienceOne.calibrated?.home ?? adaptiveOne.calibrated?.home ?? oneCalibration.calibrated?.home ?? rawMarkets.home),
-    draw: round1(dataScienceOne.calibrated?.draw ?? adaptiveOne.calibrated?.draw ?? oneCalibration.calibrated?.draw ?? rawMarkets.draw),
-    away: round1(dataScienceOne.calibrated?.away ?? adaptiveOne.calibrated?.away ?? oneCalibration.calibrated?.away ?? rawMarkets.away),
+    home: round1(dataScienceOne.calibrated?.home ?? adaptiveOne.calibrated?.home ?? oneCalibration.calibrated?.home ?? contextRawMarkets.home),
+    draw: round1(dataScienceOne.calibrated?.draw ?? adaptiveOne.calibrated?.draw ?? oneCalibration.calibrated?.draw ?? contextRawMarkets.draw),
+    away: round1(dataScienceOne.calibrated?.away ?? adaptiveOne.calibrated?.away ?? oneCalibration.calibrated?.away ?? contextRawMarkets.away),
     over15: dataScienceGoals.over15.calibrated,
     over25: dataScienceGoals.over25.calibrated,
     over35: dataScienceGoals.over35.calibrated,
@@ -818,19 +828,21 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
   if (sourceCount) factors.push(`Web consensus: ${sourceCount} źródeł • zgodność ${Math.round(agreement)}%`)
 
   const forecast = {
-    version: 'BETAI_FORECAST_V200',
+    version: 'BETAI_FORECAST_V260',
     calibrationVersion: 'BETAI_ADAPTIVE_CALIBRATION_V172',
     weightingVersion: 'BETAI_SELF_LEARNING_WEIGHTS_V167_170',
-    predictionEngineVersion: 'BETAI_PREDICTION_ENGINE_4_V200',
+    predictionEngineVersion: 'BETAI_MATCH_CONTEXT_MARKET_MEMORY_V260',
     activeModel: modelSelection.activeModel,
     modelSelection,
-    modelVariants: { champion: championVariant, challenger: challengerVariant },
+    modelVariants: { champion: championVariant, challenger: challengerVariant, contextV260: { version:'BETAI_CONTEXT_OVERLAY_V220', blendWeight:contextOverlayV220?.blendWeight || 0, raw:contextRawMarkets } },
     generatedAt: new Date().toISOString(),
     fixtureId: String(match?.apiFixtureId || match?.id || data?.fixture?.id || ''),
-    xg: { home: round2(challengerActive ? challengerVariant?.xg?.home : homeXg), away: round2(challengerActive ? challengerVariant?.xg?.away : awayXg) },
+    xg: { home: round2(contextOverlayV220?.context?.adjustedXg?.home ?? (challengerActive ? challengerVariant?.xg?.home : homeXg)), away: round2(contextOverlayV220?.context?.adjustedXg?.away ?? (challengerActive ? challengerVariant?.xg?.away : awayXg)) },
+    contextV260: contextOverlayV220?.context || null,
     raw: {
-      oneXTwo: { home: stackedRawMarkets.home, draw: stackedRawMarkets.draw, away: stackedRawMarkets.away },
-      goals: { over15: stackedRawMarkets.over15, over25: stackedRawMarkets.over25, over35: stackedRawMarkets.over35, btts: stackedRawMarkets.btts },
+      oneXTwo: { home: contextRawMarkets.home, draw: contextRawMarkets.draw, away: contextRawMarkets.away },
+      goals: { over15: contextRawMarkets.over15, over25: contextRawMarkets.over25, over35: contextRawMarkets.over35, btts: contextRawMarkets.btts },
+      preContextV220: { oneXTwo: { home:stackedRawMarkets.home, draw:stackedRawMarkets.draw, away:stackedRawMarkets.away }, goals:{ over15:stackedRawMarkets.over15, over25:stackedRawMarkets.over25, over35:stackedRawMarkets.over35, btts:stackedRawMarkets.btts }, blendWeight:contextOverlayV220?.blendWeight || 0 },
       preStacking: { oneXTwo: { home: rawMarkets.home, draw: rawMarkets.draw, away: rawMarkets.away }, goals: { over15: rawMarkets.over15, over25: rawMarkets.over25, over35: rawMarkets.over35, btts: rawMarkets.btts } },
       stacking: { oneXTwo: stackOne, applied: Boolean(challengerActive && stackOne.applied) }
     },
@@ -852,7 +864,7 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
     consensus: { sourceCount, agreement: Math.round(agreement), available: Boolean(webPercent) },
     value: valueEngine,
     factors,
-    modelInputs: { homeGF: round2(homeGF), homeGA: round2(homeGA), awayGF: round2(awayGF), awayGA: round2(awayGA), homeForm: Math.round(homeForm), awayForm: Math.round(awayForm), matchIntelligence: challengerVariant?.matchIntelligence || null }
+    modelInputs: { homeGF: round2(homeGF), homeGA: round2(homeGA), awayGF: round2(awayGF), awayGA: round2(awayGA), homeForm: Math.round(homeForm), awayForm: Math.round(awayForm), matchIntelligence: challengerVariant?.matchIntelligence || null, contextV260: contextOverlayV220?.context || null }
   }
   forecast.explainability = explainForecastV145({ match, data, consensus, forecast, homeGF, homeGA, awayGF, awayGA, homeForm, awayForm })
   return forecast
@@ -1543,6 +1555,19 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
         throw new Error(friendlyPreparationError(payload?.error || payload?.message))
       }
       if (!payload?.ok) throw new Error(friendlyPreparationError(payload?.error))
+      // V212–V220: poprzedni śledzony kontekst drużyn jest pobierany WYŁĄCZNIE z Supabase.
+      // Zero nowych requestów API-Football. Dzięki temu możemy realnie porównać XI/GK/trenera
+      // z ostatnim zapisanym meczem zamiast wymyślać ciągłość składu.
+      try {
+        const homeTeamId = String(payload?.fixture?.home?.id || '')
+        const awayTeamId = String(payload?.fixture?.away?.id || '')
+        if (homeTeamId || awayTeamId) {
+          const contextParams = new URLSearchParams({ home: homeTeamId, away: awayTeamId })
+          const contextResponse = await fetch(`/.netlify/functions/get-team-context-v260?${contextParams.toString()}`, { cache: 'no-store' })
+          const contextPayload = await contextResponse.json().catch(() => ({}))
+          if (contextResponse.ok && contextPayload?.ok) payload = { ...payload, teamContextV260: { home: contextPayload.home || null, away: contextPayload.away || null, available: Boolean(contextPayload.available) } }
+        }
+      } catch (_) {}
       if (!mountedRef.current) return
       setData(payload)
       setProgress(100)
@@ -1612,7 +1637,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   const reliabilityGuardV190 = useMemo(() => forecast ? buildReliabilityGuardV190({ match, data, forecast, performance: modelPerformance, oddsHistory }) : null, [match, data, forecast, modelPerformance, oddsHistory])
   const professionalLabBase = useMemo(() => forecast ? buildProfessionalPredictionLabV152({ match, forecast, reliability, performance: modelPerformance, oddsHistory, ensembleValidation, modelLab }) : null, [match, forecast, reliability, modelPerformance, oddsHistory, ensembleValidation, modelLab])
   const professionalLab = useMemo(() => applyReliabilityDecisionV190(professionalLabBase, reliabilityGuardV190), [professionalLabBase, reliabilityGuardV190])
-  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V200', validationVersion: 'BETAI_PREDICTION_ENGINE_4_V200', operationsVersion: 'BETAI_PRODUCTION_OPS_REPLAY_V211', reliability: reliability || null, reliabilityV190: reliabilityGuardV190 || null, dataScienceV200: modelPerformance?.dataScience || null, ensembleValidation: ensembleValidation || null, modelLab: modelLab || null, marketValidation: modelLab?.marketValidation || null, professionalLab: professionalLab || null } : null, [forecast, reliability, reliabilityGuardV190, modelPerformance, ensembleValidation, modelLab, professionalLab])
+  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V260', validationVersion: 'BETAI_MATCH_CONTEXT_MARKET_MEMORY_V260', operationsVersion: 'BETAI_PRODUCTION_OPS_REPLAY_V211', contextSuiteVersion: 'BETAI_V212_260_ALL_IN', reliability: reliability || null, reliabilityV190: reliabilityGuardV190 || null, dataScienceV200: modelPerformance?.dataScience || null, ensembleValidation: ensembleValidation || null, modelLab: modelLab || null, marketValidation: modelLab?.marketValidation || null, professionalLab: professionalLab || null } : null, [forecast, reliability, reliabilityGuardV190, modelPerformance, ensembleValidation, modelLab, professionalLab])
   const preparedData = useMemo(() => data ? { ...data, externalConsensus: consensus || null, predictionEngine: forecastWithReliability || null } : null, [data, consensus, forecastWithReliability])
   const phaseIndex = Math.min(phases.length - 1, Math.floor(progress / (100 / phases.length)))
 
@@ -1978,6 +2003,8 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
             <article><small>AUTO MODEL SELECTION</small><b>{modelPerformance?.dataScience?.autoSelection?.winner || 'BASE'}</b><span>{modelPerformance?.dataScience?.autoSelection?.reason || 'zbieranie out-of-sample historii'}</span></article>
           </div>
         </section> : null}
+
+        <MatchIntelligenceV260 match={match} data={preparedData || data} forecast={forecastWithReliability} professionalLab={professionalLab} />
 
         <MatchOperationsV211 match={match} forecast={forecastWithReliability} />
 

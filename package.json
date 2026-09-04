@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-211-production-ai-operations-replay",
-  "version": "211.0.0",
+  "name": "betai-wersja-260-match-context-market-scenario-memory-command",
+  "version": "260.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
@@ -15,7 +15,8 @@
     "test:prediction-v166": "node TEST_WERSJA_166_PREDICTION_ENGINE_2.js",
     "test:prediction-v180": "node TEST_WERSJA_180_SELF_LEARNING_ENGINE.cjs",
     "test:prediction-v200": "node TEST_WERSJA_200_RELIABILITY_DATA_SCIENCE.cjs",
-    "test:ops-v211": "node TEST_WERSJA_211_PRODUCTION_OPS_REPLAY.cjs"
+    "test:ops-v211": "node TEST_WERSJA_211_PRODUCTION_OPS_REPLAY.cjs",
+    "test:v260": "node TEST_WERSJA_260_MATCH_CONTEXT_MARKET_MEMORY.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.3",
