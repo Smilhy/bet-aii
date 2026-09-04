@@ -114,14 +114,15 @@ function bucketName(confidence) {
 
 function aggregateMarket(records, key) {
   const rows = records.filter(item => item.market === key)
-  if (!rows.length) return { key, label: marketLabels[key] || key, samples: 0, accuracy: 0, brier: 0, avgConfidence: 0 }
+  if (!rows.length) return { key, label: marketLabels[key] || key, samples: 0, accuracy: 0, brier: 0, avgConfidence: 0, calibration: [] }
   return {
     key,
     label: marketLabels[key] || key,
     samples: rows.length,
     accuracy: round(rows.filter(item => item.correct).length / rows.length * 100, 1),
     brier: round(mean(rows.map(item => item.brier)), 4),
-    avgConfidence: round(mean(rows.map(item => item.confidence)), 1)
+    avgConfidence: round(mean(rows.map(item => item.confidence)), 1),
+    calibration: calibration(rows)
   }
 }
 
@@ -149,13 +150,27 @@ function valueRecord(row) {
   if (!actual || !value?.detected || !top) return null
   const key = String(top.key || '')
   const odds = n(top.bookmakerOdds, 0)
-  if (!['home', 'draw', 'away', 'over15', 'over25', 'over35', 'btts'].includes(key) || odds <= 1) return null
-  const won = Boolean(actual[key])
+  const resultMap = {
+    home: actual.home,
+    draw: actual.draw,
+    away: actual.away,
+    over15: actual.over15,
+    under15: !actual.over15,
+    over25: actual.over25,
+    under25: !actual.over25,
+    over35: actual.over35,
+    under35: !actual.over35,
+    btts: actual.btts,
+    bttsYes: actual.btts,
+    bttsNo: !actual.btts
+  }
+  if (!(key in resultMap) || odds <= 1) return null
+  const won = Boolean(resultMap[key])
   return {
     key,
     won,
     odds,
-    edge: n(top.edge, 0),
+    edge: n(top.edgePp ?? top.edge, 0),
     profit: won ? odds - 1 : -1
   }
 }

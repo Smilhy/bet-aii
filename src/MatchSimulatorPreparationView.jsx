@@ -96,7 +96,7 @@ function buildChecks(match, data, copy) {
   const standingsReady = Boolean(data?.standings?.home && data?.standings?.away)
   const statsReady = Boolean(data?.teamStats?.home?.available && data?.teamStats?.away?.available)
   const injuriesFetchOk = Boolean(data?.simulationQuality?.checks?.injuries ?? !errorHas(data, 'Absencje:'))
-  const oddsReady = hasRealOdds(match)
+  const oddsReady = hasRealOdds(match) || Boolean(data?.odds?.available)
   const homeStatsSource = data?.teamStats?.home?.source === 'recent-fixtures' ? `${data?.teamStats?.home?.sampleSize || 0} ostatnich` : 'sezon'
   const awayStatsSource = data?.teamStats?.away?.source === 'recent-fixtures' ? `${data?.teamStats?.away?.sampleSize || 0} ostatnich` : 'sezon'
   const lineupDetail = bothOfficial
@@ -106,7 +106,7 @@ function buildChecks(match, data, copy) {
       : copy.lineupsPending
 
   return [
-    { key: 'odds', label: copy.odds, ready: oddsReady, required: false, detail: oddsReady ? copy.liveOdds : `${copy.noOdds} • opcjonalne` },
+    { key: 'odds', label: copy.odds, ready: oddsReady, required: false, detail: oddsReady ? `${copy.liveOdds}${data?.odds?.books?.length ? ` • ${data.odds.books.length} bukmacherów` : ''}` : `${copy.noOdds} • opcjonalne` },
     { key: 'form', label: copy.form, ready: formReady, required: true, detail: formReady ? `${data.recent.home.length} + ${data.recent.away.length} ${copy.checked.toLowerCase()}` : 'Wymagane min. 5 + 5 realnych meczów' },
     { key: 'h2h', label: copy.h2h, ready: h2hReady, required: false, detail: h2hReady ? `${data.h2h.summary.count} ${copy.checked.toLowerCase()}` : `${copy.noH2H} • opcjonalne` },
     { key: 'injuries', label: copy.injuries, ready: injuriesFetchOk, required: false, detail: injuriesFetchOk ? ((data?.injuries?.homeCount || 0) + (data?.injuries?.awayCount || 0) ? `${data.injuries.homeCount}:${data.injuries.awayCount}` : copy.noInjuries) : `${copy.unavailable} • opcjonalne` },
@@ -239,6 +239,253 @@ function extractMarketOdds(match = {}) {
   return result
 }
 
+
+function normalizeName(value = '') {
+  return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim()
+}
+
+function performanceMarketKey(key = '') {
+  if (['home', 'draw', 'away'].includes(key)) return 'oneXTwo'
+  if (['over15', 'under15'].includes(key)) return 'over15'
+  if (['over25', 'under25'].includes(key)) return 'over25'
+  if (['over35', 'under35'].includes(key)) return 'over35'
+  if (['bttsYes', 'bttsNo', 'btts'].includes(key)) return 'btts'
+  return key
+}
+
+function findMarketPerformance(summary = null, key = '') {
+  if (!summary || !Array.isArray(summary?.markets)) return null
+  const target = performanceMarketKey(key)
+  return summary.markets.find(item => item?.key === target) || null
+}
+
+function findCalibrationBucket(rows = [], probability = 0) {
+  if (!Array.isArray(rows) || !rows.length || probability < 50) return null
+  const p = clampNum(probability, 50, 99.999, 50)
+  return rows.find(item => {
+    const match = String(item?.range || '').match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)/)
+    if (!match) return false
+    const low = Number(match[1]); const high = Number(match[2])
+    return p >= low && (p < high || (high >= 100 && p <= high))
+  }) || null
+}
+
+function resolveCalibration(performance = null, league = '', key = '', probability = 0) {
+  const globalSummary = performance?.all || null
+  const leagueSummary = Array.isArray(performance?.leagues)
+    ? performance.leagues.find(item => normalizeName(item?.name) === normalizeName(league)) || null
+    : null
+  const globalMarket = findMarketPerformance(globalSummary, key)
+  const leagueMarket = findMarketPerformance(leagueSummary, key)
+  const useLeague = Boolean(leagueMarket && Number(leagueMarket.samples || 0) >= 30)
+  const summary = useLeague ? leagueSummary : globalSummary
+  const market = useLeague ? leagueMarket : globalMarket
+  const samples = Number(market?.samples || 0)
+  const brier = Number(market?.brier || 0)
+  const bucket = findCalibrationBucket(market?.calibration || [], probability)
+  const bucketSamples = Number(bucket?.samples || 0)
+  const gap = Number(bucket?.calibrationGap || 0)
+
+  let status = 'PENDING'
+  let reason = 'Za mała próbka historyczna'
+  if (samples >= 30) {
+    if (brier > 0.29) {
+      status = 'POOR'
+      reason = 'Historyczny Brier Score jest zbyt słaby'
+    } else if (bucket && bucketSamples >= 10 && Math.abs(gap) > 8) {
+      status = 'POOR'
+      reason = `Kalibracja odbiega o ${Math.abs(round1(gap))} pp`
+    } else if (bucket && bucketSamples >= 10 && Math.abs(gap) <= 5) {
+      status = 'GOOD'
+      reason = 'Historyczna pewność jest dobrze skalibrowana'
+    } else {
+      status = 'OK'
+      reason = 'Próbka wystarczająca, kalibracja w normie'
+    }
+  }
+
+  const globalBrier = Number(globalMarket?.brier || 0)
+  const leaguePenalty = useLeague && globalBrier > 0 && brier > globalBrier + 0.025 ? 1.5 : 0
+  return {
+    status,
+    reason,
+    source: useLeague ? 'league' : 'global',
+    samples,
+    brier: round2(brier),
+    bucket: bucket ? { range: bucket.range, samples: bucketSamples, gap: round1(gap), actualAccuracy: Number(bucket.actualAccuracy || 0) } : null,
+    leaguePenalty
+  }
+}
+
+function baseEdgeThreshold(key = '') {
+  if (['home', 'draw', 'away'].includes(key)) return 6
+  if (['bttsYes', 'bttsNo', 'btts'].includes(key)) return 5.5
+  return 5
+}
+
+function classifyValueCandidate(candidate = {}, context = {}) {
+  const quality = Number(context.dataQuality || 0)
+  const calibration = candidate.calibration || {}
+  let threshold = baseEdgeThreshold(candidate.key)
+  if (quality < 75) threshold += 4
+  else if (quality < 85) threshold += 2.5
+  else if (quality < 92) threshold += 1
+  if (calibration.status === 'OK') threshold += 0.75
+  threshold += Number(calibration.leaguePenalty || 0)
+  if (Number(context.consensusSources || 0) >= 2 && Number(context.consensusAgreement || 0) < 60) threshold += 1
+  threshold = round1(threshold)
+
+  let decision = 'NO_BET'
+  let reason = ''
+  if (!candidate.vigAdjusted) {
+    reason = 'Brak pełnego rynku do wiarygodnego usunięcia marży bukmachera'
+  } else if (quality < 75) {
+    reason = 'Za niska jakość danych'
+  } else if (calibration.status === 'PENDING') {
+    reason = 'Za mała próbka backtestu — brak rekomendacji'
+  } else if (calibration.status === 'POOR') {
+    reason = 'Model jest słabo skalibrowany dla tego rynku'
+  } else if (candidate.edgePp >= threshold + 5 && candidate.expectedValuePct >= 8 && quality >= 88) {
+    decision = 'STRONG_VALUE'
+    reason = 'Duża przewaga po usunięciu marży i dobra jakość modelu'
+  } else if (candidate.edgePp >= threshold && candidate.expectedValuePct >= 3) {
+    decision = 'VALUE'
+    reason = 'Przewaga przekracza wymagany próg'
+  } else if (candidate.edgePp > 0 && candidate.expectedValuePct > 0) {
+    decision = 'SMALL_EDGE'
+    reason = 'Dodatnia przewaga, ale poniżej bezpiecznego progu'
+  } else {
+    reason = 'Brak dodatniej przewagi nad ceną rynkową'
+  }
+  return { ...candidate, threshold, decision, reason }
+}
+
+function buildValueEngineV2({ match = {}, data = {}, probabilities = {}, dataQuality = 0, consensus = null, performance = null } = {}) {
+  const model = {
+    home: Number(probabilities.home || 0), draw: Number(probabilities.draw || 0), away: Number(probabilities.away || 0),
+    over15: Number(probabilities.over15 || 0), under15: 100 - Number(probabilities.over15 || 0),
+    over25: Number(probabilities.over25 || 0), under25: 100 - Number(probabilities.over25 || 0),
+    over35: Number(probabilities.over35 || 0), under35: 100 - Number(probabilities.over35 || 0),
+    bttsYes: Number(probabilities.btts || 0), bttsNo: 100 - Number(probabilities.btts || 0)
+  }
+  const books = Array.isArray(data?.odds?.books) ? data.odds.books : []
+  const league = data?.fixture?.league || match?.league || ''
+  const candidates = []
+  const context = {
+    dataQuality,
+    consensusSources: Number(consensus?.consensus?.sourceCount || 0),
+    consensusAgreement: Number(consensus?.consensus?.agreement || 0)
+  }
+
+  const add = (book, key, odd, denominator, marketGroup) => {
+    const price = Number(odd || 0)
+    const probability = Number(model[key] || 0)
+    if (!(price > 1) || !(probability > 0) || !(denominator > 0)) return
+    const rawImplied = 100 / price
+    const noVigImplied = (1 / price) / denominator * 100
+    const margin = (denominator - 1) * 100
+    const candidate = {
+      key,
+      marketGroup,
+      probability: round1(probability),
+      fairOdds: fairOdd(probability),
+      bookmakerOdds: round2(price),
+      bookmaker: book?.bookmaker || '',
+      rawImplied: round1(rawImplied),
+      noVigImplied: round1(noVigImplied),
+      bookmakerMargin: round1(margin),
+      edgePp: round1(probability - noVigImplied),
+      expectedValuePct: round1((probability / 100 * price - 1) * 100),
+      vigAdjusted: true,
+      calibration: resolveCalibration(performance, league, key, probability)
+    }
+    candidates.push(classifyValueCandidate(candidate, context))
+  }
+
+  for (const book of books) {
+    const home = Number(book?.home || 0), draw = Number(book?.draw || 0), away = Number(book?.away || 0)
+    if (home > 1 && draw > 1 && away > 1) {
+      const denom = 1 / home + 1 / draw + 1 / away
+      add(book, 'home', home, denom, '1X2'); add(book, 'draw', draw, denom, '1X2'); add(book, 'away', away, denom, '1X2')
+    }
+    for (const line of ['15', '25', '35']) {
+      const over = Number(book?.[`over${line}`] || 0)
+      const under = Number(book?.[`under${line}`] || 0)
+      if (over > 1 && under > 1) {
+        const denom = 1 / over + 1 / under
+        add(book, `over${line}`, over, denom, `O/U ${line[0]}.${line[1]}`)
+        add(book, `under${line}`, under, denom, `O/U ${line[0]}.${line[1]}`)
+      }
+    }
+    const yes = Number(book?.bttsYes || 0), no = Number(book?.bttsNo || 0)
+    if (yes > 1 && no > 1) {
+      const denom = 1 / yes + 1 / no
+      add(book, 'bttsYes', yes, denom, 'BTTS'); add(book, 'bttsNo', no, denom, 'BTTS')
+    }
+  }
+
+  // Fallback: pokaż cenę z listy, ale nie generuj rekomendacji bez pełnej pary
+  // kursów potrzebnej do usunięcia marży.
+  if (!candidates.length) {
+    const legacyMatch = data?.odds?.markets?.length
+      ? { ...match, hasRealOdds: true, markets: data.odds.markets }
+      : match
+    const legacy = extractMarketOdds(legacyMatch)
+    Object.entries(legacy).forEach(([legacyKey, quote]) => {
+      const key = legacyKey === 'btts' ? 'bttsYes' : legacyKey
+      const probability = Number(model[key] || 0)
+      const price = Number(quote?.odds || 0)
+      if (!probability || !(price > 1)) return
+      const raw = 100 / price
+      const candidate = {
+        key, marketGroup: 'fallback', probability: round1(probability), fairOdds: fairOdd(probability), bookmakerOdds: round2(price), bookmaker: quote?.bookmaker || '',
+        rawImplied: round1(raw), noVigImplied: null, bookmakerMargin: null,
+        edgePp: round1(probability - raw), expectedValuePct: round1((probability / 100 * price - 1) * 100), vigAdjusted: false,
+        calibration: resolveCalibration(performance, league, key, probability)
+      }
+      candidates.push(classifyValueCandidate(candidate, context))
+    })
+  }
+
+  const priority = { STRONG_VALUE: 4, VALUE: 3, SMALL_EDGE: 2, NO_BET: 1 }
+  const bestByKey = new Map()
+  for (const item of candidates) {
+    const current = bestByKey.get(item.key)
+    const score = (priority[item.decision] || 0) * 1000 + item.edgePp * 10 + item.expectedValuePct
+    const currentScore = current ? (priority[current.decision] || 0) * 1000 + current.edgePp * 10 + current.expectedValuePct : -Infinity
+    if (!current || score > currentScore) bestByKey.set(item.key, item)
+  }
+  const ranked = [...bestByKey.values()].sort((a, b) => {
+    const pd = (priority[b.decision] || 0) - (priority[a.decision] || 0)
+    if (pd) return pd
+    return b.edgePp - a.edgePp || b.expectedValuePct - a.expectedValuePct
+  })
+  const recommendations = ranked.filter(item => ['STRONG_VALUE', 'VALUE'].includes(item.decision))
+  const top3 = ranked.slice(0, 3)
+  const top = recommendations[0] || top3[0] || null
+  const hasCalibrationData = ranked.some(item => Number(item?.calibration?.samples || 0) >= 30)
+  let state = 'NO_ODDS'
+  if (ranked.length) {
+    if (!hasCalibrationData) state = 'CALIBRATION_PENDING'
+    else if (recommendations.some(item => item.decision === 'STRONG_VALUE')) state = 'STRONG_VALUE'
+    else if (recommendations.length) state = 'VALUE'
+    else if (ranked.some(item => item.decision === 'SMALL_EDGE')) state = 'SMALL_EDGE'
+    else state = 'NO_BET'
+  }
+  return {
+    version: 'BETAI_VALUE_V2',
+    state,
+    detected: recommendations.length > 0,
+    top,
+    top3,
+    candidates: ranked.slice(0, 10),
+    recommendations: recommendations.slice(0, 3),
+    bookmakerCount: books.length,
+    marginRemoved: ranked.some(item => item.vigAdjusted),
+    calibrationRequiredSamples: 30
+  }
+}
+
 function buildDataQuality(checks = [], data = {}, consensus = null) {
   const ready = key => Boolean(checks.find(item => item.key === key)?.ready)
   let score = 0
@@ -256,7 +503,7 @@ function buildDataQuality(checks = [], data = {}, consensus = null) {
   return Math.round(clampNum(score, 0, 100))
 }
 
-function buildForecast(match = {}, data = {}, consensus = null, checks = []) {
+function buildForecast(match = {}, data = {}, consensus = null, checks = [], modelPerformance = null) {
   const stats = data?.teamStats || {}
   const recent = data?.recent || {}
   const prediction = data?.prediction || {}
@@ -335,19 +582,17 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = []) {
     btts: round1(btts)
   }
   const fair = Object.fromEntries(Object.entries(markets).map(([key, value]) => [key, fairOdd(value)]))
-  const odds = extractMarketOdds(match)
-  const valueCandidates = Object.entries(odds).map(([key, quote]) => {
-    const probability = Number(markets[key] || 0)
-    if (!probability) return null
-    const edge = (probability / 100 * Number(quote.odds) - 1) * 100
-    return { key, probability, fairOdds: fair[key], bookmakerOdds: round2(quote.odds), edge: round1(edge), bookmaker: quote.bookmaker || '', pick: quote.pick || '' }
-  }).filter(Boolean).sort((a, b) => b.edge - a.edge)
-  const topValue = valueCandidates[0] || null
   const dataQuality = buildDataQuality(checks, data, consensus)
   const sourceCount = Number(consensus?.consensus?.sourceCount || 0)
   const agreement = Number(consensus?.consensus?.agreement || 0)
-  const valueDetected = Boolean(topValue && topValue.edge >= 4 && dataQuality >= 70)
-  const valueState = !valueCandidates.length ? 'NO_ODDS' : valueDetected ? 'VALUE' : 'NO_BET'
+  const valueEngine = buildValueEngineV2({
+    match,
+    data,
+    probabilities: markets,
+    dataQuality,
+    consensus,
+    performance: modelPerformance
+  })
 
   const factors = [
     `Forma: ${Math.round(homeForm)}–${Math.round(awayForm)}`,
@@ -358,7 +603,7 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = []) {
   if (sourceCount) factors.push(`Web consensus: ${sourceCount} źródeł • zgodność ${Math.round(agreement)}%`)
 
   return {
-    version: 'BETAI_FORECAST_V1',
+    version: 'BETAI_FORECAST_V2',
     generatedAt: new Date().toISOString(),
     fixtureId: String(match?.apiFixtureId || match?.id || data?.fixture?.id || ''),
     xg: { home: round2(homeXg), away: round2(awayXg) },
@@ -368,14 +613,32 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = []) {
     topScores: poisson.topScores.slice(0, 3).map(item => ({ score: item.score, probability: round1(item.probability) })),
     dataQuality,
     consensus: { sourceCount, agreement: Math.round(agreement), available: Boolean(webPercent) },
-    value: { state: valueState, detected: valueDetected, top: topValue, candidates: valueCandidates.slice(0, 6) },
+    value: valueEngine,
     factors,
     modelInputs: { homeGF: round2(homeGF), homeGA: round2(homeGA), awayGF: round2(awayGF), awayGA: round2(awayGA), homeForm: Math.round(homeForm), awayForm: Math.round(awayForm) }
   }
 }
 
 function forecastLabel(key) {
-  return ({ home: '1', draw: 'X', away: '2', over15: 'Over 1.5', over25: 'Over 2.5', over35: 'Over 3.5', btts: 'BTTS TAK' })[key] || key
+  return ({ home: '1 • Gospodarze', draw: 'X • Remis', away: '2 • Goście', over15: 'Over 1.5', under15: 'Under 1.5', over25: 'Over 2.5', under25: 'Under 2.5', over35: 'Over 3.5', under35: 'Under 3.5', btts: 'BTTS TAK', bttsYes: 'BTTS TAK', bttsNo: 'BTTS NIE' })[key] || key
+}
+
+function pause(ms) {
+  return new Promise(resolve => window.setTimeout(resolve, Math.max(0, Number(ms) || 0)))
+}
+
+function isRateLimitError(response, payload = {}) {
+  return response?.status === 429 || Boolean(payload?.rateLimited) || /429|too many requests|rate limit|requests per minute/i.test(String(payload?.error || payload?.message || ''))
+}
+
+function friendlyPreparationError(message = '') {
+  const text = String(message || '')
+  if (/429|too many requests|rate limit|requests per minute/i.test(text)) return 'API-Football jest chwilowo zajęte. Rate Limit Shield spróbuje ponownie automatycznie.'
+  return text || 'Nie udało się pobrać danych symulacji'
+}
+
+function valueDecisionLabel(value = '') {
+  return ({ STRONG_VALUE: 'STRONG VALUE', VALUE: 'VALUE', SMALL_EDGE: 'SMALL EDGE', NO_BET: 'NO BET', CALIBRATION_PENDING: 'KALIBRACJA', NO_ODDS: 'BRAK KURSÓW' })[String(value || '').toUpperCase()] || String(value || '').replaceAll('_', ' ')
 }
 
 export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBack, onStart }) {
@@ -391,6 +654,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   const [forecastSaveState, setForecastSaveState] = useState('')
   const [modelPerformance, setModelPerformance] = useState(null)
   const [modelPerformanceLoading, setModelPerformanceLoading] = useState(false)
+  const [rateShieldState, setRateShieldState] = useState({ active: false, attempt: 0, retryMs: 0, mode: '' })
   const mountedRef = useRef(true)
   const forecastSavedRef = useRef('')
 
@@ -433,18 +697,41 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
     setData(null)
     setConsensus(null)
     setConsensusError('')
+    setRateShieldState({ active: false, attempt: 0, retryMs: 0, mode: '' })
     setProgress(4)
     try {
-      const response = await fetch(`/.netlify/functions/get-match-simulator-data?fixture=${encodeURIComponent(id)}`, { cache: 'no-store' })
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok || !payload.ok) throw new Error(payload.error || 'Nie udało się pobrać danych symulacji')
+      let payload = null
+      const maxAttempts = 5
+      for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+        const response = await fetch(`/.netlify/functions/get-match-simulator-data?fixture=${encodeURIComponent(id)}`, { cache: 'no-store' })
+        payload = await response.json().catch(() => ({}))
+        if (response.ok && payload?.ok) break
+        if (isRateLimitError(response, payload) && attempt < maxAttempts - 1) {
+          const retryMs = Math.max(1200, Math.min(6500, Number(payload?.retryAfterMs || (1400 * (attempt + 1)))))
+          if (!mountedRef.current) return
+          setRateShieldState({ active: true, attempt: attempt + 1, retryMs, mode: 'retry' })
+          setProgress(prev => Math.max(12, Math.min(88, prev)))
+          await pause(retryMs)
+          if (!mountedRef.current) return
+          continue
+        }
+        throw new Error(friendlyPreparationError(payload?.error || payload?.message))
+      }
+      if (!payload?.ok) throw new Error(friendlyPreparationError(payload?.error))
       if (!mountedRef.current) return
       setData(payload)
       setProgress(100)
+      const shield = payload?.rateLimitShield || {}
+      setRateShieldState({
+        active: Boolean(shield.cachedResponses || shield.staleFallbacks || shield.rateLimited || payload?.snapshot?.reused),
+        attempt: 0,
+        retryMs: 0,
+        mode: shield.staleFallbacks ? 'stale' : payload?.snapshot?.reused || shield.cachedResponses ? 'cache' : 'live'
+      })
       loadConsensus(payload)
     } catch (err) {
       if (!mountedRef.current) return
-      setError(err?.message || 'Błąd danych symulacji')
+      setError(friendlyPreparationError(err?.message || 'Błąd danych symulacji'))
     } finally {
       if (mountedRef.current) setLoading(false)
     }
@@ -488,15 +775,15 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
     return Math.round(required.filter(item => item.ready).length * 100 / Math.max(1, required.length))
   }, [checks, data])
   const eligibility = useMemo(() => data ? buildEligibility(match, data, checks) : { eligible: false, reasons: [] }, [match, data, checks])
-  const forecast = useMemo(() => data && eligibility.eligible ? buildForecast(match, data, consensus, checks) : null, [match, data, consensus, checks, eligibility.eligible])
+  const forecast = useMemo(() => data && eligibility.eligible ? buildForecast(match, data, consensus, checks, modelPerformance) : null, [match, data, consensus, checks, eligibility.eligible, modelPerformance])
   const preparedData = useMemo(() => data ? { ...data, externalConsensus: consensus || null, predictionEngine: forecast || null } : null, [data, consensus, forecast])
   const phaseIndex = Math.min(phases.length - 1, Math.floor(progress / (100 / phases.length)))
 
   useEffect(() => {
-    if (!forecast || !eligibility.eligible || consensusLoading) return
+    if (!forecast || !eligibility.eligible || consensusLoading || modelPerformanceLoading) return
     const fixtureId = String(match?.apiFixtureId || match?.id || data?.fixture?.id || '')
     if (!fixtureId) return
-    const signature = `${fixtureId}|${forecast.version}|${forecast.dataQuality}|${forecast.consensus.sourceCount}|${forecast.xg.home}|${forecast.xg.away}`
+    const signature = `${fixtureId}|${forecast.version}|${forecast.dataQuality}|${forecast.consensus.sourceCount}|${forecast.xg.home}|${forecast.xg.away}|${forecast.value?.state || ''}|${forecast.value?.top?.key || ''}|${forecast.value?.top?.decision || ''}`
     if (forecastSavedRef.current === signature) return
     forecastSavedRef.current = signature
     setForecastSaveState('saving')
@@ -519,7 +806,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
         setForecastSaveState(response.ok && payload?.ok ? 'saved' : 'local')
       })
       .catch(() => { if (mountedRef.current) setForecastSaveState('local') })
-  }, [forecast, eligibility.eligible, consensusLoading, match, data, consensus])
+  }, [forecast, eligibility.eligible, consensusLoading, modelPerformanceLoading, match, data, consensus])
 
   return (
     <section className="sim-prep-v116">
@@ -552,6 +839,10 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
           <b>{loading ? progress : data ? 100 : progress}%</b>
         </div>
         <div className="sim-prep-track-v116"><i style={{ width: `${loading ? progress : data ? 100 : progress}%` }} /></div>
+        {rateShieldState.active ? <div className={`sim-prep-rate-shield-v138 ${rateShieldState.mode || ''}`}>
+          <b>RATE LIMIT SHIELD</b>
+          <span>{rateShieldState.mode === 'retry' ? `API 429 • automatyczne ponowienie ${rateShieldState.attempt}/4 za ${(rateShieldState.retryMs / 1000).toFixed(1)}s` : rateShieldState.mode === 'stale' ? 'API zajęte • używam ostatnich poprawnych danych z cache' : rateShieldState.mode === 'cache' ? 'Supabase cache / snapshot • oszczędzam requesty API' : 'Globalny throttle API aktywny'}</span>
+        </div> : null}
         <div className="sim-prep-phases-v116">
           {phases.map((phase, index) => <span key={phase} className={index <= phaseIndex || data ? 'active' : ''}><i>{index < phaseIndex || data ? '✓' : index === phaseIndex && loading ? '●' : '○'}</i>{phase}</span>)}
         </div>
@@ -604,8 +895,8 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
 
         {forecast ? <section className="sim-prep-forecast-v136">
           <div className="sim-prep-forecast-head-v136">
-            <div><small>BET+AI PREDICTION ENGINE V1</small><strong>Prognoza przedmeczowa</strong></div>
-            <div className="sim-prep-forecast-badges-v136"><span>DATA {forecast.dataQuality}/100</span><span>{forecast.consensus.sourceCount ? `CONSENSUS ${forecast.consensus.sourceCount}` : 'MODEL DATA'}</span>{forecastSaveState === 'saved' ? <span className="saved">SUPABASE ✓</span> : null}</div>
+            <div><small>BET+AI PREDICTION ENGINE V2</small><strong>Prognoza przedmeczowa + Value Engine</strong></div>
+            <div className="sim-prep-forecast-badges-v136"><span>DATA {forecast.dataQuality}/100</span><span>{forecast.consensus.sourceCount ? `CONSENSUS ${forecast.consensus.sourceCount}` : 'MODEL DATA'}</span><span>ODDS {forecast.value?.bookmakerCount || 0}</span>{forecastSaveState === 'saved' ? <span className="saved">SUPABASE ✓</span> : null}</div>
           </div>
 
           <div className="sim-prep-forecast-main-v136">
@@ -630,14 +921,42 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
 
           <div className="sim-prep-forecast-bottom-v136">
             <div className="sim-prep-scorelines-v136"><small>NAJBARDZIEJ PRAWDOPODOBNE WYNIKI</small><div>{forecast.topScores.map(item => <span key={item.score}><b>{item.score}</b><em>{item.probability}%</em></span>)}</div></div>
-            <div className={`sim-prep-value-v136 ${forecast.value.state.toLowerCase()}`}>
-              <small>BET+AI VALUE ENGINE</small>
-              {forecast.value.state === 'VALUE' && forecast.value.top ? <><strong>VALUE DETECTED</strong><b>{forecastLabel(forecast.value.top.key)} @ {forecast.value.top.bookmakerOdds.toFixed(2)}</b><span>Model {forecast.value.top.probability}% • fair {forecast.value.top.fairOdds.toFixed(2)} • edge +{forecast.value.top.edge}%</span></> : forecast.value.state === 'NO_BET' && forecast.value.top ? <><strong>NO BET</strong><b>Brak wystarczającej przewagi</b><span>Najlepszy edge: {forecast.value.top.edge > 0 ? '+' : ''}{forecast.value.top.edge}%</span></> : <><strong>VALUE NIEOCENIONE</strong><b>Brak realnych kursów</b><span>Prognoza probabilistyczna nadal jest dostępna.</span></>}
+            <div className={`sim-prep-value-v136 ${String(forecast.value.state || '').toLowerCase()}`}>
+              <small>BET+AI VALUE ENGINE V2 • NO-VIG</small>
+              {forecast.value.state === 'STRONG_VALUE' && forecast.value.top ? <><strong>STRONG VALUE</strong><b>{forecastLabel(forecast.value.top.key)} @ {forecast.value.top.bookmakerOdds.toFixed(2)}</b><span>Model {forecast.value.top.probability}% • fair {forecast.value.top.fairOdds.toFixed(2)} • edge +{forecast.value.top.edgePp} pp • EV +{forecast.value.top.expectedValuePct}%</span></> : forecast.value.state === 'VALUE' && forecast.value.top ? <><strong>VALUE DETECTED</strong><b>{forecastLabel(forecast.value.top.key)} @ {forecast.value.top.bookmakerOdds.toFixed(2)}</b><span>Model {forecast.value.top.probability}% • fair {forecast.value.top.fairOdds.toFixed(2)} • edge +{forecast.value.top.edgePp} pp • EV +{forecast.value.top.expectedValuePct}%</span></> : forecast.value.state === 'CALIBRATION_PENDING' ? <><strong>NO BET — KALIBRACJA</strong><b>Za mała próbka historyczna</b><span>Bet+AI pokaże rekomendację dopiero po min. {forecast.value.calibrationRequiredSamples || 30} rozliczonych próbach danego rynku.</span></> : forecast.value.state === 'SMALL_EDGE' && forecast.value.top ? <><strong>SMALL EDGE</strong><b>{forecastLabel(forecast.value.top.key)} @ {forecast.value.top.bookmakerOdds.toFixed(2)}</b><span>Przewaga +{forecast.value.top.edgePp} pp jest poniżej wymaganego progu {forecast.value.top.threshold} pp.</span></> : forecast.value.state === 'NO_BET' && forecast.value.top ? <><strong>NO BET</strong><b>{forecast.value.top.reason || 'Brak wystarczającej przewagi'}</b><span>Model {forecast.value.top.probability}% • rynek no-vig {forecast.value.top.noVigImplied ?? '—'}% • próg {forecast.value.top.threshold ?? '—'} pp</span></> : <><strong>VALUE NIEOCENIONE</strong><b>Brak pełnych realnych kursów</b><span>Do Value V2 potrzebna jest para/komplet kursów z tego samego bukmachera, aby usunąć marżę.</span></>}
             </div>
           </div>
 
+          {forecast.value?.top3?.length ? <div className="sim-prep-value-engine-v138">
+            <div className="sim-prep-value-engine-head-v138">
+              <div><small>VALUE BET ENGINE V2</small><strong>{forecast.value.detected ? 'TOP 3 przewagi cenowe' : 'TOP 3 kandydaci • bez wymuszania zakładu'}</strong></div>
+              <span>{forecast.value.marginRemoved ? 'MARŻA USUNIĘTA ✓' : 'NO-VIG NIEDOSTĘPNE'}</span>
+            </div>
+            <div className="sim-prep-value-cards-v138">
+              {forecast.value.top3.map((item, index) => <article key={`${item.key}-${item.bookmaker}-${index}`} className={String(item.decision || '').toLowerCase()}>
+                <header><small>#{index + 1} • {item.marketGroup}</small><em>{valueDecisionLabel(item.decision)}</em></header>
+                <h4>{forecastLabel(item.key)}</h4>
+                <div className="sim-prep-value-metrics-v138">
+                  <span><small>BET+AI</small><b>{item.probability}%</b></span>
+                  <span><small>FAIR ODDS</small><b>{Number(item.fairOdds || 0).toFixed(2)}</b></span>
+                  <span><small>KURS</small><b>{Number(item.bookmakerOdds || 0).toFixed(2)}</b></span>
+                  <span><small>IMPLIED RAW</small><b>{item.rawImplied}%</b></span>
+                  <span><small>RYNEK NO-VIG</small><b>{item.noVigImplied == null ? '—' : `${item.noVigImplied}%`}</b></span>
+                  <span><small>EDGE</small><b className={item.edgePp > 0 ? 'positive' : 'negative'}>{item.edgePp > 0 ? '+' : ''}{item.edgePp} pp</b></span>
+                  <span><small>EV</small><b className={item.expectedValuePct > 0 ? 'positive' : 'negative'}>{item.expectedValuePct > 0 ? '+' : ''}{item.expectedValuePct}%</b></span>
+                  <span><small>MIN. EDGE</small><b>{item.threshold} pp</b></span>
+                </div>
+                <footer>
+                  <span>{item.bookmaker || 'Bookmaker'}{item.bookmakerMargin == null ? '' : ` • marża ${item.bookmakerMargin}%`}</span>
+                  <span className={`cal-${String(item.calibration?.status || 'pending').toLowerCase()}`}>Kalibracja {item.calibration?.status || 'PENDING'} • {item.calibration?.samples || 0} prób • {item.calibration?.source === 'league' ? 'liga' : 'global'}</span>
+                </footer>
+                <p>{item.reason}</p>
+              </article>)}
+            </div>
+          </div> : null}
+
           <div className="sim-prep-factors-v136">{forecast.factors.slice(0, 5).map(factor => <span key={factor}>{factor}</span>)}</div>
-          <p className="sim-prep-forecast-note-v136">Prawdopodobieństwa są estymacją modelu, nie gwarancją wyniku. Animacja meczu korzysta z tego profilu xG i 1X2.</p>
+          <p className="sim-prep-forecast-note-v136">Prawdopodobieństwa są estymacją modelu, nie gwarancją wyniku. Value V2 porównuje model z ceną rynku po usunięciu marży i blokuje rekomendację przy zbyt małej próbce kalibracyjnej.</p>
         </section> : null}
 
         <section className="sim-prep-backtest-v137">

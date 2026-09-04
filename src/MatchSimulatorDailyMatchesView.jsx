@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 
 const COPY = {
@@ -179,24 +179,48 @@ function getReal1X2(row = {}) {
   }
 }
 
-async function qualifyFixtureForSimulator(row = {}) {
+function waitFor(ms, signal) {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(new DOMException('Aborted', 'AbortError'))
+    const timer = window.setTimeout(resolve, Math.max(0, Number(ms) || 0))
+    signal?.addEventListener('abort', () => {
+      window.clearTimeout(timer)
+      reject(new DOMException('Aborted', 'AbortError'))
+    }, { once: true })
+  })
+}
+
+function isRateLimitPayload(response, payload = {}) {
+  return response?.status === 429 || Boolean(payload?.rateLimited) || /429|too many requests|rate limit|requests per minute/i.test(String(payload?.error || payload?.message || ''))
+}
+
+async function qualifyFixtureForSimulator(row = {}, { signal } = {}) {
   const fixtureId = row.apiFixtureId || row.id
   const homeTeamId = row.homeTeamId || ''
   const awayTeamId = row.awayTeamId || ''
-  if (!fixtureId || !homeTeamId || !awayTeamId) return false
-  try {
-    const params = new URLSearchParams({
-      fixture: String(fixtureId),
-      quality_only: '1',
-      home_team_id: String(homeTeamId),
-      away_team_id: String(awayTeamId)
-    })
-    const response = await fetch(`/.netlify/functions/get-match-simulator-data?${params.toString()}`, { cache: 'no-store' })
-    const payload = await response.json().catch(() => ({}))
-    return Boolean(response.ok && payload?.ok && payload?.simulationQuality?.eligible)
-  } catch (_) {
-    return false
+  if (!fixtureId || !homeTeamId || !awayTeamId) return { eligible: false, cached: false, rateLimited: false }
+  const params = new URLSearchParams({
+    fixture: String(fixtureId),
+    quality_only: '1',
+    home_team_id: String(homeTeamId),
+    away_team_id: String(awayTeamId)
+  })
+  const delays = [0, 1400, 2800]
+  for (let attempt = 0; attempt < delays.length; attempt += 1) {
+    if (delays[attempt]) await waitFor(delays[attempt], signal)
+    try {
+      const response = await fetch(`/.netlify/functions/get-match-simulator-data?${params.toString()}`, { cache: 'no-store', signal })
+      const payload = await response.json().catch(() => ({}))
+      const eligible = Boolean(response.ok && payload?.ok && payload?.simulationQuality?.eligible)
+      if (eligible) return { eligible: true, cached: Boolean(payload?.cached || payload?.rateLimitShield?.cachedResponses), rateLimited: false }
+      if (isRateLimitPayload(response, payload) && attempt < delays.length - 1) continue
+      return { eligible: false, cached: Boolean(payload?.cached), rateLimited: isRateLimitPayload(response, payload), retryAfterMs: Number(payload?.retryAfterMs || 0) }
+    } catch (error) {
+      if (error?.name === 'AbortError') throw error
+      if (attempt >= delays.length - 1) return { eligible: false, cached: false, rateLimited: false }
+    }
   }
+  return { eligible: false, cached: false, rateLimited: false }
 }
 
 export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMatch }) {
@@ -210,6 +234,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   const [qualificationProgress, setQualificationProgress] = useState({ done: 0, total: 0 })
   const [selectedId, setSelectedId] = useState('')
   const [nowMs, setNowMs] = useState(() => Date.now())
+  const scanAbortRef = useRef(null)
   const clientTimeZone = useMemo(() => getBrowserTimeZone(), [])
   const todayKey = useMemo(() => getDateKeyInTimeZone(nowMs, clientTimeZone), [nowMs, clientTimeZone])
 
@@ -228,7 +253,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       .sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b))
   }
 
-  const requestDailyMatches = async ({ forceRefresh = false, skipOdds = true } = {}) => {
+  const requestDailyMatches = async ({ forceRefresh = false, skipOdds = true, signal } = {}) => {
     const params = new URLSearchParams({
       sport: 'Piłka nożna',
       country: 'Wszystkie',
@@ -242,13 +267,13 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       skipOdds: skipOdds ? '1' : '0',
       timezone: clientTimeZone
     })
-    const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`, { cache: 'no-store' })
+    const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`, { cache: 'no-store', signal })
     const payload = await response.json().catch(() => ({}))
     if (!response.ok || payload.ok === false) throw new Error(payload.message || payload.error || copy.error)
     return payload
   }
 
-  const loadMatches = async () => {
+  const loadMatches = async (signal) => {
     setLoading(true)
     setError('')
     try {
@@ -257,67 +282,94 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       let realRows = []
       let usedFallback = false
 
-      // 1) Najpierw szybki cache. Jeśli cache istnieje, lista pojawia się bez czekania
-      // na kosztowne pobieranie dodatkowych źródeł.
+      // Najpierw cache listy dnia; tylko gdy go brakuje robimy jeden świeży refresh.
       try {
-        payload = await requestDailyMatches({ forceRefresh: false, skipOdds: true })
+        payload = await requestDailyMatches({ forceRefresh: false, skipOdds: true, signal })
         realRows = normalizeRealRows(payload, requestNowMs)
-      } catch (_) {}
+      } catch (error) {
+        if (error?.name === 'AbortError') return
+      }
 
-      // 2) Jeśli cache nie ma dzisiejszych meczów, pobierz świeże dane z API.
-      if (!realRows.length) {
+      if (!realRows.length && !signal?.aborted) {
         try {
-          payload = await requestDailyMatches({ forceRefresh: true, skipOdds: true })
+          payload = await requestDailyMatches({ forceRefresh: true, skipOdds: true, signal })
           realRows = normalizeRealRows(payload, requestNowMs)
-        } catch (_) {
-          // 3) Ostatni bezpieczny fallback: ponów pobranie samych realnych fixture'ów.
-          payload = await requestDailyMatches({ forceRefresh: true, skipOdds: true })
+        } catch (error) {
+          if (error?.name === 'AbortError') return
+          await waitFor(1800, signal)
+          payload = await requestDailyMatches({ forceRefresh: false, skipOdds: true, signal })
           realRows = normalizeRealRows(payload, requestNowMs)
           usedFallback = true
         }
       }
 
-      // WERSJA 135: użytkownik widzi WYŁĄCZNIE mecze, które przejdą
-      // pre-check realnej formy i statystyk. Skład XI nie jest wymagany.
-      // Lista pojawia się progresywnie — nie czekamy na sprawdzenie całego dnia.
+      if (signal?.aborted) return
       setMatches([])
       setLoading(false)
       setQualifying(true)
       setQualificationProgress({ done: 0, total: realRows.length })
-      setSourceMessage(realRows.length ? `Sprawdzam jakość danych 0/${realRows.length}…` : 'Brak kolejnych nierozpoczętych meczów na dzisiaj.')
+      setSourceMessage(realRows.length ? `Rate Limit Shield • sprawdzam jakość 0/${realRows.length}…` : 'Brak kolejnych nierozpoczętych meczów na dzisiaj.')
+
       const approved = []
-      const concurrency = 6
+      // WERSJA 138: tylko 2 mecze jednocześnie. Każdy pre-check wymaga maks. 2
+      // requestów formy, a backend dodatkowo rozstawia je globalnie w czasie.
+      const concurrency = 2
+      let rateLimitHits = 0
+      let cacheHits = 0
       for (let i = 0; i < realRows.length; i += concurrency) {
+        if (signal?.aborted) return
         const batch = realRows.slice(i, i + concurrency)
-        const verdicts = await Promise.all(batch.map(async row => ({ row, ok: await qualifyFixtureForSimulator(row) })))
-        verdicts.forEach(item => { if (item.ok) approved.push(item.row) })
+        const verdicts = await Promise.all(batch.map(async row => ({ row, verdict: await qualifyFixtureForSimulator(row, { signal }) })))
+        if (signal?.aborted) return
+        verdicts.forEach(item => {
+          if (item.verdict?.eligible) approved.push(item.row)
+          if (item.verdict?.cached) cacheHits += 1
+          if (item.verdict?.rateLimited) rateLimitHits += 1
+        })
         approved.sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b))
         const done = Math.min(realRows.length, i + batch.length)
         setMatches([...approved])
         setQualificationProgress({ done, total: realRows.length })
-        setSourceMessage(`Sprawdzono ${done}/${realRows.length} meczów • zakwalifikowane ${approved.length}${usedFallback ? ' • kursy pominięte' : ''}`)
+        setSourceMessage(`Rate Limit Shield • ${done}/${realRows.length} • gotowe ${approved.length} • cache ${cacheHits}${rateLimitHits ? ` • auto-retry ${rateLimitHits}` : ''}${usedFallback ? ' • fallback' : ''}`)
+
+        // Krótka pauza między batchami zapobiega burstowi 300/min. Snapshot/cache
+        // powoduje, że kolejne wejścia są dużo szybsze i praktycznie nie zużywają API.
+        if (done < realRows.length) await waitFor(rateLimitHits ? 950 : 450, signal)
       }
+      if (signal?.aborted) return
       if (!realRows.length) {
         setSourceMessage('Brak kolejnych nierozpoczętych meczów na dzisiaj.')
       } else if (!approved.length) {
         setSourceMessage(`Sprawdzono ${realRows.length}/${realRows.length} • brak meczów spełniających próg realnych statystyk.`)
       } else {
-        setSourceMessage(`${approved.length} zakwalifikowanych meczów • tylko realna forma i statystyki • kolejność wg kickoffu`)
+        setSourceMessage(`${approved.length} zakwalifikowanych • Rate Limit Shield aktywny • cache ${cacheHits}`)
       }
       setQualifying(false)
     } catch (err) {
+      if (err?.name === 'AbortError' || signal?.aborted) return
       setMatches([])
       setQualificationProgress({ done: 0, total: 0 })
       setQualifying(false)
       setError(err?.message || copy.error)
       setSourceMessage('')
     } finally {
-      setLoading(false)
+      if (!signal?.aborted) setLoading(false)
     }
   }
 
+  const startLoadMatches = () => {
+    scanAbortRef.current?.abort()
+    const controller = new AbortController()
+    scanAbortRef.current = controller
+    loadMatches(controller.signal)
+  }
+
   useEffect(() => {
-    loadMatches()
+    const controller = new AbortController()
+    scanAbortRef.current?.abort()
+    scanAbortRef.current = controller
+    loadMatches(controller.signal)
+    return () => controller.abort()
   }, [todayKey, clientTimeZone])
 
   useEffect(() => {
@@ -344,6 +396,9 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       return
     }
     setSelectedId(fixtureKey(match))
+    // Natychmiast zatrzymujemy skan dnia, żeby requesty listy nie konkurowały
+    // z pełną analizą wybranego meczu o limit API-Football.
+    scanAbortRef.current?.abort()
     onSelectMatch?.(match)
   }
 
@@ -373,7 +428,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
         <div className="sim-day-main-v98">
           {loading && <div className="sim-day-loading-v99"><i /><strong>{copy.loading}</strong><span>API-Football • {formatDateLabel(todayKey)}</span></div>}
-          {!loading && error && <div className="sim-day-error-v99">⚠ {error}<button type="button" onClick={loadMatches}>{copy.refresh}</button></div>}
+          {!loading && error && <div className="sim-day-error-v99">⚠ {error}<button type="button" onClick={startLoadMatches}>{copy.refresh}</button></div>}
           {!loading && !error && qualifying && !filteredMatches.length && <div className="sim-day-loading-v99"><i /><strong>Sprawdzam realne statystyki meczów…</strong><span>{qualificationProgress.done}/{qualificationProgress.total} sprawdzonych</span></div>}
           {!loading && !error && !qualifying && !filteredMatches.length && <div className="sim-day-empty-v98">{copy.empty}</div>}
 

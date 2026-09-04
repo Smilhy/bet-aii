@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js')
 const { isTeamTotalLikeV40, isPureFullTimeTeamTotalBetV40, inferTeamTotalSideV41, isBet365BookmakerV41, isTeamTotalCandidateV46, extractTeamTotalLineV47 } = require('./_lib/team-total-market')
+const { apiGet: matchShieldApiGet } = require('./_lib/match-simulator-rate-shield')
 
 exports.handler = async function(event) {
   const qs = event.queryStringParameters || {}
@@ -1814,21 +1815,32 @@ exports.handler = async function(event) {
         }
         url.searchParams.set('timezone', APP_TIMEZONE)
         try {
-          const response = await fetch(url.toString(), {
-            headers: {
-              'x-apisports-key': apiKey,
-              'x-rapidapi-key': apiKey
+          if (cfg.type === 'football') {
+            const params = Object.fromEntries(url.searchParams.entries())
+            const shield = await matchShieldApiGet(cfg.path, params, { forceRefresh, ttlMs: 5 * 60 * 1000, attempts: 3 })
+            if (!shield.ok) {
+              errors.push(`${cfg.key}/league-${leagueFilter.leagueId}: ${shield.error || 'API error'}`)
+              dayResponses = [[]]
+            } else {
+              dayResponses = [Array.isArray(shield.data) ? shield.data : []]
             }
-          })
-          const data = await response.json().catch(() => ({}))
-          if (!response.ok) {
-            errors.push(`${cfg.key}/league-${leagueFilter.leagueId}: HTTP ${response.status}`)
-            dayResponses = [[]]
           } else {
-            if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
-              errors.push(`${cfg.key}/league-${leagueFilter.leagueId}: ${JSON.stringify(data.errors).slice(0, 120)}`)
+            const response = await fetch(url.toString(), {
+              headers: {
+                'x-apisports-key': apiKey,
+                'x-rapidapi-key': apiKey
+              }
+            })
+            const data = await response.json().catch(() => ({}))
+            if (!response.ok) {
+              errors.push(`${cfg.key}/league-${leagueFilter.leagueId}: HTTP ${response.status}`)
+              dayResponses = [[]]
+            } else {
+              if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
+                errors.push(`${cfg.key}/league-${leagueFilter.leagueId}: ${JSON.stringify(data.errors).slice(0, 120)}`)
+              }
+              dayResponses = [Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []]
             }
-            dayResponses = [Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []]
           }
         } catch (error) {
           errors.push(`${cfg.key}/league-${leagueFilter.leagueId}: ${error.message}`)
@@ -1842,6 +1854,15 @@ exports.handler = async function(event) {
           if (cfg.type === 'football') url.searchParams.set('timezone', APP_TIMEZONE)
 
           try {
+            if (cfg.type === 'football') {
+              const params = Object.fromEntries(url.searchParams.entries())
+              const shield = await matchShieldApiGet(cfg.path, params, { forceRefresh, ttlMs: 5 * 60 * 1000, attempts: 3 })
+              if (!shield.ok) {
+                errors.push(`${cfg.key}/${dayKey}: ${shield.error || 'API error'}`)
+                return []
+              }
+              return Array.isArray(shield.data) ? shield.data : []
+            }
             const response = await fetch(url.toString(), {
               headers: {
                 'x-apisports-key': apiKey,

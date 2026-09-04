@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const { apiGet: shieldApiGet, isRateLimitMessage } = require('./_lib/match-simulator-rate-shield')
 
 const API_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || ''
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
@@ -111,27 +112,10 @@ function pct(value) {
   return Math.max(0, Math.min(100, Math.round(num(value, 0))))
 }
 
-async function apiGet(path, query = {}) {
-  if (!API_KEY) return { ok: false, data: [], error: 'Brak klucza API-Football' }
-  const url = new URL(`https://v3.football.api-sports.io${path}`)
-  Object.entries(query).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && String(value) !== '') url.searchParams.set(key, String(value))
-  })
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 9000)
-  try {
-    const response = await fetch(url, { signal: controller.signal, headers: { 'x-apisports-key': API_KEY } })
-    const payload = await response.json().catch(() => ({}))
-    const errors = payload?.errors && typeof payload.errors === 'object' ? payload.errors : null
-    if (!response.ok || (errors && Object.keys(errors).length)) {
-      return { ok: false, data: [], error: errors && Object.keys(errors).length ? JSON.stringify(errors) : `HTTP ${response.status}` }
-    }
-    return { ok: true, data: Array.isArray(payload?.response) ? payload.response : [], error: '' }
-  } catch (error) {
-    return { ok: false, data: [], error: error?.name === 'AbortError' ? 'Przekroczono czas API' : clean(error?.message, 'Błąd API') }
-  } finally {
-    clearTimeout(timer)
-  }
+async function apiGet(path, query = {}, options = {}) {
+  // WERSJA 138: wszystkie requesty API-Football przechodzą przez wspólny
+  // Supabase cache + globalny throttle + in-flight dedupe + retry 429.
+  return shieldApiGet(path, query, options)
 }
 
 function normalizeFixture(row = {}) {
@@ -587,6 +571,147 @@ function findStanding(rows = [], teamId) {
   }
 }
 
+
+function oddsValue(value) {
+  const parsed = Number(String(value == null ? '' : value).replace(',', '.'))
+  return Number.isFinite(parsed) && parsed > 1.001 && parsed < 100 ? parsed : 0
+}
+
+function isFullTimeBttsBet(name = '', id = null) {
+  const lower = String(name || '').toLowerCase().replace(/\s+/g, ' ').trim()
+  if (Number(id) === 8) return true
+  if (!/(both teams (?:to )?score|btts|gg\/ng)/i.test(lower)) return false
+  return !/(first half|1st half|second half|2nd half|both halves|over\/under|total goals|corners|cards|home team|away team)/i.test(lower)
+}
+
+function isFullTimeGoalsBet(name = '', id = null) {
+  const lower = String(name || '').toLowerCase().replace(/\s+/g, ' ').trim()
+  if (/(first half|1st half|second half|2nd half|home team|away team|corners|cards)/i.test(lower)) return false
+  if (Number(id) === 5) return true
+  return /(goals over\/under|goals over under|^over\/under$|total goals)/i.test(lower)
+}
+
+function normalizeFixtureOdds(rows = [], fixture = {}) {
+  const books = new Map()
+  const homeName = clean(fixture?.home?.name || fixture?.home)
+  const awayName = clean(fixture?.away?.name || fixture?.away)
+
+  const ensureBook = (name = '') => {
+    const key = clean(name, 'Bookmaker')
+    if (!books.has(key)) books.set(key, { bookmaker: key })
+    return books.get(key)
+  }
+  const setOdd = (book, key, odd) => {
+    const value = oddsValue(odd)
+    if (!value) return
+    if (!book[key] || value > book[key]) book[key] = Math.round(value * 100) / 100
+  }
+
+  for (const row of Array.isArray(rows) ? rows : []) {
+    for (const bookmaker of Array.isArray(row?.bookmakers) ? row.bookmakers : []) {
+      const book = ensureBook(bookmaker?.name)
+      for (const bet of Array.isArray(bookmaker?.bets) ? bookmaker.bets : []) {
+        const betName = clean(bet?.name).toLowerCase()
+        const betId = Number(bet?.id)
+        const is1x2 = betId === 1 || ['match winner', 'winner', '1x2', 'fulltime result', 'full time result'].includes(betName)
+        const isGoals = isFullTimeGoalsBet(bet?.name, bet?.id)
+        const isBtts = isFullTimeBttsBet(bet?.name, bet?.id)
+        if (!is1x2 && !isGoals && !isBtts) continue
+        for (const value of Array.isArray(bet?.values) ? bet.values : []) {
+          const raw = clean(value?.value)
+          const lower = raw.toLowerCase()
+          const odd = value?.odd
+          if (is1x2) {
+            if (['home', '1'].includes(lower)) setOdd(book, 'home', odd)
+            else if (['draw', 'x'].includes(lower)) setOdd(book, 'draw', odd)
+            else if (['away', '2'].includes(lower)) setOdd(book, 'away', odd)
+            continue
+          }
+          if (isBtts) {
+            if (['yes', 'tak'].includes(lower)) setOdd(book, 'bttsYes', odd)
+            else if (['no', 'nie'].includes(lower)) setOdd(book, 'bttsNo', odd)
+            continue
+          }
+          if (isGoals) {
+            const match = raw.match(/^(over|under)\s*(\d+(?:[.,]\d+)?)/i)
+            if (!match) continue
+            const side = match[1].toLowerCase() === 'over' ? 'over' : 'under'
+            const line = String(match[2]).replace(',', '.')
+            if (!['1.5', '2.5', '3.5'].includes(line)) continue
+            const suffix = line.replace('.', '')
+            setOdd(book, `${side}${suffix}`, odd)
+          }
+        }
+      }
+    }
+  }
+
+  const bookRows = [...books.values()].filter(book => Object.keys(book).length > 1)
+  const marketMeta = {
+    home: ['1X2', `${homeName || 'Gospodarze'} wygra`],
+    draw: ['1X2', 'Remis'],
+    away: ['1X2', `${awayName || 'Goście'} wygra`],
+    over15: ['Gole', 'Powyżej 1.5 gola'], under15: ['Gole', 'Poniżej 1.5 gola'],
+    over25: ['Gole', 'Powyżej 2.5 gola'], under25: ['Gole', 'Poniżej 2.5 gola'],
+    over35: ['Gole', 'Powyżej 3.5 gola'], under35: ['Gole', 'Poniżej 3.5 gola'],
+    bttsYes: ['BTTS', 'Obie drużyny strzelą: TAK'], bttsNo: ['BTTS', 'Obie drużyny strzelą: NIE']
+  }
+  const markets = []
+  for (const [key, [market, pick]] of Object.entries(marketMeta)) {
+    const quotes = bookRows.map(book => ({ odds: oddsValue(book[key]), bookmaker: book.bookmaker })).filter(item => item.odds)
+    if (!quotes.length) continue
+    quotes.sort((a, b) => b.odds - a.odds)
+    markets.push({ key, market, pick, odds: quotes[0].odds, bookmaker: quotes[0].bookmaker, source: 'api-football-odds' })
+  }
+  return {
+    available: markets.length > 0,
+    generatedAt: new Date().toISOString(),
+    source: 'API-Football /odds',
+    books: bookRows,
+    markets
+  }
+}
+
+async function fetchFixtureOdds(fixtureId) {
+  const rows = []
+  const errors = []
+  let page = 1
+  let totalPages = 1
+  let rateLimited = false
+  let retryAfterMs = 0
+  while (page <= totalPages && page <= 3) {
+    const response = await apiGet('/odds', { fixture: fixtureId, page }, { ttlMs: 4 * 60 * 1000, attempts: 2 })
+    if (!response.ok) {
+      if (response.error) errors.push(response.error)
+      rateLimited = rateLimited || Boolean(response.rateLimited)
+      retryAfterMs = Math.max(retryAfterMs, Number(response.retryAfterMs || 0))
+      break
+    }
+    rows.push(...(response.data || []))
+    const pagingTotal = Number(response?.paging?.total || 1)
+    totalPages = Number.isFinite(pagingTotal) && pagingTotal > 0 ? Math.min(3, pagingTotal) : 1
+    page += 1
+  }
+  return { rows, errors, rateLimited, retryAfterMs }
+}
+
+function oddsNeedRefresh(odds = {}) {
+  const generated = Date.parse(odds?.generatedAt || '')
+  if (!Number.isFinite(generated)) return true
+  return Date.now() - generated > 4 * 60 * 1000
+}
+
+function apiShieldMeta(items = []) {
+  const rows = items.filter(Boolean)
+  return {
+    enabled: true,
+    cachedResponses: rows.filter(item => item?.fromCache).length,
+    staleFallbacks: rows.filter(item => item?.stale).length,
+    rateLimited: rows.some(item => item?.rateLimited),
+    retryAfterMs: rows.reduce((max, item) => Math.max(max, Number(item?.retryAfterMs || 0)), 0)
+  }
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
   if (event.httpMethod !== 'GET') return json(405, { error: 'Method not allowed' })
@@ -640,30 +765,61 @@ exports.handler = async function(event) {
       prediction: { available: false }, h2h: { summary: { count: 0 } }, injuriesFetchOk: false,
       lineups: { home: {}, away: {} }, standings: {}, recent, teamStats
     })
+    const shield = apiShieldMeta([recentHomeR, recentAwayR])
     return json(200, {
       ok: true,
       qualityOnly: true,
       fixtureId,
       simulationQuality: quality,
       recent: { home: recent.home.length, away: recent.away.length },
-      teamStats: { home: Boolean(teamStats.home?.available), away: Boolean(teamStats.away?.available) }
+      teamStats: { home: Boolean(teamStats.home?.available), away: Boolean(teamStats.away?.available) },
+      rateLimited: shield.rateLimited,
+      retryAfterMs: shield.retryAfterMs,
+      rateLimitShield: shield
     })
   }
 
 
-  // Stabilność przede wszystkim: jeżeli mamy wcześniej zapisany, zakwalifikowany snapshot
-  // i nie trzeba jeszcze próbować podmienić przewidywanego XI na oficjalny, zwracamy go od razu.
+  // WERSJA 138: zakwalifikowany snapshot nadal jest źródłem prawdy, ale kursy
+  // mogą być odświeżane osobno co kilka minut bez ponownego pobierania całego meczu.
   if (cachedSnapshot?.payload?.simulationQuality?.eligible && !forceRefresh && !snapshotNeedsRefresh(cachedSnapshot)) {
-    return json(200, withSnapshot(cachedSnapshot.payload, cachedSnapshot, { reused: true, note: 'Użyto zapisanego, zweryfikowanego snapshotu meczu.' }))
+    const cachedPayload = cachedSnapshot.payload
+    if (!cachedPayload?.odds?.generatedAt || oddsNeedRefresh(cachedPayload.odds)) {
+      const oddsR = await fetchFixtureOdds(fixtureId)
+      const normalizedOdds = normalizeFixtureOdds(oddsR.rows || [], cachedPayload.fixture || {})
+      if (normalizedOdds.available || !cachedPayload?.odds?.generatedAt) {
+        const merged = {
+          ...cachedPayload,
+          odds: { ...normalizedOdds, errors: oddsR.errors || [], rateLimited: Boolean(oddsR.rateLimited) },
+          rateLimitShield: {
+            ...(cachedPayload.rateLimitShield || {}),
+            enabled: true,
+            rateLimited: Boolean(oddsR.rateLimited),
+            retryAfterMs: Number(oddsR.retryAfterMs || 0)
+          }
+        }
+        await writeSimulatorSnapshot(merged)
+        return json(200, withSnapshot(merged, cachedSnapshot, { reused: true, note: normalizedOdds.available ? 'Użyto snapshotu meczu i odświeżono realne kursy.' : 'Użyto zapisanego snapshotu meczu. Kursy nadal niedostępne.' }))
+      }
+    }
+    return json(200, withSnapshot(cachedPayload, cachedSnapshot, { reused: true, note: 'Użyto zapisanego, zweryfikowanego snapshotu meczu.' }))
   }
 
-  const fixtureResponse = await apiGet('/fixtures', { id: fixtureId })
+  const fixtureResponse = await apiGet('/fixtures', { id: fixtureId }, { attempts: 3 })
   const fixtureRow = fixtureResponse.data?.[0] || null
   if (!fixtureRow) {
     if (cachedSnapshot?.payload) {
       return json(200, withSnapshot(cachedSnapshot.payload, cachedSnapshot, { reused: true, fallback: true, note: 'API chwilowo nie odpowiedziało — użyto najlepszego zapisanego snapshotu.' }))
     }
-    return json(404, { error: fixtureResponse.error || 'Nie znaleziono meczu w API-Football' })
+    if (fixtureResponse.rateLimited || isRateLimitMessage(fixtureResponse.error)) {
+      return json(503, {
+        ok: false,
+        rateLimited: true,
+        retryAfterMs: Math.max(1500, Number(fixtureResponse.retryAfterMs || 2500)),
+        error: 'API-Football jest chwilowo zajęte. Bet+AI automatycznie ponowi pobieranie.'
+      })
+    }
+    return json(404, { ok: false, error: fixtureResponse.error || 'Nie znaleziono meczu w API-Football' })
   }
   const fixture = normalizeFixture(fixtureRow)
 
@@ -676,10 +832,11 @@ exports.handler = async function(event) {
     fixture.home.id ? apiGet('/fixtures', { team: fixture.home.id, last: 8 }) : Promise.resolve({ ok: false, data: [], error: 'Brak ID gospodarzy' }),
     fixture.away.id ? apiGet('/fixtures', { team: fixture.away.id, last: 8 }) : Promise.resolve({ ok: false, data: [], error: 'Brak ID gości' }),
     fixture.home.id && fixture.leagueId && fixture.season ? apiGet('/teams/statistics', { league: fixture.leagueId, season: fixture.season, team: fixture.home.id }) : Promise.resolve({ ok: false, data: [], error: 'Brak danych gospodarzy' }),
-    fixture.away.id && fixture.leagueId && fixture.season ? apiGet('/teams/statistics', { league: fixture.leagueId, season: fixture.season, team: fixture.away.id }) : Promise.resolve({ ok: false, data: [], error: 'Brak danych gości' })
+    fixture.away.id && fixture.leagueId && fixture.season ? apiGet('/teams/statistics', { league: fixture.leagueId, season: fixture.season, team: fixture.away.id }) : Promise.resolve({ ok: false, data: [], error: 'Brak danych gości' }),
+    fetchFixtureOdds(fixtureId)
   ]
 
-  const [predictionR, injuriesR, lineupsR, h2hR, standingsR, recentHomeR, recentAwayR, statsHomeR, statsAwayR] = await Promise.all(common)
+  const [predictionR, injuriesR, lineupsR, h2hR, standingsR, recentHomeR, recentAwayR, statsHomeR, statsAwayR, oddsR] = await Promise.all(common)
   const prediction = normalizePrediction(predictionR.data?.[0] || {})
   const h2h = normalizeH2H(h2hR.data || [], fixture.home.id, fixture.away.id)
   const injuries = normalizeInjuries(injuriesR.data || [], fixture.home.id, fixture.away.id)
@@ -700,40 +857,21 @@ exports.handler = async function(event) {
     away: seasonAwayStats.available ? seasonAwayStats : deriveRecentTeamStatistics(recent.away)
   }
 
-  const historicalErrors = []
-  if ((lineups.home.startXI.length || 0) < 11 || (lineups.away.startXI.length || 0) < 11) {
-    const [homeHistoryR, awayHistoryR] = await Promise.all([
-      (lineups.home.startXI.length || 0) < 11 ? fetchRecentLineupHistory(recentHomeR.data || [], fixture.home.id, 5) : Promise.resolve({ rows: [], errors: [] }),
-      (lineups.away.startXI.length || 0) < 11 ? fetchRecentLineupHistory(recentAwayR.data || [], fixture.away.id, 5) : Promise.resolve({ rows: [], errors: [] })
-    ])
-    historicalErrors.push(...homeHistoryR.errors, ...awayHistoryR.errors)
-    if ((lineups.home.startXI.length || 0) < 11) {
-      const predictedHome = buildPredictedLineup(homeHistoryR.rows, injuries.items, fixture.home.id)
-      if (predictedHome) lineups.home = predictedHome
-    }
-    if ((lineups.away.startXI.length || 0) < 11) {
-      const predictedAway = buildPredictedLineup(awayHistoryR.rows, injuries.items, fixture.away.id)
-      if (predictedAway) lineups.away = predictedAway
-    }
+  // WERSJA 138: XI jest opcjonalne i NIE może zużywać kolejnych 10–12 requestów.
+  // Pobieramy oficjalny lineup jednym endpointem. Jeśli go jeszcze nie ma, możemy
+  // zachować wcześniejszy przewidywany XI ze snapshotu, ale nie skanujemy historii
+  // składów ani /players podczas zwykłego wejścia do meczu.
+  const cachedLineups = cachedSnapshot?.payload?.lineups || {}
+  if ((lineups.home.startXI.length || 0) < 11 && (cachedLineups?.home?.startXI?.length || 0) >= 11) lineups.home = cachedLineups.home
+  if ((lineups.away.startXI.length || 0) < 11 && (cachedLineups?.away?.startXI?.length || 0) >= 11) lineups.away = cachedLineups.away
+  lineups.available = (lineups.home.startXI.length || 0) >= 11 || (lineups.away.startXI.length || 0) >= 11
 
-    if ((lineups.home.startXI.length || 0) < 11 || (lineups.away.startXI.length || 0) < 11) {
-      const [homePlayersR, awayPlayersR] = await Promise.all([
-        (lineups.home.startXI.length || 0) < 11 && fixture.home.id && fixture.season ? apiGet('/players', { team: fixture.home.id, season: fixture.season, page: 1 }) : Promise.resolve({ ok: false, data: [], error: '' }),
-        (lineups.away.startXI.length || 0) < 11 && fixture.away.id && fixture.season ? apiGet('/players', { team: fixture.away.id, season: fixture.season, page: 1 }) : Promise.resolve({ ok: false, data: [], error: '' })
-      ])
-      if ((lineups.home.startXI.length || 0) < 11 && homePlayersR.ok) {
-        const fallback = buildPredictedLineupFromPlayerStats(homePlayersR.data || [], injuries.items, fixture.home.id)
-        if (fallback) { fallback.team = fixture.home.name; fallback.logo = fixture.home.logo; lineups.home = fallback }
-      }
-      if ((lineups.away.startXI.length || 0) < 11 && awayPlayersR.ok) {
-        const fallback = buildPredictedLineupFromPlayerStats(awayPlayersR.data || [], injuries.items, fixture.away.id)
-        if (fallback) { fallback.team = fixture.away.name; fallback.logo = fixture.away.logo; lineups.away = fallback }
-      }
-      if (!homePlayersR.ok && homePlayersR.error) historicalErrors.push(`Zawodnicy gospodarzy: ${homePlayersR.error}`)
-      if (!awayPlayersR.ok && awayPlayersR.error) historicalErrors.push(`Zawodnicy gości: ${awayPlayersR.error}`)
-    }
-    lineups.available = lineups.home.startXI.length >= 11 || lineups.away.startXI.length >= 11
-  }
+  const normalizedOdds = normalizeFixtureOdds(oddsR?.rows || [], fixture)
+  const odds = normalizedOdds.available
+    ? { ...normalizedOdds, errors: oddsR?.errors || [], rateLimited: Boolean(oddsR?.rateLimited) }
+    : cachedSnapshot?.payload?.odds?.available
+      ? { ...cachedSnapshot.payload.odds, stale: true, errors: oddsR?.errors || [], rateLimited: Boolean(oddsR?.rateLimited) }
+      : { ...normalizedOdds, errors: oddsR?.errors || [], rateLimited: Boolean(oddsR?.rateLimited) }
 
   const injuriesFetchOk = injuriesR.ok
   const quality = buildSimulationQuality({ prediction, h2h, injuriesFetchOk, lineups, standings, recent, teamStats })
@@ -747,9 +885,15 @@ exports.handler = async function(event) {
     recentHomeR.ok ? '' : `Forma gospodarzy: ${recentHomeR.error}`,
     recentAwayR.ok ? '' : `Forma gości: ${recentAwayR.error}`,
     statsHomeR.ok ? '' : `Statystyki gospodarzy: ${statsHomeR.error}`,
-    statsAwayR.ok ? '' : `Statystyki gości: ${statsAwayR.error}`,
-    ...historicalErrors
+    statsAwayR.ok ? '' : `Statystyki gości: ${statsAwayR.error}`
   ].filter(Boolean)
+
+  const shield = apiShieldMeta([
+    fixtureResponse, predictionR, injuriesR, lineupsR, h2hR, standingsR,
+    recentHomeR, recentAwayR, statsHomeR, statsAwayR
+  ])
+  shield.rateLimited = shield.rateLimited || Boolean(oddsR?.rateLimited)
+  shield.retryAfterMs = Math.max(shield.retryAfterMs, Number(oddsR?.retryAfterMs || 0))
 
   const livePayload = {
     ok: true,
@@ -766,6 +910,8 @@ exports.handler = async function(event) {
     standings,
     recent,
     teamStats,
+    odds,
+    rateLimitShield: shield,
     simulationQuality: quality
   }
 
@@ -775,7 +921,11 @@ exports.handler = async function(event) {
   // Nigdy nie pogarszamy już raz zdobytych danych. Gdy zewnętrzne API przy kolejnym
   // odczycie odda mniej informacji, użytkownik dostaje poprzedni, lepszy snapshot.
   if (cachedSnapshot?.payload && !forceRefresh && cachedScore > liveScore) {
-    return json(200, withSnapshot(cachedSnapshot.payload, cachedSnapshot, {
+    const fallbackPayload = odds?.available
+      ? { ...cachedSnapshot.payload, odds, rateLimitShield: shield }
+      : { ...cachedSnapshot.payload, rateLimitShield: shield }
+    if (odds?.available) await writeSimulatorSnapshot(fallbackPayload)
+    return json(200, withSnapshot(fallbackPayload, cachedSnapshot, {
       reused: true,
       fallback: true,
       note: `Świeże źródła zwróciły słabszy zestaw (${liveScore}%). Zachowano wcześniejszy snapshot (${cachedScore}%).`
