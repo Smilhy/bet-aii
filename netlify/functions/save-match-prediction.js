@@ -236,6 +236,11 @@ function normIdentityV183(value = '') {
   return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
 }
 function shaV182(value = '') { return crypto.createHash('sha256').update(String(value)).digest('hex') }
+function stableStringifyV211(value) {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value)
+  if (Array.isArray(value)) return `[${value.map(stableStringifyV211).join(',')}]`
+  return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableStringifyV211(value[key])}`).join(',')}}`
+}
 function seasonKeyV184(dateLike = '') {
   const d = new Date(dateLike); if (!Number.isFinite(d.getTime())) return null
   const y = d.getUTCFullYear(), start = d.getUTCMonth() >= 6 ? y : y - 1
@@ -284,12 +289,13 @@ async function captureFreezeLedgerV182(supabase, fixtureId, body = {}, forecast 
   const capturedAt=new Date().toISOString()
   const payload={fixtureId:String(fixtureId),fixtureDate:assessment.kickoff||body.fixtureDate||null,homeTeam:clean(body?.homeTeam,180),awayTeam:clean(body?.awayTeam,180),league:clean(body?.league,180),country:clean(body?.country,120),forecast}
   const freezeHash=shaV182(JSON.stringify(payload))
+  const canonicalHashV211=shaV182(stableStringifyV211(payload))
   const row={
     fixture_id:String(fixtureId), fixture_date:assessment.kickoff||body.fixtureDate||null,
     home_team:clean(body?.homeTeam,180),away_team:clean(body?.awayTeam,180),league:clean(body?.league,180),country:clean(body?.country,120),season_key:assessment.seasonKey||null,
     captured_at:capturedAt,generated_at:assessment.generatedAt||forecast?.generatedAt||null,input_cutoff_at:capturedAt,
     model_version:clean(forecast?.version||'BETAI_FORECAST_V200',100),active_model:clean(forecast?.activeModel||'champion',40),data_quality:Math.max(0,Math.min(100,Math.round(Number(forecast?.dataQuality||0)))),
-    freeze_hash:freezeHash,selected_for_backtest:Boolean(selectedForBacktest),selection_reason:clean(reason,160),forecast,integrity:{clear:assessment.clear,issues:assessment.issues||[],duplicateKey:assessment.duplicateKey||null},
+    freeze_hash:freezeHash,canonical_hash_v211:canonicalHashV211,selected_for_backtest:Boolean(selectedForBacktest),selection_reason:clean(reason,160),forecast,integrity:{clear:assessment.clear,issues:assessment.issues||[],duplicateKey:assessment.duplicateKey||null},
   }
   const {error}=await supabase.from('match_prediction_freeze_ledger').upsert(row,{onConflict:'freeze_hash',ignoreDuplicates:true})
   if(error){if(/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message||'')))return{captured:false,reason:'table_missing'};throw error}

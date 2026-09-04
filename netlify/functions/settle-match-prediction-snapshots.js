@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js')
 const { apiGet: shieldApiGet } = require('./_lib/match-simulator-rate-shield')
+const { logRun } = require('./_lib/match-ops-v211')
 
 const API_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || ''
 const API_BASE = 'https://v3.football.api-sports.io'
@@ -69,11 +70,48 @@ async function getClvSummary(supabase, fixtureId, kickoffAt, forecast = {}) {
   const kickoffMs = Date.parse(kickoffAt || '')
   const top = forecast?.value?.top || forecast?.value?.recommendations?.[0] || null
   if (!Number.isFinite(kickoffMs) || !top?.key) return null
+  const topKey = String(top.key)
+  const timelineKey = topKey === 'btts' ? 'bttsYes' : topKey
+
+  // V202: preferujemy automatyczny snapshot najbliżej kickoffu (T-15m / closing candidate).
+  try {
+    const { data: timeline } = await supabase
+      .from('match_odds_timeline')
+      .select('market_key,bookmaker,odds,captured_at,snapshot_window,actual_minutes_before,is_closing_candidate')
+      .eq('fixture_id', String(fixtureId))
+      .eq('market_key', timelineKey)
+      .lte('captured_at', new Date(kickoffMs).toISOString())
+      .order('captured_at', { ascending: false })
+      .limit(20)
+    const close = Array.isArray(timeline) ? timeline.find(x => Number(x.odds) > 1) : null
+    if (close) {
+      const closeMs = Date.parse(close.captured_at || '')
+      const minutesBeforeKickoff = Number.isFinite(closeMs) ? Math.round((kickoffMs - closeMs) / 60000) : null
+      const openingOdds = Number(top?.bookmakerOdds || 0)
+      const closingOdds = Number(close.odds || 0)
+      if (openingOdds > 1 && closingOdds > 1) {
+        return {
+          marketKey: topKey,
+          bookmaker: String(close.bookmaker || top.bookmaker || ''),
+          openOdds: Math.round(openingOdds * 100) / 100,
+          closingOdds: Math.round(closingOdds * 100) / 100,
+          clvPct: Math.round((((openingOdds / closingOdds) - 1) * 100) * 10) / 10,
+          snapshots: Array.isArray(timeline) ? timeline.length : 1,
+          minutesBeforeKickoff,
+          qualifiedClosing: Number.isFinite(minutesBeforeKickoff) && minutesBeforeKickoff >= -2 && minutesBeforeKickoff <= 25,
+          snapshotWindow: close.snapshot_window || null,
+          source: 'Bet+AI Odds Timeline V202'
+        }
+      }
+    }
+  } catch (_) {}
+
+  // Fallback: dotychczasowa historia kursów widzianych przez aplikację.
   let query = supabase
     .from('match_odds_history')
     .select('market_key,bookmaker,odds,captured_at')
     .eq('fixture_id', String(fixtureId))
-    .eq('market_key', String(top.key))
+    .eq('market_key', topKey)
     .lte('captured_at', new Date(kickoffMs).toISOString())
     .order('captured_at', { ascending: true })
     .limit(100)
@@ -89,14 +127,15 @@ async function getClvSummary(supabase, fixtureId, kickoffAt, forecast = {}) {
   if (!(openOdds > 1) || !(closingOdds > 1)) return null
   const clvPct = ((openOdds / closingOdds) - 1) * 100
   return {
-    marketKey: String(top.key),
+    marketKey: topKey,
     bookmaker: String(closing.bookmaker || top.bookmaker || ''),
     openOdds: Math.round(openOdds * 100) / 100,
     closingOdds: Math.round(closingOdds * 100) / 100,
     clvPct: Math.round(clvPct * 10) / 10,
     snapshots: data.length,
     minutesBeforeKickoff,
-    qualifiedClosing: Number.isFinite(minutesBeforeKickoff) && minutesBeforeKickoff >= -5 && minutesBeforeKickoff <= 20
+    qualifiedClosing: Number.isFinite(minutesBeforeKickoff) && minutesBeforeKickoff >= -5 && minutesBeforeKickoff <= 20,
+    source: 'match_odds_history fallback'
   }
 }
 
@@ -225,6 +264,7 @@ async function mapConcurrent(items, limit, mapper) {
 }
 
 exports.handler = async function handler(event = {}) {
+  const opsStartedV211 = Date.now()
   if (event.httpMethod === 'OPTIONS') return json(204, {})
   if (event.httpMethod && !['GET', 'POST'].includes(event.httpMethod)) return json(405, { ok: false, error: 'Method not allowed' })
   if (!API_KEY) return json(500, { ok: false, error: 'Brak APISPORTS_KEY / API_FOOTBALL_KEY.' })
@@ -245,7 +285,7 @@ exports.handler = async function handler(event = {}) {
     .order('fixture_date', { ascending: true })
     .limit(limit)
 
-  if (error) return json(500, { ok: false, error: error.message, code: error.code })
+  if (error) { try { await logRun(supabase, 'settlement', opsStartedV211, 'error', {}, error.message) } catch (_) {} ; return json(500, { ok: false, error: error.message, code: error.code }) }
   const rows = Array.isArray(data) ? data : []
   let settled = 0
   let voided = 0
@@ -318,13 +358,16 @@ exports.handler = async function handler(event = {}) {
     }
   })
 
+  const opsStatusV211 = errors.length ? (settled || voided ? 'partial' : 'error') : 'ok'
+  try { await logRun(supabase, 'settlement', opsStartedV211, opsStatusV211, { checked: rows.length, settled, void: voided, stillPending: pending, errors: errors.length }, errors[0]?.error || null) } catch (_) {}
   return json(200, {
     ok: true,
     checked: rows.length,
     settled,
     void: voided,
     stillPending: pending,
-    errors: errors.slice(0, 12)
+    errors: errors.slice(0, 12),
+    operationsV211: { status: opsStatusV211 }
   })
 }
 

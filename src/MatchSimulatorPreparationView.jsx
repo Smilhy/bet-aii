@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import MatchOperationsV211 from './MatchOperationsV211'
 import { buildChallengerRawV180, chooseActiveModelV173, buildModelLabV200, adaptiveCalibrateTripletV172, adaptiveCalibrateBinaryV172, applyDataScienceTripletV200, applyDataScienceBinaryV200, applyEnsembleStackingV197, buildReliabilityGuardV190, applyReliabilityDecisionV190 } from './predictionLabV200'
 
 const COPY = {
@@ -1611,7 +1612,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   const reliabilityGuardV190 = useMemo(() => forecast ? buildReliabilityGuardV190({ match, data, forecast, performance: modelPerformance, oddsHistory }) : null, [match, data, forecast, modelPerformance, oddsHistory])
   const professionalLabBase = useMemo(() => forecast ? buildProfessionalPredictionLabV152({ match, forecast, reliability, performance: modelPerformance, oddsHistory, ensembleValidation, modelLab }) : null, [match, forecast, reliability, modelPerformance, oddsHistory, ensembleValidation, modelLab])
   const professionalLab = useMemo(() => applyReliabilityDecisionV190(professionalLabBase, reliabilityGuardV190), [professionalLabBase, reliabilityGuardV190])
-  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V200', validationVersion: 'BETAI_PREDICTION_ENGINE_4_V200', reliability: reliability || null, reliabilityV190: reliabilityGuardV190 || null, dataScienceV200: modelPerformance?.dataScience || null, ensembleValidation: ensembleValidation || null, modelLab: modelLab || null, marketValidation: modelLab?.marketValidation || null, professionalLab: professionalLab || null } : null, [forecast, reliability, reliabilityGuardV190, modelPerformance, ensembleValidation, modelLab, professionalLab])
+  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V200', validationVersion: 'BETAI_PREDICTION_ENGINE_4_V200', operationsVersion: 'BETAI_PRODUCTION_OPS_REPLAY_V211', reliability: reliability || null, reliabilityV190: reliabilityGuardV190 || null, dataScienceV200: modelPerformance?.dataScience || null, ensembleValidation: ensembleValidation || null, modelLab: modelLab || null, marketValidation: modelLab?.marketValidation || null, professionalLab: professionalLab || null } : null, [forecast, reliability, reliabilityGuardV190, modelPerformance, ensembleValidation, modelLab, professionalLab])
   const preparedData = useMemo(() => data ? { ...data, externalConsensus: consensus || null, predictionEngine: forecastWithReliability || null } : null, [data, consensus, forecastWithReliability])
   const phaseIndex = Math.min(phases.length - 1, Math.floor(progress / (100 / phases.length)))
 
@@ -1977,6 +1978,8 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
             <article><small>AUTO MODEL SELECTION</small><b>{modelPerformance?.dataScience?.autoSelection?.winner || 'BASE'}</b><span>{modelPerformance?.dataScience?.autoSelection?.reason || 'zbieranie out-of-sample historii'}</span></article>
           </div>
         </section> : null}
+
+        <MatchOperationsV211 match={match} forecast={forecastWithReliability} />
 
         {ensembleValidation ? <section className={`sim-validation-risk-v158 disagree-${String(ensembleValidation?.disagreement?.status || 'low').toLowerCase()}`}>
           <header className="sim-validation-head-v158">

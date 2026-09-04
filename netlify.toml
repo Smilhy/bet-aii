@@ -117,3 +117,17 @@
 # do backtestingu i kalibracji. Forecast jest zapisany przed kickoffem i po starcie zamrożony.
 [functions."settle-match-prediction-snapshots"]
   schedule = "31 * * * *"
+
+# WERSJA 201 — Scheduled Odds Snapshots: T-24h / T-6h / T-1h / T-15m.
+# Funkcja działa co 15 minut, ale pobiera /odds tylko wtedy, gdy konkretny fixture
+# wchodzi w jedno z okien i nie ma jeszcze zapisanego snapshotu tego okna.
+[functions."capture-match-odds-timeline"]
+  schedule = "*/15 * * * *"
+
+# WERSJA 204 — nocny rebuild profili self-learning / calibration / data science.
+[functions."nightly-match-model-rebuild"]
+  schedule = "7 3 * * *"
+
+# WERSJA 206 — skan anomalii danych bez requestów API-Football.
+[functions."match-ops-anomaly-scan"]
+  schedule = "23 * * * *"

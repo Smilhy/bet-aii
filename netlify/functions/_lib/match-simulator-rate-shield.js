@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const { logApiEvent } = require('./match-ops-v211')
 
 const API_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || ''
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
@@ -223,6 +224,7 @@ async function performRequest(path, query, options = {}) {
     // pozostałe moduły strony.
     const apiBudget = await takeDailyBudget(options)
     if (!apiBudget.allowed) {
+      try { await logApiEvent(supabase, 'BUDGET_BLOCK', path, { query: stableQuery(query), apiBudget }, null, options.budgetScope || 'simulator-core') } catch (_) {}
       if (cached) return normalizeCached(cached, { stale: true, budgetLimited: true, apiBudget })
       return {
         ok: false, data: [], paging: {}, fromCache: false, stale: false,
@@ -233,6 +235,7 @@ async function performRequest(path, query, options = {}) {
 
     const waitMs = await reserveSlot(options.spacingMs || 275)
     if (waitMs > MAX_QUEUE_WAIT_MS) {
+      try { await logApiEvent(supabase, 'QUEUE_WAIT', path, { query: stableQuery(query), waitMs }, null, options.budgetScope || 'simulator-core') } catch (_) {}
       if (cached) return normalizeCached(cached, { stale: true, rateLimited: true })
       return {
         ok: false, data: [], paging: {}, fromCache: false, stale: false, rateLimited: true,
@@ -262,6 +265,7 @@ async function performRequest(path, query, options = {}) {
       }
 
       lastError = err || `HTTP ${response.status}`
+      try { await logApiEvent(supabase, rateLimited ? 'RATE_LIMIT' : 'HTTP_ERROR', path, { query: stableQuery(query), error: lastError, attempt: attempt + 1 }, response.status, options.budgetScope || 'simulator-core') } catch (_) {}
       if (rateLimited) {
         const retryHeader = Number(response.headers.get('retry-after'))
         lastRetry = Number.isFinite(retryHeader) && retryHeader > 0
@@ -277,6 +281,7 @@ async function performRequest(path, query, options = {}) {
       }
     } catch (error) {
       lastError = error?.name === 'AbortError' ? 'Przekroczono czas API-Football' : clean(error?.message, 'Błąd API-Football')
+      try { await logApiEvent(supabase, error?.name === 'AbortError' ? 'TIMEOUT' : 'HTTP_ERROR', path, { query: stableQuery(query), error: lastError, attempt: attempt + 1 }, null, options.budgetScope || 'simulator-core') } catch (_) {}
       if (cached) return normalizeCached(cached, { stale: !cached.fresh })
       if (attempt < attempts - 1) await sleep(Math.min(2500, 700 * (attempt + 1)))
     } finally {
