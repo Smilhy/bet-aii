@@ -151,7 +151,7 @@ async function captureShadowBetV151(supabase, fixtureId, fixtureDate, body = {},
 
 async function capturePredictionAuditV153(supabase, fixtureId, fixtureDate, body = {}, forecast = {}) {
   const compact = {
-    modelVersion: clean(forecast?.version || 'BETAI_FORECAST_V166', 80),
+    modelVersion: clean(forecast?.version || 'BETAI_FORECAST_V180', 80),
     generatedAt: forecast?.generatedAt || null,
     dataQuality: Number(forecast?.dataQuality || 0),
     xg: forecast?.xg || null,
@@ -178,7 +178,7 @@ async function capturePredictionAuditV153(supabase, fixtureId, fixtureDate, body
     away_team: clean(body?.awayTeam, 180),
     league: clean(body?.league, 180),
     country: clean(body?.country, 120),
-    model_version: clean(forecast?.version || 'BETAI_FORECAST_V166', 80),
+    model_version: clean(forecast?.version || 'BETAI_FORECAST_V180', 80),
     audit_hash: auditHash,
     data_quality: Math.max(0, Math.min(100, Math.round(Number(forecast?.dataQuality || 0)))),
     decision: clean(forecast?.professionalLab?.decisionCard?.decision || forecast?.value?.state || '', 40),
@@ -209,7 +209,7 @@ async function captureModelExperimentsV160(supabase, fixtureId, fixtureDate, bod
       league: clean(body?.league, 180),
       country: clean(body?.country, 120),
       model_role: role,
-      model_version: clean(variant?.version || (role === 'champion' ? 'BETAI_CHAMPION_V158_CORE' : 'BETAI_CHALLENGER_V166_DC_STRENGTH'), 100),
+      model_version: clean(variant?.version || (role === 'champion' ? 'BETAI_CHAMPION_V158_CORE' : 'BETAI_CHALLENGER_V180_SELF_LEARNING_MATCH_INTEL'), 100),
       active_at_capture: String(forecast?.activeModel || 'champion') === role,
       data_quality: Math.max(0, Math.min(100, Math.round(Number(forecast?.dataQuality || 0)))),
       forecast: variant,

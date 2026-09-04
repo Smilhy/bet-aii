@@ -910,6 +910,388 @@ function buildControlCenter({ all = {}, last30 = {}, drift = {}, leagueTrust = [
   }
 }
 
+
+
+// WERSJA 167–174 — SELF LEARNING ENGINE
+const SELF_MODEL_V180 = 'BETAI_CHALLENGER_V180_SELF_LEARNING_MATCH_INTEL'
+const BASE_MODEL_V158 = 'BETAI_CHAMPION_V158_CORE'
+const SELF_MARKETS = ['oneXTwo','over15','over25','over35','btts']
+const SOURCE_DEFAULTS = {
+  oneXTwo: { poisson: 1.10, dixonColes: 1.35, form: .90, api: .70, web: .45, teamStrength: 1.05 },
+  over15: { poisson: 1.00, dixonColes: 1.45, recent: .65, web: .35 },
+  over25: { poisson: 1.00, dixonColes: 1.45, recent: .65, web: .35 },
+  over35: { poisson: 1.00, dixonColes: 1.45, recent: .65, web: .35 },
+  btts: { poisson: 1.00, dixonColes: 1.45, recent: .65, web: .35 }
+}
+
+function recencyWeight(row = {}, halfLifeDays = 90) {
+  const t = Date.parse(row?.settled_at || row?.fixture_date || '')
+  if (!Number.isFinite(t)) return 1
+  const ageDays = Math.max(0, (Date.now() - t) / 86400000)
+  return Math.pow(.5, ageDays / Math.max(15, halfLifeDays))
+}
+
+function sourceProbability(source = null, market = '', actual = null) {
+  if (!source || !actual) return null
+  if (market === 'oneXTwo') {
+    const one = source?.oneXTwo || {}
+    const vals = [pct(one.home), pct(one.draw), pct(one.away)]
+    if (!vals.some(v => v > 0)) return null
+    const sum = vals.reduce((a,b)=>a+b,0)
+    if (!(sum > 0)) return null
+    const p = vals.map(v => v / sum)
+    const y = [actual.home ? 1 : 0, actual.draw ? 1 : 0, actual.away ? 1 : 0]
+    const brier = ((p[0]-y[0])**2 + (p[1]-y[1])**2 + (p[2]-y[2])**2) / 2
+    const maxIndex = p.indexOf(Math.max(...p))
+    return { brier, probability: p[maxIndex] * 100, actual: y[maxIndex], correct: Boolean(y[maxIndex]) }
+  }
+  const pRaw = Number(source?.goals?.[market])
+  if (!Number.isFinite(pRaw)) return null
+  const p = clamp(pRaw, 0, 100) / 100
+  const y = actual[market] ? 1 : 0
+  return { brier: (p-y)**2, probability: p*100, actual: y, correct: (p >= .5) === Boolean(y) }
+}
+
+function weightedMeanRows(rows = [], valueKey = 'value') {
+  let sum = 0, wsum = 0
+  for (const row of rows) {
+    const w = n(row.weight, 1), v = Number(row[valueKey])
+    if (!(w > 0) || !Number.isFinite(v)) continue
+    sum += v * w; wsum += w
+  }
+  return wsum ? sum / wsum : 0
+}
+
+function sourceStats(rows = [], sourceName = '', market = '', halfLifeDays = 90) {
+  const records = []
+  for (const row of rows) {
+    const actual = outcomes(row)
+    const source = row?.forecast?.components?.[sourceName]
+    const rec = sourceProbability(source, market, actual)
+    if (!rec) continue
+    records.push({ ...rec, weight: recencyWeight(row, halfLifeDays) })
+  }
+  return {
+    samples: records.length,
+    effectiveSamples: round(records.reduce((sum,row)=>sum+n(row.weight),0),1),
+    brier: records.length ? round(weightedMeanRows(records.map(r=>({ value:r.brier, weight:r.weight }))),4) : 0,
+    accuracy: records.length ? round(weightedMeanRows(records.map(r=>({ value:r.correct?100:0, weight:r.weight }))),1) : 0
+  }
+}
+
+function buildMarketWeightProfile(rows = [], market = '', halfLifeDays = 90) {
+  const defaults = SOURCE_DEFAULTS[market] || {}
+  const stats = {}
+  const viableBriers = []
+  for (const source of Object.keys(defaults)) {
+    stats[source] = sourceStats(rows, source, market, halfLifeDays)
+    if (stats[source].samples >= 12 && stats[source].brier > 0) viableBriers.push(stats[source].brier)
+  }
+  viableBriers.sort((a,b)=>a-b)
+  const reference = viableBriers.length ? viableBriers[Math.floor(viableBriers.length/2)] : (market === 'oneXTwo' ? .22 : .24)
+  const weights = {}
+  for (const [source, base] of Object.entries(defaults)) {
+    const row = stats[source]
+    if (!row?.samples || !(row.brier > 0)) { weights[source] = base; continue }
+    const quality = clamp(Math.pow(reference / Math.max(.05, row.brier), 1.10), .55, 1.65)
+    const learn = clamp(row.samples / (row.samples + 70), 0, .82)
+    weights[source] = round(base * (1 + (quality - 1) * learn), 3)
+  }
+  return { key: market, label: marketLabels[market] || market, samples: rows.length, weights, sourceStats: stats, referenceBrier: round(reference,4) }
+}
+
+function globalWeightsFromMarkets(marketProfiles = []) {
+  const collected = new Map()
+  for (const market of marketProfiles) {
+    for (const [source, weight] of Object.entries(market?.weights || {})) {
+      if (!collected.has(source)) collected.set(source, [])
+      collected.get(source).push(Number(weight))
+    }
+  }
+  return Object.fromEntries([...collected.entries()].map(([source, values]) => [source, round(mean(values),3)]))
+}
+
+function buildFeatureLab(marketProfiles = []) {
+  const map = new Map()
+  for (const market of marketProfiles) {
+    for (const [source, row] of Object.entries(market?.sourceStats || {})) {
+      if (!row?.samples) continue
+      if (!map.has(source)) map.set(source, { source, samples:0, effectiveSamples:0, weightedBrier:0, accuracyWeighted:0, markets:0 })
+      const item = map.get(source)
+      item.samples += n(row.samples)
+      item.effectiveSamples += n(row.effectiveSamples)
+      item.weightedBrier += n(row.brier) * Math.max(1,n(row.effectiveSamples))
+      item.accuracyWeighted += n(row.accuracy) * Math.max(1,n(row.effectiveSamples))
+      item.markets += 1
+    }
+  }
+  const rows = [...map.values()].map(item => ({
+    source: item.source,
+    samples: item.samples,
+    effectiveSamples: round(item.effectiveSamples,1),
+    brier: item.effectiveSamples ? round(item.weightedBrier/item.effectiveSamples,4) : 0,
+    accuracy: item.effectiveSamples ? round(item.accuracyWeighted/item.effectiveSamples,1) : 0,
+    markets: item.markets
+  })).sort((a,b)=>a.brier-b.brier || b.samples-a.samples)
+  return rows.map((item,index)=>({ ...item, rank:index+1, status:item.samples>=100?'PROVEN':item.samples>=30?'LEARNING':'EARLY' }))
+}
+
+function calibrationForMarket(rows = [], market = '', halfLifeDays = 90) {
+  const recs = []
+  for (const row of rows) {
+    const actual = outcomes(row)
+    const source = row?.forecast || {}
+    if (!actual) continue
+    if (market === 'oneXTwo') {
+      const one = source?.oneXTwo || {}
+      const vals = [pct(one.home),pct(one.draw),pct(one.away)]
+      const sum = vals.reduce((a,b)=>a+b,0)
+      if (!(sum>0)) continue
+      const p = vals.map(v=>v/sum*100)
+      const y = [actual.home?1:0,actual.draw?1:0,actual.away?1:0]
+      const idx = p.indexOf(Math.max(...p))
+      recs.push({ predicted:p[idx], actual:y[idx], weight:recencyWeight(row,halfLifeDays) })
+    } else {
+      const p = Number(source?.goals?.[market])
+      if (!Number.isFinite(p)) continue
+      recs.push({ predicted:clamp(p,0,100), actual:actual[market]?1:0, weight:recencyWeight(row,halfLifeDays) })
+    }
+  }
+  const samples = recs.length
+  if (!samples) return { key:market, samples:0, biasPp:0, power:1, avgPredicted:0, actualRate:0 }
+  const avgPredicted = weightedMeanRows(recs.map(r=>({value:r.predicted,weight:r.weight})))
+  const actualRate = weightedMeanRows(recs.map(r=>({value:r.actual*100,weight:r.weight})))
+  const gap = actualRate - avgPredicted
+  const shrink = clamp(samples/(samples+70),0,.85)
+  if (market === 'oneXTwo') {
+    const overconfidence = avgPredicted - actualRate
+    const power = clamp(1 - (overconfidence/35)*shrink, .72, 1.18)
+    return { key:market, samples, avgPredicted:round(avgPredicted,1), actualRate:round(actualRate,1), gapPp:round(gap,1), biasPp:0, power:round(power,3) }
+  }
+  return { key:market, samples, avgPredicted:round(avgPredicted,1), actualRate:round(actualRate,1), gapPp:round(gap,1), biasPp:round(clamp(gap*shrink,-8,8),1), power:1 }
+}
+
+function buildAdaptiveCalibration(rows = [], halfLifeDays = 90) {
+  const marketProfiles = SELF_MARKETS.map(key=>calibrationForMarket(rows,key,halfLifeDays))
+  const leagueGroups = new Map()
+  for (const row of rows) {
+    const league = String(row?.league || '').trim()
+    if (!league) continue
+    if (!leagueGroups.has(league)) leagueGroups.set(league,[])
+    leagueGroups.get(league).push(row)
+  }
+  const leagueProfiles = [...leagueGroups.entries()].filter(([,group])=>group.length>=35).map(([league,group])=>({
+    league, samples:group.length, markets:SELF_MARKETS.map(key=>calibrationForMarket(group,key,halfLifeDays))
+  })).sort((a,b)=>b.samples-a.samples).slice(0,30)
+  return { version:'BETAI_ADAPTIVE_CALIBRATION_V172', marketProfiles, leagueProfiles }
+}
+
+function buildSelfLearningV174(experimentRows = []) {
+  const rows = experimentRows.filter(row => String(row?.model_role || '').toLowerCase()==='challenger' && String(row?.model_version || '')===SELF_MODEL_V180 && row?.forecast?.components)
+  const halfLifeDays = 90
+  const marketProfiles = SELF_MARKETS.map(key=>buildMarketWeightProfile(rows,key,halfLifeDays))
+  const leagueGroups = new Map()
+  for (const row of rows) {
+    const league = String(row?.league || '').trim()
+    if (!league) continue
+    if (!leagueGroups.has(league)) leagueGroups.set(league,[])
+    leagueGroups.get(league).push(row)
+  }
+  const leagueProfiles = [...leagueGroups.entries()].filter(([,group])=>group.length>=30).map(([league,group])=>({
+    league, samples:group.length, markets:SELF_MARKETS.map(key=>buildMarketWeightProfile(group,key,halfLifeDays))
+  })).sort((a,b)=>b.samples-a.samples).slice(0,30)
+  return {
+    version:'BETAI_SELF_LEARNING_ENGINE_V174',
+    samples:rows.length,
+    recency:{ halfLifeDays, method:'exponential-decay', newestWeight:1 },
+    globalWeights:globalWeightsFromMarkets(marketProfiles),
+    marketProfiles,
+    leagueProfiles,
+    featureLab:buildFeatureLab(marketProfiles),
+    adaptiveCalibration:buildAdaptiveCalibration(rows,halfLifeDays)
+  }
+}
+
+function pairRowsV180(experimentRows = []) {
+  const grouped = new Map()
+  for (const row of experimentRows) {
+    const fixtureId = String(row?.fixture_id || '')
+    if (!fixtureId) continue
+    if (!grouped.has(fixtureId)) grouped.set(fixtureId,{ champions:[], challengers:[] })
+    const g=grouped.get(fixtureId)
+    if (String(row?.model_role || '').toLowerCase()==='champion') g.champions.push(row)
+    if (String(row?.model_role || '').toLowerCase()==='challenger' && String(row?.model_version || '')===SELF_MODEL_V180) g.challengers.push(row)
+  }
+  const pairs=[]
+  for (const [fixtureId,g] of grouped.entries()) {
+    if (!g.champions.length || !g.challengers.length) continue
+    g.champions.sort((a,b)=>Date.parse(b.settled_at||'')-Date.parse(a.settled_at||''))
+    g.challengers.sort((a,b)=>Date.parse(b.settled_at||'')-Date.parse(a.settled_at||''))
+    pairs.push({ fixtureId, champion:g.champions[0], challenger:g.challengers[0], settledAt:g.challengers[0]?.settled_at || g.champions[0]?.settled_at || '' })
+  }
+  return pairs.sort((a,b)=>Date.parse(b.settledAt||'')-Date.parse(a.settledAt||''))
+}
+
+async function fetchModelRegistryV173(supabase) {
+  const { data, error } = await supabase.from('match_model_registry').select('*').eq('registry_key','football-main').maybeSingle()
+  if (error) {
+    if (/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message||''))) return null
+    throw error
+  }
+  return data || null
+}
+
+function buildGovernanceV173(experimentRows = [], registry = null) {
+  const pairs = pairRowsV180(experimentRows)
+  const championRows = pairs.map(p=>({ ...p.champion, forecast:p.champion.forecast }))
+  const challengerRows = pairs.map(p=>({ ...p.challenger, forecast:p.challenger.forecast }))
+  const champion = aggregateVariantRows(championRows)
+  const challenger = aggregateVariantRows(challengerRows)
+  const pairedSamples = pairs.length
+  const brierDelta = pairedSamples ? round(n(champion.avgBrier)-n(challenger.avgBrier),4) : 0
+  const marketRegressions=(challenger.markets||[]).filter(item=>{
+    const base=(champion.markets||[]).find(x=>x.key===item.key)
+    return n(item.samples)>=50 && n(base?.samples)>=50 && n(item.brier)>n(base?.brier)+.015
+  }).map(x=>x.key)
+  const recentPairs=pairs.slice(0,50)
+  const recentChampion=aggregateVariantRows(recentPairs.map(p=>({ ...p.champion, forecast:p.champion.forecast })))
+  const recentChallenger=aggregateVariantRows(recentPairs.map(p=>({ ...p.challenger, forecast:p.challenger.forecast })))
+  const recentDelta=recentPairs.length ? round(n(recentChampion.avgBrier)-n(recentChallenger.avgBrier),4) : 0
+
+  let activeVersion=String(registry?.active_version || BASE_MODEL_V158)
+  let previousVersion=String(registry?.previous_version || '') || null
+  let status='COLLECTING'
+  let reason=`V180 ma ${pairedSamples}/120 rozliczonych par. Champion pozostaje aktywny.`
+  let action='NONE'
+  const requiredSamples=120
+  const lastActionSamples=n(registry?.metadata?.pairedSamples,0)
+  const rollbackCooldown=String(registry?.status||'').toUpperCase()==='AUTO_ROLLBACK' && pairedSamples-lastActionSamples<60
+  if (activeVersion===SELF_MODEL_V180) {
+    status='V180_ACTIVE'
+    reason=`V180 jest aktywny. Monitorujemy rolling 50 i automatyczny rollback.`
+    if (recentPairs.length>=40 && (recentDelta<=-.025 || marketRegressions.length>=2)) {
+      action='ROLLBACK'
+      previousVersion=SELF_MODEL_V180
+      activeVersion=BASE_MODEL_V158
+      status='AUTO_ROLLBACK'
+      reason=recentDelta<=-.025 ? `Rollback: w ostatnich ${recentPairs.length} parach V180 pogorszył Brier o ${Math.abs(recentDelta).toFixed(4)}.` : `Rollback: regresja na ${marketRegressions.length} rynkach.`
+    }
+  } else if (rollbackCooldown) {
+    status='ROLLBACK_COOLDOWN'
+    reason=`Po rollbacku wymagamy 60 nowych sparowanych meczów przed kolejną promocją (${Math.max(0,pairedSamples-lastActionSamples)}/60).`
+  } else if (pairedSamples>=requiredSamples) {
+    if (brierDelta>=.004 && recentDelta>=.001 && !marketRegressions.length) {
+      action='PROMOTE'
+      previousVersion=activeVersion || BASE_MODEL_V158
+      activeVersion=SELF_MODEL_V180
+      status='AUTO_PROMOTED'
+      reason=`V180 poprawił Brier o ${brierDelta.toFixed(4)} na ${pairedSamples} sparowanych meczach, rolling-50 nie przeczy przewadze i nie ma istotnej regresji rynków.`
+    } else if (brierDelta<=-.004) {
+      status='CHAMPION_WIN'
+      reason=`Champion jest lepszy o ${Math.abs(brierDelta).toFixed(4)} Brier.`
+    } else {
+      status='NO_CLEAR_WINNER'
+      reason='Brak wymaganej przewagi 0.004 Brier bez regresji rynkowej.'
+    }
+  }
+  return {
+    version:'BETAI_MODEL_GOVERNANCE_V173', activeVersion, previousVersion, status, reason, action,
+    pairedSamples, requiredSamples, brierDelta, recent50BrierDelta:recentDelta, marketRegressions,
+    rollbackArmed:activeVersion===SELF_MODEL_V180, rollbackCooldown, newSamplesSinceAction:Math.max(0,pairedSamples-lastActionSamples), champion, challenger
+  }
+}
+
+async function persistGovernanceV173(supabase, governance = {}, registry = null) {
+  if (!governance || !['PROMOTE','ROLLBACK'].includes(governance.action)) return governance
+  const now=new Date().toISOString()
+  const row={
+    registry_key:'football-main',
+    active_version:governance.activeVersion,
+    previous_version:governance.previousVersion,
+    status:governance.status,
+    promoted_at:governance.action==='PROMOTE'?now:(registry?.promoted_at||null),
+    rollback_at:governance.action==='ROLLBACK'?now:(registry?.rollback_at||null),
+    updated_at:now,
+    metadata:{ pairedSamples:governance.pairedSamples,brierDelta:governance.brierDelta,recent50BrierDelta:governance.recent50BrierDelta,marketRegressions:governance.marketRegressions,reason:governance.reason }
+  }
+  const { error }=await supabase.from('match_model_registry').upsert(row,{onConflict:'registry_key'})
+  if (error && !/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message||''))) throw error
+  try {
+    await supabase.from('match_model_governance_events').insert({ event_type:governance.action.toLowerCase(), from_version:governance.action==='PROMOTE'?governance.previousVersion:SELF_MODEL_V180, to_version:governance.activeVersion, reason:governance.reason, metrics:row.metadata, created_at:now })
+  } catch (_) {}
+  return { ...governance, persisted:true, changedAt:now }
+}
+
+
+function simpleProfileHash(value = '') {
+  const text=String(value||'')
+  let hash=2166136261
+  for (let i=0;i<text.length;i+=1) { hash^=text.charCodeAt(i); hash=Math.imul(hash,16777619) }
+  return (hash>>>0).toString(16).padStart(8,'0')
+}
+
+async function persistSelfLearningProfilesV174(supabase, selfLearning = {}) {
+  const rows=[]
+  const push=(profileKey,profileType,league,marketKey,weights,calibration,sampleSize,metrics={})=>{
+    const payload={weights:weights||{},calibration:calibration||{},sampleSize:n(sampleSize),halfLifeDays:n(selfLearning?.recency?.halfLifeDays,90),metrics:metrics||{}}
+    const hash=simpleProfileHash(JSON.stringify(payload))
+    rows.push({ profile_key:profileKey, model_version:SELF_MODEL_V180, profile_type:profileType, league:league||null, market_key:marketKey||null, sample_size:n(sampleSize), half_life_days:n(selfLearning?.recency?.halfLifeDays,90), weights:weights||{}, calibration:calibration||{}, metrics:metrics||{}, profile_hash:hash })
+  }
+  const globalCal=selfLearning?.adaptiveCalibration?.marketProfiles||[]
+  push('global','global',null,null,selfLearning?.globalWeights||{}, {markets:globalCal}, selfLearning?.samples||0, {featureLab:(selfLearning?.featureLab||[]).slice(0,10)})
+  for (const market of selfLearning?.marketProfiles||[]) {
+    const cal=globalCal.find(item=>item.key===market.key)||{}
+    push(`market:${market.key}`,'market',null,market.key,market.weights||{},cal,market.samples||0,{sourceStats:market.sourceStats||{}})
+  }
+  for (const leagueRow of (selfLearning?.leagueProfiles||[]).slice(0,10)) {
+    const leagueCal=(selfLearning?.adaptiveCalibration?.leagueProfiles||[]).find(item=>item.league===leagueRow.league)
+    for (const market of leagueRow.markets||[]) {
+      const cal=leagueCal?.markets?.find(item=>item.key===market.key)||{}
+      push(`league_market:${leagueRow.league}:${market.key}`,'league_market',leagueRow.league,market.key,market.weights||{},cal,leagueRow.samples||0,{sourceStats:market.sourceStats||{}})
+    }
+  }
+  if (!rows.length) return { available:false, changed:0, updatedAt:null }
+  const keys=rows.map(r=>r.profile_key)
+  const { data:existing,error:readError }=await supabase.from('match_model_learning_profiles').select('profile_key,profile_hash,updated_at').in('profile_key',keys)
+  if (readError) {
+    if (/relation .* does not exist|could not find the table|schema cache/i.test(String(readError.message||''))) return { available:false, changed:0, updatedAt:null }
+    throw readError
+  }
+  const map=new Map((existing||[]).map(r=>[r.profile_key,r]))
+  const changed=rows.filter(r=>String(map.get(r.profile_key)?.profile_hash||'')!==String(r.profile_hash||''))
+  const now=new Date().toISOString()
+  if (changed.length) {
+    const payload=changed.map(r=>({ ...r, updated_at:now }))
+    const { error }=await supabase.from('match_model_learning_profiles').upsert(payload,{onConflict:'profile_key'})
+    if (error && !/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message||''))) throw error
+  }
+  const existingTimes=(existing||[]).map(r=>Date.parse(r.updated_at||'')).filter(Number.isFinite)
+  const updatedAt=changed.length?now:(existingTimes.length?new Date(Math.max(...existingTimes)).toISOString():null)
+  return { available:true, profiles:rows.length, changed:changed.length, updatedAt }
+}
+
+function buildBrainDashboardV174(selfLearning = {}, governance = {}, all = {}, leagueTrust = []) {
+  const features=selfLearning?.featureLab||[]
+  const bestLeague=[...(leagueTrust||[])].sort((a,b)=>n(b.overallScore)-n(a.overallScore))[0]||null
+  const worstLeague=[...(leagueTrust||[])].sort((a,b)=>n(a.overallScore)-n(b.overallScore))[0]||null
+  const marketProfiles=selfLearning?.marketProfiles||[]
+  return {
+    version:'BETAI_MODEL_BRAIN_DASHBOARD_V174',
+    activeVersion:governance?.activeVersion||BASE_MODEL_V158,
+    governanceStatus:governance?.status||'COLLECTING',
+    selfLearningSamples:n(selfLearning?.samples),
+    halfLifeDays:n(selfLearning?.recency?.halfLifeDays,90),
+    topFeatures:features.slice(0,5),
+    bestLeague:bestLeague?{name:bestLeague.name,score:n(bestLeague.overallScore),matches:n(bestLeague.matches)}:null,
+    worstLeague:worstLeague?{name:worstLeague.name,score:n(worstLeague.overallScore),matches:n(worstLeague.matches)}:null,
+    marketWeights:marketProfiles.map(row=>({ key:row.key,label:row.label,weights:row.weights })),
+    brier:n(all?.avgBrier),
+    pairedSamples:n(governance?.pairedSamples),
+    rollbackArmed:Boolean(governance?.rollbackArmed),
+    profileUpdatedAt:selfLearning?.profileStorage?.updatedAt||null
+  }
+}
+
 exports.handler = async function handler(event = {}) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
   if (event.httpMethod && event.httpMethod !== 'GET') return json(405, { ok: false, error: 'Method not allowed' })
@@ -945,7 +1327,19 @@ exports.handler = async function handler(event = {}) {
     const statisticalConfidence = buildStatisticalConfidenceV161(all, shadowRows)
     const autoGate = buildAutoGateV162(all, drift)
     const teamStrength = buildTeamStrengthV164(rows)
+    const selfLearning = buildSelfLearningV174(experimentRows)
+    try { selfLearning.profileStorage = await persistSelfLearningProfilesV174(supabase, selfLearning) } catch (_) { selfLearning.profileStorage = { available:false, changed:0, updatedAt:null } }
+    let registry = null
+    try { registry = await fetchModelRegistryV173(supabase) } catch (_) {}
+    let governance = buildGovernanceV173(experimentRows, registry)
+    try { governance = await persistGovernanceV173(supabase, governance, registry) } catch (_) {}
+    selfLearning.governance = governance
+    selfLearning.brainDashboard = buildBrainDashboardV174(selfLearning, governance, all, leagueTrust)
     const controlCenter = buildControlCenter({ all, last30: last30Stats, drift, leagueTrust, versions, paperPortfolio, portfolioRisk, errorAnalysis, championChallenger, statisticalConfidence, autoGate })
+    controlCenter.activeModelVersion = governance.activeVersion || controlCenter.activeModelVersion
+    controlCenter.activeModel = governance.activeVersion === SELF_MODEL_V180 ? 'challenger' : 'champion'
+    if (governance.action === 'PROMOTE') controlCenter.alerts.unshift('SELF LEARNING: V180 został automatycznie promowany po walidacji walk-forward.')
+    if (governance.action === 'ROLLBACK') controlCenter.alerts.unshift('SELF LEARNING: wykonano automatyczny rollback do stabilnego Championa.')
     return json(200, {
       ok: true,
       available: true,
@@ -964,6 +1358,9 @@ exports.handler = async function handler(event = {}) {
       statisticalConfidence,
       autoGate,
       teamStrength,
+      selfLearning,
+      modelGovernance: governance,
+      modelBrain: selfLearning.brainDashboard,
       controlCenter,
       note: rows.length < 100 ? 'Mała próbka — wyniki kalibracji, drift i trust score będą stabilniejsze po zebraniu większej liczby meczów.' : ''
     })
@@ -972,4 +1369,4 @@ exports.handler = async function handler(event = {}) {
   }
 }
 
-exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio, buildErrorAnalysis, buildPortfolioRisk, buildControlCenter, buildChampionChallengerV160, buildStatisticalConfidenceV161, buildAutoGateV162, buildTeamStrengthV164 }
+exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio, buildErrorAnalysis, buildPortfolioRisk, buildControlCenter, buildChampionChallengerV160, buildStatisticalConfidenceV161, buildAutoGateV162, buildTeamStrengthV164, buildSelfLearningV174, buildGovernanceV173, buildAdaptiveCalibration, buildMarketWeightProfile, persistSelfLearningProfilesV174 }

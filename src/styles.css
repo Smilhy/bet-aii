@@ -84319,3 +84319,22 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 @media(max-width:1100px){.sim-model-dashboard-grid-v166{grid-template-columns:repeat(3,minmax(0,1fr))}.sim-auto-gates-v166{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.sim-model-dashboard-v166{padding:13px;border-radius:16px}.sim-model-dashboard-head-v166{flex-direction:column}.sim-model-dashboard-grid-v166{grid-template-columns:repeat(2,minmax(0,1fr))}.sim-model-separation-v166{grid-template-columns:1fr}.sim-auto-gates-v166{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:460px){.sim-model-dashboard-grid-v166{grid-template-columns:1fr}.sim-auto-gates-v166{grid-template-columns:1fr}}
+
+/* WERSJA 167–180 — Self Learning + Match Intelligence 3.0 */
+.sim-self-learning-v174,.sim-match-intelligence-v180{margin-top:12px;padding:12px;border:1px solid rgba(118,220,255,.12);border-radius:14px;background:linear-gradient(180deg,rgba(7,25,35,.62),rgba(4,13,20,.72))}
+.sim-self-learning-v174>header,.sim-match-intelligence-v180>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.sim-self-learning-v174>header small,.sim-match-intelligence-v180>header small{display:block;color:#6f8797;font-size:9px;font-weight:900;letter-spacing:.11em}
+.sim-self-learning-v174>header strong,.sim-match-intelligence-v180>header strong{display:block;color:#eef8fc;font-size:14px;margin-top:2px}
+.sim-self-learning-v174>header>span,.sim-match-intelligence-v180>header>span{padding:6px 9px;border:1px solid rgba(86,220,174,.24);border-radius:999px;background:rgba(44,199,145,.08);color:#9af0ca;font-size:9px;font-weight:900;white-space:nowrap}
+.sim-self-learning-grid-v174,.sim-match-intelligence-v180>div{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.sim-self-learning-grid-v174 article,.sim-match-intelligence-v180 article{padding:10px;border-radius:11px;border:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.16);min-width:0}
+.sim-self-learning-grid-v174 small,.sim-self-learning-grid-v174 b,.sim-self-learning-grid-v174 span,.sim-match-intelligence-v180 small,.sim-match-intelligence-v180 b,.sim-match-intelligence-v180 span{display:block}
+.sim-self-learning-grid-v174 small,.sim-match-intelligence-v180 small{color:#718a99;font-size:9px;font-weight:900}
+.sim-self-learning-grid-v174 b,.sim-match-intelligence-v180 b{color:#f2f8fb;font-size:13px;margin:3px 0}
+.sim-self-learning-grid-v174 span,.sim-match-intelligence-v180 span{color:#8296a1;font-size:9px;line-height:1.35}
+.sim-feature-lab-v171{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;margin-top:9px}
+.sim-feature-lab-v171>span{padding:8px;border-radius:10px;background:rgba(0,0,0,.17);border:1px solid rgba(255,255,255,.06)}
+.sim-feature-lab-v171 small,.sim-feature-lab-v171 b,.sim-feature-lab-v171 em{display:block}.sim-feature-lab-v171 small{font-size:8px;color:#738b99;font-weight:900}.sim-feature-lab-v171 b{font-size:10px;color:#a9e9cf;margin:2px 0}.sim-feature-lab-v171 em{font-size:8px;color:#7e929d;font-style:normal}
+@media(max-width:1100px){.sim-self-learning-grid-v174,.sim-match-intelligence-v180>div{grid-template-columns:repeat(3,minmax(0,1fr))}.sim-feature-lab-v171{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.sim-self-learning-v174>header,.sim-match-intelligence-v180>header{flex-direction:column}.sim-self-learning-grid-v174,.sim-match-intelligence-v180>div{grid-template-columns:repeat(2,minmax(0,1fr))}.sim-feature-lab-v171{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:460px){.sim-self-learning-grid-v174,.sim-match-intelligence-v180>div,.sim-feature-lab-v171{grid-template-columns:1fr}}

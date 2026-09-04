@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { buildChallengerRawV166, chooseActiveModelV160, buildModelLabV166 } from './predictionLabV166'
+import { buildChallengerRawV180, chooseActiveModelV173, buildModelLabV180, adaptiveCalibrateTripletV172, adaptiveCalibrateBinaryV172 } from './predictionLabV180'
 
 const COPY = {
   pl: {
@@ -735,8 +735,8 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
     goals: { over15: championRawMarkets.over15, over25: championRawMarkets.over25, over35: championRawMarkets.over35, btts: championRawMarkets.btts },
     xg: { home: round2(homeXg), away: round2(awayXg) }
   }
-  const challengerVariant = buildChallengerRawV166({ match, data, consensus, champion: championVariant, performance: modelPerformance })
-  const modelSelection = chooseActiveModelV160(modelPerformance)
+  const challengerVariant = buildChallengerRawV180({ match, data, consensus, champion: championVariant, performance: modelPerformance })
+  const modelSelection = chooseActiveModelV173(modelPerformance)
   const challengerActive = modelSelection.activeModel === 'challenger'
   const activeOneXTwoRaw = challengerActive ? challengerVariant.oneXTwo : oneXTwoRaw
   const rawMarkets = challengerActive ? {
@@ -759,14 +759,21 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
     over35: calibrateProbabilityV2(modelPerformance, league, 'over35', rawMarkets.over35),
     btts: calibrateProbabilityV2(modelPerformance, league, 'bttsYes', rawMarkets.btts)
   }
+  const adaptiveOne = adaptiveCalibrateTripletV172(modelPerformance, league, oneCalibration.calibrated || activeOneXTwoRaw)
+  const adaptiveGoals = {
+    over15: adaptiveCalibrateBinaryV172(modelPerformance, league, 'over15', goalCals.over15.calibrated),
+    over25: adaptiveCalibrateBinaryV172(modelPerformance, league, 'over25', goalCals.over25.calibrated),
+    over35: adaptiveCalibrateBinaryV172(modelPerformance, league, 'over35', goalCals.over35.calibrated),
+    btts: adaptiveCalibrateBinaryV172(modelPerformance, league, 'btts', goalCals.btts.calibrated)
+  }
   const markets = {
-    home: round1(oneCalibration.calibrated?.home ?? rawMarkets.home),
-    draw: round1(oneCalibration.calibrated?.draw ?? rawMarkets.draw),
-    away: round1(oneCalibration.calibrated?.away ?? rawMarkets.away),
-    over15: goalCals.over15.calibrated,
-    over25: goalCals.over25.calibrated,
-    over35: goalCals.over35.calibrated,
-    btts: goalCals.btts.calibrated
+    home: round1(adaptiveOne.calibrated?.home ?? oneCalibration.calibrated?.home ?? rawMarkets.home),
+    draw: round1(adaptiveOne.calibrated?.draw ?? oneCalibration.calibrated?.draw ?? rawMarkets.draw),
+    away: round1(adaptiveOne.calibrated?.away ?? oneCalibration.calibrated?.away ?? rawMarkets.away),
+    over15: adaptiveGoals.over15.calibrated,
+    over25: adaptiveGoals.over25.calibrated,
+    over35: adaptiveGoals.over35.calibrated,
+    btts: adaptiveGoals.btts.calibrated
   }
   const fair = Object.fromEntries(Object.entries(markets).map(([key, value]) => [key, fairOdd(value)]))
   const dataQuality = buildDataQuality(checks, data, consensus)
@@ -790,16 +797,16 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
   if (sourceCount) factors.push(`Web consensus: ${sourceCount} źródeł • zgodność ${Math.round(agreement)}%`)
 
   const forecast = {
-    version: 'BETAI_FORECAST_V166',
-    calibrationVersion: 'BETAI_CALIBRATION_V2',
-    weightingVersion: 'BETAI_DYNAMIC_WEIGHTS_V1',
-    predictionEngineVersion: 'BETAI_PREDICTION_ENGINE_2_V166',
+    version: 'BETAI_FORECAST_V180',
+    calibrationVersion: 'BETAI_ADAPTIVE_CALIBRATION_V172',
+    weightingVersion: 'BETAI_SELF_LEARNING_WEIGHTS_V167_170',
+    predictionEngineVersion: 'BETAI_PREDICTION_ENGINE_3_V180',
     activeModel: modelSelection.activeModel,
     modelSelection,
     modelVariants: { champion: championVariant, challenger: challengerVariant },
     generatedAt: new Date().toISOString(),
     fixtureId: String(match?.apiFixtureId || match?.id || data?.fixture?.id || ''),
-    xg: { home: round2(homeXg), away: round2(awayXg) },
+    xg: { home: round2(challengerActive ? challengerVariant?.xg?.home : homeXg), away: round2(challengerActive ? challengerVariant?.xg?.away : awayXg) },
     raw: {
       oneXTwo: { home: rawMarkets.home, draw: rawMarkets.draw, away: rawMarkets.away },
       goals: { over15: rawMarkets.over15, over25: rawMarkets.over25, over35: rawMarkets.over35, btts: rawMarkets.btts }
@@ -812,7 +819,8 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
       over15: goalCals.over15,
       over25: goalCals.over25,
       over35: goalCals.over35,
-      btts: goalCals.btts
+      btts: goalCals.btts,
+      adaptive: { oneXTwo: adaptiveOne, goals: adaptiveGoals }
     },
     sourceWeights,
     topScores: (challengerActive ? challengerVariant?.dixonColes?.topScores || [] : poisson.topScores).slice(0, 3).map(item => ({ score: item.score, probability: round1(item.probability) })),
@@ -820,7 +828,7 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
     consensus: { sourceCount, agreement: Math.round(agreement), available: Boolean(webPercent) },
     value: valueEngine,
     factors,
-    modelInputs: { homeGF: round2(homeGF), homeGA: round2(homeGA), awayGF: round2(awayGF), awayGA: round2(awayGA), homeForm: Math.round(homeForm), awayForm: Math.round(awayForm) }
+    modelInputs: { homeGF: round2(homeGF), homeGA: round2(homeGA), awayGF: round2(awayGF), awayGA: round2(awayGA), homeForm: Math.round(homeForm), awayForm: Math.round(awayForm), matchIntelligence: challengerVariant?.matchIntelligence || null }
   }
   forecast.explainability = explainForecastV145({ match, data, consensus, forecast, homeGF, homeGA, awayGF, awayGA, homeForm, awayForm })
   return forecast
@@ -968,7 +976,7 @@ function buildBetAiLabTestDataV152(match = {}) {
       underOver: 'Over 2.5'
     },
     h2h: { available: true, summary: { count: 6, homeWins: 3, draws: 2, awayWins: 1, avgGoals: 2.83 } },
-    injuries: { available: true, homeCount: 1, awayCount: 2, home: [], away: [] },
+    injuries: { available: true, homeCount: 1, awayCount: 2, items: [{ teamId: 'lab-home', team: 'BET+AI Home', player: 'HOME Creator', type: 'Test', reason: 'Offline test absence' }, { teamId: 'lab-away', team: 'BET+AI Away', player: 'AWAY Right', type: 'Test', reason: 'Offline test absence' }, { teamId: 'lab-away', team: 'BET+AI Away', player: 'AWAY Wing L', type: 'Test', reason: 'Offline test absence' }] },
     lineups: { available: true, home: makeTestLineupV152('HOME', 'home'), away: makeTestLineupV152('AWAY', 'away') },
     standings: { available: true, home: { rank: 3, points: 54 }, away: { rank: 8, points: 41 } },
     recent: { home: recentHome, away: recentAway },
@@ -1017,7 +1025,7 @@ function buildBetAiLabTestPerformanceV152() {
     all: { matches: 420, markets, avgBrier: 0.211, rawAvgBrier: 0.226, calibrationBrierLift: 0.015, oneXTwoAccuracy: 58.3, valueRoi: 7.8, valueBets: 128, avgClv: 3.6, clvSamples: 81, calibration: markets[2].calibration },
     last30: { matches: 96, avgBrier: 0.207, valueRoi: 5.9 },
     leagues: [league],
-    versions: [{ name: 'BETAI_FORECAST_V166', matches: 210, avgBrier: 0.204 }],
+    versions: [{ name: 'BETAI_FORECAST_V180', matches: 210, avgBrier: 0.204 }],
     walkForward: {
       samples: 350, rawBrier: 0.228, walkForwardBrier: 0.209, lift: 0.019,
       markets: [
@@ -1067,7 +1075,21 @@ function buildBetAiLabTestPerformanceV152() {
       { key: 'btts', label: 'BTTS', status: 'ACTIVE', reason: 'Stabilna historia.', samples: 386, brier: 0.219, driftStatus: 'STABLE', trustScore: 84 }
     ] },
     teamStrength: { version: 'BETAI_TEAM_STRENGTH_V164', method: 'TEST opponent-adjusted Elo', trackedTeams: 128, teams: [] },
-    controlCenter: { version: 'BETAI_MODEL_CONTROL_V166', health: 'HEALTHY', alerts: ['Over 3.5 ma status WATCH — obserwuj drift.', 'TEST: Challenger został promowany po paired validation.'], settledPredictions: 420, brier: 0.211, last30Brier: 0.207, shadowRoi: 7.8, avgClv: 3.6, driftCount: 0, watchCount: 1, bestLeague: { name: 'BET+AI PROFESSIONAL LAB', score: 87, matches: 210 }, worstLeague: null, bestMarket: { key: 'over15', label: 'Over 1.5', brier: 0.184, samples: 398 }, worstMarket: { key: 'oneXTwo', label: '1X2', brier: 0.229, samples: 420 }, activeModelVersion: 'BETAI_CHALLENGER_V166_DC_STRENGTH', activeModel: 'challenger', championChallengerStatus: 'CHALLENGER_PROMOTED', statConfidence: 'MEDIUM', blockedMarkets: [] }
+    selfLearning: {
+      version: 'BETAI_SELF_LEARNING_ENGINE_V174', samples: 130, recency: { halfLifeDays: 90, method: 'exponential-decay' },
+      globalWeights: { poisson: 1.02, dixonColes: 1.48, form: 0.86, api: 0.72, web: 0.41, teamStrength: 1.12, recent: 0.69 },
+      marketProfiles: [], leagueProfiles: [{ league: 'BET+AI PROFESSIONAL LAB', samples: 130, markets: [] }],
+      featureLab: [
+        { source: 'dixonColes', rank: 1, samples: 130, brier: 0.188, status: 'PROVEN' },
+        { source: 'teamStrength', rank: 2, samples: 130, brier: 0.199, status: 'PROVEN' },
+        { source: 'poisson', rank: 3, samples: 130, brier: 0.207, status: 'PROVEN' },
+        { source: 'form', rank: 4, samples: 130, brier: 0.221, status: 'PROVEN' }
+      ],
+      adaptiveCalibration: { version: 'BETAI_ADAPTIVE_CALIBRATION_V172', marketProfiles: [], leagueProfiles: [] },
+      governance: { version: 'BETAI_MODEL_GOVERNANCE_V173', activeVersion: 'BETAI_CHALLENGER_V180_SELF_LEARNING_MATCH_INTEL', previousVersion: 'BETAI_CHAMPION_V158_CORE', status: 'AUTO_PROMOTED', reason: 'TEST: V180 przeszedł próg 120 par.', pairedSamples: 130, requiredSamples: 120, brierDelta: 0.008, rollbackArmed: true, champion: { matches: 130, avgBrier: 0.219 }, challenger: { matches: 130, avgBrier: 0.211 } }
+    },
+    modelGovernance: { activeVersion: 'BETAI_CHALLENGER_V180_SELF_LEARNING_MATCH_INTEL', status: 'AUTO_PROMOTED', pairedSamples: 130, requiredSamples: 120, brierDelta: 0.008, rollbackArmed: true, champion: { matches: 130, avgBrier: 0.219 }, challenger: { matches: 130, avgBrier: 0.211 } },
+    controlCenter: { version: 'BETAI_MODEL_CONTROL_V166', health: 'HEALTHY', alerts: ['Over 3.5 ma status WATCH — obserwuj drift.', 'TEST: Challenger został promowany po paired validation.'], settledPredictions: 420, brier: 0.211, last30Brier: 0.207, shadowRoi: 7.8, avgClv: 3.6, driftCount: 0, watchCount: 1, bestLeague: { name: 'BET+AI PROFESSIONAL LAB', score: 87, matches: 210 }, worstLeague: null, bestMarket: { key: 'over15', label: 'Over 1.5', brier: 0.184, samples: 398 }, worstMarket: { key: 'oneXTwo', label: '1X2', brier: 0.229, samples: 420 }, activeModelVersion: 'BETAI_CHALLENGER_V180_SELF_LEARNING_MATCH_INTEL', activeModel: 'challenger', championChallengerStatus: 'CHALLENGER_PROMOTED', statConfidence: 'MEDIUM', blockedMarkets: [] }
   }
 }
 
@@ -1544,10 +1566,10 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   const eligibility = useMemo(() => data ? buildEligibility(match, data, checks) : { eligible: false, reasons: [] }, [match, data, checks])
   const forecast = useMemo(() => data && eligibility.eligible ? buildForecast(match, data, consensus, checks, modelPerformance) : null, [match, data, consensus, checks, eligibility.eligible, modelPerformance])
   const reliability = useMemo(() => forecast ? buildReliabilityEngine({ match, data, forecast, consensus, performance: modelPerformance }) : null, [match, data, forecast, consensus, modelPerformance])
-  const modelLab = useMemo(() => forecast ? buildModelLabV166({ match, data, forecast, consensus, performance: modelPerformance, oddsHistory, challenger: forecast?.modelVariants?.challenger || null }) : null, [match, data, forecast, consensus, modelPerformance, oddsHistory])
+  const modelLab = useMemo(() => forecast ? buildModelLabV180({ match, data, forecast, consensus, performance: modelPerformance, oddsHistory, challenger: forecast?.modelVariants?.challenger || null }) : null, [match, data, forecast, consensus, modelPerformance, oddsHistory])
   const ensembleValidation = modelLab?.pureEnsemble || null
   const professionalLab = useMemo(() => forecast ? buildProfessionalPredictionLabV152({ match, forecast, reliability, performance: modelPerformance, oddsHistory, ensembleValidation, modelLab }) : null, [match, forecast, reliability, modelPerformance, oddsHistory, ensembleValidation, modelLab])
-  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V166', validationVersion: 'BETAI_PREDICTION_ENGINE_2_V166', reliability: reliability || null, ensembleValidation: ensembleValidation || null, modelLab: modelLab || null, marketValidation: modelLab?.marketValidation || null, professionalLab: professionalLab || null } : null, [forecast, reliability, ensembleValidation, modelLab, professionalLab])
+  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V180', validationVersion: 'BETAI_PREDICTION_ENGINE_3_V180', reliability: reliability || null, ensembleValidation: ensembleValidation || null, modelLab: modelLab || null, marketValidation: modelLab?.marketValidation || null, professionalLab: professionalLab || null } : null, [forecast, reliability, ensembleValidation, modelLab, professionalLab])
   const preparedData = useMemo(() => data ? { ...data, externalConsensus: consensus || null, predictionEngine: forecastWithReliability || null } : null, [data, consensus, forecastWithReliability])
   const phaseIndex = Math.min(phases.length - 1, Math.floor(progress / (100 / phases.length)))
 
@@ -1848,11 +1870,11 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
 
         {modelLab ? <section className={`sim-model-dashboard-v166 health-${String(modelLab?.dashboard?.health || 'pending').toLowerCase()}`}>
           <header className="sim-model-dashboard-head-v166">
-            <div><small>BET+AI PREDICTION ENGINE 2.0 • V159–V166 ALL-IN</small><strong>Professional Model Dashboard</strong><p>Pure Model • Champion/Challenger • 95% Confidence • Auto-Gate • Dixon-Coles • Team Strength • Correlation Risk</p></div>
+            <div><small>BET+AI PREDICTION ENGINE 3.0 • V159–V180 ALL-IN</small><strong>Professional Model Dashboard</strong><p>Self Learning • League/Market Models • Adaptive Calibration • Auto Rollback • Match Intelligence 3.0</p></div>
             <span>{String(modelLab?.selection?.activeModel || 'champion').toUpperCase()}</span>
           </header>
           <div className="sim-model-dashboard-grid-v166">
-            <article className="primary"><small>ACTIVE MODEL</small><b>{modelLab?.selection?.activeModel === 'challenger' ? 'CHALLENGER V166' : 'CHAMPION V158 CORE'}</b><span>{modelLab?.selection?.status || 'COLLECTING'} • {modelLab?.selection?.pairedSamples || 0}/100 paired</span></article>
+            <article className="primary"><small>ACTIVE MODEL</small><b>{modelLab?.selection?.activeModel === 'challenger' ? 'SELF-LEARNING V180' : 'CHAMPION V158 CORE'}</b><span>{modelLab?.selection?.status || 'COLLECTING'} • {modelLab?.selection?.pairedSamples || 0}/{modelLab?.selection?.requiredSamples || 120} paired</span></article>
             <article><small>CHAMPION BRIER</small><b>{modelLab?.selection?.champion?.avgBrier ? Number(modelLab.selection.champion.avgBrier).toFixed(3) : '—'}</b><span>{modelLab?.selection?.champion?.matches || 0} par</span></article>
             <article><small>CHALLENGER BRIER</small><b>{modelLab?.selection?.challenger?.avgBrier ? Number(modelLab.selection.challenger.avgBrier).toFixed(3) : '—'}</b><span>Δ {Number(modelLab?.selection?.brierDelta || 0) > 0 ? '+' : ''}{Number(modelLab?.selection?.brierDelta || 0).toFixed(4)}</span></article>
             <article className={`gate-${String(modelLab?.autoGate?.status || 'pending').toLowerCase()}`}><small>AUTO-GATE</small><b>{modelLab?.autoGate?.status || 'PENDING'}</b><span>{modelLab?.autoGate?.reason || 'zbieranie historii'}</span></article>
@@ -1873,11 +1895,33 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
           {modelPerformance?.autoGate?.markets?.length ? <div className="sim-auto-gates-v166">
             {modelPerformance.autoGate.markets.map(item => <span key={item.key} className={`gate-${String(item.status || '').toLowerCase()}`}><small>{item.label}</small><b>{item.status}</b><em>{item.samples} prób • Brier {Number(item.brier || 0).toFixed(3)}</em></span>)}
           </div> : null}
+          <div className="sim-self-learning-v174">
+            <header><div><small>V167–V174 • SELF LEARNING AI ENGINE</small><strong>Model Brain • automatyczne wagi i governance</strong></div><span>{modelLab?.selfLearning?.governance?.status || 'COLLECTING'}</span></header>
+            <div className="sim-self-learning-grid-v174">
+              <article><small>SELF-LEARNING SAMPLE</small><b>{modelLab?.dashboard?.selfLearningSamples || 0}</b><span>V180 settled • half-life {modelLab?.dashboard?.halfLifeDays || 90} dni</span></article>
+              <article><small>ACTIVE VERSION</small><b>{modelLab?.selfLearning?.governance?.activeVersion === 'BETAI_CHALLENGER_V180_SELF_LEARNING_MATCH_INTEL' ? 'V180' : 'V158'}</b><span>{modelLab?.selfLearning?.governance?.rollbackArmed ? 'AUTO-ROLLBACK ARMED' : 'validation in progress'}</span></article>
+              <article><small>FEATURE LEADER</small><b>{modelLab?.selfLearning?.featureLab?.[0]?.source || '—'}</b><span>{modelLab?.selfLearning?.featureLab?.[0]?.samples || 0} prób • Brier {Number(modelLab?.selfLearning?.featureLab?.[0]?.brier || 0).toFixed(3)}</span></article>
+              <article><small>LEAGUE PROFILE</small><b>{modelLab?.selfLearning?.leagueProfile ? 'AKTYWNY' : 'GLOBAL'}</b><span>{modelLab?.selfLearning?.activeLeague || '—'}</span></article>
+              <article><small>LAST WEIGHT CHANGE</small><b>{modelLab?.dashboard?.profileUpdatedAt ? new Date(modelLab.dashboard.profileUpdatedAt).toLocaleDateString('pl-PL') : '—'}</b><span>{modelLab?.selfLearning?.globalWeights ? 'profile audit w Supabase' : 'zbieranie profilu'}</span></article>
+            </div>
+            {modelLab?.selfLearning?.featureLab?.length ? <div className="sim-feature-lab-v171">{modelLab.selfLearning.featureLab.slice(0,6).map(item => <span key={item.source}><small>#{item.rank} {item.source}</small><b>{item.status}</b><em>{item.samples} • Brier {Number(item.brier || 0).toFixed(3)}</em></span>)}</div> : null}
+          </div>
+          {modelLab?.matchIntelligence ? <div className="sim-match-intelligence-v180">
+            <header><div><small>V175–V180 • MATCH INTELLIGENCE 3.0</small><strong>XI • absencje • fatigue • matchup adjustment</strong></div><span>{modelLab.matchIntelligence.dataConfidence || 0}% DATA</span></header>
+            <div>
+              <article><small>HOME XI</small><b>{modelLab.matchIntelligence.home?.lineup?.official ? 'OFFICIAL' : modelLab.matchIntelligence.home?.lineup?.available ? 'PREDICTED' : 'BRAK XI'}</b><span>{modelLab.matchIntelligence.home?.lineup?.formation || '—'} • absencje {modelLab.matchIntelligence.home?.injuries?.count || 0}</span></article>
+              <article><small>AWAY XI</small><b>{modelLab.matchIntelligence.away?.lineup?.official ? 'OFFICIAL' : modelLab.matchIntelligence.away?.lineup?.available ? 'PREDICTED' : 'BRAK XI'}</b><span>{modelLab.matchIntelligence.away?.lineup?.formation || '—'} • absencje {modelLab.matchIntelligence.away?.injuries?.count || 0}</span></article>
+              <article><small>HOME FATIGUE</small><b>{modelLab.matchIntelligence.home?.fatigue?.congestion || 'UNKNOWN'}</b><span>rest {modelLab.matchIntelligence.home?.fatigue?.restDays ?? '—'}d • 7d: {modelLab.matchIntelligence.home?.fatigue?.matches7d || 0} mecze</span></article>
+              <article><small>AWAY FATIGUE</small><b>{modelLab.matchIntelligence.away?.fatigue?.congestion || 'UNKNOWN'}</b><span>rest {modelLab.matchIntelligence.away?.fatigue?.restDays ?? '—'}d • 7d: {modelLab.matchIntelligence.away?.fatigue?.matches7d || 0} mecze</span></article>
+              <article><small>xG ADJUSTED</small><b>{Number(modelLab.matchIntelligence.adjustedXg?.home || 0).toFixed(2)} – {Number(modelLab.matchIntelligence.adjustedXg?.away || 0).toFixed(2)}</b><span>Δ {Number(modelLab.matchIntelligence.home?.xgAdjustment || 0) >= 0 ? '+' : ''}{Number(modelLab.matchIntelligence.home?.xgAdjustment || 0).toFixed(2)} / {Number(modelLab.matchIntelligence.away?.xgAdjustment || 0) >= 0 ? '+' : ''}{Number(modelLab.matchIntelligence.away?.xgAdjustment || 0).toFixed(2)}</span></article>
+              <article><small>GOALKEEPER DATA</small><b>{modelLab.matchIntelligence.goalkeeper?.home?.knownInXI && modelLab.matchIntelligence.goalkeeper?.away?.knownInXI ? 'XI KNOWN' : 'PARTIAL'}</b><span>bez fikcyjnych ratingów zawodników</span></article>
+            </div>
+          </div> : null}
         </section> : null}
 
         {ensembleValidation ? <section className={`sim-validation-risk-v158 disagree-${String(ensembleValidation?.disagreement?.status || 'low').toLowerCase()}`}>
           <header className="sim-validation-head-v158">
-            <div><small>BET+AI MODEL VALIDATION & RISK LAB • V153–V166</small><strong>Pure Ensemble • Sharp Disagreement • Audit • Error Analysis • Portfolio Risk</strong></div>
+            <div><small>BET+AI MODEL VALIDATION & RISK LAB • V153–V180</small><strong>Pure Ensemble • Sharp Disagreement • Audit • Error Analysis • Portfolio Risk</strong></div>
             <span className={`health-${String(modelPerformance?.controlCenter?.health || 'pending').toLowerCase()}`}>{modelPerformance?.controlCenter?.health || 'PENDING'}</span>
           </header>
           <div className="sim-ensemble-v158">
