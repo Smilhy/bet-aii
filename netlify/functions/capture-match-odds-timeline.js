@@ -2,6 +2,7 @@ const { createClient } = require('@supabase/supabase-js')
 const { apiGet } = require('./_lib/match-simulator-rate-shield')
 const { normalizeFixtureOdds, marketProbability, fairOdds, edgePp } = require('./_lib/match-odds-normalizer-v211')
 const { logRun } = require('./_lib/match-ops-v211')
+const { shouldSkipAutoJobV300 } = require('./_lib/system-safe-mode-v300')
 
 const WINDOWS = [
   { key: 'T24H', minutes: 1440, tolerance: 90 },
@@ -43,6 +44,7 @@ exports.handler = async function handler(event = {}) {
   const started = Date.now()
   const supabase = client()
   if (!supabase) return json(503, { ok: false, error: 'Supabase ENV niedostępne' })
+  const gateV300 = await shouldSkipAutoJobV300(supabase,'odds_snapshot'); if (gateV300.skip) return json(200, { ok: true, skipped: true, reason: 'SYSTEM_SAFE_MODE' })
   try {
     const now = Date.now()
     const from = new Date(now + 4 * 60 * 1000).toISOString()

@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 const { apiGet: shieldApiGet } = require('./_lib/match-simulator-rate-shield')
 const { logRun } = require('./_lib/match-ops-v211')
+const { shouldSkipAutoJobV300 } = require('./_lib/system-safe-mode-v300')
 
 const API_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || ''
 const API_BASE = 'https://v3.football.api-sports.io'
@@ -270,6 +271,7 @@ exports.handler = async function handler(event = {}) {
   if (!API_KEY) return json(500, { ok: false, error: 'Brak APISPORTS_KEY / API_FOOTBALL_KEY.' })
   const supabase = getSupabase()
   if (!supabase) return json(500, { ok: false, error: 'Brak SUPABASE_URL lub SUPABASE_SERVICE_ROLE_KEY.' })
+  { const gateV300 = await shouldSkipAutoJobV300(supabase,'settlement'); if (gateV300.skip) { try { await logRun(supabase, 'settlement', opsStartedV211, 'skipped', { safeMode: true }) } catch (_) {}; return json(200, { ok: true, skipped: true, reason: 'SYSTEM_SAFE_MODE' }) } }
 
   const requestedLimit = Number(event.queryStringParameters?.limit || 80)
   const limit = Math.max(1, Math.min(150, Number.isFinite(requestedLimit) ? requestedLimit : 80))

@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
 const { logRun } = require('./_lib/match-ops-v211')
+const { shouldSkipAutoJobV300 } = require('./_lib/system-safe-mode-v300')
 
 function json(statusCode, body) { return { statusCode, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) } }
 function client() {
@@ -43,6 +44,7 @@ exports.handler = async function handler() {
   const started = Date.now()
   const supabase = client()
   if (!supabase) return json(503, { ok: false, error: 'Supabase ENV niedostępne' })
+  const gateV300 = await shouldSkipAutoJobV300(supabase,'anomaly_scan'); if (gateV300.skip) return json(200, { ok: true, skipped: true, reason: 'SYSTEM_SAFE_MODE' })
   try {
     const since = new Date(Date.now() - 45 * 86400000).toISOString()
     const { data, error } = await supabase.from('match_prediction_snapshots')

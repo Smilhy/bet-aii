@@ -1,0 +1,38 @@
+'use strict'
+const { createClient } = require('@supabase/supabase-js')
+const { apiGet } = require('./_lib/match-simulator-rate-shield')
+const { shouldSkipAutoJobV300, getSystemSettingsV300 } = require('./_lib/system-safe-mode-v300')
+function json(code,body){return{statusCode:code,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'},body:JSON.stringify(body)}}
+function client(){const u=process.env.SUPABASE_URL||process.env.VITE_SUPABASE_URL||'';const k=process.env.SUPABASE_SERVICE_ROLE_KEY||process.env.SUPABASE_SERVICE_KEY||process.env.SERVICE_ROLE_KEY||'';return u&&k?createClient(u,k,{auth:{persistSession:false,autoRefreshToken:false}}):null}
+async function log(s,started,status,metrics={},err=null){try{await s.from('match_ops_runs').insert({run_type:'backfill',status,started_at:new Date(started).toISOString(),finished_at:new Date().toISOString(),duration_ms:Date.now()-started,metrics,error_text:err})}catch(_){}}
+function seasonKey(v){const d=new Date(v);if(!Number.isFinite(d.getTime()))return null;const y=d.getUTCFullYear(),s=d.getUTCMonth()>=6?y:y-1;return `${s}/${String(s+1).slice(-2)}`}
+exports.handler=async()=>{const started=Date.now(),s=client();if(!s)return json(503,{ok:false,error:'Supabase ENV unavailable'});try{
+  const gate=await shouldSkipAutoJobV300(s,'backfill'),settings=await getSystemSettingsV300(s);if(gate.skip||!settings.backfill_enabled){await log(s,started,'skipped',{safeMode:gate.skip,backfillEnabled:settings.backfill_enabled});return json(200,{ok:true,skipped:true,reason:gate.skip?'safe_mode':'backfill_disabled'})}
+  const since=new Date(Date.now()-365*86400000).toISOString()
+  const {data:snaps,error}=await s.from('match_prediction_snapshots').select('fixture_id,fixture_date,home_team,away_team,league,country').gte('fixture_date',since).order('fixture_date',{ascending:false}).limit(1000);if(error)throw error
+  const ids=(snaps||[]).map(x=>String(x.fixture_id));let existing=[];if(ids.length){const {data}=await s.from('match_fixture_integrity').select('fixture_id').in('fixture_id',ids);existing=data||[]}
+  const set=new Set(existing.map(x=>String(x.fixture_id))),seed=(snaps||[]).filter(x=>!set.has(String(x.fixture_id))).slice(0,60)
+  for(const r of seed){await s.from('match_backfill_queue_v300').upsert({fixture_id:String(r.fixture_id),backfill_type:'integrity_from_snapshot',priority:80,status:'pending',payload:r,updated_at:new Date().toISOString()},{onConflict:'fixture_id,backfill_type'})}
+  const {data:closingOld}=await s.from('match_odds_history').select('fixture_id,fixture_date,market_key,bookmaker,odds,model_probability,fair_odds,edge_pp,captured_at').eq('is_closing',true).gte('fixture_date',since).order('captured_at',{ascending:false}).limit(300)
+  for(const r of closingOld||[]){await s.from('match_backfill_queue_v300').upsert({fixture_id:String(r.fixture_id),backfill_type:`closing_timeline:${r.market_key}:${r.bookmaker||'book'}`,priority:60,status:'pending',payload:r,updated_at:new Date().toISOString()},{onConflict:'fixture_id,backfill_type'})}
+  const apiBackfill=String(process.env.BETAI_V300_API_BACKFILL_ENABLED||'').toLowerCase()==='true'
+  if(apiBackfill){for(const r of (snaps||[]).filter(x=>!String(x.country||'').trim()||!String(x.league||'').trim()).slice(0,20)){await s.from('match_backfill_queue_v300').upsert({fixture_id:String(r.fixture_id),backfill_type:'fixture_metadata_api',priority:30,status:'pending',payload:r,updated_at:new Date().toISOString()},{onConflict:'fixture_id,backfill_type'})}}
+  const {data:work,wErr}=await s.from('match_backfill_queue_v300').select('*').in('status',['pending','retry']).or(`next_attempt_at.is.null,next_attempt_at.lte.${new Date().toISOString()}`).order('priority',{ascending:false}).order('created_at',{ascending:true}).limit(80);if(wErr)throw wErr
+  let done=0,retry=0,apiCalls=0,cacheHits=0
+  for(const job of work||[]){try{
+    await s.from('match_backfill_queue_v300').update({status:'processing',attempts:Number(job.attempts||0)+1,updated_at:new Date().toISOString()}).eq('id',job.id)
+    if(job.backfill_type==='integrity_from_snapshot'){
+      const p=job.payload||{};await s.from('match_fixture_integrity').upsert({fixture_id:String(job.fixture_id),canonical_fixture_date:p.fixture_date||null,home_team:p.home_team||'',away_team:p.away_team||'',league:p.league||'',country:p.country||'',duplicate_key:`${String(p.home_team||'').toLowerCase()}|${String(p.away_team||'').toLowerCase()}|${String(p.fixture_date||'').slice(0,10)}`,season_key:seasonKey(p.fixture_date),integrity_status:'clear',leakage_status:'clear',last_seen_at:new Date().toISOString(),updated_at:new Date().toISOString()},{onConflict:'fixture_id'})
+    }else if(String(job.backfill_type).startsWith('closing_timeline:')){
+      const p=job.payload||{};if(Number(p.odds)>1){await s.from('match_odds_timeline').upsert({fixture_id:String(job.fixture_id),fixture_date:p.fixture_date||null,market_key:p.market_key||'',bookmaker:p.bookmaker||'',odds:Number(p.odds),model_probability:p.model_probability??null,fair_odds:p.fair_odds??null,edge_pp:p.edge_pp??null,snapshot_window:'CLOSING',target_minutes_before:0,actual_minutes_before:0,source:'V300 backfill from historical match_odds_history',is_closing_candidate:true,captured_at:p.captured_at||new Date().toISOString(),metadata:{backfilled:true,source:'match_odds_history'}},{onConflict:'fixture_id,snapshot_window,market_key,bookmaker'})}
+    }else if(job.backfill_type==='fixture_metadata_api'){
+      if(String(process.env.BETAI_V300_API_BACKFILL_ENABLED||'').toLowerCase()!=='true')throw new Error('API backfill ENV disabled')
+      const r=await apiGet('/fixtures',{id:String(job.fixture_id)},{budgetScope:'backfill-v300',budgetLimit:20,totalBudgetLimit:750,ttlMs:30*86400000,allowStaleMs:90*86400000,attempts:2,timeoutMs:8000})
+      if(!r?.ok)throw new Error(r?.error||'fixture metadata unavailable');if(r.fromCache)cacheHits++;else apiCalls++
+      const fx=Array.isArray(r.data)?r.data[0]:r.data?.response?.[0]||r.data?.[0]||r.data;const p=job.payload||{};const fd=fx?.fixture?.date||p.fixture_date||null,home=fx?.teams?.home?.name||p.home_team||'',away=fx?.teams?.away?.name||p.away_team||'',league=fx?.league?.name||p.league||'',country=fx?.league?.country||p.country||''
+      await s.from('match_fixture_integrity').upsert({fixture_id:String(job.fixture_id),canonical_fixture_date:fd,home_team:home,away_team:away,league,country,duplicate_key:`${String(home).toLowerCase()}|${String(away).toLowerCase()}|${String(fd||'').slice(0,10)}`,season_key:seasonKey(fd),integrity_status:'clear',leakage_status:'clear',metadata:{backfilledV300:true,apiFixtureMetadata:true},last_seen_at:new Date().toISOString(),updated_at:new Date().toISOString()},{onConflict:'fixture_id'})
+    }else throw new Error('Unknown backfill type')
+    await s.from('match_backfill_queue_v300').update({status:'done',last_error:null,updated_at:new Date().toISOString()}).eq('id',job.id);done++
+  }catch(e){const attempts=Number(job.attempts||0)+1,status=attempts>=4?'dead':'retry';await s.from('match_backfill_queue_v300').update({status,last_error:String(e?.message||e).slice(0,1000),next_attempt_at:new Date(Date.now()+Math.min(24,2**attempts)*3600000).toISOString(),updated_at:new Date().toISOString()}).eq('id',job.id);retry++}}
+  await log(s,started,retry?'partial':'ok',{seededIntegrity:seed.length,seededClosing:(closingOld||[]).length,processed:(work||[]).length,done,retry,apiCalls,cacheHits});return json(200,{ok:true,seededIntegrity:seed.length,seededClosing:(closingOld||[]).length,done,retry,apiCalls,cacheHits})
+}catch(e){await log(s,started,'error',{},e?.message||String(e));return json(500,{ok:false,error:e?.message||String(e)})}}

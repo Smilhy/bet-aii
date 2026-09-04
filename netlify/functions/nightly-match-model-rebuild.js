@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 const performance = require('./get-match-prediction-performance')
 const { logRun } = require('./_lib/match-ops-v211')
+const { shouldSkipAutoJobV300 } = require('./_lib/system-safe-mode-v300')
 
 function json(statusCode, body) { return { statusCode, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) } }
 function client() {
@@ -14,6 +15,7 @@ exports.handler = async function handler() {
   const started = Date.now()
   const supabase = client()
   if (!supabase) return json(503, { ok: false, error: 'Supabase ENV niedostępne' })
+  const gateV300 = await shouldSkipAutoJobV300(supabase,'model_rebuild'); if (gateV300.skip) return json(200, { ok: true, skipped: true, reason: 'SYSTEM_SAFE_MODE' })
   try {
     const response = await performance.handler({ httpMethod: 'GET', queryStringParameters: { limit: '12000', rebuild: '1' } })
     const payload = JSON.parse(response?.body || '{}')

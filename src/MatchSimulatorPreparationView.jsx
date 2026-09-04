@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import MatchOperationsV211 from './MatchOperationsV211'
 import MatchIntelligenceV260 from './MatchIntelligenceV260'
 import LivePreMatchV280 from './LivePreMatchV280'
+import ProductionPlatformV300 from './ProductionPlatformV300'
 import { applyContextOverlayV220 } from './matchIntelligenceV260'
 import { buildChallengerRawV180, chooseActiveModelV173, buildModelLabV200, adaptiveCalibrateTripletV172, adaptiveCalibrateBinaryV172, applyDataScienceTripletV200, applyDataScienceBinaryV200, applyEnsembleStackingV197, buildReliabilityGuardV190, applyReliabilityDecisionV190 } from './predictionLabV200'
 
@@ -2007,6 +2008,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
 
         <MatchIntelligenceV260 match={match} data={preparedData || data} forecast={forecastWithReliability} professionalLab={professionalLab} />
         <LivePreMatchV280 lang={lang} match={match} data={preparedData || data} forecast={forecastWithReliability} />
+        <ProductionPlatformV300 lang={lang} match={match} forecast={forecastWithReliability} />
 
         <MatchOperationsV211 match={match} forecast={forecastWithReliability} />
 

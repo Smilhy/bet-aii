@@ -5,6 +5,7 @@ const { apiGet } = require('./_lib/match-simulator-rate-shield')
 const { logRun } = require('./_lib/match-ops-v211')
 const { safe, num, norm, normalizeApiLineups, normalizeApiInjuries, buildPreMatchStateV280, haversineKm } = require('./_lib/prematch-v280')
 const { WINDOWS, dueWindow, relevantEventRules } = require('./_lib/prematch-schedule-v280')
+const { shouldSkipAutoJobV300 } = require('./_lib/system-safe-mode-v300')
 function json(statusCode, body){return{statusCode,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'},body:JSON.stringify(body)}}
 function client(){const url=process.env.SUPABASE_URL||process.env.VITE_SUPABASE_URL||'';const key=process.env.SUPABASE_SERVICE_ROLE_KEY||process.env.SUPABASE_SERVICE_KEY||process.env.SERVICE_ROLE_KEY||'';if(!url||!key)return null;try{return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}})}catch(_){return null}}
 function sha(v=''){return crypto.createHash('sha256').update(String(v)).digest('hex')}
@@ -56,7 +57,7 @@ async function fanoutAlerts(supabase, fixture, events=[]){
 }
 
 async function handlerCore(event={}){
-  const started=Date.now(),supabase=client();if(!supabase)return json(503,{ok:false,error:'Supabase ENV niedostępne'})
+  const started=Date.now(),supabase=client();if(!supabase)return json(503,{ok:false,error:'Supabase ENV niedostępne'});const gateV300=await shouldSkipAutoJobV300(supabase,'prematch_scan');if(gateV300.skip)return json(200,{ok:true,skipped:true,reason:'SYSTEM_SAFE_MODE'})
   try{
     const now=Date.now(),from=new Date(now+4*60000).toISOString(),to=new Date(now+136*60000).toISOString()
     const {data:snaps,error}=await supabase.from('match_prediction_snapshots').select('fixture_id,fixture_date,home_team,away_team,league,forecast,settled_at').is('settled_at',null).gte('fixture_date',from).lte('fixture_date',to).order('fixture_date',{ascending:true}).limit(80)

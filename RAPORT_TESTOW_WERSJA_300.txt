@@ -1,0 +1,78 @@
+BET+AI — RAPORT TESTÓW WERSJA 300
+=================================
+Data pakietu: 2026-09-04
+Pakiet: PRODUCTION PLATFORM 2.0 ALL-IN (V281–V300)
+
+WYNIK KOŃCOWY
+-------------
+PASS — kontrole statyczne, składnia backendu, parser JSX, harmonogram Netlify oraz testy logiki V300/V280/V260/V200 przeszły.
+
+TESTY V300
+----------
+1. TEST_WERSJA_300_PRODUCTION_PLATFORM_2.cjs — PASS / TEST_V300_OK
+   - 13 wymaganych tabel V300 obecnych w SQL
+   - Web Push dependency przypięta do web-push 3.6.7
+   - Runtime Controls obecne
+   - SYSTEM SAFE MODE obecny
+   - Export CSV/JSON/PDF obecny
+   - Service Worker obecny
+   - integracja ProductionPlatformV300 z MatchSimulatorPreparationView obecna
+
+2. Node syntax — PASS
+   Sprawdzone:
+   - match-platform-v300.js
+   - dispatch-match-push-v300.js
+   - match-backfill-v300.js
+   - match-cleanup-v300.js
+   - match-retry-worker-v300.js
+   - match-health-snapshot-v300.js
+   - _lib/system-safe-mode-v300.js
+   - betai-sw-v300.js
+   - GENERATE_VAPID_KEYS_V300.js
+   - zmodyfikowane match-specific scheduled functions V137/V201/V204/V206/V280
+
+3. JSX / transpile parser — PASS, 0 diagnostics
+   - src/ProductionPlatformV300.jsx
+   - src/MatchSimulatorPreparationView.jsx
+
+4. netlify.toml — PASS
+   Python tomllib parsuje plik bez błędów.
+   Nowe joby V300 mają harmonogramy:
+   - dispatch-match-push-v300
+   - match-backfill-v300
+   - match-cleanup-v300
+   - match-retry-worker-v300
+   - match-health-snapshot-v300
+
+REGRESJA POPRZEDNICH WARSTW
+---------------------------
+- TEST V280 — PASS / BET -> WATCH + lineup/major-change/review flags
+- TEST V260 — PASS / TEST_V260_OK
+- TEST V200 — PASS / OOS calibration + bootstrap + auto selection
+
+Testy V211/V180, które importują Supabase bezpośrednio, nie zostały ponownie uruchomione w finalnym środowisku, ponieważ lokalny node_modules nie jest zainstalowany. Ich odpowiednie pliki backendu przeszły `node --check`, a wcześniejsze wersje były testowane przy generowaniu poprzednich paczek.
+
+FULL NPM/VITE BUILD
+-------------------
+NIE OZNACZONO JAKO PASS.
+Lokalne środowisko nie dokończyło pobrania zależności npm. V300 dodaje `web-push`, którego nie było w lockfile V280.
+
+Aby nie zostawić niespójnego package-lock.json, stary lockfile V280 został usunięty z finalnego pakietu. `package.json` zawiera dokładnie przypięte wersje zależności. Netlify powinien wykonać czystą instalację npm przy deployu.
+
+OCHRONA DANYCH
+--------------
+- Cleanup NIE usuwa match_prediction_snapshots.
+- Cleanup NIE usuwa match_model_experiments.
+- Cleanup NIE usuwa match_prediction_freeze_ledger.
+- Safe Mode nie usuwa danych i nie wyłącza całej strony.
+- Backup V298 zapisuje konfigurację, a nie hasła/sekrety.
+- API Backfill domyślnie OFF oraz dodatkowo chroniony ENV + budżetem requestów.
+
+WEB PUSH
+--------
+Kod i Service Worker są gotowe, ale realna dostawa Web Push wymaga prawidłowej pary VAPID w Netlify ENV:
+- VAPID_PUBLIC_KEY
+- VAPID_PRIVATE_KEY
+- VAPID_SUBJECT
+
+Bez VAPID strona nadal działa; panel pokaże, że Web Push wymaga konfiguracji.

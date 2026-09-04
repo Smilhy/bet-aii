@@ -146,3 +146,25 @@
 # WERSJA 277 — dzienny digest watchlisty (w aplikacji; bez zewnętrznego mail/push providera).
 [functions."build-daily-prematch-digest-v280"]
   schedule = "17 7 * * *"
+
+# WERSJA 281–V284 — Web Push dispatcher.
+# Alerty powstają w V280; ten worker wysyła tylko niedostarczone alerty do aktywnych subskrypcji.
+[functions."dispatch-match-push-v300"]
+  schedule = "*/5 * * * *"
+
+# WERSJA 289 — Safe Backfill. Domyślnie OFF w match_system_settings_v300.
+# Po włączeniu najpierw uzupełnia dane z istniejącej historii bez dodatkowych requestów API.
+[functions."match-backfill-v300"]
+  schedule = "17 4 * * *"
+
+# WERSJA 290 — Cleanup cache/telemetrii. Nigdy nie usuwa Prediction Freeze Ledger ani historii predykcji.
+[functions."match-cleanup-v300"]
+  schedule = "47 4 * * 0"
+
+# WERSJA 291 — Error Recovery / retry queue.
+[functions."match-retry-worker-v300"]
+  schedule = "11,41 * * * *"
+
+# WERSJA 299/V300 — godzinowy immutable System Health snapshot.
+[functions."match-health-snapshot-v300"]
+  schedule = "5 * * * *"
