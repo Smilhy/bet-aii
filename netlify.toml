@@ -112,3 +112,8 @@
 
 [functions."algorithm-cycle-background"]
   background = true
+
+# WERSJA 137 — Match Simulator Prediction Engine: rozliczanie rzeczywistych wyników
+# do backtestingu i kalibracji. Forecast jest zapisany przed kickoffem i po starcie zamrożony.
+[functions."settle-match-prediction-snapshots"]
+  schedule = "31 * * * *"

@@ -389,6 +389,8 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [forecastSaveState, setForecastSaveState] = useState('')
+  const [modelPerformance, setModelPerformance] = useState(null)
+  const [modelPerformanceLoading, setModelPerformanceLoading] = useState(false)
   const mountedRef = useRef(true)
   const forecastSavedRef = useRef('')
 
@@ -461,6 +463,22 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
     }, 170)
     return () => window.clearInterval(timer)
   }, [loading])
+
+  // WERSJA 137: globalny backtest jest liczony wyłącznie z prognoz zapisanych
+  // przed kickoffem i później rozliczonych prawdziwym wynikiem z API-Football.
+  useEffect(() => {
+    let cancelled = false
+    setModelPerformanceLoading(true)
+    fetch('/.netlify/functions/get-match-prediction-performance?limit=5000', { cache: 'no-store' })
+      .then(response => response.json().catch(() => ({})).then(payload => ({ response, payload })))
+      .then(({ response, payload }) => {
+        if (cancelled || !mountedRef.current) return
+        if (response.ok && payload?.ok && payload?.available) setModelPerformance(payload)
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled && mountedRef.current) setModelPerformanceLoading(false) })
+    return () => { cancelled = true }
+  }, [])
 
   const checks = useMemo(() => data ? buildChecks(match, data, copy) : [], [match, data, copy])
   const completeness = useMemo(() => {
@@ -621,6 +639,29 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
           <div className="sim-prep-factors-v136">{forecast.factors.slice(0, 5).map(factor => <span key={factor}>{factor}</span>)}</div>
           <p className="sim-prep-forecast-note-v136">Prawdopodobieństwa są estymacją modelu, nie gwarancją wyniku. Animacja meczu korzysta z tego profilu xG i 1X2.</p>
         </section> : null}
+
+        <section className="sim-prep-backtest-v137">
+          <div className="sim-prep-backtest-head-v137">
+            <div><small>BET+AI BACKTEST & CALIBRATION</small><strong>Rzeczywista skuteczność modelu</strong></div>
+            {modelPerformanceLoading ? <span className="loading">● LICZĘ</span> : modelPerformance?.all?.matches ? <span className="live">● {modelPerformance.all.matches} ROZLICZONYCH</span> : <span className="waiting">ZBIERANIE DANYCH</span>}
+          </div>
+          {modelPerformance?.all?.matches ? <>
+            <div className="sim-prep-backtest-kpis-v137">
+              <article><small>1X2 ACCURACY</small><b>{modelPerformance.all.oneXTwoAccuracy}%</b><span>{modelPerformance.all.markets?.find(item => item.key === 'oneXTwo')?.samples || 0} meczów</span></article>
+              <article><small>BRIER SCORE</small><b>{Number(modelPerformance.all.avgBrier || 0).toFixed(3)}</b><span>niżej = lepiej</span></article>
+              <article><small>VALUE ROI</small><b className={Number(modelPerformance.all.valueRoi || 0) >= 0 ? 'positive' : 'negative'}>{Number(modelPerformance.all.valueRoi || 0) > 0 ? '+' : ''}{modelPerformance.all.valueRoi}%</b><span>{modelPerformance.all.valueBets || 0} value betów</span></article>
+              <article><small>30 DNI</small><b>{modelPerformance.last30?.matches || 0}</b><span>rozliczonych meczów</span></article>
+            </div>
+            <div className="sim-prep-backtest-markets-v137">
+              {(modelPerformance.all.markets || []).filter(item => item.key !== 'oneXTwo').map(item => <span key={item.key}><small>{item.label}</small><b>{item.accuracy}%</b><em>Brier {Number(item.brier || 0).toFixed(3)}</em></span>)}
+            </div>
+            {modelPerformance.all.calibration?.length ? <div className="sim-prep-calibration-v137">
+              <small>KALIBRACJA PEWNOŚCI</small>
+              <div>{modelPerformance.all.calibration.slice(-5).map(item => <span key={item.range}><b>{item.range}</b><em>realnie {item.actualAccuracy}%</em><i className={Math.abs(Number(item.calibrationGap || 0)) <= 5 ? 'good' : 'warn'}>{Number(item.calibrationGap || 0) > 0 ? '+' : ''}{item.calibrationGap} pp</i></span>)}</div>
+            </div> : null}
+            {modelPerformance.note ? <p className="sim-prep-backtest-note-v137">⚠ {modelPerformance.note}</p> : <p className="sim-prep-backtest-note-v137 ok">✓ Wyniki są liczone wyłącznie z zamrożonych prognoz pre-match i prawdziwych rezultatów.</p>}
+          </> : <p className="sim-prep-backtest-empty-v137">Pierwsze statystyki pojawią się po zakończeniu i automatycznym rozliczeniu zapisanych prognoz. Forecast po kickoffie jest zablokowany, więc wynik nie może zmienić historycznej predykcji.</p>}
+        </section>
 
         <div className={`sim-prep-quality-gate-v126 ${eligibility.eligible ? 'accepted' : 'rejected'}`}>
           <div>

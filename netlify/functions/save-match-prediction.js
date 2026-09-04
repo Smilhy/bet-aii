@@ -42,12 +42,34 @@ exports.handler = async function(event) {
   const newQuality = Math.max(0, Math.min(100, Math.round(Number(forecast.dataQuality) || 0)))
   const { data: existing, error: readError } = await supabase
     .from('match_prediction_snapshots')
-    .select('fixture_id,data_quality,forecast,updated_at')
+    .select('fixture_id,fixture_date,data_quality,forecast,updated_at,settled_at')
     .eq('fixture_id', fixtureId)
     .maybeSingle()
 
   if (readError && readError.code !== 'PGRST116' && !String(readError.message || '').toLowerCase().includes('no rows')) {
     return json(500, { ok: false, error: readError.message })
+  }
+
+  // WERSJA 137: prognoza jest pre-match. Po kickoffie snapshot jest zamrożony
+  // i nigdy nie jest nadpisywany danymi, które mogły już znać przebieg meczu.
+  const kickoffRaw = existing?.fixture_date || body.fixtureDate || ''
+  const kickoffMs = Date.parse(kickoffRaw)
+  const afterKickoff = Number.isFinite(kickoffMs) && Date.now() >= kickoffMs
+  if (existing?.settled_at || afterKickoff) {
+    return json(200, {
+      ok: true,
+      saved: false,
+      reused: Boolean(existing),
+      frozen: true,
+      reason: existing?.settled_at ? 'prediction_already_settled' : 'kickoff_passed_prediction_locked',
+      dataQuality: Number(existing?.data_quality || newQuality || 0)
+    })
+  }
+
+  // Nie tworzymy nowej prognozy po rozpoczęciu meczu nawet wtedy, gdy snapshotu wcześniej nie było.
+  const requestedKickoffMs = Date.parse(body.fixtureDate || '')
+  if (!existing && Number.isFinite(requestedKickoffMs) && Date.now() >= requestedKickoffMs) {
+    return json(200, { ok: true, saved: false, reused: false, frozen: true, reason: 'cannot_create_post_kickoff_snapshot', dataQuality: 0 })
   }
 
   if (existing && Number(existing.data_quality || 0) > newQuality) {
