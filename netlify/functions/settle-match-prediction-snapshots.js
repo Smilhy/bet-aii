@@ -189,6 +189,28 @@ async function settleModelExperimentsV160(supabase, fixtureId, score, now, fixtu
   if (error && !/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) throw error
 }
 
+
+
+function normV183(value=''){return String(value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim()}
+function teamLooksCompatibleV183(a='',b=''){
+  const x=normV183(a),y=normV183(b); if(!x||!y)return true; if(x===y||x.includes(y)||y.includes(x))return true
+  const xs=new Set(x.split(' ').filter(t=>t.length>=4)),ys=y.split(' ').filter(t=>t.length>=4)
+  return ys.some(t=>xs.has(t))
+}
+async function integrityEventV183(supabase,fixtureId,eventType,severity='info',detail={}){
+  try{await supabase.from('match_integrity_events').insert({fixture_id:String(fixtureId),event_type:eventType,severity,detail,created_at:new Date().toISOString()})}catch(_){}
+}
+async function recordSettlementIntegrityV183(supabase,row={},fixture=null,state='',score=null,now=''){
+  const apiHome=String(fixture?.teams?.home?.name||''),apiAway=String(fixture?.teams?.away?.name||'')
+  const teamWarning=!(teamLooksCompatibleV183(row?.home_team,apiHome)&&teamLooksCompatibleV183(row?.away_team,apiAway))
+  if(teamWarning) await integrityEventV183(supabase,row.fixture_id,'settlement_team_name_warning','warning',{snapshot:{home:row?.home_team,away:row?.away_team},api:{home:apiHome,away:apiAway}})
+  try{
+    const {data:current}=await supabase.from('match_fixture_integrity').select('settlement_count').eq('fixture_id',String(row.fixture_id)).maybeSingle()
+    await supabase.from('match_fixture_integrity').update({settlement_count:Number(current?.settlement_count||0)+1,integrity_status:teamWarning?'review':'clear',last_seen_at:now||new Date().toISOString(),updated_at:now||new Date().toISOString(),metadata:{settlementState:state,score,apiHome,apiAway,teamNameWarning:teamWarning}}).eq('fixture_id',String(row.fixture_id))
+  }catch(_){}
+  await integrityEventV183(supabase,row.fixture_id,state==='settled'?'settlement_committed':'settlement_voided','info',{state,score,fixtureStatus:String(fixture?.fixture?.status?.short||'')})
+}
+
 async function mapConcurrent(items, limit, mapper) {
   let cursor = 0
   const results = new Array(items.length)
@@ -259,6 +281,7 @@ exports.handler = async function handler(event = {}) {
         if (updateError) throw updateError
         try { await voidShadowBetsV151(supabase, row.fixture_id, now) } catch (_) {}
         try { await voidModelExperimentsV160(supabase, row.fixture_id, now, fixtureStatus) } catch (_) {}
+        try { await recordSettlementIntegrityV183(supabase, row, fixture, 'void', null, now) } catch (_) {}
         voided += 1
         return
       }
@@ -288,6 +311,7 @@ exports.handler = async function handler(event = {}) {
       try { await markClosingOdds(supabase, row.fixture_id, row.fixture_date) } catch (_) {}
       try { await settleShadowBetsV151(supabase, row.fixture_id, score, clv, now) } catch (_) {}
       try { await settleModelExperimentsV160(supabase, row.fixture_id, score, now, fixtureStatus) } catch (_) {}
+      try { await recordSettlementIntegrityV183(supabase, row, fixture, 'settled', score, now) } catch (_) {}
       settled += 1
     } catch (err) {
       errors.push({ fixture_id: row.fixture_id, error: err?.message || String(err) })

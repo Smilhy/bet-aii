@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-180-self-learning-match-intelligence",
-  "version": "180.0.0",
+  "name": "betai-wersja-200-model-reliability-data-science",
+  "version": "200.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
@@ -13,7 +13,8 @@
     "test:algorithm": "node TEST_WERSJA_1882_ALGORITHM_MODEL.js",
     "test:typer-stake": "node TEST_WERSJA_26_TYPER_EXPERT_PENDING_STAKE.js",
     "test:prediction-v166": "node TEST_WERSJA_166_PREDICTION_ENGINE_2.js",
-    "test:prediction-v180": "node TEST_WERSJA_180_SELF_LEARNING_ENGINE.cjs"
+    "test:prediction-v180": "node TEST_WERSJA_180_SELF_LEARNING_ENGINE.cjs",
+    "test:prediction-v200": "node TEST_WERSJA_200_RELIABILITY_DATA_SCIENCE.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.3",

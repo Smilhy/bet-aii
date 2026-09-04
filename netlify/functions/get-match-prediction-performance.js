@@ -924,11 +924,24 @@ const SOURCE_DEFAULTS = {
   btts: { poisson: 1.00, dixonColes: 1.45, recent: .65, web: .35 }
 }
 
+function seasonStartYearV196(dateLike = '') {
+  const d = new Date(dateLike)
+  if (!Number.isFinite(d.getTime())) return null
+  const y = d.getUTCFullYear()
+  return d.getUTCMonth() >= 6 ? y : y - 1
+}
+
 function recencyWeight(row = {}, halfLifeDays = 90) {
-  const t = Date.parse(row?.settled_at || row?.fixture_date || '')
+  const raw = row?.settled_at || row?.fixture_date || ''
+  const t = Date.parse(raw)
   if (!Number.isFinite(t)) return 1
   const ageDays = Math.max(0, (Date.now() - t) / 86400000)
-  return Math.pow(.5, ageDays / Math.max(15, halfLifeDays))
+  const exponential = Math.pow(.5, ageDays / Math.max(15, halfLifeDays))
+  const currentSeason = seasonStartYearV196(new Date().toISOString())
+  const rowSeason = seasonStartYearV196(row?.fixture_date || row?.settled_at || '')
+  const gap = Number.isFinite(currentSeason) && Number.isFinite(rowSeason) ? Math.max(0, currentSeason - rowSeason) : 0
+  const seasonDecay = gap <= 0 ? 1 : gap === 1 ? .55 : gap === 2 ? .25 : .12
+  return exponential * seasonDecay
 }
 
 function sourceProbability(source = null, market = '', actual = null) {
@@ -993,9 +1006,14 @@ function buildMarketWeightProfile(rows = [], market = '', halfLifeDays = 90) {
   for (const [source, base] of Object.entries(defaults)) {
     const row = stats[source]
     if (!row?.samples || !(row.brier > 0)) { weights[source] = base; continue }
-    const quality = clamp(Math.pow(reference / Math.max(.05, row.brier), 1.10), .55, 1.65)
-    const learn = clamp(row.samples / (row.samples + 70), 0, .82)
-    weights[source] = round(base * (1 + (quality - 1) * learn), 3)
+    const quality = clamp(Math.pow(reference / Math.max(.05, row.brier), 1.10), .60, 1.55)
+    // V186: shrink learned weights toward the stable default until the sample is large.
+    // This prevents a lucky 15–40 match run from creating an extreme source weight.
+    const effective = Math.max(0, n(row.effectiveSamples, row.samples))
+    const learn = clamp(effective / (effective + 95), 0, .74)
+    const proposed = base * (1 + (quality - 1) * learn)
+    const capLow = base * .68, capHigh = base * 1.42
+    weights[source] = round(clamp(proposed, capLow, capHigh), 3)
   }
   return { key: market, label: marketLabels[market] || market, samples: rows.length, weights, sourceStats: stats, referenceBrier: round(reference,4) }
 }
@@ -1292,6 +1310,284 @@ function buildBrainDashboardV174(selfLearning = {}, governance = {}, all = {}, l
   }
 }
 
+
+
+// WERSJA 181–200 — RELIABILITY, DATA INTEGRITY & DATA SCIENCE LAB
+const DS_MARKETS_V200 = ['oneXTwo','over15','over25','over35','btts']
+
+function safeProbV200(value) { return clamp(n(value, .5), .005, .995) }
+function logLossBinaryV191(probability, actual) {
+  const p = safeProbV200(Number(probability) > 1 ? Number(probability) / 100 : Number(probability))
+  const y = actual ? 1 : 0
+  return -(y * Math.log(p) + (1 - y) * Math.log(1 - p))
+}
+function rowLogLossV191(row = {}) {
+  const actual = outcomes(row)
+  const forecast = row?.forecast || {}
+  if (!actual) return []
+  const out = []
+  const one = forecast?.oneXTwo || {}
+  const vals = [pct(one.home), pct(one.draw), pct(one.away)].map(v => Math.max(.01, v / 100))
+  const total = vals.reduce((a,b)=>a+b,0)
+  if (total > 0) {
+    const ps = vals.map(v=>v/total)
+    const idx = actual.home ? 0 : actual.draw ? 1 : 2
+    out.push({ market:'oneXTwo', logLoss:-Math.log(Math.max(.005, ps[idx])), brier:predictionRecords(row,'calibrated').find(r=>r.market==='oneXTwo')?.brier ?? 0 })
+  }
+  const goals = forecast?.goals || {}
+  for (const key of ['over15','over25','over35','btts']) {
+    if (!Number.isFinite(Number(goals[key]))) continue
+    const rec = predictionRecords(row,'calibrated').find(r=>r.market===key)
+    out.push({ market:key, logLoss:logLossBinaryV191(Number(goals[key])/100, Boolean(actual[key])), brier:n(rec?.brier) })
+  }
+  return out
+}
+
+function binaryObservationsV200(rows = [], market = '') {
+  return [...rows].sort((a,b)=>rowTime(a)-rowTime(b)).map(row => {
+    const actual = outcomes(row); if (!actual) return null
+    const p = Number(row?.forecast?.goals?.[market])
+    if (!Number.isFinite(p)) return null
+    return { p:clamp(p/100,.005,.995), y:actual[market]?1:0, time:rowTime(row), league:String(row?.league||'') }
+  }).filter(Boolean)
+}
+
+function oneXTwoObservationsV200(rows = []) {
+  return [...rows].sort((a,b)=>rowTime(a)-rowTime(b)).map(row=>{
+    const actual=outcomes(row); const one=row?.forecast?.oneXTwo||{}; if(!actual) return null
+    const vals=[pct(one.home),pct(one.draw),pct(one.away)].map(v=>Math.max(.01,v/100)); const sum=vals.reduce((a,b)=>a+b,0); if(!(sum>0)) return null
+    return { p:vals.map(v=>v/sum), y:actual.home?0:actual.draw?1:2, time:rowTime(row), league:String(row?.league||'') }
+  }).filter(Boolean)
+}
+
+function fitPlattV193(obs = []) {
+  if (obs.length < 25) return { a:1,b:0 }
+  let a=1,b=0
+  const lr=.08, l2=.015
+  for(let iter=0;iter<260;iter+=1){
+    let ga=0,gb=0
+    for(const o of obs){
+      const x=Math.log(safeProbV200(o.p)/(1-safeProbV200(o.p)))
+      const q=1/(1+Math.exp(-(a*x+b)))
+      ga+=(q-o.y)*x; gb+=(q-o.y)
+    }
+    ga=ga/obs.length+l2*(a-1); gb/=obs.length
+    a-=lr*ga; b-=lr*gb
+    a=clamp(a,.25,2.5); b=clamp(b,-2,2)
+  }
+  return { a:round(a,4), b:round(b,4) }
+}
+function predictPlattV193(p, params={}) {
+  const pp=safeProbV200(p), x=Math.log(pp/(1-pp)), a=n(params.a,1), b=n(params.b,0)
+  return safeProbV200(1/(1+Math.exp(-(a*x+b))))
+}
+
+function fitIsotonicV192(obs = []) {
+  if (obs.length < 25) return { points:[] }
+  const sorted=[...obs].sort((a,b)=>a.p-b.p)
+  const targetBins=Math.min(12,Math.max(5,Math.floor(Math.sqrt(sorted.length))))
+  const size=Math.max(1,Math.ceil(sorted.length/targetBins))
+  let blocks=[]
+  for(let i=0;i<sorted.length;i+=size){
+    const part=sorted.slice(i,i+size)
+    blocks.push({ x:mean(part.map(o=>o.p)), y:mean(part.map(o=>o.y)), w:part.length })
+  }
+  let i=0
+  while(i<blocks.length-1){
+    if(blocks[i].y<=blocks[i+1].y){ i+=1; continue }
+    const a=blocks[i],b=blocks[i+1],w=a.w+b.w
+    blocks.splice(i,2,{x:(a.x*a.w+b.x*b.w)/w,y:(a.y*a.w+b.y*b.w)/w,w})
+    i=Math.max(0,i-1)
+  }
+  return { points:blocks.map(b=>({x:round(b.x*100,1),y:round(clamp(b.y*100,1,99),1),samples:b.w})) }
+}
+function predictIsotonicV192(p, params={}) {
+  const x=safeProbV200(p)*100, pts=(params.points||[]).slice().sort((a,b)=>n(a.x)-n(b.x))
+  if(!pts.length) return safeProbV200(p)
+  if(x<=n(pts[0].x)) return safeProbV200(n(pts[0].y)/100)
+  if(x>=n(pts[pts.length-1].x)) return safeProbV200(n(pts[pts.length-1].y)/100)
+  for(let i=1;i<pts.length;i+=1){
+    if(x>n(pts[i].x)) continue
+    const lo=pts[i-1],hi=pts[i],span=Math.max(.01,n(hi.x)-n(lo.x)),t=(x-n(lo.x))/span
+    return safeProbV200((n(lo.y)+(n(hi.y)-n(lo.y))*t)/100)
+  }
+  return safeProbV200(p)
+}
+
+function evaluateBinaryCalibrationV198(obs = []) {
+  const minTrain=60, block=20
+  if(obs.length < 80) return { samples:obs.length, validationSamples:0, selectedMethod:'RAW', status:'COLLECTING', improvement:0, parameters:{} }
+  const losses={RAW:[],PLATT:[],ISOTONIC:[]}
+  for(let start=minTrain;start<obs.length;start+=block){
+    const train=obs.slice(0,start), test=obs.slice(start,Math.min(obs.length,start+block)); if(!test.length) break
+    const pp=fitPlattV193(train), iso=fitIsotonicV192(train)
+    for(const o of test){
+      losses.RAW.push(logLossBinaryV191(o.p,o.y))
+      losses.PLATT.push(logLossBinaryV191(predictPlattV193(o.p,pp),o.y))
+      losses.ISOTONIC.push(logLossBinaryV191(predictIsotonicV192(o.p,iso),o.y))
+    }
+  }
+  const score=Object.fromEntries(Object.entries(losses).map(([k,v])=>[k,v.length?mean(v):9]))
+  const ordered=Object.entries(score).sort((a,b)=>a[1]-b[1])
+  let selected=ordered[0][0]
+  const improvement=score.RAW-score[selected]
+  if(selected!=='RAW' && improvement<.003) selected='RAW'
+  const fullParams=selected==='PLATT'?fitPlattV193(obs):selected==='ISOTONIC'?fitIsotonicV192(obs):{}
+  return { samples:obs.length, validationSamples:losses.RAW.length, selectedMethod:selected, status:losses.RAW.length>=40?'VALIDATED':'LEARNING', rawLogLoss:round(score.RAW,4), plattLogLoss:round(score.PLATT,4), isotonicLogLoss:round(score.ISOTONIC,4), selectedLogLoss:round(score[selected],4), improvement:round(score.RAW-score[selected],4), parameters:fullParams }
+}
+
+function temperatureScaleV200(probs = [], temp = 1) {
+  const vals=probs.map(p=>Math.pow(Math.max(.0001,p),1/clamp(temp,.6,1.7)))
+  const s=vals.reduce((a,b)=>a+b,0); return vals.map(v=>v/s)
+}
+function bestTemperatureV200(obs = []) {
+  let best={temperature:1,loss:Infinity}
+  for(let t=.70;t<=1.50;t+=.05){
+    const loss=mean(obs.map(o=>-Math.log(Math.max(.005,temperatureScaleV200(o.p,t)[o.y]))))
+    if(loss<best.loss) best={temperature:t,loss}
+  }
+  return { temperature:round(best.temperature,2), loss:round(best.loss,4) }
+}
+function evaluateOneXTwoTemperatureV198(obs = []) {
+  if(obs.length<100) return { samples:obs.length,validationSamples:0,selectedMethod:'RAW',status:'COLLECTING',improvement:0,parameters:{temperature:1} }
+  const minTrain=80,block=25,raw=[],scaled=[]
+  for(let start=minTrain;start<obs.length;start+=block){
+    const train=obs.slice(0,start),test=obs.slice(start,Math.min(obs.length,start+block)),fit=bestTemperatureV200(train)
+    for(const o of test){ raw.push(-Math.log(Math.max(.005,o.p[o.y]))); scaled.push(-Math.log(Math.max(.005,temperatureScaleV200(o.p,fit.temperature)[o.y]))) }
+  }
+  const rawLoss=raw.length?mean(raw):9, scaledLoss=scaled.length?mean(scaled):9, imp=rawLoss-scaledLoss
+  const selected=imp>=.003?'TEMPERATURE':'RAW'
+  const full=bestTemperatureV200(obs)
+  return { samples:obs.length,validationSamples:raw.length,selectedMethod:selected,status:raw.length>=40?'VALIDATED':'LEARNING',rawLogLoss:round(rawLoss,4),temperatureLogLoss:round(scaledLoss,4),selectedLogLoss:round(selected==='TEMPERATURE'?scaledLoss:rawLoss,4),improvement:round(selected==='TEMPERATURE'?imp:0,4),parameters:{temperature:selected==='TEMPERATURE'?full.temperature:1} }
+}
+
+function leagueBayesianPriorsV194(rows = []) {
+  const globals={}
+  for(const key of ['over15','over25','over35','btts']){
+    const obs=binaryObservationsV200(rows,key); globals[key]=obs.length?mean(obs.map(o=>o.y)):.5
+  }
+  const groups=new Map()
+  for(const row of rows){ const league=String(row?.league||'').trim(); if(!league)continue; if(!groups.has(league))groups.set(league,[]); groups.get(league).push(row) }
+  return [...groups.entries()].filter(([,g])=>g.length>=12).map(([league,g])=>{
+    const markets={}
+    for(const key of ['over15','over25','over35','btts']){
+      const obs=binaryObservationsV200(g,key), prior=globals[key], strength=30, hits=obs.reduce((a,o)=>a+o.y,0)
+      markets[key]={samples:obs.length,prior:round(prior*100,1),posterior:round((hits+prior*strength)/(obs.length+strength)*100,1),shrinkage:round(strength/(obs.length+strength),3)}
+    }
+    return {league,samples:g.length,markets}
+  }).sort((a,b)=>b.samples-a.samples).slice(0,30)
+}
+
+function addHierarchicalShrinkV195(profile = {}, leagueSamples = 0) {
+  const shrink=clamp(leagueSamples/(leagueSamples+70),.20,.92)
+  return { ...profile, hierarchicalShrink:round(shrink,3) }
+}
+
+function seasonDecayV196(rows = []) {
+  const current=seasonStartYearV196(new Date().toISOString()), map=new Map()
+  for(const row of rows){ const season=seasonStartYearV196(row.fixture_date||row.settled_at||''); if(!Number.isFinite(season))continue; map.set(season,(map.get(season)||0)+1) }
+  return { currentSeason:current?`${current}/${String(current+1).slice(-2)}`:'UNKNOWN', policy:[{gap:0,weight:1},{gap:1,weight:.55},{gap:2,weight:.25},{gap:'3+',weight:.12}], samples:[...map.entries()].sort((a,b)=>b[0]-a[0]).map(([season,count])=>({season:`${season}/${String(season+1).slice(-2)}`,count,weight:season===current?1:season===current-1?.55:season===current-2?.25:.12})) }
+}
+
+function stackingWeightsV197(experimentRows = []) {
+  const challengers=experimentRows.filter(r=>String(r?.model_role||'').toLowerCase()==='challenger'&&r?.forecast?.components)
+  const sourceNames=['poisson','dixonColes','form','api','web','teamStrength','recent']
+  const profiles={}
+  for(const market of DS_MARKETS_V200){
+    const scores=[]
+    for(const source of sourceNames){
+      const stat=sourceStats(challengers,source,market,90)
+      if(stat.samples<20||!(stat.brier>0)) continue
+      const confidence=clamp(stat.effectiveSamples/(stat.effectiveSamples+80),.15,.85)
+      const inverse=1/Math.max(.08,stat.brier)
+      scores.push({source,samples:stat.samples,brier:stat.brier,raw:inverse,confidence})
+    }
+    const total=scores.reduce((a,b)=>a+b.raw,0)||1
+    profiles[market]=scores.map(r=>({source:r.source,samples:r.samples,brier:r.brier,weight:round((.5*(1/scores.length||0)+.5*(r.raw/total))*r.confidence + (1-r.confidence)*(1/Math.max(1,scores.length)),3)}))
+  }
+  return profiles
+}
+
+function bootstrapConfidenceV199(rows = [], reps = 180) {
+  const records=rows.flatMap(row=>predictionRecords(row,'calibrated')).filter(r=>Number.isFinite(n(r.brier)))
+  if(records.length<30) return {samples:records.length,reps:0,level:'PENDING',brier95:{low:0,high:0}}
+  let seed=(records.length*2654435761)>>>0
+  const rand=()=>{ seed=(Math.imul(seed,1664525)+1013904223)>>>0; return seed/4294967296 }
+  const vals=[]
+  for(let r=0;r<reps;r+=1){ let sum=0; for(let i=0;i<records.length;i+=1) sum+=n(records[Math.floor(rand()*records.length)]?.brier); vals.push(sum/records.length) }
+  vals.sort((a,b)=>a-b)
+  const low=quantile(vals,.025),high=quantile(vals,.975),width=high-low
+  return {samples:records.length,reps,level:width<=.03?'HIGH':width<=.06?'MEDIUM':'LOW',brier95:{low:round(low,4),high:round(high,4),width:round(width,4)}}
+}
+
+function buildDataScienceV200(rows = [], experimentRows = [], leagueTrust = []) {
+  const logs=rows.flatMap(rowLogLossV191)
+  const logLoss=logs.length?mean(logs.map(r=>r.logLoss)):0
+  const marketProfiles=[]
+  const oneProfile=evaluateOneXTwoTemperatureV198(oneXTwoObservationsV200(rows))
+  marketProfiles.push({key:'oneXTwo',label:'1X2',...oneProfile,hierarchicalShrink:1})
+  for(const key of ['over15','over25','over35','btts']) marketProfiles.push({key,label:marketLabels[key],...evaluateBinaryCalibrationV198(binaryObservationsV200(rows,key)),hierarchicalShrink:1})
+  const leagueGroups=new Map()
+  for(const row of rows){const league=String(row?.league||'').trim();if(!league)continue;if(!leagueGroups.has(league))leagueGroups.set(league,[]);leagueGroups.get(league).push(row)}
+  const leagueProfiles=[...leagueGroups.entries()].filter(([,g])=>g.length>=50).map(([league,g])=>({
+    league,samples:g.length,markets:[
+      addHierarchicalShrinkV195({key:'oneXTwo',label:'1X2',...evaluateOneXTwoTemperatureV198(oneXTwoObservationsV200(g))},g.length),
+      ...['over15','over25','over35','btts'].map(key=>addHierarchicalShrinkV195({key,label:marketLabels[key],...evaluateBinaryCalibrationV198(binaryObservationsV200(g,key))},g.length))
+    ]
+  })).sort((a,b)=>b.samples-a.samples).slice(0,20)
+  const validated=marketProfiles.filter(p=>p.status==='VALIDATED')
+  const improvements=validated.map(p=>n(p.improvement))
+  const avgImp=improvements.length?mean(improvements):0
+  const overfitScore=Math.round(clamp(100-(rows.length<100?35:0)-validated.filter(p=>n(p.improvement)<0).length*15-(avgImp<.001?15:0),0,100))
+  const overfitLevel=overfitScore>=78?'LOW':overfitScore>=58?'MEDIUM':'HIGH'
+  const winner=validated.filter(p=>p.selectedMethod!=='RAW').length>=2?'CALIBRATED_STACK':'BASE'
+  const bootstrap=bootstrapConfidenceV199(rows)
+  const stacking=stackingWeightsV197(experimentRows)
+  return {
+    version:'BETAI_DATA_SCIENCE_LAB_V200',
+    modules:['V191_LOG_LOSS','V192_ISOTONIC','V193_PLATT','V194_BAYESIAN_PRIORS','V195_HIERARCHICAL','V196_SEASON_DECAY','V197_STACKING','V198_OOS_WALK_FORWARD','V199_BOOTSTRAP','V200_AUTO_SELECTION'],
+    decisionQuality:{
+      samples:rows.length,graded:logs.length,logLoss:round(logLoss,4),brier:round(mean(logs.map(r=>r.brier)),4),
+      clvSamples:n(rows.filter(r=>r?.settlement?.clv?.qualifiedClosing).length),
+      positiveClvRate: (()=>{const c=rows.map(r=>r?.settlement?.clv).filter(x=>x?.qualifiedClosing&&Number.isFinite(Number(x?.clvPct)));return c.length?round(c.filter(x=>Number(x.clvPct)>0).length/c.length*100,1):0})(),
+      abstentions:rows.filter(r=>Boolean(r?.forecast?.reliabilityV190?.abstention?.abstain||r?.forecast?.professionalLab?.decisionCard?.abstention)).length,
+      abstentionRate:rows.length?round(rows.filter(r=>Boolean(r?.forecast?.reliabilityV190?.abstention?.abstain||r?.forecast?.professionalLab?.decisionCard?.abstention)).length/rows.length*100,1):0
+    },
+    calibration:{marketProfiles,leagueProfiles},
+    bayesianPriors:leagueBayesianPriorsV194(rows),
+    seasonDecay:seasonDecayV196(rows),
+    stacking,
+    bootstrap,
+    overfittingGuard:{score:overfitScore,level:overfitLevel,validatedMarkets:validated.length,avgOosLogLossLift:round(avgImp,4),weightShrinkage:'ACTIVE'},
+    autoSelection:{status:rows.length>=120&&validated.length>=3?'VALIDATED':'COLLECTING',winner,validatedMarkets:validated.length,reason:rows.length<120?`Potrzeba min. 120 meczów (${rows.length}/120).`:winner==='CALIBRATED_STACK'?'Co najmniej 2 kalibratory poprawiają log loss out-of-sample.':'Brak stabilnej przewagi kalibracji nad bazą.'}
+  }
+}
+
+async function fetchIntegrityControlV190(supabase) {
+  const safeCount=async(table,filters=[])=>{let q=supabase.from(table).select('*',{count:'exact',head:true});for(const [op,col,val] of filters){q=q[op](col,val)};const {count,error}=await q;if(error)throw error;return n(count)}
+  try{
+    const freezes=await safeCount('match_prediction_freeze_ledger')
+    const leaks=await safeCount('match_integrity_events',[['eq','event_type','data_leakage_blocked']])
+    const duplicates=await safeCount('match_integrity_events',[['eq','event_type','duplicate_fixture']])
+    const mismatches=await safeCount('match_integrity_events',[['eq','event_type','settlement_fixture_mismatch']])
+    let health='HEALTHY'; if(leaks+mismatches>0) health='WATCH'; if(mismatches>=3) health='CRITICAL'
+    return {version:'BETAI_RELIABILITY_CONTROL_V190',health,freezeSnapshots:freezes,leakageBlocks:leaks,duplicateFixtures:duplicates,settlementMismatches:mismatches,settlementIntegrity:mismatches===0?'100% CLEAR':'REVIEW'}
+  }catch(error){
+    if(/relation .* does not exist|could not find the table|schema cache/i.test(String(error?.message||''))) return {version:'BETAI_RELIABILITY_CONTROL_V190',health:'PENDING',freezeSnapshots:0,leakageBlocks:0,duplicateFixtures:0,settlementMismatches:0,settlementIntegrity:'PENDING'}
+    return {version:'BETAI_RELIABILITY_CONTROL_V190',health:'PENDING',freezeSnapshots:0,leakageBlocks:0,duplicateFixtures:0,settlementMismatches:0,settlementIntegrity:'PENDING'}
+  }
+}
+
+async function persistDataScienceProfilesV200(supabase, ds = {}) {
+  const rows=[]
+  for(const p of ds?.calibration?.marketProfiles||[]) rows.push({profile_key:`v200:market:${p.key}`,model_version:'BETAI_PREDICTION_ENGINE_4_V200',profile_type:'market',league:null,market_key:p.key,season_key:ds?.seasonDecay?.currentSeason||null,method:p.selectedMethod||'RAW',sample_size:n(p.samples),log_loss:n(p.selectedLogLoss||p.rawLogLoss),brier:null,parameters:p.parameters||{},validation:{status:p.status,validationSamples:p.validationSamples,improvement:p.improvement},updated_at:new Date().toISOString()})
+  for(const l of ds?.calibration?.leagueProfiles||[]) for(const p of l.markets||[]) rows.push({profile_key:`v200:league:${l.league}:${p.key}`,model_version:'BETAI_PREDICTION_ENGINE_4_V200',profile_type:'league_market',league:l.league,market_key:p.key,season_key:ds?.seasonDecay?.currentSeason||null,method:p.selectedMethod||'RAW',sample_size:n(p.samples),log_loss:n(p.selectedLogLoss||p.rawLogLoss),brier:null,parameters:{...(p.parameters||{}),hierarchicalShrink:p.hierarchicalShrink},validation:{status:p.status,validationSamples:p.validationSamples,improvement:p.improvement},updated_at:new Date().toISOString()})
+  if(!rows.length) return {available:false,profiles:0}
+  const {error}=await supabase.from('match_data_science_profiles').upsert(rows,{onConflict:'profile_key'})
+  if(error){if(/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message||'')))return{available:false,profiles:0};throw error}
+  return {available:true,profiles:rows.length,updatedAt:new Date().toISOString()}
+}
+
 exports.handler = async function handler(event = {}) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
   if (event.httpMethod && event.httpMethod !== 'GET') return json(405, { ok: false, error: 'Method not allowed' })
@@ -1329,6 +1625,9 @@ exports.handler = async function handler(event = {}) {
     const teamStrength = buildTeamStrengthV164(rows)
     const selfLearning = buildSelfLearningV174(experimentRows)
     try { selfLearning.profileStorage = await persistSelfLearningProfilesV174(supabase, selfLearning) } catch (_) { selfLearning.profileStorage = { available:false, changed:0, updatedAt:null } }
+    const dataScience = buildDataScienceV200(rows, experimentRows, leagueTrust)
+    try { dataScience.profileStorage = await persistDataScienceProfilesV200(supabase, dataScience) } catch (_) { dataScience.profileStorage = { available:false, profiles:0 } }
+    const integrityControl = await fetchIntegrityControlV190(supabase)
     let registry = null
     try { registry = await fetchModelRegistryV173(supabase) } catch (_) {}
     let governance = buildGovernanceV173(experimentRows, registry)
@@ -1340,6 +1639,8 @@ exports.handler = async function handler(event = {}) {
     controlCenter.activeModel = governance.activeVersion === SELF_MODEL_V180 ? 'challenger' : 'champion'
     if (governance.action === 'PROMOTE') controlCenter.alerts.unshift('SELF LEARNING: V180 został automatycznie promowany po walidacji walk-forward.')
     if (governance.action === 'ROLLBACK') controlCenter.alerts.unshift('SELF LEARNING: wykonano automatyczny rollback do stabilnego Championa.')
+    if (integrityControl.health === 'CRITICAL') controlCenter.alerts.unshift('DATA INTEGRITY: Reliability Control Center ma status CRITICAL.')
+    if (dataScience.overfittingGuard?.level === 'HIGH') controlCenter.alerts.unshift('DATA SCIENCE: Overfitting Guard ma status HIGH — wagi są ograniczane shrinkage.')
     return json(200, {
       ok: true,
       available: true,
@@ -1358,6 +1659,8 @@ exports.handler = async function handler(event = {}) {
       statisticalConfidence,
       autoGate,
       teamStrength,
+      integrityControl,
+      dataScience,
       selfLearning,
       modelGovernance: governance,
       modelBrain: selfLearning.brainDashboard,
@@ -1369,4 +1672,4 @@ exports.handler = async function handler(event = {}) {
   }
 }
 
-exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio, buildErrorAnalysis, buildPortfolioRisk, buildControlCenter, buildChampionChallengerV160, buildStatisticalConfidenceV161, buildAutoGateV162, buildTeamStrengthV164, buildSelfLearningV174, buildGovernanceV173, buildAdaptiveCalibration, buildMarketWeightProfile, persistSelfLearningProfilesV174 }
+exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio, buildErrorAnalysis, buildPortfolioRisk, buildControlCenter, buildChampionChallengerV160, buildStatisticalConfidenceV161, buildAutoGateV162, buildTeamStrengthV164, buildSelfLearningV174, buildGovernanceV173, buildAdaptiveCalibration, buildMarketWeightProfile, persistSelfLearningProfilesV174, buildDataScienceV200, evaluateBinaryCalibrationV198, evaluateOneXTwoTemperatureV198, fitPlattV193, fitIsotonicV192, bootstrapConfidenceV199, leagueBayesianPriorsV194 }

@@ -230,6 +230,76 @@ async function captureModelExperimentsV160(supabase, fixtureId, fixtureDate, bod
   return { captured: true, rows: rows.length }
 }
 
+
+
+function normIdentityV183(value = '') {
+  return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
+}
+function shaV182(value = '') { return crypto.createHash('sha256').update(String(value)).digest('hex') }
+function seasonKeyV184(dateLike = '') {
+  const d = new Date(dateLike); if (!Number.isFinite(d.getTime())) return null
+  const y = d.getUTCFullYear(), start = d.getUTCMonth() >= 6 ? y : y - 1
+  return `${start}/${String(start + 1).slice(-2)}`
+}
+async function integrityEventV183(supabase, fixtureId, eventType, severity = 'info', detail = {}) {
+  try { await supabase.from('match_integrity_events').insert({ fixture_id:String(fixtureId), event_type:eventType, severity, detail, created_at:new Date().toISOString() }) } catch (_) {}
+}
+async function assessFixtureIntegrityV183(supabase, fixtureId, body = {}, forecast = {}, existing = null) {
+  const kickoff = body.fixtureDate || existing?.fixture_date || null
+  const kickoffMs = Date.parse(kickoff || '')
+  const generatedMs = Date.parse(forecast?.generatedAt || '')
+  const now = Date.now()
+  const forecastFixtureId = String(forecast?.fixtureId || '')
+  const home = clean(body?.homeTeam, 180), away = clean(body?.awayTeam, 180), league = clean(body?.league, 180)
+  const issues=[]
+  if (forecastFixtureId && forecastFixtureId !== String(fixtureId)) issues.push('forecast_fixture_id_mismatch')
+  if (!home || !away || normIdentityV183(home) === normIdentityV183(away)) issues.push('invalid_teams')
+  if (!Number.isFinite(kickoffMs)) issues.push('invalid_kickoff')
+  if (Number.isFinite(generatedMs) && Number.isFinite(kickoffMs) && generatedMs >= kickoffMs) issues.push('generated_after_kickoff')
+  if (Number.isFinite(generatedMs) && generatedMs > now + 2 * 60 * 1000) issues.push('generated_in_future')
+  const duplicateKey = shaV182(`${normIdentityV183(league)}|${normIdentityV183(home)}|${normIdentityV183(away)}|${kickoff || ''}`).slice(0,40)
+  let duplicateFixtureId = null
+  try {
+    const { data } = await supabase.from('match_fixture_integrity').select('fixture_id').eq('duplicate_key', duplicateKey).neq('fixture_id', String(fixtureId)).limit(1).maybeSingle()
+    duplicateFixtureId = data?.fixture_id ? String(data.fixture_id) : null
+  } catch (_) {}
+  if (duplicateFixtureId) issues.push('duplicate_fixture')
+  return { clear:issues.length===0,issues,duplicateKey,duplicateFixtureId,kickoff,kickoffMs,generatedAt:Number.isFinite(generatedMs)?new Date(generatedMs).toISOString():null,seasonKey:seasonKeyV184(kickoff) }
+}
+async function persistFixtureIntegrityV183(supabase, fixtureId, body = {}, assessment = {}, current = {}) {
+  try {
+    const now=new Date().toISOString()
+    const row={
+      fixture_id:String(fixtureId), canonical_fixture_date:assessment.kickoff||null,
+      home_team:clean(body?.homeTeam,180), away_team:clean(body?.awayTeam,180), league:clean(body?.league,180), country:clean(body?.country,120),
+      duplicate_key:assessment.duplicateKey||null, season_key:assessment.seasonKey||null,
+      integrity_status:assessment.clear?'clear':'review', leakage_status:assessment.issues?.some(x=>x.includes('generated_')||x.includes('fixture_id_mismatch'))?'blocked':'clear',
+      freeze_count:Math.max(0,Number(current?.freeze_count||0)), settlement_count:Math.max(0,Number(current?.settlement_count||0)),
+      metadata:{issues:assessment.issues||[],duplicateFixtureId:assessment.duplicateFixtureId||null}, first_seen_at:current?.first_seen_at||now,last_seen_at:now,updated_at:now
+    }
+    await supabase.from('match_fixture_integrity').upsert(row,{onConflict:'fixture_id'})
+  } catch (_) {}
+}
+async function captureFreezeLedgerV182(supabase, fixtureId, body = {}, forecast = {}, assessment = {}, selectedForBacktest = false, reason = '') {
+  const capturedAt=new Date().toISOString()
+  const payload={fixtureId:String(fixtureId),fixtureDate:assessment.kickoff||body.fixtureDate||null,homeTeam:clean(body?.homeTeam,180),awayTeam:clean(body?.awayTeam,180),league:clean(body?.league,180),country:clean(body?.country,120),forecast}
+  const freezeHash=shaV182(JSON.stringify(payload))
+  const row={
+    fixture_id:String(fixtureId), fixture_date:assessment.kickoff||body.fixtureDate||null,
+    home_team:clean(body?.homeTeam,180),away_team:clean(body?.awayTeam,180),league:clean(body?.league,180),country:clean(body?.country,120),season_key:assessment.seasonKey||null,
+    captured_at:capturedAt,generated_at:assessment.generatedAt||forecast?.generatedAt||null,input_cutoff_at:capturedAt,
+    model_version:clean(forecast?.version||'BETAI_FORECAST_V200',100),active_model:clean(forecast?.activeModel||'champion',40),data_quality:Math.max(0,Math.min(100,Math.round(Number(forecast?.dataQuality||0)))),
+    freeze_hash:freezeHash,selected_for_backtest:Boolean(selectedForBacktest),selection_reason:clean(reason,160),forecast,integrity:{clear:assessment.clear,issues:assessment.issues||[],duplicateKey:assessment.duplicateKey||null},
+  }
+  const {error}=await supabase.from('match_prediction_freeze_ledger').upsert(row,{onConflict:'freeze_hash',ignoreDuplicates:true})
+  if(error){if(/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message||'')))return{captured:false,reason:'table_missing'};throw error}
+  try {
+    const {data:current}=await supabase.from('match_fixture_integrity').select('freeze_count,first_seen_at,settlement_count').eq('fixture_id',String(fixtureId)).maybeSingle()
+    await supabase.from('match_fixture_integrity').update({freeze_count:Number(current?.freeze_count||0)+1,last_seen_at:capturedAt,updated_at:capturedAt}).eq('fixture_id',String(fixtureId))
+  } catch (_) {}
+  return {captured:true,freezeHash}
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
   if (event.httpMethod !== 'POST') return json(405, { ok: false, error: 'Method not allowed' })
@@ -255,12 +325,30 @@ exports.handler = async function(event) {
     return json(500, { ok: false, error: readError.message })
   }
 
+  // V181–V184: integralność jest oceniana przed jakimkolwiek zapisem do historii modelu.
+  const assessment = await assessFixtureIntegrityV183(supabase, fixtureId, body, forecast, existing)
+  let integrityCurrent = null
+  try { const { data } = await supabase.from('match_fixture_integrity').select('freeze_count,settlement_count,first_seen_at').eq('fixture_id', fixtureId).maybeSingle(); integrityCurrent = data || null } catch (_) {}
+  await persistFixtureIntegrityV183(supabase, fixtureId, body, assessment, integrityCurrent || {})
+  if (!assessment.clear) {
+    const leakage = assessment.issues.some(x => x === 'generated_after_kickoff' || x === 'generated_in_future' || x === 'forecast_fixture_id_mismatch')
+    await integrityEventV183(supabase, fixtureId, leakage ? 'data_leakage_blocked' : assessment.issues.includes('duplicate_fixture') ? 'duplicate_fixture' : 'fixture_integrity_blocked', leakage ? 'critical' : 'warning', assessment)
+    return json(200, { ok:true, saved:false, frozen:true, integrityBlocked:true, reason:assessment.issues[0] || 'integrity_blocked', integrity:assessment, dataQuality:Number(existing?.data_quality || newQuality || 0) })
+  }
+
+  // V183: jeżeli API przesunęło ten sam fixture na nowy, przyszły termin, stary pre-match
+  // snapshot nie może blokować świeżej analizy. Zmiana jest audytowana jako reschedule.
+  const existingKickoffMs = Date.parse(existing?.fixture_date || '')
+  const requestedKickoffMsV200 = Date.parse(body.fixtureDate || '')
+  const rescheduled = Boolean(existing && !existing?.settled_at && Number.isFinite(existingKickoffMs) && Number.isFinite(requestedKickoffMsV200) && requestedKickoffMsV200 > Date.now() && Math.abs(requestedKickoffMsV200 - existingKickoffMs) >= 2 * 60 * 60 * 1000)
+  if (rescheduled) await integrityEventV183(supabase, fixtureId, 'fixture_rescheduled', 'info', { from:existing.fixture_date,to:body.fixtureDate })
+
   // WERSJA 137: prognoza jest pre-match. Po kickoffie snapshot jest zamrożony
   // i nigdy nie jest nadpisywany danymi, które mogły już znać przebieg meczu.
-  const kickoffRaw = existing?.fixture_date || body.fixtureDate || ''
+  const kickoffRaw = rescheduled ? (body.fixtureDate || '') : (existing?.fixture_date || body.fixtureDate || '')
   const kickoffMs = Date.parse(kickoffRaw)
   const afterKickoff = Number.isFinite(kickoffMs) && Date.now() >= kickoffMs
-  if (existing?.settled_at || afterKickoff) {
+  if (existing?.settled_at || (afterKickoff && !rescheduled)) {
     return json(200, {
       ok: true,
       saved: false,
@@ -277,13 +365,15 @@ exports.handler = async function(event) {
     return json(200, { ok: true, saved: false, reused: false, frozen: true, reason: 'cannot_create_post_kickoff_snapshot', dataQuality: 0 })
   }
 
-  if (existing && Number(existing.data_quality || 0) > newQuality) {
+  if (existing && !rescheduled && Number(existing.data_quality || 0) > newQuality) {
+    let freezeLedger = null
+    try { freezeLedger = await captureFreezeLedgerV182(supabase, fixtureId, body, forecast, assessment, false, 'existing_snapshot_has_higher_quality') } catch (_) {}
     try { await captureOddsHistory(supabase, fixtureId, body.fixtureDate || existing.fixture_date || null, forecast) } catch (_) {}
     let oddsHistory = null
     try { oddsHistory = await getOddsHistorySummary(supabase, fixtureId, body.fixtureDate || existing.fixture_date || null) } catch (_) {}
     let audit = null
     try { audit = await capturePredictionAuditV153(supabase, fixtureId, body.fixtureDate || existing.fixture_date || null, body, forecast) } catch (_) {}
-    return json(200, { ok: true, saved: false, reused: true, reason: 'existing_snapshot_has_higher_quality', dataQuality: existing.data_quality, oddsHistory, audit })
+    return json(200, { ok: true, saved: false, reused: true, reason: 'existing_snapshot_has_higher_quality', dataQuality: existing.data_quality, oddsHistory, audit, freezeLedger, integrity:assessment })
   }
 
   const now = new Date().toISOString()
@@ -309,6 +399,9 @@ exports.handler = async function(event) {
 
   if (upsertError) return json(500, { ok: false, error: upsertError.message })
 
+  let freezeLedger = null
+  try { freezeLedger = await captureFreezeLedgerV182(supabase, fixtureId, body, forecast, assessment, true, rescheduled ? 'rescheduled_pre_match_snapshot' : 'selected_pre_match_snapshot') } catch (_) {}
+
   // V142 — store the odds we actually saw with the frozen pre-match forecast.
   // This reuses already-fetched odds; it does not make another API-Football request.
   try { await captureOddsHistory(supabase, fixtureId, body.fixtureDate || null, forecast) } catch (_) {}
@@ -321,5 +414,5 @@ exports.handler = async function(event) {
   let modelExperiments = null
   try { modelExperiments = await captureModelExperimentsV160(supabase, fixtureId, body.fixtureDate || null, body, forecast) } catch (_) {}
 
-  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality, oddsHistory, shadowBet, audit, modelExperiments })
+  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality, oddsHistory, shadowBet, audit, modelExperiments, freezeLedger, integrity:assessment, rescheduled })
 }
