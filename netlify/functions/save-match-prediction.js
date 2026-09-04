@@ -16,9 +16,7 @@ function json(statusCode, body) {
 }
 
 function clean(value, max = 300) {
-  let raw = value
-  if (raw && typeof raw === 'object') raw = raw.name ?? raw.label ?? raw.title ?? raw.value ?? ''
-  return String(raw == null ? '' : raw).trim().slice(0, max)
+  return String(value == null ? '' : value).trim().slice(0, max)
 }
 
 function getClient() {
@@ -106,7 +104,7 @@ async function getOddsHistorySummary(supabase, fixtureId, fixtureDate) {
 
 
 async function captureShadowBetV151(supabase, fixtureId, fixtureDate, body = {}, forecast = {}) {
-  const card = forecast?.validationLab?.decisionCard || forecast?.professionalLab?.decisionCard || null
+  const card = forecast?.professionalLab?.decisionCard || null
   if (!card || String(card?.decision || '').toUpperCase() !== 'BET') return { captured: false, reason: 'not_a_bet' }
   const marketKey = clean(card?.key, 50)
   const bookmaker = clean(card?.bookmaker || 'Bookmaker', 120)
@@ -123,7 +121,7 @@ async function captureShadowBetV151(supabase, fixtureId, fixtureDate, body = {},
     market_label: clean(card?.label || marketKey, 120),
     bookmaker,
     odds,
-    model_version: clean(forecast?.version || 'BETAI_FORECAST_V158', 80),
+    model_version: clean(forecast?.version || 'BETAI_FORECAST_V152', 80),
     raw_probability: Number(card?.rawProbability || 0),
     calibrated_probability: Number(card?.calibratedProbability || 0),
     uncertainty_pp: Number(card?.uncertaintyPp || 0),
@@ -150,35 +148,26 @@ async function captureShadowBetV151(supabase, fixtureId, fixtureDate, body = {},
 }
 
 
-function auditSignatureV153(forecast = {}) {
-  const compact = {
-    version: forecast?.version || '',
-    dataQuality: forecast?.dataQuality || 0,
-    oneXTwo: forecast?.oneXTwo || null,
-    goals: forecast?.goals || null,
-    xg: forecast?.xg || null,
-    reliability: forecast?.reliability || null,
-    professionalLab: forecast?.professionalLab?.decisionCard || null,
-    validationLab: forecast?.validationLab?.decisionCard || null,
-    ensemble: forecast?.validationLab?.ensemble || null
-  }
-  return crypto.createHash('sha256').update(JSON.stringify(compact)).digest('hex')
-}
 
-async function captureAuditTrailV153(supabase, fixtureId, fixtureDate, body = {}, forecast = {}) {
-  const signature = auditSignatureV153(forecast)
-  const decision = forecast?.validationLab?.decisionCard || forecast?.professionalLab?.decisionCard || {}
-  const sourceSnapshot = {
-    consensus: body?.consensus && typeof body.consensus === 'object' ? body.consensus : {},
-    sourceWeights: forecast?.sourceWeights || {},
+async function capturePredictionAuditV153(supabase, fixtureId, fixtureDate, body = {}, forecast = {}) {
+  const compact = {
+    modelVersion: clean(forecast?.version || 'BETAI_FORECAST_V158', 80),
+    generatedAt: forecast?.generatedAt || null,
+    dataQuality: Number(forecast?.dataQuality || 0),
+    xg: forecast?.xg || null,
+    raw: forecast?.raw || null,
+    calibrated: { oneXTwo: forecast?.oneXTwo || null, goals: forecast?.goals || null },
+    sourceWeights: forecast?.sourceWeights || null,
+    ensembleValidation: forecast?.ensembleValidation || null,
+    reliability: forecast?.reliability || null,
+    professionalLab: forecast?.professionalLab || null,
+    valueTop3: Array.isArray(forecast?.value?.top3) ? forecast.value.top3.slice(0, 3) : [],
+    consensus: forecast?.consensus || null,
     factors: Array.isArray(forecast?.factors) ? forecast.factors.slice(0, 12) : [],
-    modelInputs: forecast?.modelInputs || {},
-    odds: Array.isArray(forecast?.value?.top3) ? forecast.value.top3.slice(0, 6).map(item => ({
-      key: clean(item?.key, 50), bookmaker: clean(item?.bookmaker || 'Bookmaker', 120), odds: Number(item?.bookmakerOdds || 0),
-      probability: Number(item?.probability || 0), noVig: item?.noVigImplied == null ? null : Number(item.noVigImplied),
-      edgePp: Number(item?.edgePp || 0), evPct: Number(item?.expectedValuePct || 0)
-    })) : []
+    modelInputs: forecast?.modelInputs || null
   }
+  const hashInput = JSON.stringify({ fixtureId, compact })
+  const auditHash = crypto.createHash('sha256').update(hashInput).digest('hex').slice(0, 40)
   const row = {
     fixture_id: String(fixtureId),
     fixture_date: fixtureDate || null,
@@ -187,25 +176,20 @@ async function captureAuditTrailV153(supabase, fixtureId, fixtureDate, body = {}
     league: clean(body?.league, 180),
     country: clean(body?.country, 120),
     model_version: clean(forecast?.version || 'BETAI_FORECAST_V158', 80),
-    audit_version: 'BETAI_AUDIT_TRAIL_V1',
-    signature,
+    audit_hash: auditHash,
     data_quality: Math.max(0, Math.min(100, Math.round(Number(forecast?.dataQuality || 0)))),
-    snapshot: {
-      generatedAt: forecast?.generatedAt || null, xg: forecast?.xg || null, raw: forecast?.raw || null,
-      oneXTwo: forecast?.oneXTwo || null, goals: forecast?.goals || null, fairOdds: forecast?.fairOdds || null,
-      calibration: forecast?.calibration || null, reliability: forecast?.reliability || null,
-      professionalLab: forecast?.professionalLab || null, validationLab: forecast?.validationLab || null
-    },
-    sources: sourceSnapshot,
-    decision,
-    created_at: new Date().toISOString()
+    decision: clean(forecast?.professionalLab?.decisionCard?.decision || forecast?.value?.state || '', 40),
+    market_key: clean(forecast?.professionalLab?.decisionCard?.key || forecast?.value?.top?.key || '', 60),
+    payload: compact
   }
-  const { error } = await supabase.from('match_prediction_audit').upsert(row, { onConflict: 'fixture_id,signature', ignoreDuplicates: true })
+  const { error } = await supabase
+    .from('match_prediction_audit')
+    .upsert(row, { onConflict: 'fixture_id,audit_hash', ignoreDuplicates: true })
   if (error) {
     if (/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) return { captured: false, reason: 'table_missing' }
     throw error
   }
-  return { captured: true, signature }
+  return { captured: true, auditHash }
 }
 
 exports.handler = async function(event) {
@@ -259,7 +243,9 @@ exports.handler = async function(event) {
     try { await captureOddsHistory(supabase, fixtureId, body.fixtureDate || existing.fixture_date || null, forecast) } catch (_) {}
     let oddsHistory = null
     try { oddsHistory = await getOddsHistorySummary(supabase, fixtureId, body.fixtureDate || existing.fixture_date || null) } catch (_) {}
-    return json(200, { ok: true, saved: false, reused: true, reason: 'existing_snapshot_has_higher_quality', dataQuality: existing.data_quality, oddsHistory })
+    let audit = null
+    try { audit = await capturePredictionAuditV153(supabase, fixtureId, body.fixtureDate || existing.fixture_date || null, body, forecast) } catch (_) {}
+    return json(200, { ok: true, saved: false, reused: true, reason: 'existing_snapshot_has_higher_quality', dataQuality: existing.data_quality, oddsHistory, audit })
   }
 
   const now = new Date().toISOString()
@@ -292,8 +278,8 @@ exports.handler = async function(event) {
   try { oddsHistory = await getOddsHistorySummary(supabase, fixtureId, body.fixtureDate || null) } catch (_) {}
   let shadowBet = null
   try { shadowBet = await captureShadowBetV151(supabase, fixtureId, body.fixtureDate || null, body, forecast) } catch (_) {}
-  let auditTrail = null
-  try { auditTrail = await captureAuditTrailV153(supabase, fixtureId, body.fixtureDate || null, body, forecast) } catch (_) {}
+  let audit = null
+  try { audit = await capturePredictionAuditV153(supabase, fixtureId, body.fixtureDate || null, body, forecast) } catch (_) {}
 
-  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality, oddsHistory, shadowBet, auditTrail })
+  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality, oddsHistory, shadowBet, audit })
 }

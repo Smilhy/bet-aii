@@ -430,91 +430,6 @@ function aggregateShadowPortfolio(rows = []) {
   }
 }
 
-
-function quantileV157(values = [], q = 0.5) {
-  const rows = values.map(Number).filter(Number.isFinite).sort((a, b) => a - b)
-  if (!rows.length) return 0
-  const pos = (rows.length - 1) * Math.max(0, Math.min(1, q))
-  const lo = Math.floor(pos), hi = Math.ceil(pos)
-  if (lo === hi) return rows[lo]
-  return rows[lo] + (rows[hi] - rows[lo]) * (pos - lo)
-}
-
-function seededRandomV157(seed = 123456789) {
-  let state = (Number(seed) >>> 0) || 123456789
-  return () => {
-    state = (1664525 * state + 1013904223) >>> 0
-    return state / 4294967296
-  }
-}
-
-function buildPortfolioRiskSimulatorV157(rows = [], simulations = 1000) {
-  const settled = rows.filter(row => ['won', 'lost'].includes(String(row?.status || '').toLowerCase()))
-  const returns = settled.map(row => {
-    const stake = Math.max(0.01, n(row?.stake_units, 1))
-    return n(row?.profit_units, 0) / stake
-  }).filter(Number.isFinite)
-  if (returns.length < 30) return { available: false, status: 'PENDING', samples: returns.length, simulations: 0, horizons: [] }
-
-  const rng = seededRandomV157(0xB37A1 + returns.length * 97)
-  const horizons = [50, 100, 250].map(horizon => {
-    const rois = [], drawdowns = []
-    for (let sim = 0; sim < simulations; sim += 1) {
-      let equity = 0, peak = 0, maxDrawdown = 0
-      for (let i = 0; i < horizon; i += 1) {
-        const sample = returns[Math.floor(rng() * returns.length)]
-        equity += sample
-        peak = Math.max(peak, equity)
-        maxDrawdown = Math.max(maxDrawdown, peak - equity)
-      }
-      rois.push(equity / horizon * 100)
-      drawdowns.push(maxDrawdown)
-    }
-    return {
-      horizon,
-      medianRoi: round(quantileV157(rois, 0.50), 1),
-      p10Roi: round(quantileV157(rois, 0.10), 1),
-      p90Roi: round(quantileV157(rois, 0.90), 1),
-      medianDrawdown: round(quantileV157(drawdowns, 0.50), 1),
-      p90Drawdown: round(quantileV157(drawdowns, 0.90), 1)
-    }
-  })
-  return { available: true, status: 'READY', samples: returns.length, simulations, horizons, method: 'bootstrap historical 1u returns' }
-}
-
-async function fetchErrorAnalysisV154(supabase, limit = 1000) {
-  const { data, error } = await supabase
-    .from('match_prediction_error_analysis')
-    .select('fixture_id,classification,severity,summary,market_key,league,clv_pct,created_at')
-    .order('created_at', { ascending: false })
-    .limit(Math.max(50, Math.min(5000, limit)))
-  if (error) {
-    if (/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) return { total: 0, categories: [], recent: [] }
-    throw error
-  }
-  const rows = Array.isArray(data) ? data : []
-  const map = new Map()
-  for (const row of rows) {
-    const key = String(row?.classification || 'OTHER')
-    map.set(key, (map.get(key) || 0) + 1)
-  }
-  const categories = [...map.entries()].map(([classification, count]) => ({ classification, count })).sort((a, b) => b.count - a.count)
-  return {
-    total: rows.length,
-    categories,
-    recent: rows.slice(0, 12).map(row => ({
-      fixtureId: row.fixture_id,
-      classification: row.classification,
-      severity: row.severity,
-      summary: row.summary,
-      marketKey: row.market_key,
-      league: row.league,
-      clvPct: row.clv_pct,
-      createdAt: row.created_at
-    }))
-  }
-}
-
 async function fetchShadowBets(supabase, limit = 5000) {
   const { data, error } = await supabase
     .from('match_shadow_bets')
@@ -548,6 +463,235 @@ async function fetchSettled(supabase, limit = 5000) {
   return rows
 }
 
+
+
+// WERSJA 154 / 157 / 158 — walidacja modelu, analiza błędów i risk lab.
+function resultForMarketKey(row = {}, key = '') {
+  const actual = outcomes(row)
+  if (!actual) return null
+  const map = {
+    home: actual.home,
+    draw: actual.draw,
+    away: actual.away,
+    over15: actual.over15,
+    under15: !actual.over15,
+    over25: actual.over25,
+    under25: !actual.over25,
+    over35: actual.over35,
+    under35: !actual.over35,
+    btts: actual.btts,
+    bttsYes: actual.btts,
+    bttsNo: !actual.btts
+  }
+  return Object.prototype.hasOwnProperty.call(map, key) ? Boolean(map[key]) : null
+}
+
+function primaryDecisionCandidate(row = {}) {
+  const forecast = row?.forecast || {}
+  const card = forecast?.professionalLab?.decisionCard || forecast?.validationRiskLab?.decisionCard || null
+  if (card?.key) return {
+    key: String(card.key),
+    label: String(card.label || card.key),
+    probability: n(card.conservativeProbability ?? card.calibratedProbability ?? card.rawProbability, 0),
+    rawProbability: n(card.rawProbability, 0),
+    edge: n(card.conservativeEdgePp ?? card.rawEdgePp, 0),
+    decision: String(card.decision || ''),
+    driftStatus: String(card.driftStatus || forecast?.professionalLab?.drift?.status || 'PENDING')
+  }
+  const top = forecast?.value?.top || forecast?.value?.top3?.[0] || null
+  if (!top?.key) return null
+  return {
+    key: String(top.key),
+    label: String(top.label || top.key),
+    probability: n(top.probability, 0),
+    rawProbability: n(top.probability, 0),
+    edge: n(top.edgePp ?? top.edge, 0),
+    decision: String(top.decision || forecast?.value?.state || ''),
+    driftStatus: String(forecast?.professionalLab?.drift?.status || 'PENDING')
+  }
+}
+
+function buildErrorAnalysis(rows = []) {
+  const errors = []
+  const categoryCounts = new Map()
+  const addCategory = (key, label) => categoryCounts.set(key, { key, label, count: (categoryCounts.get(key)?.count || 0) + 1 })
+
+  for (const row of rows) {
+    const candidate = primaryDecisionCandidate(row)
+    if (!candidate?.key) continue
+    const won = resultForMarketKey(row, candidate.key)
+    if (won == null || won) continue
+
+    const categories = []
+    const quality = n(row?.data_quality)
+    const sourceCount = n(row?.source_count)
+    const consensusAgreement = n(row?.consensus_agreement)
+    const clv = n(row?.settlement?.clv?.clvPct, NaN)
+    const disagreement = String(row?.forecast?.ensembleValidation?.disagreement?.status || row?.forecast?.validationRiskLab?.ensemble?.disagreement?.status || '').toUpperCase()
+
+    if (quality < 75) { categories.push('LOW_DATA_QUALITY'); addCategory('LOW_DATA_QUALITY', 'Niska jakość danych') }
+    if (sourceCount > 0 && sourceCount < 3) { categories.push('LOW_SOURCE_DEPTH'); addCategory('LOW_SOURCE_DEPTH', 'Mało niezależnych źródeł') }
+    if (consensusAgreement > 0 && consensusAgreement < 60) { categories.push('SOURCE_CONFLICT'); addCategory('SOURCE_CONFLICT', 'Źródła były rozbieżne') }
+    if (candidate.probability >= 67) { categories.push('OVERCONFIDENCE'); addCategory('OVERCONFIDENCE', 'Model był zbyt pewny') }
+    if (Number.isFinite(clv) && clv < -3) { categories.push('NEGATIVE_CLV'); addCategory('NEGATIVE_CLV', 'Rynek przesunął się przeciwko prognozie') }
+    if (['WATCH','DRIFT'].includes(String(candidate.driftStatus || '').toUpperCase())) { categories.push('MODEL_DRIFT'); addCategory('MODEL_DRIFT', 'Drift / pogorszenie modelu') }
+    if (disagreement === 'HIGH') { categories.push('ENSEMBLE_DISAGREEMENT'); addCategory('ENSEMBLE_DISAGREEMENT', 'Modele składowe mocno się nie zgadzały') }
+    if (!categories.length) { categories.push('NORMAL_VARIANCE'); addCategory('NORMAL_VARIANCE', 'Normalna wariancja wyniku') }
+
+    errors.push({
+      fixtureId: row.fixture_id,
+      fixtureDate: row.fixture_date,
+      homeTeam: row.home_team,
+      awayTeam: row.away_team,
+      league: row.league,
+      marketKey: candidate.key,
+      marketLabel: candidate.label,
+      probability: round(candidate.probability, 1),
+      edge: round(candidate.edge, 1),
+      quality,
+      sourceCount,
+      consensusAgreement,
+      categories
+    })
+  }
+
+  const categories = [...categoryCounts.values()]
+    .map(item => ({ ...item, sharePct: errors.length ? round(item.count / errors.length * 100, 1) : 0 }))
+    .sort((a, b) => b.count - a.count)
+
+  return {
+    analyzed: rows.length,
+    losingPredictions: errors.length,
+    errorRatePct: rows.length ? round(errors.length / rows.length * 100, 1) : 0,
+    categories,
+    recentErrors: errors.slice(0, 12)
+  }
+}
+
+function stddev(values = []) {
+  const clean = values.filter(Number.isFinite)
+  if (clean.length < 2) return 0
+  const m = mean(clean)
+  return Math.sqrt(mean(clean.map(value => (value - m) ** 2)))
+}
+
+function quantile(values = [], q = 0.5) {
+  const clean = values.filter(Number.isFinite).sort((a, b) => a - b)
+  if (!clean.length) return 0
+  const index = (clean.length - 1) * Math.max(0, Math.min(1, q))
+  const lo = Math.floor(index), hi = Math.ceil(index)
+  if (lo === hi) return clean[lo]
+  return clean[lo] + (clean[hi] - clean[lo]) * (index - lo)
+}
+
+function rollingPortfolioWindows(settled = [], size = 50) {
+  if (!settled.length) return { size, windows: 0, medianRoi: 0, worstRoi: 0, bestRoi: 0, positiveRate: 0 }
+  const rows = []
+  if (settled.length < size) {
+    const stake = settled.reduce((sum, row) => sum + Math.max(0.01, n(row.stake_units, 1)), 0)
+    const profit = settled.reduce((sum, row) => sum + n(row.profit_units), 0)
+    rows.push(stake ? profit / stake * 100 : 0)
+  } else {
+    for (let i = 0; i <= settled.length - size; i += 1) {
+      const slice = settled.slice(i, i + size)
+      const stake = slice.reduce((sum, row) => sum + Math.max(0.01, n(row.stake_units, 1)), 0)
+      const profit = slice.reduce((sum, row) => sum + n(row.profit_units), 0)
+      rows.push(stake ? profit / stake * 100 : 0)
+    }
+  }
+  return {
+    size,
+    windows: rows.length,
+    medianRoi: round(quantile(rows, .5), 1),
+    p25Roi: round(quantile(rows, .25), 1),
+    worstRoi: round(Math.min(...rows), 1),
+    bestRoi: round(Math.max(...rows), 1),
+    positiveRate: round(rows.filter(value => value > 0).length / rows.length * 100, 1)
+  }
+}
+
+function buildPortfolioRisk(rows = []) {
+  const settled = [...rows]
+    .filter(row => ['won','lost'].includes(String(row?.status || '').toLowerCase()))
+    .sort((a, b) => Date.parse(a.created_at || '') - Date.parse(b.created_at || ''))
+  const profits = settled.map(row => n(row.profit_units))
+  const stakes = settled.map(row => Math.max(.01, n(row.stake_units, 1)))
+  const totalStake = stakes.reduce((a, b) => a + b, 0)
+  const totalProfit = profits.reduce((a, b) => a + b, 0)
+  let equity = 0, peak = 0, maxDrawdown = 0, worstPoint = 0
+  const equityCurve = []
+  for (let i = 0; i < settled.length; i += 1) {
+    equity += profits[i]
+    peak = Math.max(peak, equity)
+    const dd = peak - equity
+    if (dd > maxDrawdown) { maxDrawdown = dd; worstPoint = i + 1 }
+    equityCurve.push(round(equity, 2))
+  }
+  const volatility = stddev(profits)
+  const roi = totalStake ? totalProfit / totalStake * 100 : 0
+  const drawdownPctOfStake = totalStake ? maxDrawdown / totalStake * 100 : 0
+  let riskScore = 35
+  riskScore += Math.min(35, drawdownPctOfStake * 1.8)
+  riskScore += Math.min(25, volatility * 18)
+  if (roi < 0) riskScore += 10
+  riskScore = Math.round(clamp(riskScore, 0, 100))
+  const level = riskScore >= 75 ? 'HIGH' : riskScore >= 55 ? 'MEDIUM' : 'LOW'
+  return {
+    settled: settled.length,
+    roi: round(roi, 1),
+    profitUnits: round(totalProfit, 2),
+    volatilityUnits: round(volatility, 3),
+    maxDrawdownUnits: round(maxDrawdown, 2),
+    maxDrawdownAtBet: worstPoint,
+    riskScore,
+    level,
+    rolling: {
+      w50: rollingPortfolioWindows(settled, 50),
+      w100: rollingPortfolioWindows(settled, 100),
+      w250: rollingPortfolioWindows(settled, 250)
+    },
+    equityCurve: equityCurve.slice(-200)
+  }
+}
+
+function buildControlCenter({ all = {}, last30 = {}, drift = {}, leagueTrust = [], versions = [], paperPortfolio = {}, portfolioRisk = {}, errorAnalysis = {} } = {}) {
+  const driftRows = Array.isArray(drift?.markets) ? drift.markets : []
+  const driftCount = driftRows.filter(item => String(item?.status || '').toUpperCase() === 'DRIFT').length
+  const watchCount = driftRows.filter(item => String(item?.status || '').toUpperCase() === 'WATCH').length
+  const sortedLeagues = [...(Array.isArray(leagueTrust) ? leagueTrust : [])].sort((a,b) => n(b.overallScore) - n(a.overallScore))
+  const bestLeague = sortedLeagues[0] || null
+  const worstLeague = sortedLeagues.length > 1 ? sortedLeagues[sortedLeagues.length - 1] : null
+  const allMarkets = Array.isArray(all?.markets) ? all.markets.filter(item => n(item.samples) > 0) : []
+  const bestMarket = [...allMarkets].sort((a,b) => n(a.brier, 9) - n(b.brier, 9))[0] || null
+  const worstMarket = [...allMarkets].sort((a,b) => n(b.brier) - n(a.brier))[0] || null
+  const alerts = []
+  if (driftCount) alerts.push(`${driftCount} rynek/rynki mają status MODEL DRIFT.`)
+  if (watchCount) alerts.push(`${watchCount} rynek/rynki wymagają obserwacji.`)
+  if (n(all?.matches) < 100) alerts.push('Próbka historyczna jest nadal mała (<100 meczów).')
+  if (n(portfolioRisk?.riskScore) >= 75) alerts.push('Shadow Portfolio ma wysoki historyczny profil ryzyka.')
+  if (n(errorAnalysis?.categories?.[0]?.sharePct) >= 35) alerts.push(`Dominujący błąd: ${errorAnalysis.categories[0].label}.`)
+  let health = 'HEALTHY'
+  if (driftCount >= 2 || n(all?.avgBrier) > .30 || n(portfolioRisk?.riskScore) >= 82) health = 'CRITICAL'
+  else if (driftCount || watchCount >= 2 || n(all?.avgBrier) > .26 || n(portfolioRisk?.riskScore) >= 60) health = 'WATCH'
+  return {
+    version: 'BETAI_MODEL_CONTROL_V158',
+    health,
+    alerts,
+    settledPredictions: n(all?.matches),
+    brier: n(all?.avgBrier),
+    last30Brier: n(last30?.avgBrier),
+    shadowRoi: n(paperPortfolio?.roi),
+    avgClv: n(paperPortfolio?.avgClv ?? all?.avgClv),
+    driftCount,
+    watchCount,
+    bestLeague: bestLeague ? { name: bestLeague.name, score: n(bestLeague.overallScore), matches: n(bestLeague.matches) } : null,
+    worstLeague: worstLeague ? { name: worstLeague.name, score: n(worstLeague.overallScore), matches: n(worstLeague.matches) } : null,
+    bestMarket: bestMarket ? { key: bestMarket.key, label: bestMarket.label, brier: n(bestMarket.brier), samples: n(bestMarket.samples) } : null,
+    worstMarket: worstMarket ? { key: worstMarket.key, label: worstMarket.label, brier: n(worstMarket.brier), samples: n(worstMarket.samples) } : null,
+    activeModelVersion: versions?.[0]?.name || 'BETAI_FORECAST_V158'
+  }
+}
+
 exports.handler = async function handler(event = {}) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
   if (event.httpMethod && event.httpMethod !== 'GET') return json(405, { ok: false, error: 'Method not allowed' })
@@ -571,14 +715,13 @@ exports.handler = async function handler(event = {}) {
     const leagueTrust = buildLeagueTrust(rows)
     let shadowRows = []
     let paperPortfolio = aggregateShadowPortfolio([])
-    let portfolioRisk = buildPortfolioRiskSimulatorV157([])
     try {
       shadowRows = await fetchShadowBets(supabase, 5000)
       paperPortfolio = aggregateShadowPortfolio(shadowRows)
-      portfolioRisk = buildPortfolioRiskSimulatorV157(shadowRows, 1000)
     } catch (_) {}
-    let errorAnalysis = { total: 0, categories: [], recent: [] }
-    try { errorAnalysis = await fetchErrorAnalysisV154(supabase, 1000) } catch (_) {}
+    const errorAnalysis = buildErrorAnalysis(rows)
+    const portfolioRisk = buildPortfolioRisk(shadowRows)
+    const controlCenter = buildControlCenter({ all, last30: last30Stats, drift, leagueTrust, versions, paperPortfolio, portfolioRisk, errorAnalysis })
     return json(200, {
       ok: true,
       available: true,
@@ -591,13 +734,14 @@ exports.handler = async function handler(event = {}) {
       drift,
       leagueTrust,
       paperPortfolio,
-      portfolioRisk,
       errorAnalysis,
-      note: rows.length < 100 ? 'Mała próbka — wyniki kalibracji, drift, trust score i risk simulator będą stabilniejsze po zebraniu większej liczby meczów.' : ''
+      portfolioRisk,
+      controlCenter,
+      note: rows.length < 100 ? 'Mała próbka — wyniki kalibracji, drift i trust score będą stabilniejsze po zebraniu większej liczby meczów.' : ''
     })
   } catch (error) {
     return json(500, { ok: false, available: false, error: error?.message || String(error) })
   }
 }
 
-exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio, buildPortfolioRiskSimulatorV157 }
+exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio, buildErrorAnalysis, buildPortfolioRisk, buildControlCenter }

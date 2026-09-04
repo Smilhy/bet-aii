@@ -7,6 +7,19 @@ const SIM_SECONDS_PER_REAL_SECOND = MATCH_TOTAL_SECONDS / REAL_MATCH_DURATION_X1
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, Number(value) || 0))
 const safeNum = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback
+
+function safeDisplayText(value, fallback = '') {
+  if (value == null || value === '') return fallback
+  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (typeof value === 'boolean') return value ? 'Tak' : 'Nie'
+  if (typeof value === 'object') {
+    if (value.name != null) return safeDisplayText(value.name, fallback)
+    if (value.label != null) return safeDisplayText(value.label, fallback)
+    if (value.value != null) return safeDisplayText(value.value, fallback)
+    if (value.title != null) return safeDisplayText(value.title, fallback)
+  }
+  return fallback
+}
 const lerp = (from, to, t) => from + (to - from) * t
 const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2
 
@@ -1310,9 +1323,9 @@ function MatchPitch({ data, model, clockSec, timeline }) {
     <div className="sim-pitch-wrap" style={kitVars}>
       <div className="sim-scoreboard-overlay">
         <b>{formatClock(clockSec)}</b>
-        <span>{data.fixture?.home?.name}</span>
+        <span>{safeDisplayText(data.fixture?.home?.name, 'Gospodarze')}</span>
         <strong>{homeScore} : {awayScore}</strong>
-        <span>{data.fixture?.away?.name}</span>
+        <span>{safeDisplayText(data.fixture?.away?.name, 'Goście')}</span>
       </div>
       <div className="sim-scoreboard-meta">
         <span>{live.phaseLabel}</span>
@@ -1334,10 +1347,10 @@ function MatchPitch({ data, model, clockSec, timeline }) {
         {live.flashMode === 'goal' && live.featuredEvent ? <div className={`sim-goal-flash ${live.featuredEvent.team}`}>
           <b>GOOOL!</b>
           <strong>{shortPlayerName(live.featuredEvent.actor || (live.featuredEvent.team === 'home' ? data.fixture?.home?.name : data.fixture?.away?.name))}</strong>
-          <span>{Math.floor(live.featuredEvent.second / 60)}' • {live.featuredEvent.team === 'home' ? data.fixture?.home?.name : data.fixture?.away?.name}</span>
+          <span>{Math.floor(live.featuredEvent.second / 60)}' • {safeDisplayText(live.featuredEvent.team === 'home' ? data.fixture?.home?.name : data.fixture?.away?.name, 'Drużyna')}</span>
         </div> : null}
         {clockSec >= HALF_SECONDS && clockSec < HALF_SECONDS + 90 ? <div className="fm125-halftime-overlay"><small>PRZERWA</small><b>{homeScore} : {awayScore}</b><span>xG {model?.xg?.home?.toFixed?.(2) || model?.xg?.home || 0} – {model?.xg?.away?.toFixed?.(2) || model?.xg?.away || 0}</span></div> : null}
-        {clockSec >= MATCH_TOTAL_SECONDS ? <div className="fm125-fulltime-overlay"><small>FULL TIME</small><b>{homeScore} : {awayScore}</b><span>{data.fixture?.home?.name} • {data.fixture?.away?.name}</span><em>{model?.samples || 0} symulacji modelu • 1 {model?.probabilities?.home || 0}% • X {model?.probabilities?.draw || 0}% • 2 {model?.probabilities?.away || 0}%</em></div> : null}
+        {clockSec >= MATCH_TOTAL_SECONDS ? <div className="fm125-fulltime-overlay"><small>FULL TIME</small><b>{homeScore} : {awayScore}</b><span>{safeDisplayText(data.fixture?.home?.name, 'Gospodarze')} • {safeDisplayText(data.fixture?.away?.name, 'Goście')}</span><em>{model?.samples || 0} symulacji modelu • 1 {model?.probabilities?.home || 0}% • X {model?.probabilities?.draw || 0}% • 2 {model?.probabilities?.away || 0}%</em></div> : null}
 
         {homeBase.map((player, index) => (
           <div key={`h-${player.id || index}`} className={playerClass(player, 'home')} style={getPlayerStyle(player, 'home')} title={player.name || `Gospodarze #${player.number || index + 1}`}>
@@ -1379,7 +1392,7 @@ function LineupPanel({ title, lineup }) {
         <span className={ready ? 'ready' : 'waiting'}>{ready ? `✓ Oficjalny • ${lineup.formation || 'XI'}` : 'Oczekiwanie na oficjalny skład'}</span>
       </div>
       {ready
-        ? <div className="sim-lineup-grid">{lineup.startXI.map((player, index) => <span key={player.id || index}><b>{player.number || '•'}</b>{player.name}</span>)}</div>
+        ? <div className="sim-lineup-grid">{lineup.startXI.map((player, index) => <span key={player.id || index}><b>{player.number || '•'}</b>{safeDisplayText(player.name, 'Zawodnik')}</span>)}</div>
         : <p>Bet+AI nie tworzy fikcyjnych nazwisk. Skład pojawi się automatycznie, gdy API-Football opublikuje startową XI.</p>}
     </div>
   )
@@ -1422,7 +1435,7 @@ function FormationBoard({ teamName, lineup, tone = 'home' }) {
       <div className="fm119-formation-head">
         <div className="fm123-formation-team">
           {lineup?.logo ? <img src={lineup.logo} alt="" /> : <i className="fm123-team-mark">⚽</i>}
-          <div><strong>{teamName}</strong><span>{ready ? `${lineup?.formation || 'XI'}${predicted ? ` • przewidywany ${lineup?.predictionConfidence || ''}%` : ' • oficjalny'}` : 'Brak składu'}</span></div>
+          <div><strong>{safeDisplayText(teamName, 'Drużyna')}</strong><span>{ready ? `${lineup?.formation || 'XI'}${predicted ? ` • przewidywany ${lineup?.predictionConfidence || ''}%` : ' • oficjalny'}` : 'Brak składu'}</span></div>
         </div>
         <em>{official ? 'LIVE XI' : predicted ? 'PRED XI' : 'API'}</em>
       </div>
@@ -1447,11 +1460,11 @@ function FormationBoard({ teamName, lineup, tone = 'home' }) {
           <div className="fm119-no-lineup">
             <strong>{ready ? 'Brak pozycji boiskowych w API' : 'Brak składu do symulacji'}</strong>
             <span>{predicted ? 'XI przewidywana z ostatnich realnych składów.' : 'Bet+AI nie generuje przypadkowych nazwisk ani ustawienia.'}</span>
-            {ready ? <div className="fm119-real-xi-list">{lineup.startXI.map((player, index) => <em key={player.id || index}>{player.number || '•'} {player.name}</em>)}</div> : null}
+            {ready ? <div className="fm119-real-xi-list">{lineup.startXI.map((player, index) => <em key={player.id || index}>{player.number || '•'} {safeDisplayText(player.name, 'Zawodnik')}</em>)}</div> : null}
           </div>
         </div>
       )}
-      <div className="fm119-formation-footer"><span>{ready ? `${lineup.startXI.length} zawodników • ${predicted ? `predykcja z ${lineup.sourceMatches || 0} składów` : 'oficjalne XI'} • Trener` : 'Dane API • Trener'}</span><b>{typeof lineup?.coach === 'object' ? (lineup?.coach?.name || lineup?.coach?.label || '—') : (lineup?.coach || '—')}</b></div>
+      <div className="fm119-formation-footer"><span>{ready ? `${lineup.startXI.length} zawodników • ${predicted ? `predykcja z ${lineup.sourceMatches || 0} składów` : 'oficjalne XI'} • Trener` : 'Dane API • Trener'}</span><b>{safeDisplayText(lineup?.coach, '—')}</b></div>
     </aside>
   )
 }
@@ -1811,10 +1824,10 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
         <header className="fm119-scorebar">
           <div className="fm119-score-meta">
             <div><span>BET+AI SIMULATOR</span><em className={running ? 'live' : ''}>{running ? 'LIVE' : clockSec >= MATCH_TOTAL_SECONDS ? 'FT' : 'PAUZA'}</em>{data?.externalConsensus?.consensus?.available ? <em className="multi-source-v128">MULTI-SOURCE {data.externalConsensus.consensus.sourceCount}</em> : null}<em className="fm146-engine-badge">EVENT ENGINE 2.0</em></div>
-            <small>{data.fixture.league} • {data.fixture.round || 'Mecz'}</small>
+            <small>{safeDisplayText(data.fixture?.league, 'Liga')} • {safeDisplayText(data.fixture?.round, 'Mecz')}</small>
           </div>
           <div className="fm119-score-team home">
-            <div><strong>{data.fixture.home.name}</strong><TeamForm rows={data.recent.home} /></div>
+            <div><strong>{safeDisplayText(data.fixture?.home?.name, 'Gospodarze')}</strong><TeamForm rows={data.recent.home} /></div>
             {data.fixture.home.logo ? <img src={data.fixture.home.logo} alt="" /> : null}
           </div>
           <div className="fm119-score-center">
@@ -1824,7 +1837,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
           </div>
           <div className="fm119-score-team away">
             {data.fixture.away.logo ? <img src={data.fixture.away.logo} alt="" /> : null}
-            <div><strong>{data.fixture.away.name}</strong><TeamForm rows={data.recent.away} /></div>
+            <div><strong>{safeDisplayText(data.fixture?.away?.name, 'Goście')}</strong><TeamForm rows={data.recent.away} /></div>
           </div>
         </header>
 
@@ -1850,7 +1863,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
 
           <article className="fm119-stat-card fm119-momentum-card">
             <h3>MOMENTUM</h3>
-            <MomentumChart timeline={timeline} clockSec={clockSec} model={model} homeName={data.fixture.home.name} awayName={data.fixture.away.name} />
+            <MomentumChart timeline={timeline} clockSec={clockSec} model={model} homeName={safeDisplayText(data.fixture?.home?.name, 'Gospodarze')} awayName={safeDisplayText(data.fixture?.away?.name, 'Goście')} />
             <div className="fm121-card-footer">Zobacz analizę</div>
           </article>
 
@@ -1873,7 +1886,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
         </section>
 
         <section className="fm119-match-layout">
-          <FormationBoard teamName={data.fixture.home.name} lineup={data.lineups.home} tone="home" />
+          <FormationBoard teamName={safeDisplayText(data.fixture?.home?.name, 'Gospodarze')} lineup={data.lineups.home} tone="home" />
 
           <main className="fm119-pitch-stage" style={pitchKitVariables(data?.lineups || {})}>
             <div className="fm119-pitch-toolbar">
@@ -1889,10 +1902,10 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
               </div>
             </div>
             <MatchPitch data={data} model={model} clockSec={clockSec} timeline={timeline} />
-            <div className="fm119-pitch-legend"><span className="home">● {data.fixture.home.name}</span><span className="away">● {data.fixture.away.name}</span></div>
+            <div className="fm119-pitch-legend"><span className="home">● {safeDisplayText(data.fixture?.home?.name, 'Gospodarze')}</span><span className="away">● {safeDisplayText(data.fixture?.away?.name, 'Goście')}</span></div>
           </main>
 
-          <FormationBoard teamName={data.fixture.away.name} lineup={data.lineups.away} tone="away" />
+          <FormationBoard teamName={safeDisplayText(data.fixture?.away?.name, 'Goście')} lineup={data.lineups.away} tone="away" />
         </section>
 
         <section className="fm119-commentary-strip">
@@ -1930,7 +1943,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
 
         {clockSec >= MATCH_TOTAL_SECONDS ? <section className="fm146-fulltime-report">
           <header><div><small>EVENT ENGINE 2.0 • FULL TIME REPORT</small><strong>Raport końcowy symulacji</strong></div><span>90:00 • MODEL PRE-MATCH</span></header>
-          <div className="fm146-fulltime-score"><b>{data.fixture.home.name}</b><strong>{currentScore.home} : {currentScore.away}</strong><b>{data.fixture.away.name}</b></div>
+          <div className="fm146-fulltime-score"><b>{safeDisplayText(data.fixture?.home?.name, 'Gospodarze')}</b><strong>{currentScore.home} : {currentScore.away}</strong><b>{safeDisplayText(data.fixture?.away?.name, 'Goście')}</b></div>
           <div className="fm146-fulltime-grid">
             <article><small>xG MODEL</small><b>{model.xg.home.toFixed(2)} – {model.xg.away.toFixed(2)}</b></article>
             <article><small>STRZAŁY</small><b>{liveCounters.homeShots} – {liveCounters.awayShots}</b></article>
