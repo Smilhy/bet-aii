@@ -223,6 +223,121 @@ async function qualifyFixtureForSimulator(row = {}, { signal } = {}) {
   return { eligible: false, cached: false, rateLimited: false }
 }
 
+
+const SCANNER_LABELS = {
+  home: '1 • Gospodarze', draw: 'X • Remis', away: '2 • Goście',
+  over15: 'Over 1.5', under15: 'Under 1.5', over25: 'Over 2.5', under25: 'Under 2.5',
+  over35: 'Over 3.5', under35: 'Under 3.5', bttsYes: 'BTTS • TAK', bttsNo: 'BTTS • NIE'
+}
+
+function scannerMarketKey(key = '') {
+  if (['home', 'draw', 'away'].includes(key)) return 'oneXTwo'
+  if (['over15', 'under15'].includes(key)) return 'over15'
+  if (['over25', 'under25'].includes(key)) return 'over25'
+  if (['over35', 'under35'].includes(key)) return 'over35'
+  if (['bttsYes', 'bttsNo', 'btts'].includes(key)) return 'btts'
+  return key
+}
+
+function scannerNormalizeName(value = '') {
+  return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim()
+}
+
+function scannerFindBucket(rows = [], probability = 0) {
+  if (!Array.isArray(rows) || probability < 50) return null
+  return rows.find(item => {
+    const m = String(item?.range || '').match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)/)
+    if (!m) return false
+    const low = Number(m[1]); const high = Number(m[2])
+    return probability >= low && (probability < high || (high >= 100 && probability <= high))
+  }) || null
+}
+
+function scannerCalibration(performance = null, league = '', candidate = null) {
+  const key = scannerMarketKey(candidate?.key || '')
+  const globalSummary = performance?.all || null
+  const leagueSummary = Array.isArray(performance?.leagues)
+    ? performance.leagues.find(item => scannerNormalizeName(item?.name) === scannerNormalizeName(league)) || null
+    : null
+  const findMarket = summary => summary?.markets?.find(item => item?.key === key) || null
+  const globalMarket = findMarket(globalSummary)
+  const leagueMarket = findMarket(leagueSummary)
+  const useLeague = Boolean(leagueMarket && Number(leagueMarket.samples || 0) >= 30)
+  const market = useLeague ? leagueMarket : globalMarket
+  const samples = Number(market?.samples || 0)
+  const brier = Number(market?.brier || 0)
+  const bucket = scannerFindBucket(market?.calibration || [], Number(candidate?.probability || 0))
+  const gap = Number(bucket?.calibrationGap || 0)
+  const bucketSamples = Number(bucket?.samples || 0)
+  let status = 'PENDING'
+  if (samples >= 30) {
+    if (brier > 0.29 || (bucketSamples >= 10 && Math.abs(gap) > 8)) status = 'POOR'
+    else if (bucketSamples >= 10 && Math.abs(gap) <= 5) status = 'GOOD'
+    else status = 'OK'
+  }
+  let score = 45
+  if (status === 'GOOD') score = 92
+  else if (status === 'OK') score = 76
+  else if (status === 'POOR') score = 28
+  if (samples >= 100) score = Math.min(100, score + 4)
+  return { status, score, samples, brier, source: useLeague ? 'league' : 'global', gap: bucket ? Math.round(gap * 10) / 10 : null }
+}
+
+function scannerBaseThreshold(key = '') {
+  if (['home', 'draw', 'away'].includes(key)) return 6
+  if (['bttsYes', 'bttsNo'].includes(key)) return 5.5
+  return 5
+}
+
+function enrichScannerCandidate(scan = {}, candidate = null, performance = null) {
+  if (!candidate) return { decision: 'NO_ODDS', reliability: { score: 0, label: 'BRAK KURSÓW', calibration: { status: 'PENDING', samples: 0 } } }
+  const calibration = scannerCalibration(performance, scan?.league || '', candidate)
+  const dataQuality = Number(scan?.dataQuality || 0)
+  const agreement = Number(scan?.modelAgreement || 0)
+  const marketScore = Number(scan?.bookmakerCount || 0) >= 3 ? 92 : Number(scan?.bookmakerCount || 0) >= 1 ? 78 : 35
+  const reliabilityScore = Math.round(Math.max(0, Math.min(100, dataQuality * 0.40 + agreement * 0.20 + calibration.score * 0.25 + marketScore * 0.15)))
+  let reliabilityLabel = reliabilityScore >= 82 ? 'HIGH' : reliabilityScore >= 68 ? 'MEDIUM' : 'LOW'
+  if (calibration.status === 'PENDING') reliabilityLabel = 'PENDING'
+  if (calibration.status === 'POOR') reliabilityLabel = 'LOW'
+
+  let threshold = scannerBaseThreshold(candidate.key)
+  if (dataQuality < 85) threshold += 2
+  if (reliabilityScore < 82) threshold += 1.5
+  if (reliabilityScore < 68) threshold += 2
+  threshold = Math.round(threshold * 10) / 10
+
+  let decision = 'NO_BET'
+  let reason = 'Brak przewagi ponad wymagany próg.'
+  if (calibration.status === 'PENDING') reason = `Kalibracja: ${calibration.samples}/30 prób.`
+  else if (calibration.status === 'POOR') reason = 'Historyczna kalibracja tego rynku jest słaba.'
+  else if (reliabilityScore < 65) reason = 'Za niska wiarygodność modelu dla tego meczu.'
+  else if (Number(candidate.edgePp || 0) >= threshold + 4 && Number(candidate.expectedValuePct || 0) >= 8 && reliabilityScore >= 80) {
+    decision = 'STRONG_VALUE'; reason = 'Duża przewaga cenowa i wysoka wiarygodność.'
+  } else if (Number(candidate.edgePp || 0) >= threshold && Number(candidate.expectedValuePct || 0) >= 3) {
+    decision = 'VALUE'; reason = 'Przewaga przekracza próg po kontroli kalibracji.'
+  } else if (Number(candidate.edgePp || 0) > 0 && Number(candidate.expectedValuePct || 0) > 0) {
+    decision = 'SMALL_EDGE'; reason = 'Dodatni edge, ale poniżej bezpiecznego progu.'
+  }
+  return {
+    ...candidate,
+    threshold,
+    decision,
+    reason,
+    reliability: { score: reliabilityScore, label: reliabilityLabel, calibration, modelAgreement: agreement, dataQuality }
+  }
+}
+
+function enrichScannerResult(scan = {}, performance = null) {
+  const candidates = (scan?.candidates || []).map(item => enrichScannerCandidate(scan, item, performance))
+  const priority = { STRONG_VALUE: 5, VALUE: 4, SMALL_EDGE: 3, NO_BET: 2, NO_ODDS: 1 }
+  candidates.sort((a, b) => (priority[b.decision] || 0) - (priority[a.decision] || 0) || Number(b.edgePp || 0) - Number(a.edgePp || 0))
+  return { ...scan, candidates, topFinal: candidates[0] || enrichScannerCandidate(scan, null, performance) }
+}
+
+function scannerDecisionLabel(value = '') {
+  return ({ STRONG_VALUE: 'STRONG VALUE', VALUE: 'VALUE', SMALL_EDGE: 'SMALL EDGE', NO_BET: 'NO BET', NO_ODDS: 'BRAK KURSÓW' })[String(value || '').toUpperCase()] || value
+}
+
 export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMatch }) {
   const copy = COPY[lang] || COPY.pl
   const [query, setQuery] = useState('')
@@ -233,6 +348,10 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   const [sourceMessage, setSourceMessage] = useState('')
   const [qualificationProgress, setQualificationProgress] = useState({ done: 0, total: 0 })
   const [selectedId, setSelectedId] = useState('')
+  const [scannerResults, setScannerResults] = useState({})
+  const [scannerProgress, setScannerProgress] = useState({ done: 0, total: 0 })
+  const [scannerActive, setScannerActive] = useState(false)
+  const [scannerPerformance, setScannerPerformance] = useState(null)
   const [nowMs, setNowMs] = useState(() => Date.now())
   const scanAbortRef = useRef(null)
   const clientTimeZone = useMemo(() => getBrowserTimeZone(), [])
@@ -273,9 +392,43 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     return payload
   }
 
+  const scanQualifiedMatches = async (rows = [], signal) => {
+    setScannerResults({})
+    setScannerProgress({ done: 0, total: rows.length })
+    if (!rows.length) { setScannerActive(false); return }
+    setScannerActive(true)
+    for (let i = 0; i < rows.length; i += 1) {
+      if (signal?.aborted) return
+      const row = rows[i]
+      const params = new URLSearchParams({
+        fixture: String(row.apiFixtureId || row.id || ''),
+        home_team_id: String(row.homeTeamId || ''),
+        away_team_id: String(row.awayTeamId || ''),
+        home: String(row.home || ''), away: String(row.away || ''),
+        league: String(row.league || ''), country: String(row.country || ''),
+        fixture_date: String(row.commence_time || row.fixture_date || row.rawDate || '')
+      })
+      try {
+        const response = await fetch(`/.netlify/functions/get-match-value-scan?${params.toString()}`, { cache: 'no-store', signal })
+        const payload = await response.json().catch(() => ({}))
+        if (response.ok && payload?.ok) {
+          setScannerResults(prev => ({ ...prev, [fixtureKey(row)]: payload }))
+        }
+      } catch (error) {
+        if (error?.name === 'AbortError') return
+      }
+      setScannerProgress({ done: i + 1, total: rows.length })
+      if (i < rows.length - 1) await waitFor(320, signal)
+    }
+    if (!signal?.aborted) setScannerActive(false)
+  }
+
   const loadMatches = async (signal) => {
     setLoading(true)
     setError('')
+    setScannerResults({})
+    setScannerProgress({ done: 0, total: 0 })
+    setScannerActive(false)
     try {
       const requestNowMs = Date.now()
       let payload = null
@@ -345,6 +498,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         setSourceMessage(`${approved.length} zakwalifikowanych • Rate Limit Shield aktywny • cache ${cacheHits}`)
       }
       setQualifying(false)
+      if (approved.length && !signal?.aborted) await scanQualifiedMatches([...approved], signal)
     } catch (err) {
       if (err?.name === 'AbortError' || signal?.aborted) return
       setMatches([])
@@ -377,6 +531,17 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     return () => window.clearInterval(timer)
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    fetch('/.netlify/functions/get-match-prediction-performance?limit=5000', { cache: 'no-store' })
+      .then(response => response.json().catch(() => ({})).then(payload => ({ response, payload })))
+      .then(({ response, payload }) => {
+        if (!cancelled && response.ok && payload?.ok && payload?.available) setScannerPerformance(payload)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
   const availableMatches = useMemo(() => matches
     .filter(match => isPreMatchFixture(match, nowMs))
     .filter(match => getDateKeyInTimeZone(getFixtureStartMs(match), clientTimeZone) === todayKey)
@@ -387,6 +552,20 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     if (!q) return availableMatches
     return availableMatches.filter(match => [match.home, match.away, match.league, match.country].join(' ').toLowerCase().includes(q))
   }, [query, availableMatches])
+
+  const scannerEntries = useMemo(() => {
+    const allowed = new Map(availableMatches.map(match => [fixtureKey(match), match]))
+    return Object.entries(scannerResults)
+      .filter(([key]) => allowed.has(key))
+      .map(([key, raw]) => ({ key, match: allowed.get(key), scan: enrichScannerResult(raw, scannerPerformance) }))
+      .filter(item => item.scan?.topFinal)
+      .sort((a, b) => {
+        const priority = { STRONG_VALUE: 5, VALUE: 4, SMALL_EDGE: 3, NO_BET: 2, NO_ODDS: 1 }
+        const ad = priority[a.scan.topFinal.decision] || 0
+        const bd = priority[b.scan.topFinal.decision] || 0
+        return bd - ad || Number(b.scan.topFinal.edgePp || 0) - Number(a.scan.topFinal.edgePp || 0) || Number(b.scan.topFinal.reliability?.score || 0) - Number(a.scan.topFinal.reliability?.score || 0)
+      })
+  }, [scannerResults, scannerPerformance, availableMatches])
 
   const nearestKey = availableMatches.length ? fixtureKey(availableMatches[0]) : ''
 
@@ -431,6 +610,31 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           {!loading && error && <div className="sim-day-error-v99">⚠ {error}<button type="button" onClick={startLoadMatches}>{copy.refresh}</button></div>}
           {!loading && !error && qualifying && !filteredMatches.length && <div className="sim-day-loading-v99"><i /><strong>Sprawdzam realne statystyki meczów…</strong><span>{qualificationProgress.done}/{qualificationProgress.total} sprawdzonych</span></div>}
           {!loading && !error && !qualifying && !filteredMatches.length && <div className="sim-day-empty-v98">{copy.empty}</div>}
+
+          {!loading && !error && (scannerActive || scannerEntries.length > 0) ? <section className="sim-value-scanner-v139">
+            <div className="sim-value-scanner-head-v139">
+              <div><small>BET+AI • MODEL RELIABILITY</small><strong>AI VALUE SCANNER</strong><p>Skanuje tylko zakwalifikowane mecze. Pełna analiza po wejściu w mecz jest końcową weryfikacją.</p></div>
+              <div className="sim-value-scanner-progress-v139"><b>{scannerProgress.done}/{scannerProgress.total}</b><span>{scannerActive ? 'SKANOWANIE LIVE' : 'SKAN GOTOWY'}</span></div>
+            </div>
+            {scannerEntries.length ? <div className="sim-value-scanner-grid-v139">
+              {scannerEntries.slice(0, 6).map(({ key, match: scanMatch, scan }, index) => {
+                const item = scan.topFinal
+                const rel = item.reliability || {}
+                return <button type="button" key={`scan-${key}`} className={`sim-value-scanner-card-v139 ${String(item.decision || '').toLowerCase()}`} onClick={() => handleSelect(scanMatch)}>
+                  <header><span>#{index + 1} • {scanMatch.league}</span><em>{scannerDecisionLabel(item.decision)}</em></header>
+                  <strong>{scanMatch.home} <i>vs</i> {scanMatch.away}</strong>
+                  <div className="sim-value-scanner-pick-v139"><b>{SCANNER_LABELS[item.key] || item.key || 'Brak rynku'}</b><span>{item.bookmakerOdds ? `@ ${Number(item.bookmakerOdds).toFixed(2)}` : 'bez kursu'}</span></div>
+                  <div className="sim-value-scanner-metrics-v139">
+                    <span><small>BET+AI</small><b>{item.probability ? `${item.probability}%` : '—'}</b></span>
+                    <span><small>FAIR</small><b>{item.fairOdds ? Number(item.fairOdds).toFixed(2) : '—'}</b></span>
+                    <span><small>EDGE</small><b>{Number.isFinite(Number(item.edgePp)) ? `${Number(item.edgePp) > 0 ? '+' : ''}${item.edgePp} pp` : '—'}</b></span>
+                    <span><small>RELIABILITY</small><b>{rel.score || 0}/100</b></span>
+                  </div>
+                  <footer><span className={`rel-${String(rel.label || 'pending').toLowerCase()}`}>{rel.label || 'PENDING'}</span><small>{rel.calibration?.samples || 0} prób • model agreement {scan.modelAgreement || 0}%</small></footer>
+                </button>
+              })}
+            </div> : <div className="sim-value-scanner-empty-v139"><i />Szukam przewag cenowych i sprawdzam kalibrację…</div>}
+          </section> : null}
 
           {!loading && !error && filteredMatches.map((match) => {
             const odds = getReal1X2(match)

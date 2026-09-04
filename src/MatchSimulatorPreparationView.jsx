@@ -333,7 +333,14 @@ function classifyValueCandidate(candidate = {}, context = {}) {
   if (calibration.status === 'OK') threshold += 0.75
   threshold += Number(calibration.leaguePenalty || 0)
   if (Number(context.consensusSources || 0) >= 2 && Number(context.consensusAgreement || 0) < 60) threshold += 1
+  if (Number(context.modelAgreement || 65) < 60) threshold += 1.5
+  if (Number(context.modelAgreement || 65) < 50) threshold += 2
   threshold = round1(threshold)
+
+  const calibrationScore = calibration.status === 'GOOD' ? 92 : calibration.status === 'OK' ? 76 : calibration.status === 'POOR' ? 28 : 45
+  const consensusScore = Number(context.consensusSources || 0) > 0 ? Number(context.consensusAgreement || 0) : 55
+  const reliabilityScore = Math.round(clampNum(quality * 0.45 + calibrationScore * 0.30 + Number(context.modelAgreement || 65) * 0.15 + consensusScore * 0.10, 0, 100))
+  const reliabilityLabel = calibration.status === 'PENDING' ? 'PENDING' : calibration.status === 'POOR' || reliabilityScore < 65 ? 'LOW' : reliabilityScore >= 82 ? 'HIGH' : 'MEDIUM'
 
   let decision = 'NO_BET'
   let reason = ''
@@ -345,7 +352,13 @@ function classifyValueCandidate(candidate = {}, context = {}) {
     reason = 'Za mała próbka backtestu — brak rekomendacji'
   } else if (calibration.status === 'POOR') {
     reason = 'Model jest słabo skalibrowany dla tego rynku'
-  } else if (candidate.edgePp >= threshold + 5 && candidate.expectedValuePct >= 8 && quality >= 88) {
+  } else if (Number(context.modelAgreement || 65) < 45) {
+    reason = 'Modele zbyt mocno się nie zgadzają — brak rekomendacji'
+  } else if (Number(context.consensusSources || 0) >= 2 && Number(context.consensusAgreement || 0) < 45) {
+    reason = 'Zewnętrzne źródła są zbyt rozbieżne — brak rekomendacji'
+  } else if (reliabilityScore < 62) {
+    reason = 'Łączna wiarygodność modelu jest za niska'
+  } else if (candidate.edgePp >= threshold + 5 && candidate.expectedValuePct >= 8 && quality >= 88 && reliabilityScore >= 78) {
     decision = 'STRONG_VALUE'
     reason = 'Duża przewaga po usunięciu marży i dobra jakość modelu'
   } else if (candidate.edgePp >= threshold && candidate.expectedValuePct >= 3) {
@@ -357,7 +370,7 @@ function classifyValueCandidate(candidate = {}, context = {}) {
   } else {
     reason = 'Brak dodatniej przewagi nad ceną rynkową'
   }
-  return { ...candidate, threshold, decision, reason }
+  return { ...candidate, threshold, decision, reason, reliabilityScore, reliabilityLabel }
 }
 
 function buildValueEngineV2({ match = {}, data = {}, probabilities = {}, dataQuality = 0, consensus = null, performance = null } = {}) {
@@ -371,10 +384,13 @@ function buildValueEngineV2({ match = {}, data = {}, probabilities = {}, dataQua
   const books = Array.isArray(data?.odds?.books) ? data.odds.books : []
   const league = data?.fixture?.league || match?.league || ''
   const candidates = []
+  const apiTriplet = normalizeTriplet(data?.prediction?.percent)
+  const modelAgreement = apiTriplet ? Math.round(clampNum(100 - ((Math.abs(Number(model.home || 0) - apiTriplet.home) + Math.abs(Number(model.draw || 0) - apiTriplet.draw) + Math.abs(Number(model.away || 0) - apiTriplet.away)) / 3) * 2.2, 35, 98)) : 62
   const context = {
     dataQuality,
     consensusSources: Number(consensus?.consensus?.sourceCount || 0),
-    consensusAgreement: Number(consensus?.consensus?.agreement || 0)
+    consensusAgreement: Number(consensus?.consensus?.agreement || 0),
+    modelAgreement
   }
 
   const add = (book, key, odd, denominator, marketGroup) => {
@@ -482,7 +498,8 @@ function buildValueEngineV2({ match = {}, data = {}, probabilities = {}, dataQua
     recommendations: recommendations.slice(0, 3),
     bookmakerCount: books.length,
     marginRemoved: ranked.some(item => item.vigAdjusted),
-    calibrationRequiredSamples: 30
+    calibrationRequiredSamples: 30,
+    modelAgreement
   }
 }
 
@@ -641,6 +658,71 @@ function valueDecisionLabel(value = '') {
   return ({ STRONG_VALUE: 'STRONG VALUE', VALUE: 'VALUE', SMALL_EDGE: 'SMALL EDGE', NO_BET: 'NO BET', CALIBRATION_PENDING: 'KALIBRACJA', NO_ODDS: 'BRAK KURSÓW' })[String(value || '').toUpperCase()] || String(value || '').replaceAll('_', ' ')
 }
 
+
+function reliabilityCalibrationScore(calibration = {}) {
+  const status = String(calibration?.status || 'PENDING').toUpperCase()
+  let score = status === 'GOOD' ? 94 : status === 'OK' ? 78 : status === 'POOR' ? 28 : 45
+  const samples = Number(calibration?.samples || 0)
+  if (samples >= 100) score += 4
+  else if (samples >= 50) score += 2
+  return Math.round(clampNum(score, 0, 100))
+}
+
+function buildReliabilityEngine({ match = {}, data = {}, forecast = null, consensus = null, performance = null } = {}) {
+  if (!forecast) return null
+  const quality = Number(forecast?.dataQuality || 0)
+  const apiPercent = normalizeTriplet(data?.prediction?.percent)
+  const modelPercent = forecast?.oneXTwo || {}
+  let modelAgreement = 62
+  if (apiPercent) {
+    const diff = (Math.abs(Number(modelPercent.home || 0) - apiPercent.home) + Math.abs(Number(modelPercent.draw || 0) - apiPercent.draw) + Math.abs(Number(modelPercent.away || 0) - apiPercent.away)) / 3
+    modelAgreement = Math.round(clampNum(100 - diff * 2.2, 35, 98))
+  }
+
+  const candidate = forecast?.value?.top3?.[0] || forecast?.value?.top || null
+  const fallbackProbability = Math.max(Number(forecast?.goals?.over25 || 0), 100 - Number(forecast?.goals?.over25 || 0))
+  const calibration = candidate?.calibration || resolveCalibration(performance, data?.fixture?.league || match?.league || '', candidate?.key || 'over25', candidate?.probability || fallbackProbability)
+  const calibrationScore = reliabilityCalibrationScore(calibration)
+
+  const sourceCount = Number(consensus?.consensus?.sourceCount || 0)
+  const consensusAgreement = consensus?.consensus?.available ? Number(consensus?.consensus?.agreement || 0) : 55
+  const sourceScore = Math.round(clampNum(62 + Math.min(5, sourceCount) * 6 + (data?.prediction?.available ? 7 : 0) + (data?.teamStats?.home?.available && data?.teamStats?.away?.available ? 8 : 0), 0, 100))
+  const bookmakerCount = Number(data?.odds?.books?.length || 0)
+  const marketDepth = bookmakerCount >= 5 ? 96 : bookmakerCount >= 3 ? 90 : bookmakerCount >= 1 ? 78 : 45
+
+  let score = Math.round(quality * 0.35 + modelAgreement * 0.20 + calibrationScore * 0.25 + consensusAgreement * 0.10 + marketDepth * 0.10)
+  if (calibration?.status === 'POOR') score = Math.min(score, 59)
+  score = Math.round(clampNum(score, 0, 100))
+
+  let label = score >= 82 ? 'HIGH' : score >= 68 ? 'MEDIUM' : 'LOW'
+  let decisionSupport = label === 'HIGH' ? 'Model ma mocne podstawy do wspierania decyzji.' : label === 'MEDIUM' ? 'Model jest użyteczny, ale wymaga ostrożniejszego progu value.' : 'Nie traktuj tego meczu jako mocnej rekomendacji.'
+  if (Number(calibration?.samples || 0) < 30) {
+    label = 'PENDING'
+    decisionSupport = `Kalibracja historyczna ma ${Number(calibration?.samples || 0)}/30 wymaganych prób.`
+  }
+  if (calibration?.status === 'POOR') {
+    label = 'LOW'
+    decisionSupport = 'Historyczna kalibracja tego rynku jest zbyt słaba dla mocnej rekomendacji.'
+  }
+
+  return {
+    version: 'BETAI_RELIABILITY_V1', score, label, decisionSupport,
+    components: {
+      dataQuality: Math.round(quality),
+      modelAgreement,
+      calibration: calibrationScore,
+      consensus: Math.round(clampNum(consensusAgreement, 0, 100)),
+      marketDepth
+    },
+    calibration: {
+      status: calibration?.status || 'PENDING', samples: Number(calibration?.samples || 0),
+      brier: Number(calibration?.brier || 0), source: calibration?.source || 'global', gap: calibration?.bucket?.gap ?? null
+    },
+    sourceCount,
+    bookmakerCount
+  }
+}
+
 export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBack, onStart }) {
   const copy = COPY[lang] || COPY.pl
   const phases = lang === 'en' ? LOAD_PHASES_EN : LOAD_PHASES_PL
@@ -776,14 +858,16 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   }, [checks, data])
   const eligibility = useMemo(() => data ? buildEligibility(match, data, checks) : { eligible: false, reasons: [] }, [match, data, checks])
   const forecast = useMemo(() => data && eligibility.eligible ? buildForecast(match, data, consensus, checks, modelPerformance) : null, [match, data, consensus, checks, eligibility.eligible, modelPerformance])
-  const preparedData = useMemo(() => data ? { ...data, externalConsensus: consensus || null, predictionEngine: forecast || null } : null, [data, consensus, forecast])
+  const reliability = useMemo(() => forecast ? buildReliabilityEngine({ match, data, forecast, consensus, performance: modelPerformance }) : null, [match, data, forecast, consensus, modelPerformance])
+  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, reliability: reliability || null } : null, [forecast, reliability])
+  const preparedData = useMemo(() => data ? { ...data, externalConsensus: consensus || null, predictionEngine: forecastWithReliability || null } : null, [data, consensus, forecastWithReliability])
   const phaseIndex = Math.min(phases.length - 1, Math.floor(progress / (100 / phases.length)))
 
   useEffect(() => {
-    if (!forecast || !eligibility.eligible || consensusLoading || modelPerformanceLoading) return
+    if (!forecastWithReliability || !eligibility.eligible || consensusLoading || modelPerformanceLoading) return
     const fixtureId = String(match?.apiFixtureId || match?.id || data?.fixture?.id || '')
     if (!fixtureId) return
-    const signature = `${fixtureId}|${forecast.version}|${forecast.dataQuality}|${forecast.consensus.sourceCount}|${forecast.xg.home}|${forecast.xg.away}|${forecast.value?.state || ''}|${forecast.value?.top?.key || ''}|${forecast.value?.top?.decision || ''}`
+    const signature = `${fixtureId}|${forecastWithReliability.version}|${forecastWithReliability.dataQuality}|${forecastWithReliability.consensus.sourceCount}|${forecastWithReliability.xg.home}|${forecastWithReliability.xg.away}|${forecastWithReliability.value?.state || ''}|${forecastWithReliability.value?.top?.key || ''}|${forecastWithReliability.reliability?.score || 0}`
     if (forecastSavedRef.current === signature) return
     forecastSavedRef.current = signature
     setForecastSaveState('saving')
@@ -797,7 +881,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
         awayTeam: data?.fixture?.away?.name || match?.away || '',
         league: data?.fixture?.league || match?.league || '',
         country: data?.fixture?.country || match?.country || '',
-        forecast,
+        forecast: forecastWithReliability,
         consensus: consensus || null
       })
     }).then(response => response.json().catch(() => ({})).then(payload => ({ response, payload })))
@@ -806,7 +890,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
         setForecastSaveState(response.ok && payload?.ok ? 'saved' : 'local')
       })
       .catch(() => { if (mountedRef.current) setForecastSaveState('local') })
-  }, [forecast, eligibility.eligible, consensusLoading, modelPerformanceLoading, match, data, consensus])
+  }, [forecastWithReliability, eligibility.eligible, consensusLoading, modelPerformanceLoading, match, data, consensus])
 
   return (
     <section className="sim-prep-v116">
@@ -957,6 +1041,23 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
 
           <div className="sim-prep-factors-v136">{forecast.factors.slice(0, 5).map(factor => <span key={factor}>{factor}</span>)}</div>
           <p className="sim-prep-forecast-note-v136">Prawdopodobieństwa są estymacją modelu, nie gwarancją wyniku. Value V2 porównuje model z ceną rynku po usunięciu marży i blokuje rekomendację przy zbyt małej próbce kalibracyjnej.</p>
+        </section> : null}
+
+        {reliability ? <section className={`sim-prep-reliability-v139 rel-${String(reliability.label || 'pending').toLowerCase()}`}>
+          <div className="sim-prep-reliability-head-v139">
+            <div><small>BET+AI MODEL RELIABILITY V1</small><strong>Wiarygodność tej analizy</strong><p>{reliability.decisionSupport}</p></div>
+            <div className="sim-prep-reliability-score-v139"><b>{reliability.score}</b><span>/100</span><em>{reliability.label}</em></div>
+          </div>
+          <div className="sim-prep-reliability-bars-v139">
+            {[
+              ['DATA QUALITY', reliability.components.dataQuality],
+              ['MODEL AGREEMENT', reliability.components.modelAgreement],
+              ['KALIBRACJA', reliability.components.calibration],
+              ['CONSENSUS', reliability.components.consensus],
+              ['RYNEK / KURSY', reliability.components.marketDepth]
+            ].map(([label, value]) => <article key={label}><header><small>{label}</small><b>{value}%</b></header><div><i style={{ width: `${Math.max(0, Math.min(100, value))}%` }} /></div></article>)}
+          </div>
+          <footer><span>Backtest: <b>{reliability.calibration.samples}</b> prób • {reliability.calibration.status}</span><span>Źródła consensus: <b>{reliability.sourceCount}</b></span><span>Bukmacherzy: <b>{reliability.bookmakerCount}</b></span></footer>
         </section> : null}
 
         <section className="sim-prep-backtest-v137">
