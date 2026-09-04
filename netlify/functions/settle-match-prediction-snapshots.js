@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const { apiGet: shieldApiGet } = require('./_lib/match-simulator-rate-shield')
 
 const API_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || ''
 const API_BASE = 'https://v3.football.api-sports.io'
@@ -29,22 +30,73 @@ function getSupabase() {
   }
 }
 
-async function apiFixture(fixtureId, timeoutMs = 9000) {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeoutMs)
-  try {
-    const response = await fetch(`${API_BASE}/fixtures?id=${encodeURIComponent(fixtureId)}`, {
-      signal: controller.signal,
-      headers: { 'x-apisports-key': API_KEY }
-    })
-    const payload = await response.json().catch(() => ({}))
-    const errors = payload?.errors && typeof payload.errors === 'object' ? payload.errors : null
-    if (!response.ok || (errors && Object.keys(errors).length)) {
-      throw new Error(errors && Object.keys(errors).length ? JSON.stringify(errors) : `API-Football HTTP ${response.status}`)
-    }
-    return Array.isArray(payload?.response) ? payload.response[0] || null : null
-  } finally {
-    clearTimeout(timer)
+async function apiFixture(fixtureId) {
+  const response = await shieldApiGet('/fixtures', { id: fixtureId }, {
+    budgetScope: 'settlement',
+    budgetLimit: 100,
+    totalBudgetLimit: 750,
+    ttlMs: 20 * 60 * 1000,
+    allowStaleMs: 2 * 60 * 60 * 1000,
+    attempts: 2,
+    timeoutMs: 9000
+  })
+  if (!response?.ok) throw new Error(response?.error || 'API-Football settlement unavailable')
+  return Array.isArray(response?.data) ? response.data[0] || null : null
+}
+
+async function markClosingOdds(supabase, fixtureId, kickoffAt) {
+  const kickoffMs = Date.parse(kickoffAt || '')
+  if (!Number.isFinite(kickoffMs)) return
+  const kickoff = new Date(kickoffMs).toISOString()
+  const { data, error } = await supabase
+    .from('match_odds_history')
+    .select('id,market_key,bookmaker,captured_at')
+    .eq('fixture_id', String(fixtureId))
+    .lte('captured_at', kickoff)
+    .order('captured_at', { ascending: false })
+    .limit(250)
+  if (error || !Array.isArray(data)) return
+  const seen = new Set()
+  for (const row of data) {
+    const key = `${row.market_key}|${row.bookmaker}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    await supabase.from('match_odds_history').update({ is_closing: true }).eq('id', row.id)
+  }
+}
+
+async function getClvSummary(supabase, fixtureId, kickoffAt, forecast = {}) {
+  const kickoffMs = Date.parse(kickoffAt || '')
+  const top = forecast?.value?.top || forecast?.value?.recommendations?.[0] || null
+  if (!Number.isFinite(kickoffMs) || !top?.key) return null
+  let query = supabase
+    .from('match_odds_history')
+    .select('market_key,bookmaker,odds,captured_at')
+    .eq('fixture_id', String(fixtureId))
+    .eq('market_key', String(top.key))
+    .lte('captured_at', new Date(kickoffMs).toISOString())
+    .order('captured_at', { ascending: true })
+    .limit(100)
+  if (top?.bookmaker) query = query.eq('bookmaker', String(top.bookmaker))
+  const { data, error } = await query
+  if (error || !Array.isArray(data) || data.length < 2) return null
+  const first = data[0]
+  const closing = data[data.length - 1]
+  const closeMs = Date.parse(closing.captured_at || '')
+  const minutesBeforeKickoff = Number.isFinite(closeMs) ? Math.round((kickoffMs - closeMs) / 60000) : null
+  const openOdds = Number(first.odds || 0)
+  const closingOdds = Number(closing.odds || 0)
+  if (!(openOdds > 1) || !(closingOdds > 1)) return null
+  const clvPct = ((openOdds / closingOdds) - 1) * 100
+  return {
+    marketKey: String(top.key),
+    bookmaker: String(closing.bookmaker || top.bookmaker || ''),
+    openOdds: Math.round(openOdds * 100) / 100,
+    closingOdds: Math.round(closingOdds * 100) / 100,
+    clvPct: Math.round(clvPct * 10) / 10,
+    snapshots: data.length,
+    minutesBeforeKickoff,
+    qualifiedClosing: Number.isFinite(minutesBeforeKickoff) && minutesBeforeKickoff >= -5 && minutesBeforeKickoff <= 20
   }
 }
 
@@ -140,6 +192,8 @@ exports.handler = async function handler(event = {}) {
 
       const score = regularTimeScore(fixture)
       if (!score) { pending += 1; return }
+      let clv = null
+      try { clv = await getClvSummary(supabase, row.fixture_id, row.fixture_date, row.forecast || {}) } catch (_) {}
       const { error: updateError } = await supabase.from(TABLE).update({
         actual_home_goals: score.home,
         actual_away_goals: score.away,
@@ -150,13 +204,15 @@ exports.handler = async function handler(event = {}) {
           fixtureStatus,
           score,
           settledAt: now,
-          source: 'API-Football'
+          source: 'API-Football',
+          clv
         },
         locked_at: row.fixture_date || now,
         settled_at: now,
         updated_at: now
       }).eq('fixture_id', row.fixture_id).is('settled_at', null)
       if (updateError) throw updateError
+      try { await markClosingOdds(supabase, row.fixture_id, row.fixture_date) } catch (_) {}
       settled += 1
     } catch (err) {
       errors.push({ fixture_id: row.fixture_id, error: err?.message || String(err) })

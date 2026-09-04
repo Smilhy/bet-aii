@@ -62,18 +62,19 @@ function outcomes(row) {
   }
 }
 
-function predictionRecords(row) {
+function predictionRecords(row, mode = 'calibrated') {
   const forecast = row?.forecast || {}
+  const source = mode === 'raw' && forecast?.raw ? forecast.raw : forecast
   const actual = outcomes(row)
   if (!actual) return []
-  const one = forecast?.oneXTwo || {}
+  const one = source?.oneXTwo || forecast?.oneXTwo || {}
   const oneValues = [
     { key: 'home', probability: pct(one.home), actual: actual.home ? 1 : 0 },
     { key: 'draw', probability: pct(one.draw), actual: actual.draw ? 1 : 0 },
     { key: 'away', probability: pct(one.away), actual: actual.away ? 1 : 0 }
   ]
   const best1x2 = oneValues.reduce((best, item) => item.probability > best.probability ? item : best, oneValues[0] || { key: 'home', probability: 0, actual: 0 })
-  const goals = forecast?.goals || {}
+  const goals = source?.goals || forecast?.goals || {}
   const binaries = ['over15', 'over25', 'over35', 'btts'].map(key => {
     const probability = pct(goals[key])
     const yes = Boolean(actual[key])
@@ -176,17 +177,24 @@ function valueRecord(row) {
 }
 
 function aggregateRows(rows) {
-  const records = rows.flatMap(predictionRecords)
+  const records = rows.flatMap(row => predictionRecords(row, 'calibrated'))
+  const rawRecords = rows.flatMap(row => predictionRecords(row, 'raw'))
   const values = rows.map(valueRecord).filter(Boolean)
   const markets = ['oneXTwo', 'over15', 'over25', 'over35', 'btts'].map(key => aggregateMarket(records, key))
+  const rawMarkets = ['oneXTwo', 'over15', 'over25', 'over35', 'btts'].map(key => aggregateMarket(rawRecords, key))
   const overallCorrect = records.filter(item => item.correct).length
   const oneXTwo = markets.find(item => item.key === 'oneXTwo') || {}
+  const rawBrier = rawRecords.length ? mean(rawRecords.map(item => item.brier)) : 0
+  const calibratedBrier = records.length ? mean(records.map(item => item.brier)) : 0
   const valueProfit = values.reduce((sum, item) => sum + item.profit, 0)
+  const clvRows = rows.map(row => row?.settlement?.clv).filter(item => item && item.qualifiedClosing && Number.isFinite(Number(item.clvPct)))
   return {
     matches: rows.length,
     gradedPredictions: records.length,
     overallAccuracy: records.length ? round(overallCorrect / records.length * 100, 1) : 0,
-    avgBrier: records.length ? round(mean(records.map(item => item.brier)), 4) : 0,
+    avgBrier: records.length ? round(calibratedBrier, 4) : 0,
+    rawAvgBrier: rawRecords.length ? round(rawBrier, 4) : 0,
+    calibrationBrierLift: rawRecords.length ? round(rawBrier - calibratedBrier, 4) : 0,
     oneXTwoAccuracy: n(oneXTwo.accuracy, 0),
     oneXTwoBrier: n(oneXTwo.brier, 0),
     valueBets: values.length,
@@ -194,7 +202,11 @@ function aggregateRows(rows) {
     valueProfitUnits: round(valueProfit, 2),
     valueRoi: values.length ? round(valueProfit / values.length * 100, 1) : 0,
     avgRecordedEdge: values.length ? round(mean(values.map(item => item.edge)), 1) : 0,
+    clvSamples: clvRows.length,
+    avgClv: clvRows.length ? round(mean(clvRows.map(item => Number(item.clvPct))), 1) : 0,
+    positiveClvRate: clvRows.length ? round(clvRows.filter(item => Number(item.clvPct) > 0).length / clvRows.length * 100, 1) : 0,
     markets,
+    rawMarkets,
     calibration: calibration(records)
   }
 }
@@ -219,7 +231,7 @@ async function fetchSettled(supabase, limit = 5000) {
     const to = Math.min(from + pageSize - 1, limit - 1)
     const { data, error } = await supabase
       .from(TABLE)
-      .select('fixture_id,fixture_date,home_team,away_team,league,country,model_version,data_quality,source_count,consensus_agreement,forecast,actual_home_goals,actual_away_goals,settled_at')
+      .select('fixture_id,fixture_date,home_team,away_team,league,country,model_version,data_quality,source_count,consensus_agreement,forecast,settlement,actual_home_goals,actual_away_goals,settled_at')
       .not('actual_home_goals', 'is', null)
       .not('actual_away_goals', 'is', null)
       .order('settled_at', { ascending: false })

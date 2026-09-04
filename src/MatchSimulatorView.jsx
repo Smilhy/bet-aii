@@ -667,7 +667,7 @@ function uniqueEventSecond(random, usedSeconds, minMinute = 3, maxMinute = 88) {
 function buildTimeline(data, model) {
   if (!model) return []
   const fixture = data.fixture || {}
-  const seed = hashString(`${fixture.id}|timeline|${model.topScore.text}|${model.xg.home}|${model.xg.away}`)
+  const seed = hashString(`${fixture.id}|timeline-v146|${model.topScore.text}|${model.xg.home}|${model.xg.away}`)
   const random = mulberry32(seed)
   const usedSeconds = new Set([1, HALF_SECONDS, HALF_SECONDS + 60, MATCH_TOTAL_SECONDS])
   const events = []
@@ -744,7 +744,6 @@ function buildTimeline(data, model) {
     }
   }
 
-
   const addDangerousFouls = (team, count) => {
     const lineup = team === 'home' ? data.lineups?.home : data.lineups?.away
     const teamName = team === 'home' ? fixture.home?.name : fixture.away?.name
@@ -762,8 +761,58 @@ function buildTimeline(data, model) {
     }
   }
 
+  const addFreeKicks = (team, count) => {
+    const lineup = team === 'home' ? data.lineups?.home : data.lineups?.away
+    const teamName = team === 'home' ? fixture.home?.name : fixture.away?.name
+    for (let i = 0; i < count; i += 1) {
+      const taker = pickLineupPlayer(lineup, random, ['M', 'F', 'D'])
+      addEvent({
+        team,
+        type: 'freeKick',
+        actor: taker?.name || '',
+        lane: 30 + random() * 40,
+        minMinute: 12,
+        maxMinute: 86,
+        label: `🎯 Rzut wolny — ${shortPlayerName(taker?.name || teamName)} (${teamName})`
+      })
+    }
+  }
+
+  const addSubstitutions = (team, count = 2) => {
+    const lineup = team === 'home' ? data.lineups?.home : data.lineups?.away
+    const teamName = team === 'home' ? fixture.home?.name : fixture.away?.name
+    const subs = Array.isArray(lineup?.substitutes) ? lineup.substitutes.filter(player => player?.name) : []
+    const starters = Array.isArray(lineup?.startXI) ? lineup.startXI.filter(player => player?.name) : []
+    for (let i = 0; i < count; i += 1) {
+      const incoming = subs.length ? subs[i % subs.length] : null
+      const outgoing = starters.length ? starters[(i * 3 + Math.floor(random() * starters.length)) % starters.length] : null
+      const label = incoming?.name
+        ? `🔄 Zmiana — ${shortPlayerName(incoming.name)} za ${shortPlayerName(outgoing?.name || 'zawodnika')} (${teamName})`
+        : `🔄 Zmiana taktyczna ${teamName}`
+      addEvent({
+        team,
+        type: 'substitution',
+        actor: incoming?.name || '',
+        assist: outgoing?.name || '',
+        lane: 50,
+        minMinute: i === 0 ? 58 : 70,
+        maxMinute: i === 0 ? 72 : 84,
+        label
+      })
+    }
+  }
+
   for (let i = 0; i < model.topScore.home; i += 1) addGoal('home')
   for (let i = 0; i < model.topScore.away; i += 1) addGoal('away')
+
+  // A penalty can be the origin of one already-modelled goal; it never adds a
+  // bonus goal beyond the pre-match score distribution.
+  const goals = events.filter(event => event.type === 'goal')
+  if (goals.length && random() < 0.16) {
+    const event = goals[Math.floor(random() * goals.length)]
+    event.subtype = 'penalty'
+    event.label = `⚽ GOL Z KARNEGO — ${shortPlayerName(event.actor || (event.team === 'home' ? fixture.home?.name : fixture.away?.name))}`
+  }
 
   addShots('home', clamp(Math.round(model.expected.homeShots * 0.46), 3, 8))
   addShots('away', clamp(Math.round(model.expected.awayShots * 0.46), 3, 8))
@@ -773,6 +822,51 @@ function buildTimeline(data, model) {
   addCards('away', 1 + Math.round(random()))
   addDangerousFouls('home', 1 + (random() > .58 ? 1 : 0))
   addDangerousFouls('away', 1 + (random() > .58 ? 1 : 0))
+  addFreeKicks('home', 1 + (random() > .72 ? 1 : 0))
+  addFreeKicks('away', 1 + (random() > .72 ? 1 : 0))
+  addSubstitutions('home', 2)
+  addSubstitutions('away', 2)
+
+  // Rare red card. It changes possession/compactness in the animation instead
+  // of being just decorative.
+  if (random() < 0.14) {
+    const team = random() < 0.5 ? 'home' : 'away'
+    const lineup = team === 'home' ? data.lineups?.home : data.lineups?.away
+    const teamName = team === 'home' ? fixture.home?.name : fixture.away?.name
+    const player = pickLineupPlayer(lineup, random, ['D', 'M', 'F'])
+    addEvent({
+      team,
+      type: 'redCard',
+      actor: player?.name || '',
+      lane: 30 + random() * 40,
+      minMinute: 25,
+      maxMinute: 78,
+      label: `🟥 Czerwona kartka — ${shortPlayerName(player?.name || teamName)} (${teamName})`
+    })
+  }
+
+  // Tactical reactions are based on the simulated score state at the moment,
+  // not random labels detached from the event timeline.
+  const scoreAt = second => events.reduce((score, event) => {
+    if (event.type === 'goal' && event.second <= second) score[event.team] += 1
+    return score
+  }, { home: 0, away: 0 })
+  for (const minute of [66, 78]) {
+    const second = minute * 60 + 18
+    const score = scoreAt(second)
+    let team = null
+    if (score.home < score.away) team = 'home'
+    else if (score.away < score.home) team = 'away'
+    else team = Number(model?.probabilities?.home || 0) >= Number(model?.probabilities?.away || 0) ? 'home' : 'away'
+    const teamName = team === 'home' ? fixture.home?.name : fixture.away?.name
+    addEvent({
+      team,
+      type: 'tactic',
+      second,
+      lane: 50,
+      label: minute < 70 ? `📈 ${teamName}: wyższy pressing i szybsze przejście do ataku` : `⚡ ${teamName}: bardziej ofensywne ustawienie na końcówkę`
+    })
+  }
 
   events.push({ second: 1, minute: 0, team: 'none', type: 'info', lane: 50, label: '▶ Początek symulacji' })
   events.push({ second: HALF_SECONDS, minute: 45, team: 'none', type: 'info', lane: 50, label: '⏱ Przerwa' })
@@ -843,7 +937,13 @@ function buildLiveAnimationState({ clockSec, timeline, model, fixture, lineups }
   const phase = clamp((clockSec % flowSpan) / flowSpan, 0, .999)
   const flowSeed = hashString(`${fixture?.id || ''}|flow|${cycleIndex}`)
   const random = mulberry32(flowSeed)
-  const homeChance = clamp((model?.possession?.home || 50) / 100, .34, .66)
+  const redHome = timeline.filter(event => event.type === 'redCard' && event.team === 'home' && event.second <= clockSec).length
+  const redAway = timeline.filter(event => event.type === 'redCard' && event.team === 'away' && event.second <= clockSec).length
+  const activeTacticHome = [...timeline].reverse().find(event => event.type === 'tactic' && event.team === 'home' && event.second <= clockSec && clockSec - event.second <= 12 * 60)
+  const activeTacticAway = [...timeline].reverse().find(event => event.type === 'tactic' && event.team === 'away' && event.second <= clockSec && clockSec - event.second <= 12 * 60)
+  const cardSwing = (redAway - redHome) * .095
+  const tacticSwing = (activeTacticHome ? .035 : 0) - (activeTacticAway ? .035 : 0)
+  const homeChance = clamp((model?.possession?.home || 50) / 100 + cardSwing + tacticSwing, .25, .75)
   let possessionTeam = random() <= homeChance ? 'home' : 'away'
   if (featuredEvent?.team === 'home' || featuredEvent?.team === 'away') possessionTeam = featuredEvent.team
 
@@ -981,8 +1081,11 @@ function buildLiveAnimationState({ clockSec, timeline, model, fixture, lineups }
         ? (possessionTeam === 'home' ? 96 : 4)
         : featuredEvent.type === 'corner'
           ? (possessionTeam === 'home' ? 97 : 3)
-          : (possessionTeam === 'home' ? 70 : 30)
-    const beforeWindow = featuredEvent.type === 'goal' ? 145 : featuredEvent.type === 'shot' ? 125 : 105
+          : featuredEvent.type === 'freeKick'
+            ? (possessionTeam === 'home' ? 94 : 6)
+            : (possessionTeam === 'home' ? 70 : 30)
+    const administrativeEvent = ['card', 'redCard', 'foul', 'substitution', 'tactic'].includes(featuredEvent.type)
+    const beforeWindow = featuredEvent.type === 'goal' ? 145 : featuredEvent.type === 'shot' ? 125 : featuredEvent.type === 'freeKick' ? 115 : administrativeEvent ? 48 : 105
 
     if (clockSec <= featuredEvent.second) {
       const p = clamp((clockSec - (featuredEvent.second - beforeWindow)) / beforeWindow, 0, 1)
@@ -1026,7 +1129,9 @@ function buildLiveAnimationState({ clockSec, timeline, model, fixture, lineups }
             ? `${shortPlayerName(carrier?.name || teamName)} uderza na bramkę!`
             : featuredEvent.type === 'corner'
               ? `${teamName} wrzuca piłkę z narożnika`
-              : `${featuredEvent.label}`
+              : featuredEvent.type === 'freeKick'
+                ? `${shortPlayerName(carrier?.name || teamName)} ustawia piłkę do rzutu wolnego`
+                : `${featuredEvent.label}`
       }
       pressure = .72 + e * .26
       compactness = .78
@@ -1069,6 +1174,38 @@ function buildLiveAnimationState({ clockSec, timeline, model, fixture, lineups }
         ball = after < 24 ? { x: targetX, y: eventLane } : { x: possessionTeam === 'home' ? 85 : 15, y: 50 }
         trajectoryTarget = { x: possessionTeam === 'home' ? 86 : 14, y: 50 }
         commentary = `${featuredEvent.label}`
+      } else if (featuredEvent.type === 'freeKick') {
+        flashMode = 'freeKick'
+        actionPhase = 'freeKick'
+        ballAttached = false
+        showTrajectory = true
+        ball = after < 22 ? { x: targetX, y: eventLane } : { x: possessionTeam === 'home' ? 84 : 16, y: 50 }
+        trajectoryTarget = { x: possessionTeam === 'home' ? 96 : 4, y: 50 }
+        pressure = .76
+        commentary = `${featuredEvent.label}`
+      } else if (featuredEvent.type === 'redCard') {
+        flashMode = 'redCard'
+        actionPhase = 'redCard'
+        ballAttached = false
+        showTrajectory = false
+        ball = { x: possessionTeam === 'home' ? 58 : 42, y: eventLane }
+        pressure = .12
+        commentary = `${featuredEvent.label} — zespół musi przebudować ustawienie`
+      } else if (featuredEvent.type === 'substitution') {
+        flashMode = 'substitution'
+        actionPhase = 'substitution'
+        ballAttached = false
+        showTrajectory = false
+        ball = { x: 50, y: 50 }
+        pressure = .16
+        commentary = `${featuredEvent.label}`
+      } else if (featuredEvent.type === 'tactic') {
+        flashMode = 'tactic'
+        actionPhase = 'tactic'
+        ball = { x: possessionTeam === 'home' ? 58 : 42, y: eventLane }
+        pressure = .48
+        compactness = .72
+        commentary = `${featuredEvent.label}`
       } else if (featuredEvent.type === 'card') {
         flashMode = 'card'
         actionPhase = 'card'
@@ -1086,6 +1223,12 @@ function buildLiveAnimationState({ clockSec, timeline, model, fixture, lineups }
       }
     }
   }
+
+  const fatigue = clamp((clockSec - 55 * 60) / (35 * 60), 0, 1)
+  const recentSub = timeline.some(event => event.type === 'substitution' && event.team === possessionTeam && event.second <= clockSec && clockSec - event.second <= 9 * 60)
+  const staminaBoost = recentSub ? .08 : 0
+  pressure = clamp(pressure * (1 - fatigue * .18) + staminaBoost, .12, 1)
+  compactness = clamp(compactness * (1 - fatigue * .12) + (possessionTeam === 'home' ? redHome : redAway) * -.08, .18, 1)
 
   return {
     phaseLabel: getPhaseLabel(clockSec),
@@ -1373,7 +1516,7 @@ function MomentumChart({ timeline = [], clockSec = 0, model = null, homeName = '
     const partial = clamp((clockSec - from) / bucketSeconds, 0, 1)
     const visibleEvents = timeline.filter(event => event.second >= from && event.second < to && event.second <= clockSec)
     const eventScore = visibleEvents.reduce((score, event) => {
-      const weight = event.type === 'goal' ? 4.4 : event.type === 'shot' ? 1.7 : event.type === 'corner' ? 1.15 : event.type === 'card' ? -.3 : event.type === 'turnover' ? .45 : 0
+      const weight = event.type === 'goal' ? 4.4 : event.type === 'shot' ? 1.7 : event.type === 'corner' ? 1.15 : event.type === 'freeKick' ? 1.05 : event.type === 'redCard' ? -1.15 : event.type === 'card' ? -.3 : event.type === 'tactic' ? .35 : event.type === 'turnover' ? .45 : 0
       return score + (event.team === 'home' ? weight : event.team === 'away' ? -weight : 0)
     }, 0)
 
@@ -1593,15 +1736,17 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
       fulltimeCuePlayedRef.current = true
       playRealMatchCue(realAudioBankRef, 'fulltime', soundVolume)
     }
-    const approaching = timeline.filter(event => ['goal', 'shot', 'corner'].includes(event.type) && event.second - 65 > previous && event.second - 65 <= clockSec)
+    const approaching = timeline.filter(event => ['goal', 'shot', 'corner', 'freeKick'].includes(event.type) && event.second - 65 > previous && event.second - 65 <= clockSec)
     approaching.forEach(() => playRealMatchCue(realAudioBankRef, 'attack', soundVolume * .78))
     const crossed = timeline.filter(event => event.second > previous && event.second <= clockSec)
     crossed.forEach(event => {
       if (event.type === 'goal') playRealMatchCue(realAudioBankRef, 'goal', soundVolume)
+      else if (event.type === 'redCard') { playRealMatchCue(realAudioBankRef, 'card', soundVolume); playRealMatchCue(realAudioBankRef, 'foul', soundVolume * .92) }
       else if (event.type === 'card') playRealMatchCue(realAudioBankRef, 'card', soundVolume)
-      else if (event.type === 'foul') playRealMatchCue(realAudioBankRef, 'foul', soundVolume)
+      else if (event.type === 'foul' || event.type === 'freeKick') playRealMatchCue(realAudioBankRef, 'foul', soundVolume)
       else if (event.type === 'corner') playRealMatchCue(realAudioBankRef, 'corner', soundVolume)
       else if (event.type === 'shot') playRealMatchCue(realAudioBankRef, 'attack', soundVolume * .9)
+      else if (event.type === 'substitution' || event.type === 'tactic') playRealMatchCue(realAudioBankRef, 'attack', soundVolume * .42)
     })
     soundClockRef.current = clockSec
   }, [Math.floor(clockSec), running, soundEnabled, soundVolume, timeline, audioUnlocked])
@@ -1609,7 +1754,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
   useEffect(() => {
     const bank = ensureRealAudioBank(realAudioBankRef)
     if (!bank) return
-    const imminent = timeline.some(event => ['goal','shot','corner'].includes(event.type) && event.second > clockSec && event.second <= clockSec + 95)
+    const imminent = timeline.some(event => ['goal','shot','corner','freeKick'].includes(event.type) && event.second > clockSec && event.second <= clockSec + 95)
     setRealCrowd(bank, { enabled: soundEnabled && audioUnlocked && clockSec < MATCH_TOTAL_SECONDS, running, volume: soundVolume, danger: imminent ? 1 : 0 })
   }, [soundEnabled, audioUnlocked, soundVolume, running, Math.floor(clockSec / 5), timeline])
 
@@ -1621,9 +1766,27 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
   }, [])
 
   const liveCards = useMemo(() => ({
-    home: timeline.filter(event => event.type === 'card' && event.team === 'home' && event.second <= clockSec).length,
-    away: timeline.filter(event => event.type === 'card' && event.team === 'away' && event.second <= clockSec).length
+    home: timeline.filter(event => ['card','redCard'].includes(event.type) && event.team === 'home' && event.second <= clockSec).length,
+    away: timeline.filter(event => ['card','redCard'].includes(event.type) && event.team === 'away' && event.second <= clockSec).length
   }), [timeline, clockSec])
+  const liveRedCards = useMemo(() => ({
+    home: timeline.filter(event => event.type === 'redCard' && event.team === 'home' && event.second <= clockSec).length,
+    away: timeline.filter(event => event.type === 'redCard' && event.team === 'away' && event.second <= clockSec).length
+  }), [timeline, clockSec])
+  const liveSubs = useMemo(() => ({
+    home: timeline.filter(event => event.type === 'substitution' && event.team === 'home' && event.second <= clockSec).length,
+    away: timeline.filter(event => event.type === 'substitution' && event.team === 'away' && event.second <= clockSec).length
+  }), [timeline, clockSec])
+  const simulatedMvp = useMemo(() => {
+    const scores = new Map()
+    timeline.filter(event => event.second <= clockSec && event.actor).forEach(event => {
+      const key = String(event.actor)
+      const add = event.type === 'goal' ? 1.4 : event.type === 'shot' ? .16 : event.type === 'redCard' ? -.9 : event.type === 'card' ? -.22 : event.type === 'freeKick' ? .12 : 0
+      scores.set(key, (scores.get(key) || 0) + add)
+    })
+    const best = [...scores.entries()].sort((a, b) => b[1] - a[1])[0]
+    return best?.[0] || ''
+  }, [timeline, clockSec])
   const elapsedRatio = clamp(clockSec / MATCH_TOTAL_SECONDS, 0, 1)
   const xgLive = {
     home: Math.round(model?.xg?.home * elapsedRatio * 100) / 100 || 0,
@@ -1647,7 +1810,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
       {data && model ? <>
         <header className="fm119-scorebar">
           <div className="fm119-score-meta">
-            <div><span>BET+AI SIMULATOR</span><em className={running ? 'live' : ''}>{running ? 'LIVE' : clockSec >= MATCH_TOTAL_SECONDS ? 'FT' : 'PAUZA'}</em>{data?.externalConsensus?.consensus?.available ? <em className="multi-source-v128">MULTI-SOURCE {data.externalConsensus.consensus.sourceCount}</em> : null}</div>
+            <div><span>BET+AI SIMULATOR</span><em className={running ? 'live' : ''}>{running ? 'LIVE' : clockSec >= MATCH_TOTAL_SECONDS ? 'FT' : 'PAUZA'}</em>{data?.externalConsensus?.consensus?.available ? <em className="multi-source-v128">MULTI-SOURCE {data.externalConsensus.consensus.sourceCount}</em> : null}<em className="fm146-engine-badge">EVENT ENGINE 2.0</em></div>
             <small>{data.fixture.league} • {data.fixture.round || 'Mecz'}</small>
           </div>
           <div className="fm119-score-team home">
@@ -1764,6 +1927,20 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
             }} />
           </div>
         </section>
+
+        {clockSec >= MATCH_TOTAL_SECONDS ? <section className="fm146-fulltime-report">
+          <header><div><small>EVENT ENGINE 2.0 • FULL TIME REPORT</small><strong>Raport końcowy symulacji</strong></div><span>90:00 • MODEL PRE-MATCH</span></header>
+          <div className="fm146-fulltime-score"><b>{data.fixture.home.name}</b><strong>{currentScore.home} : {currentScore.away}</strong><b>{data.fixture.away.name}</b></div>
+          <div className="fm146-fulltime-grid">
+            <article><small>xG MODEL</small><b>{model.xg.home.toFixed(2)} – {model.xg.away.toFixed(2)}</b></article>
+            <article><small>STRZAŁY</small><b>{liveCounters.homeShots} – {liveCounters.awayShots}</b></article>
+            <article><small>ROŻNE</small><b>{liveCounters.homeCorners} – {liveCounters.awayCorners}</b></article>
+            <article><small>KARTKI</small><b>{liveCards.home} – {liveCards.away}</b><em>czerwone {liveRedCards.home}:{liveRedCards.away}</em></article>
+            <article><small>ZMIANY</small><b>{liveSubs.home} – {liveSubs.away}</b></article>
+            <article><small>MVP SYMULACJI</small><b>{simulatedMvp ? shortPlayerName(simulatedMvp) : '—'}</b></article>
+          </div>
+          <footer>Ten przebieg jest jedną reprezentatywną symulacją wygenerowaną z zamrożonego profilu przedmeczowego. Prawdopodobieństwa i VALUE są liczone przed animacją, nie z jej wyniku.</footer>
+        </section> : null}
       </> : null}
     </section>
   )

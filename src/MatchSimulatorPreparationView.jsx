@@ -317,6 +317,136 @@ function resolveCalibration(performance = null, league = '', key = '', probabili
   }
 }
 
+function calibrateProbabilityV2(performance = null, league = '', key = '', rawProbability = 0) {
+  const raw = clampNum(rawProbability, 0.1, 99.9, 50)
+  const confidence = raw >= 50 ? raw : 100 - raw
+  const calibration = resolveCalibration(performance, league, key, confidence)
+  const bucket = calibration?.bucket || null
+  const bucketSamples = Number(bucket?.samples || 0)
+  const actualAccuracy = Number(bucket?.actualAccuracy || 0)
+  if (!bucket || bucketSamples < 10 || !(actualAccuracy > 0)) {
+    return { raw: round1(raw), calibrated: round1(raw), delta: 0, applied: false, calibration }
+  }
+
+  // More history = stronger correction, but never let backtest completely replace
+  // the current-match model. League-specific buckets get slightly more trust.
+  const historyWeight = clampNum(
+    0.18 + Math.min(0.50, bucketSamples / 180) + (calibration?.source === 'league' ? 0.08 : 0),
+    0.18,
+    0.72,
+    0.25
+  )
+  const calibratedConfidence = clampNum(raw * 0 + confidence * (1 - historyWeight) + actualAccuracy * historyWeight, 50.1, 96.5, confidence)
+  const calibrated = raw >= 50 ? calibratedConfidence : 100 - calibratedConfidence
+  return {
+    raw: round1(raw),
+    calibrated: round1(clampNum(calibrated, 1, 99, raw)),
+    delta: round1(calibrated - raw),
+    applied: true,
+    historyWeight: round1(historyWeight * 100),
+    calibration
+  }
+}
+
+function calibrateTripletV2(performance = null, league = '', rawTriplet = null) {
+  const raw = normalizeTriplet(rawTriplet)
+  if (!raw) return { raw: null, calibrated: null, applied: false, top: null }
+  const topKey = ['home', 'draw', 'away'].sort((a, b) => raw[b] - raw[a])[0]
+  const topCal = calibrateProbabilityV2(performance, league, topKey, raw[topKey])
+  if (!topCal.applied || topCal.calibrated <= 0 || topCal.calibrated >= 99) {
+    return { raw, calibrated: raw, applied: false, top: { key: topKey, ...topCal } }
+  }
+  const others = ['home', 'draw', 'away'].filter(key => key !== topKey)
+  const oldOther = Math.max(0.001, 100 - raw[topKey])
+  const newOther = Math.max(0.001, 100 - topCal.calibrated)
+  const calibrated = { [topKey]: topCal.calibrated }
+  others.forEach(key => { calibrated[key] = raw[key] / oldOther * newOther })
+  const normalized = normalizeTriplet(calibrated) || raw
+  return {
+    raw,
+    calibrated: { home: round1(normalized.home), draw: round1(normalized.draw), away: round1(normalized.away) },
+    applied: true,
+    top: { key: topKey, ...topCal }
+  }
+}
+
+function dynamicSourceWeightsV143({ data = {}, consensus = null, performance = null, league = '', poisson = null, apiPercent = null, webPercent = null } = {}) {
+  const global1x2 = findMarketPerformance(performance?.all || null, 'home')
+  const leagueSummary = Array.isArray(performance?.leagues)
+    ? performance.leagues.find(item => normalizeName(item?.name) === normalizeName(league)) || null
+    : null
+  const league1x2 = findMarketPerformance(leagueSummary, 'home')
+  const hist = Number(league1x2?.samples || 0) >= 30 ? league1x2 : global1x2
+  const brier = Number(hist?.brier || 0)
+  const historyQuality = hist && Number(hist.samples || 0) >= 30
+    ? clampNum(100 - Math.max(0, brier - 0.16) * 250, 45, 100, 70)
+    : 68
+
+  const statsReady = Boolean(data?.teamStats?.home?.available && data?.teamStats?.away?.available)
+  const recentDepth = Math.min(16, Number(data?.recent?.home?.length || 0) + Number(data?.recent?.away?.length || 0))
+  const statsScore = clampNum((statsReady ? 76 : 52) + recentDepth * 1.15 + historyQuality * 0.08, 50, 98, 72)
+
+  let apiAgreement = 60
+  if (apiPercent && poisson?.oneXTwo) {
+    const diff = (Math.abs(apiPercent.home - poisson.oneXTwo.home) + Math.abs(apiPercent.draw - poisson.oneXTwo.draw) + Math.abs(apiPercent.away - poisson.oneXTwo.away)) / 3
+    apiAgreement = clampNum(100 - diff * 2.1, 35, 98, 60)
+  }
+  const apiScore = apiPercent ? clampNum(52 + apiAgreement * 0.38 + historyQuality * 0.10, 50, 94, 65) : 0
+
+  const sourceCount = Number(consensus?.consensus?.sourceCount || 0)
+  const agreement = Number(consensus?.consensus?.agreement || 0)
+  const webScore = webPercent
+    ? clampNum(40 + Math.min(6, sourceCount) * 5.5 + agreement * 0.28, 45, 92, 55)
+    : 0
+
+  const statsRaw = statsScore * 1.20
+  const apiRaw = apiScore > 0 ? apiScore * 0.52 : 0
+  const webRaw = webScore > 0 ? webScore * 0.34 : 0
+  const total = Math.max(1, statsRaw + apiRaw + webRaw)
+  return {
+    stats: round1(statsRaw / total * 100),
+    api: round1(apiRaw / total * 100),
+    web: round1(webRaw / total * 100),
+    diagnostics: {
+      historyQuality: Math.round(historyQuality),
+      apiAgreement: Math.round(apiAgreement),
+      webAgreement: Math.round(agreement),
+      sourceCount
+    }
+  }
+}
+
+function explainForecastV145({ match = {}, data = {}, consensus = null, forecast = null, homeGF = 0, homeGA = 0, awayGF = 0, awayGA = 0, homeForm = 50, awayForm = 50 } = {}) {
+  const positives = []
+  const risks = []
+  const top = forecast?.value?.top || forecast?.value?.top3?.[0] || null
+  const formDiff = homeForm - awayForm
+  if (Math.abs(formDiff) >= 12) positives.push(`${formDiff > 0 ? match?.home : match?.away} ma wyraźnie lepszą formę ostatnich spotkań (${Math.round(Math.max(homeForm, awayForm))}/100 vs ${Math.round(Math.min(homeForm, awayForm))}/100).`)
+  if (homeGF >= 1.65) positives.push(`${match?.home} zdobywa średnio ${round2(homeGF)} gola na mecz w dostępnej próbce.`)
+  if (awayGF >= 1.65) positives.push(`${match?.away} zdobywa średnio ${round2(awayGF)} gola na mecz w dostępnej próbce.`)
+  if (homeGA >= 1.45) positives.push(`${match?.home} traci średnio ${round2(homeGA)} gola — to podnosi profil bramkowy.`)
+  if (awayGA >= 1.45) positives.push(`${match?.away} traci średnio ${round2(awayGA)} gola — to podnosi profil bramkowy.`)
+  if (Number(consensus?.consensus?.sourceCount || 0) >= 3) {
+    const a = Number(consensus?.consensus?.agreement || 0)
+    ;(a >= 70 ? positives : risks).push(`Consensus: ${consensus.consensus.sourceCount} źródeł, zgodność ${Math.round(a)}%.`)
+  }
+  if (Number(data?.injuries?.homeCount || 0) + Number(data?.injuries?.awayCount || 0) > 0) risks.push(`Absencje: ${Number(data?.injuries?.homeCount || 0)} gospodarze / ${Number(data?.injuries?.awayCount || 0)} goście.`)
+  if (!data?.prediction?.available) risks.push('Brak dodatkowej prognozy API — większa część ciężaru spoczywa na modelu statystycznym.')
+  if (Number(forecast?.dataQuality || 0) < 85) risks.push(`Data Quality ${forecast?.dataQuality || 0}/100 — model podnosi wymagany próg value.`)
+  if (top?.calibration?.status === 'POOR') risks.push('Historyczna kalibracja wybranego rynku jest słaba — rekomendacja jest blokowana.')
+  if (top?.calibration?.status === 'PENDING') risks.push(`Kalibracja rynku ma dopiero ${top?.calibration?.samples || 0} prób.`)
+  if (top?.decision === 'STRONG_VALUE' || top?.decision === 'VALUE') positives.push(`${forecastLabel(top.key)}: skalibrowane ${top.probability}% vs rynek no-vig ${top.noVigImplied}% (edge ${top.edgePp > 0 ? '+' : ''}${top.edgePp} pp).`)
+  if (!positives.length) positives.push('Model nie znalazł jednego dominującego czynnika — prognoza jest wynikiem połączenia kilku umiarkowanych sygnałów.')
+  if (!risks.length) risks.push('Brak dużych czerwonych flag w dostępnych danych przedmeczowych.')
+  return {
+    positives: positives.slice(0, 5),
+    risks: risks.slice(0, 5),
+    summary: top
+      ? `${forecastLabel(top.key)}: model po kalibracji ${top.probability}%, fair ${Number(top.fairOdds || 0).toFixed(2)}, decyzja ${valueDecisionLabel(top.decision)}.`
+      : 'Brak kompletnego rynku kursowego — model pokazuje prawdopodobieństwa, ale nie wymusza rekomendacji.'
+  }
+}
+
 function baseEdgeThreshold(key = '') {
   if (['home', 'draw', 'away'].includes(key)) return 6
   if (['bttsYes', 'bttsNo', 'btts'].includes(key)) return 5.5
@@ -525,6 +655,7 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
   const recent = data?.recent || {}
   const prediction = data?.prediction || {}
   const injuries = data?.injuries || {}
+  const league = data?.fixture?.league || match?.league || ''
 
   const homeGF = Number(stats?.home?.goalsForAvg) || avg(recent?.home, 'gf', 1.35)
   const homeGA = Number(stats?.home?.goalsAgainstAvg) || avg(recent?.home, 'ga', 1.18)
@@ -556,7 +687,6 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
     awayXg *= scale
   }
 
-  // Web/expert O2.5 is a secondary signal only; it nudges the total-goals profile.
   const externalOver25 = Number(consensus?.goals?.over25 || 0)
   const externalGoalSources = Number(consensus?.goals?.sourceCount || 0)
   if (consensus?.goals?.available && externalOver25 > 0 && externalGoalSources > 0) {
@@ -572,31 +702,50 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
   awayXg = clampNum(awayXg, 0.18, 3.4)
   const poisson = poissonForecast(homeXg, awayXg)
 
-  const webWeight = webPercent ? clampNum(0.08 + Number(consensus?.consensus?.agreement || 0) / 100 * 0.08 + Math.min(6, Number(consensus?.consensus?.sourceCount || 0)) * 0.01, 0.08, 0.20) : 0
-  const apiWeight = apiPercent ? 0.22 : 0
-  const statsWeight = 0.58
-  const oneXTwo = weightedTriplet([
-    { value: poisson.oneXTwo, weight: statsWeight },
-    { value: apiPercent, weight: apiWeight },
-    { value: webPercent, weight: webWeight }
+  // V143 — weights are dynamic. Statistics remain the primary independent source;
+  // API/web weight rises only when the source is present and agrees reasonably.
+  const sourceWeights = dynamicSourceWeightsV143({ data, consensus, performance: modelPerformance, league, poisson, apiPercent, webPercent })
+  const oneXTwoRaw = weightedTriplet([
+    { value: poisson.oneXTwo, weight: sourceWeights.stats },
+    { value: apiPercent, weight: sourceWeights.api },
+    { value: webPercent, weight: sourceWeights.web }
   ]) || poisson.oneXTwo
 
-  const goalsWeight = consensus?.goals?.available && externalGoalSources > 0
-    ? clampNum(0.12 + Number(consensus?.goals?.confidence || 0) / 100 * 0.10, 0.12, 0.22)
+  const goalsWebWeight = consensus?.goals?.available && externalGoalSources > 0
+    ? clampNum((sourceWeights.web / 100) * 0.85, 0.05, 0.24, 0.12)
     : 0
-  const over25 = goalsWeight > 0 ? poisson.over25 * (1 - goalsWeight) + externalOver25 * goalsWeight : poisson.over25
+  const over25Raw = goalsWebWeight > 0 ? poisson.over25 * (1 - goalsWebWeight) + externalOver25 * goalsWebWeight : poisson.over25
   const externalBtts = Number(consensus?.goals?.bttsYes || 0)
-  const bttsWeight = consensus?.goals?.bttsAvailable && externalBtts > 0 ? Math.min(0.18, goalsWeight || 0.12) : 0
-  const btts = bttsWeight > 0 ? poisson.btts * (1 - bttsWeight) + externalBtts * bttsWeight : poisson.btts
+  const bttsWeight = consensus?.goals?.bttsAvailable && externalBtts > 0 ? Math.min(0.20, goalsWebWeight || 0.10) : 0
+  const bttsRaw = bttsWeight > 0 ? poisson.btts * (1 - bttsWeight) + externalBtts * bttsWeight : poisson.btts
 
-  const markets = {
-    home: round1(oneXTwo.home),
-    draw: round1(oneXTwo.draw),
-    away: round1(oneXTwo.away),
+  const rawMarkets = {
+    home: round1(oneXTwoRaw.home),
+    draw: round1(oneXTwoRaw.draw),
+    away: round1(oneXTwoRaw.away),
     over15: round1(poisson.over15),
-    over25: round1(over25),
+    over25: round1(over25Raw),
     over35: round1(poisson.over35),
-    btts: round1(btts)
+    btts: round1(bttsRaw)
+  }
+
+  // V141 — calibrate against historical pre-match forecasts. Value/fair odds use
+  // calibrated probabilities, while RAW remains visible for auditing.
+  const oneCalibration = calibrateTripletV2(modelPerformance, league, oneXTwoRaw)
+  const goalCals = {
+    over15: calibrateProbabilityV2(modelPerformance, league, 'over15', rawMarkets.over15),
+    over25: calibrateProbabilityV2(modelPerformance, league, 'over25', rawMarkets.over25),
+    over35: calibrateProbabilityV2(modelPerformance, league, 'over35', rawMarkets.over35),
+    btts: calibrateProbabilityV2(modelPerformance, league, 'bttsYes', rawMarkets.btts)
+  }
+  const markets = {
+    home: round1(oneCalibration.calibrated?.home ?? rawMarkets.home),
+    draw: round1(oneCalibration.calibrated?.draw ?? rawMarkets.draw),
+    away: round1(oneCalibration.calibrated?.away ?? rawMarkets.away),
+    over15: goalCals.over15.calibrated,
+    over25: goalCals.over25.calibrated,
+    over35: goalCals.over35.calibrated,
+    btts: goalCals.btts.calibrated
   }
   const fair = Object.fromEntries(Object.entries(markets).map(([key, value]) => [key, fairOdd(value)]))
   const dataQuality = buildDataQuality(checks, data, consensus)
@@ -619,14 +768,28 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
   if (data?.h2h?.summary?.count) factors.push(`H2H: ${data.h2h.summary.count} meczów • śr. ${round2(data.h2h.summary.avgGoals)} gola`)
   if (sourceCount) factors.push(`Web consensus: ${sourceCount} źródeł • zgodność ${Math.round(agreement)}%`)
 
-  return {
-    version: 'BETAI_FORECAST_V2',
+  const forecast = {
+    version: 'BETAI_FORECAST_V146',
+    calibrationVersion: 'BETAI_CALIBRATION_V2',
+    weightingVersion: 'BETAI_DYNAMIC_WEIGHTS_V1',
     generatedAt: new Date().toISOString(),
     fixtureId: String(match?.apiFixtureId || match?.id || data?.fixture?.id || ''),
     xg: { home: round2(homeXg), away: round2(awayXg) },
-    oneXTwo: { home: round1(oneXTwo.home), draw: round1(oneXTwo.draw), away: round1(oneXTwo.away) },
+    raw: {
+      oneXTwo: { home: rawMarkets.home, draw: rawMarkets.draw, away: rawMarkets.away },
+      goals: { over15: rawMarkets.over15, over25: rawMarkets.over25, over35: rawMarkets.over35, btts: rawMarkets.btts }
+    },
+    oneXTwo: { home: markets.home, draw: markets.draw, away: markets.away },
     goals: { over15: markets.over15, over25: markets.over25, over35: markets.over35, btts: markets.btts },
     fairOdds: fair,
+    calibration: {
+      oneXTwo: oneCalibration,
+      over15: goalCals.over15,
+      over25: goalCals.over25,
+      over35: goalCals.over35,
+      btts: goalCals.btts
+    },
+    sourceWeights,
     topScores: poisson.topScores.slice(0, 3).map(item => ({ score: item.score, probability: round1(item.probability) })),
     dataQuality,
     consensus: { sourceCount, agreement: Math.round(agreement), available: Boolean(webPercent) },
@@ -634,6 +797,8 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
     factors,
     modelInputs: { homeGF: round2(homeGF), homeGA: round2(homeGA), awayGF: round2(awayGF), awayGA: round2(awayGA), homeForm: Math.round(homeForm), awayForm: Math.round(awayForm) }
   }
+  forecast.explainability = explainForecastV145({ match, data, consensus, forecast, homeGF, homeGA, awayGF, awayGA, homeForm, awayForm })
+  return forecast
 }
 
 function forecastLabel(key) {
@@ -734,6 +899,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [forecastSaveState, setForecastSaveState] = useState('')
+  const [oddsHistory, setOddsHistory] = useState(null)
   const [modelPerformance, setModelPerformance] = useState(null)
   const [modelPerformanceLoading, setModelPerformanceLoading] = useState(false)
   const [rateShieldState, setRateShieldState] = useState({ active: false, attempt: 0, retryMs: 0, mode: '' })
@@ -779,6 +945,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
     setData(null)
     setConsensus(null)
     setConsensusError('')
+    setOddsHistory(null)
     setRateShieldState({ active: false, attempt: 0, retryMs: 0, mode: '' })
     setProgress(4)
     try {
@@ -867,7 +1034,8 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
     if (!forecastWithReliability || !eligibility.eligible || consensusLoading || modelPerformanceLoading) return
     const fixtureId = String(match?.apiFixtureId || match?.id || data?.fixture?.id || '')
     if (!fixtureId) return
-    const signature = `${fixtureId}|${forecastWithReliability.version}|${forecastWithReliability.dataQuality}|${forecastWithReliability.consensus.sourceCount}|${forecastWithReliability.xg.home}|${forecastWithReliability.xg.away}|${forecastWithReliability.value?.state || ''}|${forecastWithReliability.value?.top?.key || ''}|${forecastWithReliability.reliability?.score || 0}`
+    const oddsSignature = (forecastWithReliability.value?.top3 || []).map(item => `${item.key}:${item.bookmaker}:${item.bookmakerOdds}`).join(',')
+    const signature = `${fixtureId}|${forecastWithReliability.version}|${forecastWithReliability.dataQuality}|${forecastWithReliability.consensus.sourceCount}|${forecastWithReliability.xg.home}|${forecastWithReliability.xg.away}|${forecastWithReliability.value?.state || ''}|${forecastWithReliability.value?.top?.key || ''}|${forecastWithReliability.reliability?.score || 0}|${oddsSignature}`
     if (forecastSavedRef.current === signature) return
     forecastSavedRef.current = signature
     setForecastSaveState('saving')
@@ -888,6 +1056,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
       .then(({ response, payload }) => {
         if (!mountedRef.current) return
         setForecastSaveState(response.ok && payload?.ok ? 'saved' : 'local')
+        if (payload?.oddsHistory) setOddsHistory(payload.oddsHistory)
       })
       .catch(() => { if (mountedRef.current) setForecastSaveState('local') })
   }, [forecastWithReliability, eligibility.eligible, consensusLoading, modelPerformanceLoading, match, data, consensus])
@@ -1003,6 +1172,34 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
             <article><small>BTTS • TAK</small><b>{forecast.goals.btts}%</b><span>fair {forecast.fairOdds.btts.toFixed(2)}</span></article>
           </div>
 
+          <div className="sim-prep-calibration2-v146">
+            <div className="sim-prep-calibration2-head-v146">
+              <div><small>CALIBRATION ENGINE 2.0</small><strong>RAW → skalibrowane prawdopodobieństwo</strong></div>
+              <span>{forecast.calibration?.over25?.applied || forecast.calibration?.btts?.applied || forecast.calibration?.oneXTwo?.applied ? 'HISTORIA AKTYWNA' : 'ZBIERANIE PRÓB'}</span>
+            </div>
+            <div className="sim-prep-calibration2-grid-v146">
+              {[
+                ['1X2 TOP', forecast.calibration?.oneXTwo?.top?.raw, forecast.calibration?.oneXTwo?.top?.calibrated, forecast.calibration?.oneXTwo?.top?.calibration],
+                ['OVER 1.5', forecast.raw?.goals?.over15, forecast.goals.over15, forecast.calibration?.over15?.calibration],
+                ['OVER 2.5', forecast.raw?.goals?.over25, forecast.goals.over25, forecast.calibration?.over25?.calibration],
+                ['OVER 3.5', forecast.raw?.goals?.over35, forecast.goals.over35, forecast.calibration?.over35?.calibration],
+                ['BTTS', forecast.raw?.goals?.btts, forecast.goals.btts, forecast.calibration?.btts?.calibration]
+              ].map(([label, raw, calibrated, cal]) => <article key={label}>
+                <small>{label}</small>
+                <div><span>{raw == null ? '—' : `${Number(raw).toFixed(1)}%`}</span><i>→</i><b>{calibrated == null ? '—' : `${Number(calibrated).toFixed(1)}%`}</b></div>
+                <em>{cal?.samples || 0} prób • {cal?.source === 'league' ? 'liga' : 'global'} • {cal?.status || 'PENDING'}</em>
+              </article>)}
+            </div>
+          </div>
+
+          <div className="sim-prep-sourceweights-v146">
+            <div><small>DYNAMIC SOURCE WEIGHTING</small><strong>Wagi źródeł dla tego meczu</strong></div>
+            <article><span>MODEL STATYSTYCZNY</span><b>{forecast.sourceWeights?.stats || 0}%</b><i><em style={{ width: `${forecast.sourceWeights?.stats || 0}%` }} /></i></article>
+            <article><span>API PREDICTION</span><b>{forecast.sourceWeights?.api || 0}%</b><i><em style={{ width: `${forecast.sourceWeights?.api || 0}%` }} /></i></article>
+            <article><span>WEB / EXPERT CONSENSUS</span><b>{forecast.sourceWeights?.web || 0}%</b><i><em style={{ width: `${forecast.sourceWeights?.web || 0}%` }} /></i></article>
+            <p>Wagi zmieniają się zależnie od dostępności danych, zgodności źródeł i historycznej jakości modelu. Kurs bukmachera nie jest używany do sztucznego podbijania prognozy — służy do niezależnej oceny VALUE.</p>
+          </div>
+
           <div className="sim-prep-forecast-bottom-v136">
             <div className="sim-prep-scorelines-v136"><small>NAJBARDZIEJ PRAWDOPODOBNE WYNIKI</small><div>{forecast.topScores.map(item => <span key={item.score}><b>{item.score}</b><em>{item.probability}%</em></span>)}</div></div>
             <div className={`sim-prep-value-v136 ${String(forecast.value.state || '').toLowerCase()}`}>
@@ -1010,6 +1207,20 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
               {forecast.value.state === 'STRONG_VALUE' && forecast.value.top ? <><strong>STRONG VALUE</strong><b>{forecastLabel(forecast.value.top.key)} @ {forecast.value.top.bookmakerOdds.toFixed(2)}</b><span>Model {forecast.value.top.probability}% • fair {forecast.value.top.fairOdds.toFixed(2)} • edge +{forecast.value.top.edgePp} pp • EV +{forecast.value.top.expectedValuePct}%</span></> : forecast.value.state === 'VALUE' && forecast.value.top ? <><strong>VALUE DETECTED</strong><b>{forecastLabel(forecast.value.top.key)} @ {forecast.value.top.bookmakerOdds.toFixed(2)}</b><span>Model {forecast.value.top.probability}% • fair {forecast.value.top.fairOdds.toFixed(2)} • edge +{forecast.value.top.edgePp} pp • EV +{forecast.value.top.expectedValuePct}%</span></> : forecast.value.state === 'CALIBRATION_PENDING' ? <><strong>NO BET — KALIBRACJA</strong><b>Za mała próbka historyczna</b><span>Bet+AI pokaże rekomendację dopiero po min. {forecast.value.calibrationRequiredSamples || 30} rozliczonych próbach danego rynku.</span></> : forecast.value.state === 'SMALL_EDGE' && forecast.value.top ? <><strong>SMALL EDGE</strong><b>{forecastLabel(forecast.value.top.key)} @ {forecast.value.top.bookmakerOdds.toFixed(2)}</b><span>Przewaga +{forecast.value.top.edgePp} pp jest poniżej wymaganego progu {forecast.value.top.threshold} pp.</span></> : forecast.value.state === 'NO_BET' && forecast.value.top ? <><strong>NO BET</strong><b>{forecast.value.top.reason || 'Brak wystarczającej przewagi'}</b><span>Model {forecast.value.top.probability}% • rynek no-vig {forecast.value.top.noVigImplied ?? '—'}% • próg {forecast.value.top.threshold ?? '—'} pp</span></> : <><strong>VALUE NIEOCENIONE</strong><b>Brak pełnych realnych kursów</b><span>Do Value V2 potrzebna jest para/komplet kursów z tego samego bukmachera, aby usunąć marżę.</span></>}
             </div>
           </div>
+
+          {oddsHistory?.markets?.length ? <div className="sim-prep-clv-v146">
+            <div className="sim-prep-clv-head-v146">
+              <div><small>ODDS HISTORY • CLOSING LINE VALUE</small><strong>Ruch rynku zapisany w Supabase</strong></div>
+              <span>0 DODATKOWYCH REQUESTÓW API</span>
+            </div>
+            <div className="sim-prep-clv-grid-v146">
+              {oddsHistory.markets.slice(0, 6).map((row, index) => <article key={`${row.marketKey}-${row.bookmaker}-${index}`}>
+                <header><b>{forecastLabel(row.marketKey)}</b><small>{row.bookmaker}</small></header>
+                <div><span>OPEN <b>{Number(row.openOdds || 0).toFixed(2)}</b></span><i>→</i><span>LAST <b>{Number(row.latestOdds || 0).toFixed(2)}</b></span></div>
+                <footer>{row.clvPct == null ? <em>CLV po kursie blisko kickoffu • {row.snapshots} snapshotów</em> : <strong className={Number(row.clvPct) >= 0 ? 'positive' : 'negative'}>CLV {Number(row.clvPct) > 0 ? '+' : ''}{row.clvPct}%</strong>}</footer>
+              </article>)}
+            </div>
+          </div> : null}
 
           {forecast.value?.top3?.length ? <div className="sim-prep-value-engine-v138">
             <div className="sim-prep-value-engine-head-v138">
@@ -1037,6 +1248,15 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
                 <p>{item.reason}</p>
               </article>)}
             </div>
+          </div> : null}
+
+          {forecast.explainability ? <div className="sim-prep-explain-v146">
+            <div className="sim-prep-explain-head-v146"><div><small>EXPLAINABLE AI</small><strong>Dlaczego Bet+AI tak ocenia ten mecz?</strong></div><span>BEZ UKRYWANIA CZYNNIKÓW</span></div>
+            <div className="sim-prep-explain-columns-v146">
+              <section><h4>CO WSPIERA PROGNOZĘ</h4>{forecast.explainability.positives.map((item, index) => <p key={`p-${index}`}><i>+</i>{item}</p>)}</section>
+              <section className="risk"><h4>RYZYKA / OGRANICZENIA</h4>{forecast.explainability.risks.map((item, index) => <p key={`r-${index}`}><i>!</i>{item}</p>)}</section>
+            </div>
+            <footer>{forecast.explainability.summary}</footer>
           </div> : null}
 
           <div className="sim-prep-factors-v136">{forecast.factors.slice(0, 5).map(factor => <span key={factor}>{factor}</span>)}</div>
@@ -1069,6 +1289,8 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
             <div className="sim-prep-backtest-kpis-v137">
               <article><small>1X2 ACCURACY</small><b>{modelPerformance.all.oneXTwoAccuracy}%</b><span>{modelPerformance.all.markets?.find(item => item.key === 'oneXTwo')?.samples || 0} meczów</span></article>
               <article><small>BRIER SCORE</small><b>{Number(modelPerformance.all.avgBrier || 0).toFixed(3)}</b><span>niżej = lepiej</span></article>
+              <article><small>CALIBRATION LIFT</small><b className={Number(modelPerformance.all.calibrationBrierLift || 0) >= 0 ? 'positive' : 'negative'}>{Number(modelPerformance.all.calibrationBrierLift || 0) > 0 ? '+' : ''}{Number(modelPerformance.all.calibrationBrierLift || 0).toFixed(3)}</b><span>RAW {Number(modelPerformance.all.rawAvgBrier || 0).toFixed(3)}</span></article>
+              <article><small>AVG CLV</small><b className={Number(modelPerformance.all.avgClv || 0) >= 0 ? 'positive' : 'negative'}>{Number(modelPerformance.all.avgClv || 0) > 0 ? '+' : ''}{Number(modelPerformance.all.avgClv || 0).toFixed(1)}%</b><span>{modelPerformance.all.clvSamples || 0} closing samples</span></article>
               <article><small>VALUE ROI</small><b className={Number(modelPerformance.all.valueRoi || 0) >= 0 ? 'positive' : 'negative'}>{Number(modelPerformance.all.valueRoi || 0) > 0 ? '+' : ''}{modelPerformance.all.valueRoi}%</b><span>{modelPerformance.all.valueBets || 0} value betów</span></article>
               <article><small>30 DNI</small><b>{modelPerformance.last30?.matches || 0}</b><span>rozliczonych meczów</span></article>
             </div>

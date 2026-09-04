@@ -334,7 +334,12 @@ function scannerCalibration(performance = null, league = '', candidate = null) {
   else if (status === 'OK') score = 76
   else if (status === 'POOR') score = 28
   if (samples >= 100) score = Math.min(100, score + 4)
-  return { status, score, samples, brier, source: useLeague ? 'league' : 'global', gap: bucket ? Math.round(gap * 10) / 10 : null }
+  return {
+    status, score, samples, brier, source: useLeague ? 'league' : 'global',
+    gap: bucket ? Math.round(gap * 10) / 10 : null,
+    bucketSamples,
+    actualAccuracy: bucket ? Number(bucket.actualAccuracy || 0) : null
+  }
 }
 
 function scannerBaseThreshold(key = '') {
@@ -346,6 +351,23 @@ function scannerBaseThreshold(key = '') {
 function enrichScannerCandidate(scan = {}, candidate = null, performance = null) {
   if (!candidate) return { decision: 'NO_ODDS', reliability: { score: 0, label: 'BRAK KURSÓW', calibration: { status: 'PENDING', samples: 0 } } }
   const calibration = scannerCalibration(performance, scan?.league || '', candidate)
+  const rawProbability = Number(candidate?.probability || 0)
+  const confidence = rawProbability >= 50 ? rawProbability : 100 - rawProbability
+  const canCalibrate = Number(calibration?.bucketSamples || 0) >= 10 && Number(calibration?.actualAccuracy || 0) > 0
+  const historyWeight = canCalibrate ? Math.max(.18, Math.min(.62, .18 + Number(calibration.bucketSamples || 0) / 180 + (calibration.source === 'league' ? .08 : 0))) : 0
+  const calibratedConfidence = canCalibrate ? confidence * (1 - historyWeight) + Number(calibration.actualAccuracy) * historyWeight : confidence
+  const probability = Math.round((rawProbability >= 50 ? calibratedConfidence : 100 - calibratedConfidence) * 10) / 10
+  const noVig = Number(candidate?.noVigImplied || 0)
+  const bookmakerOdds = Number(candidate?.bookmakerOdds || 0)
+  candidate = {
+    ...candidate,
+    rawProbability: Math.round(rawProbability * 10) / 10,
+    probability,
+    fairOdds: probability > 0 ? Math.round((100 / probability) * 100) / 100 : 0,
+    edgePp: noVig > 0 ? Math.round((probability - noVig) * 10) / 10 : Number(candidate?.edgePp || 0),
+    expectedValuePct: bookmakerOdds > 1 ? Math.round(((probability / 100 * bookmakerOdds - 1) * 100) * 10) / 10 : Number(candidate?.expectedValuePct || 0),
+    calibrated: canCalibrate
+  }
   const dataQuality = Number(scan?.dataQuality || 0)
   const agreement = Number(scan?.modelAgreement || 0)
   const marketScore = Number(scan?.bookmakerCount || 0) >= 3 ? 92 : Number(scan?.bookmakerCount || 0) >= 1 ? 78 : 35
@@ -377,7 +399,8 @@ function enrichScannerCandidate(scan = {}, candidate = null, performance = null)
     threshold,
     decision,
     reason,
-    reliability: { score: reliabilityScore, label: reliabilityLabel, calibration, modelAgreement: agreement, dataQuality }
+    reliability: { score: reliabilityScore, label: reliabilityLabel, calibration, modelAgreement: agreement, dataQuality },
+    dailyScore: Math.round(Math.max(0, Math.min(100, reliabilityScore * .55 + Math.max(0, Number(candidate.edgePp || 0)) * 2.2 + Math.max(0, Number(candidate.expectedValuePct || 0)) * .35)))
   }
 }
 
@@ -632,7 +655,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         const priority = { STRONG_VALUE: 5, VALUE: 4, SMALL_EDGE: 3, NO_BET: 2, NO_ODDS: 1 }
         const ad = priority[a.scan.topFinal.decision] || 0
         const bd = priority[b.scan.topFinal.decision] || 0
-        return bd - ad || Number(b.scan.topFinal.edgePp || 0) - Number(a.scan.topFinal.edgePp || 0) || Number(b.scan.topFinal.reliability?.score || 0) - Number(a.scan.topFinal.reliability?.score || 0)
+        return bd - ad || Number(b.scan.topFinal.dailyScore || 0) - Number(a.scan.topFinal.dailyScore || 0) || Number(b.scan.topFinal.edgePp || 0) - Number(a.scan.topFinal.edgePp || 0) || Number(b.scan.topFinal.reliability?.score || 0) - Number(a.scan.topFinal.reliability?.score || 0)
       })
   }, [scannerResults, scannerPerformance, availableMatches])
 
@@ -682,11 +705,11 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
           {!loading && !error && (scannerActive || scannerEntries.length > 0) ? <section className="sim-value-scanner-v139">
             <div className="sim-value-scanner-head-v139">
-              <div><small>BET+AI • TOP LEAGUES • MODEL RELIABILITY</small><strong>AI VALUE SCANNER</strong><p>Skanuje maks. 24 najbliższe zakwalifikowane mecze z topowych lig + Ekstraklasy. Pełna analiza meczu pozostaje końcową weryfikacją.</p></div>
+              <div><small>BET+AI • DAILY SHORTLIST • TOP LEAGUES</small><strong>TOP 5 ANALIZ DNIA</strong><p>Value Scanner wybiera maksymalnie 5 najmocniejszych kandydatów z topowych lig + Ekstraklasy. RAW jest korygowane historyczną kalibracją; pełna analiza pozostaje końcową weryfikacją.</p></div>
               <div className="sim-value-scanner-progress-v139"><b>{scannerProgress.done}/{scannerProgress.total}</b><span>{scannerActive ? 'SKANOWANIE LIVE' : 'SKAN GOTOWY'}</span></div>
             </div>
             {scannerEntries.length ? <div className="sim-value-scanner-grid-v139">
-              {scannerEntries.slice(0, 6).map(({ key, match: scanMatch, scan }, index) => {
+              {scannerEntries.slice(0, 5).map(({ key, match: scanMatch, scan }, index) => {
                 const item = scan.topFinal
                 const rel = item.reliability || {}
                 return <button type="button" key={`scan-${key}`} className={`sim-value-scanner-card-v139 ${String(item.decision || '').toLowerCase()}`} onClick={() => handleSelect(scanMatch)}>
@@ -694,10 +717,11 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                   <strong>{scanMatch.home} <i>vs</i> {scanMatch.away}</strong>
                   <div className="sim-value-scanner-pick-v139"><b>{SCANNER_LABELS[item.key] || item.key || 'Brak rynku'}</b><span>{item.bookmakerOdds ? `@ ${Number(item.bookmakerOdds).toFixed(2)}` : 'bez kursu'}</span></div>
                   <div className="sim-value-scanner-metrics-v139">
-                    <span><small>BET+AI</small><b>{item.probability ? `${item.probability}%` : '—'}</b></span>
+                    <span><small>BET+AI CAL.</small><b>{item.probability ? `${item.probability}%` : '—'}</b>{item.calibrated ? <em>RAW {item.rawProbability}%</em> : null}</span>
                     <span><small>FAIR</small><b>{item.fairOdds ? Number(item.fairOdds).toFixed(2) : '—'}</b></span>
                     <span><small>EDGE</small><b>{Number.isFinite(Number(item.edgePp)) ? `${Number(item.edgePp) > 0 ? '+' : ''}${item.edgePp} pp` : '—'}</b></span>
                     <span><small>RELIABILITY</small><b>{rel.score || 0}/100</b></span>
+                    <span><small>DAILY SCORE</small><b>{item.dailyScore || 0}/100</b></span>
                   </div>
                   <footer><span className={`rel-${String(rel.label || 'pending').toLowerCase()}`}>{rel.label || 'PENDING'}</span><small>{rel.calibration?.samples || 0} prób • model agreement {scan.modelAgreement || 0}%</small></footer>
                 </button>

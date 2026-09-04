@@ -25,6 +25,82 @@ function getClient() {
   try { return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } }) } catch (_) { return null }
 }
 
+async function captureOddsHistory(supabase, fixtureId, fixtureDate, forecast) {
+  const rows = Array.isArray(forecast?.value?.top3) ? forecast.value.top3 : []
+  if (!rows.length) return
+  const now = new Date()
+  for (const item of rows) {
+    const marketKey = clean(item?.key, 50)
+    const bookmaker = clean(item?.bookmaker || 'Bookmaker', 120)
+    const odds = Number(item?.bookmakerOdds || 0)
+    if (!marketKey || !(odds > 1)) continue
+
+    // Do not spam history when the exact same quote is saved repeatedly.
+    const { data: last } = await supabase
+      .from('match_odds_history')
+      .select('odds,captured_at')
+      .eq('fixture_id', fixtureId)
+      .eq('market_key', marketKey)
+      .eq('bookmaker', bookmaker)
+      .order('captured_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const lastMs = Date.parse(last?.captured_at || '')
+    if (last && Math.abs(Number(last.odds || 0) - odds) < 0.005 && Number.isFinite(lastMs) && now.getTime() - lastMs < 10 * 60 * 1000) continue
+
+    await supabase.from('match_odds_history').insert({
+      fixture_id: fixtureId,
+      fixture_date: fixtureDate || null,
+      market_key: marketKey,
+      bookmaker,
+      odds,
+      model_probability: Number(item?.probability || 0),
+      fair_odds: Number(item?.fairOdds || 0),
+      edge_pp: Number(item?.edgePp || 0),
+      expected_value_pct: Number(item?.expectedValuePct || 0),
+      captured_at: now.toISOString()
+    })
+  }
+}
+
+async function getOddsHistorySummary(supabase, fixtureId, fixtureDate) {
+  const { data, error } = await supabase
+    .from('match_odds_history')
+    .select('market_key,bookmaker,odds,model_probability,fair_odds,edge_pp,expected_value_pct,captured_at')
+    .eq('fixture_id', fixtureId)
+    .order('captured_at', { ascending: true })
+    .limit(200)
+  if (error || !Array.isArray(data)) return null
+  const kickoffMs = Date.parse(fixtureDate || '')
+  const grouped = {}
+  for (const row of data) {
+    const key = `${row.market_key}|${row.bookmaker}`
+    if (!grouped[key]) grouped[key] = []
+    grouped[key].push(row)
+  }
+  const markets = Object.values(grouped).map(rows => {
+    const first = rows[0]
+    const latest = rows[rows.length - 1]
+    const latestMs = Date.parse(latest?.captured_at || '')
+    const nearKickoff = Number.isFinite(kickoffMs) && Number.isFinite(latestMs) && kickoffMs - latestMs <= 20 * 60 * 1000 && kickoffMs - latestMs >= -5 * 60 * 1000
+    const clvPct = nearKickoff && Number(latest?.odds) > 1 && Number(first?.odds) > 1
+      ? ((Number(first.odds) / Number(latest.odds)) - 1) * 100
+      : null
+    return {
+      marketKey: first.market_key,
+      bookmaker: first.bookmaker,
+      openOdds: Number(first.odds),
+      latestOdds: Number(latest.odds),
+      snapshots: rows.length,
+      nearKickoff,
+      clvPct: clvPct == null ? null : Math.round(clvPct * 10) / 10,
+      latestAt: latest.captured_at
+    }
+  })
+  return { fixtureId, markets }
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
   if (event.httpMethod !== 'POST') return json(405, { ok: false, error: 'Method not allowed' })
@@ -73,7 +149,10 @@ exports.handler = async function(event) {
   }
 
   if (existing && Number(existing.data_quality || 0) > newQuality) {
-    return json(200, { ok: true, saved: false, reused: true, reason: 'existing_snapshot_has_higher_quality', dataQuality: existing.data_quality })
+    try { await captureOddsHistory(supabase, fixtureId, body.fixtureDate || existing.fixture_date || null, forecast) } catch (_) {}
+    let oddsHistory = null
+    try { oddsHistory = await getOddsHistorySummary(supabase, fixtureId, body.fixtureDate || existing.fixture_date || null) } catch (_) {}
+    return json(200, { ok: true, saved: false, reused: true, reason: 'existing_snapshot_has_higher_quality', dataQuality: existing.data_quality, oddsHistory })
   }
 
   const now = new Date().toISOString()
@@ -98,5 +177,12 @@ exports.handler = async function(event) {
     .upsert(row, { onConflict: 'fixture_id' })
 
   if (upsertError) return json(500, { ok: false, error: upsertError.message })
-  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality })
+
+  // V142 — store the odds we actually saw with the frozen pre-match forecast.
+  // This reuses already-fetched odds; it does not make another API-Football request.
+  try { await captureOddsHistory(supabase, fixtureId, body.fixtureDate || null, forecast) } catch (_) {}
+  let oddsHistory = null
+  try { oddsHistory = await getOddsHistorySummary(supabase, fixtureId, body.fixtureDate || null) } catch (_) {}
+
+  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality, oddsHistory })
 }
