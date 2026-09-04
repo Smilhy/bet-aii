@@ -5,6 +5,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL |
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY || ''
 const CACHE_TABLE = 'match_simulator_api_cache'
 const RATE_RPC = 'betai_reserve_match_api_slot'
+const DAILY_BUDGET_RPC = 'betai_take_match_api_budget'
 const DEFAULT_STALE_MS = 24 * 60 * 60 * 1000
 const MAX_QUEUE_WAIT_MS = 6500
 
@@ -143,6 +144,41 @@ async function reserveSlot(spacingMs = 275) {
   return Math.max(0, reservedAt - now)
 }
 
+
+async function takeDailyBudget(options = {}) {
+  const scope = clean(options.budgetScope)
+  if (!scope) return { allowed: true, enabled: false }
+
+  const scopeLimit = Math.max(1, Math.round(Number(options.budgetLimit) || 650))
+  const totalLimit = Math.max(scopeLimit, Math.round(Number(options.totalBudgetLimit) || 750))
+
+  // Bez Supabase nie mamy bezpiecznego współdzielonego licznika między instancjami
+  // Netlify. Nie blokujemy wtedy strony, ale cache + per-minute throttle nadal działa.
+  if (!supabase) return { allowed: true, enabled: false }
+
+  try {
+    const { data, error } = await supabase.rpc(DAILY_BUDGET_RPC, {
+      p_scope: scope,
+      p_scope_limit: scopeLimit,
+      p_total_limit: totalLimit
+    })
+    if (error) throw error
+    const row = Array.isArray(data) ? data[0] : data
+    return {
+      allowed: Boolean(row?.allowed ?? true),
+      enabled: true,
+      scope,
+      scopeUsed: Number(row?.scope_used || 0),
+      totalUsed: Number(row?.total_used || 0),
+      scopeRemaining: Number(row?.scope_remaining || 0),
+      totalRemaining: Number(row?.total_remaining || 0)
+    }
+  } catch (_) {
+    // Jeżeli SQL v140 nie został jeszcze uruchomiony, nie psujemy istniejącej strony.
+    return { allowed: true, enabled: false }
+  }
+}
+
 function normalizeCached(entry, extra = {}) {
   const body = entry?.payload || {}
   return {
@@ -154,6 +190,8 @@ function normalizeCached(entry, extra = {}) {
     stale: Boolean(extra.stale || !entry?.fresh),
     cacheSource: entry?.source || 'cache',
     rateLimited: Boolean(extra.rateLimited),
+    budgetLimited: Boolean(extra.budgetLimited),
+    apiBudget: extra.apiBudget || null,
     retryAfterMs: 0
   }
 }
@@ -179,6 +217,20 @@ async function performRequest(path, query, options = {}) {
   let lastRetry = 0
 
   for (let attempt = 0; attempt < attempts; attempt += 1) {
+    // WERSJA 140: każda FAKTYCZNA próba sieciowa zużywa jeden punkt budżetu.
+    // Trafienie w świeży cache nie zużywa nic. Dzięki temu Symulator AI ma
+    // własny dzienny limit i nie może zjeść całego pakietu API używanego przez
+    // pozostałe moduły strony.
+    const apiBudget = await takeDailyBudget(options)
+    if (!apiBudget.allowed) {
+      if (cached) return normalizeCached(cached, { stale: true, budgetLimited: true, apiBudget })
+      return {
+        ok: false, data: [], paging: {}, fromCache: false, stale: false,
+        rateLimited: false, budgetLimited: true, apiBudget, retryAfterMs: 0,
+        error: 'Dzienny budżet API Symulatora AI został osiągnięty. Pozostała część strony zachowuje swój pakiet API.'
+      }
+    }
+
     const waitMs = await reserveSlot(options.spacingMs || 275)
     if (waitMs > MAX_QUEUE_WAIT_MS) {
       if (cached) return normalizeCached(cached, { stale: true, rateLimited: true })
@@ -205,7 +257,7 @@ async function performRequest(path, query, options = {}) {
           ok: true,
           data: Array.isArray(payload?.response) ? payload.response : [],
           paging: payload?.paging || {},
-          error: '', fromCache: false, stale: false, rateLimited: false, retryAfterMs: 0
+          error: '', fromCache: false, stale: false, rateLimited: false, budgetLimited: false, apiBudget, retryAfterMs: 0
         }
       }
 
@@ -241,6 +293,7 @@ async function performRequest(path, query, options = {}) {
     fromCache: false,
     stale: false,
     rateLimited,
+    budgetLimited: false,
     retryAfterMs: lastRetry || (rateLimited ? 2500 : 0)
   }
 }

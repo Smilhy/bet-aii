@@ -113,9 +113,16 @@ function pct(value) {
 }
 
 async function apiGet(path, query = {}, options = {}) {
-  // WERSJA 138: wszystkie requesty API-Football przechodzą przez wspólny
-  // Supabase cache + globalny throttle + in-flight dedupe + retry 429.
-  return shieldApiGet(path, query, options)
+  // WERSJA 140: Symulator ma własny dzienny budżet API. Dzięki temu nawet
+  // intensywne skanowanie nie może zużyć całych 7500 requestów, bo pozostałe
+  // moduły strony (Typy AI, live, algorytm, rozliczenia itd.) też korzystają
+  // z API-FOOTBALL.
+  return shieldApiGet(path, query, {
+    budgetScope: 'simulator-core',
+    budgetLimit: 650,
+    totalBudgetLimit: 750,
+    ...options
+  })
 }
 
 function normalizeFixture(row = {}) {
@@ -703,11 +710,14 @@ function oddsNeedRefresh(odds = {}) {
 
 function apiShieldMeta(items = []) {
   const rows = items.filter(Boolean)
+  const budgetRow = rows.find(item => item?.apiBudget) || null
   return {
     enabled: true,
     cachedResponses: rows.filter(item => item?.fromCache).length,
     staleFallbacks: rows.filter(item => item?.stale).length,
     rateLimited: rows.some(item => item?.rateLimited),
+    budgetLimited: rows.some(item => item?.budgetLimited),
+    apiBudget: budgetRow?.apiBudget || null,
     retryAfterMs: rows.reduce((max, item) => Math.max(max, Number(item?.retryAfterMs || 0)), 0)
   }
 }
@@ -774,6 +784,8 @@ exports.handler = async function(event) {
       recent: { home: recent.home.length, away: recent.away.length },
       teamStats: { home: Boolean(teamStats.home?.available), away: Boolean(teamStats.away?.available) },
       rateLimited: shield.rateLimited,
+      budgetLimited: shield.budgetLimited,
+      apiBudget: shield.apiBudget,
       retryAfterMs: shield.retryAfterMs,
       rateLimitShield: shield
     })

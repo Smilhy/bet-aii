@@ -13,6 +13,8 @@ exports.handler = async function(event) {
   const countOnly = String(qs.countOnly || '') === '1'
   const forceRefresh = String(qs.forceRefresh || '') === '1'
   const skipOdds = String(qs.skipOdds || '') === '1'
+  const topOnly = String(qs.topOnly || qs.top_only || '') === '1'
+  const maxTopFixtures = Math.max(1, Math.min(120, Number(qs.maxTopFixtures || qs.max_top_fixtures || 60) || 60))
   const allLeagues = String(qs.allLeagues || '') === '1' || String(league || '').toLowerCase().includes('wszystkie')
   const addDaysToPlainDate = (dateKey, addDays) => {
     const [year, month, day] = String(dateKey || '').split('-').map(Number)
@@ -186,6 +188,49 @@ exports.handler = async function(event) {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
+
+
+  // WERSJA 140: twarda whitelista dla Symulatora AI. Endpoint nadal może
+  // obsługiwać pełną stronę (Dodaj typ, live scores itd.), ale gdy przychodzi
+  // topOnly=1 zwraca wyłącznie ligi, które chcemy kosztownie analizować.
+  const TOP_SIMULATOR_LEAGUES_V140 = [
+    { country: 'England', leagues: ['Premier League', 'Championship'] },
+    { country: 'Spain', leagues: ['La Liga', 'Primera Division'] },
+    { country: 'Italy', leagues: ['Serie A'] },
+    { country: 'Germany', leagues: ['Bundesliga'] },
+    { country: 'France', leagues: ['Ligue 1'] },
+    { country: 'Netherlands', leagues: ['Eredivisie'] },
+    { country: 'Portugal', leagues: ['Primeira Liga', 'Liga Portugal'] },
+    { country: 'Belgium', leagues: ['Pro League', 'First Division A', 'Jupiler Pro League'] },
+    { country: 'Scotland', leagues: ['Premiership'] },
+    { country: 'Poland', leagues: ['Ekstraklasa'] },
+    { country: '', leagues: ['UEFA Champions League', 'Champions League'] },
+    { country: '', leagues: ['UEFA Europa League', 'Europa League'] },
+    { country: '', leagues: ['UEFA Conference League', 'Conference League'] },
+  ]
+
+  const isTopSimulatorLeagueV140 = (fixture = {}) => {
+    const actualCountry = normalizeLoose(fixture?.country || '')
+    const actualLeague = normalizeLoose(fixture?.league || '')
+    if (!actualLeague) return false
+    return TOP_SIMULATOR_LEAGUES_V140.some(item => {
+      const wantedCountry = normalizeLoose(item.country)
+      if (wantedCountry && actualCountry !== wantedCountry && !actualCountry.includes(wantedCountry)) return false
+      return item.leagues.some(name => {
+        const wantedLeague = normalizeLoose(name)
+        return actualLeague === wantedLeague || actualLeague.includes(wantedLeague)
+      })
+    })
+  }
+
+  const applyTopSimulatorFilterV140 = (fixtures = []) => {
+    const rows = Array.isArray(fixtures) ? fixtures : []
+    if (!topOnly) return rows
+    return rows
+      .filter(isTopSimulatorLeagueV140)
+      .sort((a, b) => Date.parse(a?.commence_time || '') - Date.parse(b?.commence_time || ''))
+      .slice(0, maxTopFixtures)
+  }
 
   // WERSJA 1848: wyszukiwarka w "Dodaj typ" przyjmuje także polskie
   // nazwy reprezentacji/krajów. API-FOOTBALL pracuje głównie na nazwach
@@ -1901,14 +1946,14 @@ exports.handler = async function(event) {
     }
 
     const seen = new Set()
-    const baseFixtures = collected
+    const baseFixtures = applyTopSimulatorFilterV140(collected
       .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
       .filter(item => {
         const key = `${item.sportKey}|${item.home}|${item.away}|${item.commence_time}`.toLowerCase()
         if (seen.has(key)) return false
         seen.add(key)
         return true
-      })
+      }))
       .slice(0, countOnly ? MAX_FIXTURES_RETURN : MAX_FIXTURES_RETURN)
 
     // WERSJA 966:
@@ -1949,7 +1994,7 @@ exports.handler = async function(event) {
             source: 'supabase-fixture-cache',
             cacheHit: true,
             cacheHours: FIXTURE_CACHE_HOURS,
-            fixtures: cachedFixtures.slice(0, MAX_FIXTURES_RETURN),
+            fixtures: applyTopSimulatorFilterV140(cachedFixtures).slice(0, MAX_FIXTURES_RETURN),
             message: `Cache: znaleziono ${cachedFixtures.length} zapisanych meczów z ostatnich ${FIXTURE_CACHE_HOURS} h.`
           })
         }
@@ -1964,7 +2009,7 @@ exports.handler = async function(event) {
           return isLocalDateInRange(item.commence_time, date, daysAhead)
         })
       if (cachedFixtures.length) {
-        const fixtures = cachedFixtures
+        const fixtures = applyTopSimulatorFilterV140(cachedFixtures)
           .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
           .slice(0, countOnly ? MAX_FIXTURES_RETURN : MAX_FIXTURES_RETURN)
         return {

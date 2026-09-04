@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 const COPY = {
   pl: {
     title: 'Mecze dnia',
-    subtitle: 'Tylko realne mecze z wystarczającą formą i statystykami obu drużyn. Skład XI i kursy są opcjonalne.',
+    subtitle: 'Tylko topowe ligi + Polska Ekstraklasa z wystarczającymi realnymi danymi. Skład XI i kursy są opcjonalne.',
     search: 'Wyszukaj mecz, ligę lub kraj',
     sport: 'Sport',
     football: 'Piłka nożna',
@@ -24,7 +24,7 @@ const COPY = {
   },
   en: {
     title: 'Matches of the day',
-    subtitle: 'Only real fixtures with sufficient team form and statistics. Lineups and odds are optional.',
+    subtitle: 'Top leagues + Polish Ekstraklasa only, with sufficient real data. Lineups and odds are optional.',
     search: 'Search match, league or country',
     sport: 'Sport',
     football: 'Football',
@@ -145,6 +145,49 @@ function isRealApiFootballFixture(row = {}) {
   return Boolean(row.apiFixtureId) && source !== 'demo' && !String(row.id || '').startsWith('demo-')
 }
 
+const TOP_SIMULATOR_LEAGUES_V140 = [
+  { country: 'England', leagues: ['Premier League', 'Championship'] },
+  { country: 'Spain', leagues: ['La Liga', 'Primera Division'] },
+  { country: 'Italy', leagues: ['Serie A'] },
+  { country: 'Germany', leagues: ['Bundesliga'] },
+  { country: 'France', leagues: ['Ligue 1'] },
+  { country: 'Netherlands', leagues: ['Eredivisie'] },
+  { country: 'Portugal', leagues: ['Primeira Liga', 'Liga Portugal'] },
+  { country: 'Belgium', leagues: ['Pro League', 'First Division A', 'Jupiler Pro League'] },
+  { country: 'Scotland', leagues: ['Premiership'] },
+  // Polska liga ma zostać zawsze uwzględniona w trybie TOP.
+  { country: 'Poland', leagues: ['Ekstraklasa'] },
+  { country: '', leagues: ['UEFA Champions League', 'Champions League'] },
+  { country: '', leagues: ['UEFA Europa League', 'Europa League'] },
+  { country: '', leagues: ['UEFA Conference League', 'Conference League'] },
+]
+
+const MAX_TOP_SIMULATOR_MATCHES_V140 = 60
+const MAX_VALUE_SCANNER_MATCHES_V140 = 24
+
+function normalizeLeagueV140(value = '') {
+  return String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function isTopSimulatorLeagueV140(row = {}) {
+  const country = normalizeLeagueV140(row.country || row.leagueCountry || '')
+  const league = normalizeLeagueV140(row.league || row.leagueName || '')
+  if (!league) return false
+  return TOP_SIMULATOR_LEAGUES_V140.some(item => {
+    const wantedCountry = normalizeLeagueV140(item.country)
+    if (wantedCountry && country !== wantedCountry && !country.includes(wantedCountry)) return false
+    return item.leagues.some(name => {
+      const wantedLeague = normalizeLeagueV140(name)
+      return league === wantedLeague || league.includes(wantedLeague)
+    })
+  })
+}
+
 function statusText(row = {}) {
   const short = String(row.status_short || '').toUpperCase()
   if (!short || short === 'NS' || short === 'TBD') return 'Zaplanowany'
@@ -212,9 +255,20 @@ async function qualifyFixtureForSimulator(row = {}, { signal } = {}) {
       const response = await fetch(`/.netlify/functions/get-match-simulator-data?${params.toString()}`, { cache: 'no-store', signal })
       const payload = await response.json().catch(() => ({}))
       const eligible = Boolean(response.ok && payload?.ok && payload?.simulationQuality?.eligible)
-      if (eligible) return { eligible: true, cached: Boolean(payload?.cached || payload?.rateLimitShield?.cachedResponses), rateLimited: false }
+      if (eligible) return {
+        eligible: true,
+        cached: Boolean(payload?.cached || payload?.rateLimitShield?.cachedResponses),
+        rateLimited: false,
+        budgetLimited: Boolean(payload?.budgetLimited || payload?.rateLimitShield?.budgetLimited)
+      }
       if (isRateLimitPayload(response, payload) && attempt < delays.length - 1) continue
-      return { eligible: false, cached: Boolean(payload?.cached), rateLimited: isRateLimitPayload(response, payload), retryAfterMs: Number(payload?.retryAfterMs || 0) }
+      return {
+        eligible: false,
+        cached: Boolean(payload?.cached),
+        rateLimited: isRateLimitPayload(response, payload),
+        budgetLimited: Boolean(payload?.budgetLimited || payload?.rateLimitShield?.budgetLimited),
+        retryAfterMs: Number(payload?.retryAfterMs || 0)
+      }
     } catch (error) {
       if (error?.name === 'AbortError') throw error
       if (attempt >= delays.length - 1) return { eligible: false, cached: false, rateLimited: false }
@@ -361,6 +415,10 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     const seen = new Set()
     return (Array.isArray(payload?.fixtures) ? payload.fixtures : [])
       .filter(isRealApiFootballFixture)
+      // WERSJA 140: Symulator AI nie skanuje już setek lig. Najpierw twarda
+      // whitelista topowych lig + Polska Ekstraklasa, dopiero potem kosztowne
+      // sprawdzanie formy/statystyk.
+      .filter(isTopSimulatorLeagueV140)
       .filter(row => isPreMatchFixture(row, requestNowMs))
       .filter(row => getDateKeyInTimeZone(getFixtureStartMs(row), clientTimeZone) === todayKey)
       .filter(row => {
@@ -370,6 +428,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         return true
       })
       .sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b))
+      .slice(0, MAX_TOP_SIMULATOR_MATCHES_V140)
   }
 
   const requestDailyMatches = async ({ forceRefresh = false, skipOdds = true, signal } = {}) => {
@@ -380,6 +439,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       date: todayKey,
       daysAhead: '0',
       allLeagues: '1',
+      topOnly: '1',
+      maxTopFixtures: String(MAX_TOP_SIMULATOR_MATCHES_V140),
       mode: 'all-today',
       realOnly: '1',
       forceRefresh: forceRefresh ? '1' : '0',
@@ -393,13 +454,17 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   }
 
   const scanQualifiedMatches = async (rows = [], signal) => {
+    // VALUE Scanner jest najdroższą częścią skanu dnia. Skanujemy maksymalnie
+    // 24 najbliższe zakwalifikowane mecze z topowych lig. Reszta nadal może
+    // zostać ręcznie otwarta i zasymulowana.
+    const scanRows = rows.slice(0, MAX_VALUE_SCANNER_MATCHES_V140)
     setScannerResults({})
-    setScannerProgress({ done: 0, total: rows.length })
-    if (!rows.length) { setScannerActive(false); return }
+    setScannerProgress({ done: 0, total: scanRows.length })
+    if (!scanRows.length) { setScannerActive(false); return }
     setScannerActive(true)
-    for (let i = 0; i < rows.length; i += 1) {
+    for (let i = 0; i < scanRows.length; i += 1) {
       if (signal?.aborted) return
-      const row = rows[i]
+      const row = scanRows[i]
       const params = new URLSearchParams({
         fixture: String(row.apiFixtureId || row.id || ''),
         home_team_id: String(row.homeTeamId || ''),
@@ -417,8 +482,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       } catch (error) {
         if (error?.name === 'AbortError') return
       }
-      setScannerProgress({ done: i + 1, total: rows.length })
-      if (i < rows.length - 1) await waitFor(320, signal)
+      setScannerProgress({ done: i + 1, total: scanRows.length })
+      if (i < scanRows.length - 1) await waitFor(520, signal)
     }
     if (!signal?.aborted) setScannerActive(false)
   }
@@ -461,13 +526,14 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       setLoading(false)
       setQualifying(true)
       setQualificationProgress({ done: 0, total: realRows.length })
-      setSourceMessage(realRows.length ? `Rate Limit Shield • sprawdzam jakość 0/${realRows.length}…` : 'Brak kolejnych nierozpoczętych meczów na dzisiaj.')
+      setSourceMessage(realRows.length ? `TOP LEAGUES • Ekstraklasa • sprawdzam jakość 0/${realRows.length}…` : 'Brak kolejnych meczów z topowych lig na dzisiaj.')
 
       const approved = []
       // WERSJA 138: tylko 2 mecze jednocześnie. Każdy pre-check wymaga maks. 2
       // requestów formy, a backend dodatkowo rozstawia je globalnie w czasie.
       const concurrency = 2
       let rateLimitHits = 0
+      let budgetLimitHits = 0
       let cacheHits = 0
       for (let i = 0; i < realRows.length; i += concurrency) {
         if (signal?.aborted) return
@@ -478,12 +544,13 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           if (item.verdict?.eligible) approved.push(item.row)
           if (item.verdict?.cached) cacheHits += 1
           if (item.verdict?.rateLimited) rateLimitHits += 1
+          if (item.verdict?.budgetLimited) budgetLimitHits += 1
         })
         approved.sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b))
         const done = Math.min(realRows.length, i + batch.length)
         setMatches([...approved])
         setQualificationProgress({ done, total: realRows.length })
-        setSourceMessage(`Rate Limit Shield • ${done}/${realRows.length} • gotowe ${approved.length} • cache ${cacheHits}${rateLimitHits ? ` • auto-retry ${rateLimitHits}` : ''}${usedFallback ? ' • fallback' : ''}`)
+        setSourceMessage(`TOP LEAGUES • ${done}/${realRows.length} • gotowe ${approved.length} • cache ${cacheHits}${rateLimitHits ? ` • auto-retry ${rateLimitHits}` : ''}${budgetLimitHits ? ` • budget guard ${budgetLimitHits}` : ''}${usedFallback ? ' • fallback' : ''}`)
 
         // Krótka pauza między batchami zapobiega burstowi 300/min. Snapshot/cache
         // powoduje, że kolejne wejścia są dużo szybsze i praktycznie nie zużywają API.
@@ -494,8 +561,10 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         setSourceMessage('Brak kolejnych nierozpoczętych meczów na dzisiaj.')
       } else if (!approved.length) {
         setSourceMessage(`Sprawdzono ${realRows.length}/${realRows.length} • brak meczów spełniających próg realnych statystyk.`)
+      } else if (budgetLimitHits) {
+        setSourceMessage(`${approved.length} zakwalifikowanych • API Budget Guard zatrzymał świeże requesty Symulatora • pakiet zachowany dla reszty strony • cache ${cacheHits}`)
       } else {
-        setSourceMessage(`${approved.length} zakwalifikowanych • Rate Limit Shield aktywny • cache ${cacheHits}`)
+        setSourceMessage(`${approved.length} zakwalifikowanych • TOP LEAGUES + Ekstraklasa • API Budget Guard aktywny • cache ${cacheHits}`)
       }
       setQualifying(false)
       if (approved.length && !signal?.aborted) await scanQualifiedMatches([...approved], signal)
@@ -613,7 +682,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
           {!loading && !error && (scannerActive || scannerEntries.length > 0) ? <section className="sim-value-scanner-v139">
             <div className="sim-value-scanner-head-v139">
-              <div><small>BET+AI • MODEL RELIABILITY</small><strong>AI VALUE SCANNER</strong><p>Skanuje tylko zakwalifikowane mecze. Pełna analiza po wejściu w mecz jest końcową weryfikacją.</p></div>
+              <div><small>BET+AI • TOP LEAGUES • MODEL RELIABILITY</small><strong>AI VALUE SCANNER</strong><p>Skanuje maks. 24 najbliższe zakwalifikowane mecze z topowych lig + Ekstraklasy. Pełna analiza meczu pozostaje końcową weryfikacją.</p></div>
               <div className="sim-value-scanner-progress-v139"><b>{scannerProgress.done}/{scannerProgress.total}</b><span>{scannerActive ? 'SKANOWANIE LIVE' : 'SKAN GOTOWY'}</span></div>
             </div>
             {scannerEntries.length ? <div className="sim-value-scanner-grid-v139">

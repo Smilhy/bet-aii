@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
-const { apiGet, isRateLimitMessage } = require('./_lib/match-simulator-rate-shield')
+const { apiGet: shieldApiGet, isRateLimitMessage } = require('./_lib/match-simulator-rate-shield')
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY || ''
@@ -38,6 +38,18 @@ function round(value, digits = 1) {
   return Math.round((num(value, 0) + Number.EPSILON) * factor) / factor
 }
 function pct(value) { return clamp(value, 0, 100) }
+
+
+async function apiGet(path, query = {}, options = {}) {
+  // WERSJA 140: Value Scanner ma osobny, niski budżet. Gdy go wykorzysta,
+  // pełna symulacja oraz pozostałe moduły strony nadal mają dostęp do API.
+  return shieldApiGet(path, query, {
+    budgetScope: 'value-scanner',
+    budgetLimit: 240,
+    totalBudgetLimit: 750,
+    ...options
+  })
+}
 
 async function readSnapshot(fixtureId) {
   if (!supabase || !fixtureId) return null
