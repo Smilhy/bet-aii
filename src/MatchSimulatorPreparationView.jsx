@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { buildChallengerRawV166, chooseActiveModelV160, buildModelLabV166 } from './predictionLabV166'
 
 const COPY = {
   pl: {
@@ -719,7 +720,7 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
   const bttsWeight = consensus?.goals?.bttsAvailable && externalBtts > 0 ? Math.min(0.20, goalsWebWeight || 0.10) : 0
   const bttsRaw = bttsWeight > 0 ? poisson.btts * (1 - bttsWeight) + externalBtts * bttsWeight : poisson.btts
 
-  const rawMarkets = {
+  const championRawMarkets = {
     home: round1(oneXTwoRaw.home),
     draw: round1(oneXTwoRaw.draw),
     away: round1(oneXTwoRaw.away),
@@ -728,10 +729,30 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
     over35: round1(poisson.over35),
     btts: round1(bttsRaw)
   }
+  const championVariant = {
+    version: 'BETAI_CHAMPION_V158_CORE',
+    oneXTwo: { home: championRawMarkets.home, draw: championRawMarkets.draw, away: championRawMarkets.away },
+    goals: { over15: championRawMarkets.over15, over25: championRawMarkets.over25, over35: championRawMarkets.over35, btts: championRawMarkets.btts },
+    xg: { home: round2(homeXg), away: round2(awayXg) }
+  }
+  const challengerVariant = buildChallengerRawV166({ match, data, consensus, champion: championVariant, performance: modelPerformance })
+  const modelSelection = chooseActiveModelV160(modelPerformance)
+  const challengerActive = modelSelection.activeModel === 'challenger'
+  const activeOneXTwoRaw = challengerActive ? challengerVariant.oneXTwo : oneXTwoRaw
+  const rawMarkets = challengerActive ? {
+    home: round1(challengerVariant.oneXTwo.home),
+    draw: round1(challengerVariant.oneXTwo.draw),
+    away: round1(challengerVariant.oneXTwo.away),
+    over15: round1(challengerVariant.goals.over15),
+    over25: round1(challengerVariant.goals.over25),
+    over35: round1(challengerVariant.goals.over35),
+    btts: round1(challengerVariant.goals.btts)
+  } : championRawMarkets
 
-  // V141 — calibrate against historical pre-match forecasts. Value/fair odds use
-  // calibrated probabilities, while RAW remains visible for auditing.
-  const oneCalibration = calibrateTripletV2(modelPerformance, league, oneXTwoRaw)
+  // V160/V166 — Champion remains active until the Challenger has enough paired,
+  // settled history and proves a lower Brier Score. Calibration is applied only
+  // after model selection, so Value Engine never mixes future outcome data.
+  const oneCalibration = calibrateTripletV2(modelPerformance, league, activeOneXTwoRaw)
   const goalCals = {
     over15: calibrateProbabilityV2(modelPerformance, league, 'over15', rawMarkets.over15),
     over25: calibrateProbabilityV2(modelPerformance, league, 'over25', rawMarkets.over25),
@@ -769,9 +790,13 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
   if (sourceCount) factors.push(`Web consensus: ${sourceCount} źródeł • zgodność ${Math.round(agreement)}%`)
 
   const forecast = {
-    version: 'BETAI_FORECAST_V146',
+    version: 'BETAI_FORECAST_V166',
     calibrationVersion: 'BETAI_CALIBRATION_V2',
     weightingVersion: 'BETAI_DYNAMIC_WEIGHTS_V1',
+    predictionEngineVersion: 'BETAI_PREDICTION_ENGINE_2_V166',
+    activeModel: modelSelection.activeModel,
+    modelSelection,
+    modelVariants: { champion: championVariant, challenger: challengerVariant },
     generatedAt: new Date().toISOString(),
     fixtureId: String(match?.apiFixtureId || match?.id || data?.fixture?.id || ''),
     xg: { home: round2(homeXg), away: round2(awayXg) },
@@ -790,7 +815,7 @@ function buildForecast(match = {}, data = {}, consensus = null, checks = [], mod
       btts: goalCals.btts
     },
     sourceWeights,
-    topScores: poisson.topScores.slice(0, 3).map(item => ({ score: item.score, probability: round1(item.probability) })),
+    topScores: (challengerActive ? challengerVariant?.dixonColes?.topScores || [] : poisson.topScores).slice(0, 3).map(item => ({ score: item.score, probability: round1(item.probability) })),
     dataQuality,
     consensus: { sourceCount, agreement: Math.round(agreement), available: Boolean(webPercent) },
     value: valueEngine,
@@ -992,7 +1017,7 @@ function buildBetAiLabTestPerformanceV152() {
     all: { matches: 420, markets, avgBrier: 0.211, rawAvgBrier: 0.226, calibrationBrierLift: 0.015, oneXTwoAccuracy: 58.3, valueRoi: 7.8, valueBets: 128, avgClv: 3.6, clvSamples: 81, calibration: markets[2].calibration },
     last30: { matches: 96, avgBrier: 0.207, valueRoi: 5.9 },
     leagues: [league],
-    versions: [{ name: 'BETAI_FORECAST_V152', matches: 210, avgBrier: 0.204 }],
+    versions: [{ name: 'BETAI_FORECAST_V166', matches: 210, avgBrier: 0.204 }],
     walkForward: {
       samples: 350, rawBrier: 0.228, walkForwardBrier: 0.209, lift: 0.019,
       markets: [
@@ -1022,12 +1047,27 @@ function buildBetAiLabTestPerformanceV152() {
       { key: 'SOURCE_CONFLICT', label: 'Źródła były rozbieżne', count: 31, sharePct: 22.0 },
       { key: 'OVERCONFIDENCE', label: 'Model był zbyt pewny', count: 24, sharePct: 17.0 }
     ], recentErrors: [] },
-    portfolioRisk: { settled: 116, roi: 7.8, profitUnits: 9.05, volatilityUnits: 0.96, maxDrawdownUnits: 7.2, maxDrawdownAtBet: 74, riskScore: 47, level: 'LOW', rolling: {
+    portfolioRisk: { settled: 116, roi: 7.8, profitUnits: 9.05, volatilityUnits: 0.96, maxDrawdownUnits: 7.2, maxDrawdownAtBet: 74, riskScore: 47, level: 'LOW', concentration: { hhi: 0.24, largestMarket: { key: 'over25', count: 34, sharePct: 29.3 }, markets: [] }, rolling: {
       w50: { size: 50, windows: 67, medianRoi: 7.2, p25Roi: 2.1, worstRoi: -8.4, bestRoi: 21.3, positiveRate: 73.1 },
       w100: { size: 100, windows: 17, medianRoi: 7.7, p25Roi: 4.1, worstRoi: 1.2, bestRoi: 13.9, positiveRate: 100 },
       w250: { size: 250, windows: 1, medianRoi: 7.8, p25Roi: 7.8, worstRoi: 7.8, bestRoi: 7.8, positiveRate: 100 }
     } },
-    controlCenter: { version: 'BETAI_MODEL_CONTROL_V158', health: 'HEALTHY', alerts: ['Over 3.5 ma status WATCH — obserwuj drift.'], settledPredictions: 420, brier: 0.211, last30Brier: 0.207, shadowRoi: 7.8, avgClv: 3.6, driftCount: 0, watchCount: 1, bestLeague: { name: 'BET+AI PROFESSIONAL LAB', score: 87, matches: 210 }, worstLeague: null, bestMarket: { key: 'over15', label: 'Over 1.5', brier: 0.184, samples: 398 }, worstMarket: { key: 'oneXTwo', label: '1X2', brier: 0.229, samples: 420 }, activeModelVersion: 'BETAI_FORECAST_V158' }
+    championChallenger: {
+      version: 'BETAI_CHAMPION_CHALLENGER_V160', activeModel: 'challenger', status: 'CHALLENGER_PROMOTED', pairedSamples: 142, requiredSamples: 100, promotionBrierLift: 0.005, brierDelta: 0.009,
+      reason: 'TEST: Challenger ma niższy Brier w 142 sparowanych prognozach.',
+      champion: { version: 'BETAI_CHAMPION_V158_CORE', matches: 142, avgBrier: 0.219, accuracy: 63.1 },
+      challenger: { version: 'BETAI_CHALLENGER_V166_DC_STRENGTH', matches: 142, avgBrier: 0.210, accuracy: 65.0 }, marketRegressions: []
+    },
+    statisticalConfidence: { version: 'BETAI_STAT_CONFIDENCE_V161', markets: markets.map(item => ({ key: item.key, label: item.label, samples: item.samples, accuracy: item.accuracy, brier: item.brier, accuracy95: { low: Math.max(0, item.accuracy - 5.2), high: Math.min(100, item.accuracy + 5.2) }, level: item.samples >= 250 ? 'HIGH' : 'MEDIUM' })), portfolio: { samples: 116, roi: 7.8, roi95: { low: 1.1, high: 14.5 }, standardDeviationUnits: 0.96, level: 'MEDIUM' } },
+    autoGate: { version: 'BETAI_AUTO_GATE_V162', blocked: [], watch: ['over35'], markets: [
+      { key: 'oneXTwo', label: '1X2', status: 'ACTIVE', reason: 'Stabilna historia.', samples: 420, brier: 0.229, driftStatus: 'STABLE', trustScore: 78 },
+      { key: 'over15', label: 'Over 1.5', status: 'ACTIVE', reason: 'Stabilna historia.', samples: 398, brier: 0.184, driftStatus: 'STABLE', trustScore: 92 },
+      { key: 'over25', label: 'Over 2.5', status: 'ACTIVE', reason: 'Stabilna historia.', samples: 392, brier: 0.213, driftStatus: 'STABLE', trustScore: 89 },
+      { key: 'over35', label: 'Over 3.5', status: 'WATCH', reason: 'Rynek ma status DRIFT WATCH.', samples: 374, brier: 0.205, driftStatus: 'WATCH', trustScore: 74 },
+      { key: 'btts', label: 'BTTS', status: 'ACTIVE', reason: 'Stabilna historia.', samples: 386, brier: 0.219, driftStatus: 'STABLE', trustScore: 84 }
+    ] },
+    teamStrength: { version: 'BETAI_TEAM_STRENGTH_V164', method: 'TEST opponent-adjusted Elo', trackedTeams: 128, teams: [] },
+    controlCenter: { version: 'BETAI_MODEL_CONTROL_V166', health: 'HEALTHY', alerts: ['Over 3.5 ma status WATCH — obserwuj drift.', 'TEST: Challenger został promowany po paired validation.'], settledPredictions: 420, brier: 0.211, last30Brier: 0.207, shadowRoi: 7.8, avgClv: 3.6, driftCount: 0, watchCount: 1, bestLeague: { name: 'BET+AI PROFESSIONAL LAB', score: 87, matches: 210 }, worstLeague: null, bestMarket: { key: 'over15', label: 'Over 1.5', brier: 0.184, samples: 398 }, worstMarket: { key: 'oneXTwo', label: '1X2', brier: 0.229, samples: 420 }, activeModelVersion: 'BETAI_CHALLENGER_V166_DC_STRENGTH', activeModel: 'challenger', championChallengerStatus: 'CHALLENGER_PROMOTED', statConfidence: 'MEDIUM', blockedMarkets: [] }
   }
 }
 
@@ -1229,11 +1269,11 @@ function buildEnsembleValidationV155({ data = {}, forecast = null, consensus = n
   }
 }
 
-function buildProfessionalPredictionLabV152({ match = {}, forecast = null, reliability = null, performance = null, oddsHistory = null, ensembleValidation = null } = {}) {
+function buildProfessionalPredictionLabV152({ match = {}, forecast = null, reliability = null, performance = null, oddsHistory = null, ensembleValidation = null, modelLab = null } = {}) {
   if (!forecast) return null
   const candidate = forecast?.value?.top3?.[0] || forecast?.value?.top || null
   if (!candidate) return {
-    version: 'BETAI_PRO_LAB_V158', decisionCard: { decision: 'NO_BET', reason: 'Brak pełnego rynku kursowego do policzenia przewagi.', key: '', label: 'BRAK RYNKU' },
+    version: 'BETAI_PRO_LAB_V166', decisionCard: { decision: 'NO_BET', reason: 'Brak pełnego rynku kursowego do policzenia przewagi.', key: '', label: 'BRAK RYNKU' },
     uncertainty: { pp: 10, conservativeProbability: 0 }, leagueTrust: { score: 50, label: 'PENDING', samples: 0 }, drift: { status: 'PENDING', score: 50 }, walkForward: { samples: 0 }, paperPortfolio: performance?.paperPortfolio || null
   }
   const league = safeTextV158(match?.league || '', '')
@@ -1242,19 +1282,23 @@ function buildProfessionalPredictionLabV152({ match = {}, forecast = null, relia
   const relScore = Number(reliability?.score || 0)
   const quality = Number(forecast?.dataQuality || 0)
   const modelAgreement = Number(reliability?.components?.modelAgreement || forecast?.value?.modelAgreement || 60)
-  const sourceCount = Number(forecast?.consensus?.sourceCount || 0)
+  const sourceCount = Number(ensembleValidation?.independentSources || forecast?.consensus?.sourceCount || 0)
+  const webSourceCount = Number(forecast?.consensus?.sourceCount || 0)
   const consensusAgreement = Number(forecast?.consensus?.agreement || 0)
   const calibrationSamples = Number(candidate?.calibration?.samples || reliability?.calibration?.samples || 0)
   const trust = findLeagueTrustV150(performance, league, candidate.key)
   const drift = findDriftV149(performance, candidate.key)
   const walkForward = findWalkForwardV147(performance, candidate.key)
+  const autoGate = modelLab?.autoGate || { status: 'PENDING', reason: '' }
+  const statConfidence = modelLab?.statisticalConfidence || { level: 'PENDING', samples: 0 }
+  const correlationRisk = modelLab?.correlationRisk || { level: 'LOW', score: 0 }
 
   let uncertainty = 2.4
   uncertainty += Math.max(0, 92 - quality) * 0.055
   uncertainty += Math.max(0, 82 - relScore) * 0.045
   uncertainty += Math.max(0, 82 - modelAgreement) * 0.035
   if (sourceCount < 3) uncertainty += 1.0
-  if (sourceCount >= 3 && consensusAgreement < 65) uncertainty += Math.min(1.5, (65 - consensusAgreement) * 0.04)
+  if (webSourceCount >= 3 && consensusAgreement < 65) uncertainty += Math.min(1.5, (65 - consensusAgreement) * 0.04)
   if (calibrationSamples < 30) uncertainty += 2.4
   else if (calibrationSamples < 100) uncertainty += 0.8
   if (String(drift?.status || '').toUpperCase() === 'WATCH') uncertainty += 1.1
@@ -1262,6 +1306,9 @@ function buildProfessionalPredictionLabV152({ match = {}, forecast = null, relia
   if (Number(trust?.score || 0) >= 80) uncertainty -= 0.6
   if (Number(trust?.score || 0) < 60) uncertainty += 1.4
   uncertainty += Number(ensembleValidation?.disagreement?.uncertaintyPenaltyPp || 0)
+  if (String(statConfidence?.level || '').toUpperCase() === 'LOW') uncertainty += 0.8
+  if (String(statConfidence?.level || '').toUpperCase() === 'PENDING') uncertainty += 1.2
+  if (String(autoGate?.status || '').toUpperCase() === 'WATCH') uncertainty += 0.9
   uncertainty = round1(clampNum(uncertainty, 2.5, 14, 7))
 
   const conservativeProbability = round1(clampNum(calibratedProbability - uncertainty, 1, 99, calibratedProbability))
@@ -1275,6 +1322,8 @@ function buildProfessionalPredictionLabV152({ match = {}, forecast = null, relia
   let reason = 'Brak wystarczającej przewagi po konserwatywnej korekcie.'
   if (!(Number(candidate?.bookmakerOdds || 0) > 1) || !(noVig > 0)) {
     reason = 'Brak pełnych kursów potrzebnych do obliczenia rynku no-vig.'
+  } else if (String(autoGate?.status || '').toUpperCase() === 'BLOCKED') {
+    reason = `NO BET: AUTO-GATE zablokował rynek — ${autoGate?.reason || 'historyczna jakość modelu jest zbyt słaba.'}`
   } else if (String(drift?.status || '').toUpperCase() === 'DRIFT') {
     reason = 'NO BET: wykryto pogorszenie modelu (MODEL DRIFT).'
   } else if (ensembleValidation?.independentSources >= 3 && ensembleValidation?.disagreement?.status === 'HIGH') {
@@ -1293,13 +1342,17 @@ function buildProfessionalPredictionLabV152({ match = {}, forecast = null, relia
     decision = 'WATCH'
     reason = 'WATCH: dodatnia przewaga istnieje, ale nie przechodzi konserwatywnego progu wejścia.'
   }
+  if (decision === 'BET' && String(autoGate?.status || '').toUpperCase() === 'WATCH') {
+    decision = 'WATCH'
+    reason = `WATCH: AUTO-GATE wymaga obserwacji — ${autoGate?.reason || 'rynek nie ma jeszcze stabilnej historii.'}`
+  }
   if (decision === 'BET' && ensembleValidation?.disagreement?.status === 'MEDIUM' && conservativeEdge < threshold + 3) {
     decision = 'WATCH'
     reason = `WATCH: modele składowe mają średnią rozbieżność (${ensembleValidation.disagreement.spreadPp} pp).`
   }
 
   return {
-    version: 'BETAI_PRO_LAB_V158',
+    version: 'BETAI_PRO_LAB_V166',
     walkForwardVersion: 'BETAI_WALK_FORWARD_V1', uncertaintyVersion: 'BETAI_UNCERTAINTY_V1', driftVersion: 'BETAI_DRIFT_V1', trustVersion: 'BETAI_TRUST_V1', shadowVersion: 'BETAI_SHADOW_PORTFOLIO_V1',
     uncertainty: { pp: uncertainty, rawProbability: round1(rawProbability), calibratedProbability: round1(calibratedProbability), conservativeProbability, conservativeFairOdds },
     leagueTrust: trust,
@@ -1307,6 +1360,8 @@ function buildProfessionalPredictionLabV152({ match = {}, forecast = null, relia
     walkForward,
     paperPortfolio: performance?.paperPortfolio || null,
     ensembleValidation: ensembleValidation || null,
+    modelLab: modelLab || null,
+    autoGate, statisticalConfidence: statConfidence, correlationRisk,
     clv: clv ? { openOdds: Number(clv.openOdds || 0), latestOdds: Number(clv.latestOdds || 0), clvPct: clv.clvPct, nearKickoff: Boolean(clv.nearKickoff), snapshots: Number(clv.snapshots || 0) } : null,
     decisionCard: {
       decision, reason, key: candidate.key, label: forecastLabel(candidate.key), marketGroup: candidate.marketGroup,
@@ -1316,7 +1371,8 @@ function buildProfessionalPredictionLabV152({ match = {}, forecast = null, relia
       reliability: relScore, dataQuality: quality, leagueTrust: Number(trust?.score || 0), trustLabel: trust?.label || 'PENDING', sampleSize: calibrationSamples,
       driftStatus: drift?.status || 'PENDING', walkForwardSamples: Number(walkForward?.samples || 0), walkForwardBrier: Number(walkForward?.walkForwardBrier || 0),
       ensembleProbability: Number(ensembleValidation?.probability || 0), ensembleSources: Number(ensembleValidation?.independentSources || 0), disagreementStatus: ensembleValidation?.disagreement?.status || 'PENDING', disagreementSpreadPp: Number(ensembleValidation?.disagreement?.spreadPp || 0),
-      clvPct: clv?.clvPct ?? null, stakeUnits: 1
+      clvPct: clv?.clvPct ?? null, stakeUnits: 1,
+      activeModel: forecast?.activeModel || 'champion', autoGateStatus: autoGate?.status || 'PENDING', statisticalConfidence: statConfidence?.level || 'PENDING', correlationRisk: correlationRisk?.level || 'LOW', modelMarketSeparated: true
     }
   }
 }
@@ -1488,16 +1544,17 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   const eligibility = useMemo(() => data ? buildEligibility(match, data, checks) : { eligible: false, reasons: [] }, [match, data, checks])
   const forecast = useMemo(() => data && eligibility.eligible ? buildForecast(match, data, consensus, checks, modelPerformance) : null, [match, data, consensus, checks, eligibility.eligible, modelPerformance])
   const reliability = useMemo(() => forecast ? buildReliabilityEngine({ match, data, forecast, consensus, performance: modelPerformance }) : null, [match, data, forecast, consensus, modelPerformance])
-  const ensembleValidation = useMemo(() => forecast ? buildEnsembleValidationV155({ data, forecast, consensus }) : null, [data, forecast, consensus])
-  const professionalLab = useMemo(() => forecast ? buildProfessionalPredictionLabV152({ match, forecast, reliability, performance: modelPerformance, oddsHistory, ensembleValidation }) : null, [match, forecast, reliability, modelPerformance, oddsHistory, ensembleValidation])
-  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V158', validationVersion: 'BETAI_MODEL_VALIDATION_RISK_V158', reliability: reliability || null, ensembleValidation: ensembleValidation || null, professionalLab: professionalLab || null } : null, [forecast, reliability, ensembleValidation, professionalLab])
+  const modelLab = useMemo(() => forecast ? buildModelLabV166({ match, data, forecast, consensus, performance: modelPerformance, oddsHistory, challenger: forecast?.modelVariants?.challenger || null }) : null, [match, data, forecast, consensus, modelPerformance, oddsHistory])
+  const ensembleValidation = modelLab?.pureEnsemble || null
+  const professionalLab = useMemo(() => forecast ? buildProfessionalPredictionLabV152({ match, forecast, reliability, performance: modelPerformance, oddsHistory, ensembleValidation, modelLab }) : null, [match, forecast, reliability, modelPerformance, oddsHistory, ensembleValidation, modelLab])
+  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V166', validationVersion: 'BETAI_PREDICTION_ENGINE_2_V166', reliability: reliability || null, ensembleValidation: ensembleValidation || null, modelLab: modelLab || null, marketValidation: modelLab?.marketValidation || null, professionalLab: professionalLab || null } : null, [forecast, reliability, ensembleValidation, modelLab, professionalLab])
   const preparedData = useMemo(() => data ? { ...data, externalConsensus: consensus || null, predictionEngine: forecastWithReliability || null } : null, [data, consensus, forecastWithReliability])
   const phaseIndex = Math.min(phases.length - 1, Math.floor(progress / (100 / phases.length)))
 
   useEffect(() => {
     if (isBetAiLabTestV152(match)) {
       setForecastSaveState('test')
-      setAuditState({ captured: true, hash: 'TEST-OFFLINE-V158' })
+      setAuditState({ captured: true, hash: 'TEST-OFFLINE-V166' })
       return
     }
     if (!forecastWithReliability || !eligibility.eligible || consensusLoading || modelPerformanceLoading) return
@@ -1619,7 +1676,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
         {forecast ? <section className="sim-prep-forecast-v136">
           <div className="sim-prep-forecast-head-v136">
             <div><small>BET+AI PREDICTION ENGINE V2</small><strong>Prognoza przedmeczowa + Value Engine</strong></div>
-            <div className="sim-prep-forecast-badges-v136"><span>DATA {forecast.dataQuality}/100</span><span>{forecast.consensus.sourceCount ? `CONSENSUS ${forecast.consensus.sourceCount}` : 'MODEL DATA'}</span><span>ODDS {forecast.value?.bookmakerCount || 0}</span>{forecastSaveState === 'saved' ? <span className="saved">SUPABASE ✓</span> : null}</div>
+            <div className="sim-prep-forecast-badges-v136"><span>DATA {forecast.dataQuality}/100</span><span>MODEL {String(forecast.activeModel || 'champion').toUpperCase()}</span><span>{forecast.consensus.sourceCount ? `CONSENSUS ${forecast.consensus.sourceCount}` : 'MODEL DATA'}</span><span>ODDS {forecast.value?.bookmakerCount || 0}</span>{forecastSaveState === 'saved' ? <span className="saved">SUPABASE ✓</span> : null}</div>
           </div>
 
           <div className="sim-prep-forecast-main-v136">
@@ -1752,7 +1809,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
 
         {professionalLab ? <section className={`sim-pro-lab-v152 decision-${String(professionalLab?.decisionCard?.decision || 'no_bet').toLowerCase()}`}>
           <header className="sim-pro-lab-head-v152">
-            <div><small>BET+AI PROFESSIONAL PREDICTION LAB • V147–V158</small><strong>Finalna decyzja modelu</strong><p>Walk-Forward • Uncertainty • Drift • League Trust • Shadow Portfolio • Conservative Value</p></div>
+            <div><small>BET+AI PROFESSIONAL PREDICTION LAB • V147–V166</small><strong>Finalna decyzja modelu</strong><p>Walk-Forward • Uncertainty • Drift • League Trust • Shadow Portfolio • Conservative Value</p></div>
             <div className={`sim-pro-lab-decision-v152 ${String(professionalLab?.decisionCard?.decision || '').toLowerCase()}`}><span>BET+AI</span><b>{professionalLab?.decisionCard?.decision === 'BET' ? 'BET' : professionalLab?.decisionCard?.decision === 'WATCH' ? 'WATCH' : 'NO BET'}</b></div>
           </header>
           <div className="sim-pro-lab-main-v152">
@@ -1789,9 +1846,38 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
         </section> : null}
 
 
+        {modelLab ? <section className={`sim-model-dashboard-v166 health-${String(modelLab?.dashboard?.health || 'pending').toLowerCase()}`}>
+          <header className="sim-model-dashboard-head-v166">
+            <div><small>BET+AI PREDICTION ENGINE 2.0 • V159–V166 ALL-IN</small><strong>Professional Model Dashboard</strong><p>Pure Model • Champion/Challenger • 95% Confidence • Auto-Gate • Dixon-Coles • Team Strength • Correlation Risk</p></div>
+            <span>{String(modelLab?.selection?.activeModel || 'champion').toUpperCase()}</span>
+          </header>
+          <div className="sim-model-dashboard-grid-v166">
+            <article className="primary"><small>ACTIVE MODEL</small><b>{modelLab?.selection?.activeModel === 'challenger' ? 'CHALLENGER V166' : 'CHAMPION V158 CORE'}</b><span>{modelLab?.selection?.status || 'COLLECTING'} • {modelLab?.selection?.pairedSamples || 0}/100 paired</span></article>
+            <article><small>CHAMPION BRIER</small><b>{modelLab?.selection?.champion?.avgBrier ? Number(modelLab.selection.champion.avgBrier).toFixed(3) : '—'}</b><span>{modelLab?.selection?.champion?.matches || 0} par</span></article>
+            <article><small>CHALLENGER BRIER</small><b>{modelLab?.selection?.challenger?.avgBrier ? Number(modelLab.selection.challenger.avgBrier).toFixed(3) : '—'}</b><span>Δ {Number(modelLab?.selection?.brierDelta || 0) > 0 ? '+' : ''}{Number(modelLab?.selection?.brierDelta || 0).toFixed(4)}</span></article>
+            <article className={`gate-${String(modelLab?.autoGate?.status || 'pending').toLowerCase()}`}><small>AUTO-GATE</small><b>{modelLab?.autoGate?.status || 'PENDING'}</b><span>{modelLab?.autoGate?.reason || 'zbieranie historii'}</span></article>
+            <article><small>STATISTICAL CONFIDENCE</small><b>{modelLab?.statisticalConfidence?.level || 'PENDING'}</b><span>{modelLab?.statisticalConfidence?.samples || 0} prób rynku</span></article>
+            <article><small>SHADOW ROI • 95% CI</small><b>{modelLab?.statisticalConfidence?.portfolioRoi == null ? '—' : `${Number(modelLab.statisticalConfidence.portfolioRoi) > 0 ? '+' : ''}${Number(modelLab.statisticalConfidence.portfolioRoi).toFixed(1)}%`}</b><span>{modelLab?.statisticalConfidence?.roi95 ? `${modelLab.statisticalConfidence.roi95.low}% → ${modelLab.statisticalConfidence.roi95.high}%` : 'brak wystarczającej próby'}</span></article>
+            <article><small>DIXON-COLES</small><b>ρ {Number(modelLab?.challenger?.dixonColes?.rho ?? -0.08).toFixed(2)}</b><span>korekta 0:0 • 1:0 • 0:1 • 1:1</span></article>
+            <article><small>TEAM STRENGTH • HOME</small><b>{modelLab?.challenger?.teamStrength?.home?.rating || '—'}</b><span>{modelLab?.challenger?.teamStrength?.home?.team || '—'} • {modelLab?.challenger?.teamStrength?.home?.samples || 0} hist.</span></article>
+            <article><small>TEAM STRENGTH • AWAY</small><b>{modelLab?.challenger?.teamStrength?.away?.rating || '—'}</b><span>{modelLab?.challenger?.teamStrength?.away?.team || '—'} • {modelLab?.challenger?.teamStrength?.away?.samples || 0} hist.</span></article>
+            <article><small>MODEL ↔ MARKET</small><b>{modelLab?.marketValidation?.deltaPp == null ? '—' : `${Number(modelLab.marketValidation.deltaPp) > 0 ? '+' : ''}${modelLab.marketValidation.deltaPp} pp`}</b><span>{modelLab?.marketValidation?.status || 'NO MARKET'} • market nie jest wejściem modelu</span></article>
+            <article className={`risk-${String(modelLab?.correlationRisk?.level || 'low').toLowerCase()}`}><small>CORRELATION RISK</small><b>{modelLab?.correlationRisk?.score || 0}/100 • {modelLab?.correlationRisk?.level || 'LOW'}</b><span>max ρ {Number(modelLab?.correlationRisk?.maxCorrelation || 0).toFixed(2)} • ekspozycja ×{Number(modelLab?.correlationRisk?.exposureMultiplier || 1).toFixed(2)}</span></article>
+            <article><small>PURE MODEL ENSEMBLE</small><b>{modelLab?.pureEnsemble?.probability || 0}%</b><span>{modelLab?.pureEnsemble?.independentSources || 0} modeli • bez rynku no-vig</span></article>
+          </div>
+          <div className="sim-model-separation-v166">
+            <div><b>V159 • MODEL / MARKET SEPARATION</b><span>{modelLab?.marketValidation?.note || 'Rynek jest tylko warstwą wyceny.'}</span></div>
+            <div><b>V160 • CHAMPION / CHALLENGER</b><span>{modelLab?.selection?.reason || 'Challenger zbiera historię.'}</span></div>
+            <div><b>V165 • CORRELATION</b><span>{modelLab?.correlationRisk?.note || 'Kontrola wspólnej ekspozycji.'}</span></div>
+          </div>
+          {modelPerformance?.autoGate?.markets?.length ? <div className="sim-auto-gates-v166">
+            {modelPerformance.autoGate.markets.map(item => <span key={item.key} className={`gate-${String(item.status || '').toLowerCase()}`}><small>{item.label}</small><b>{item.status}</b><em>{item.samples} prób • Brier {Number(item.brier || 0).toFixed(3)}</em></span>)}
+          </div> : null}
+        </section> : null}
+
         {ensembleValidation ? <section className={`sim-validation-risk-v158 disagree-${String(ensembleValidation?.disagreement?.status || 'low').toLowerCase()}`}>
           <header className="sim-validation-head-v158">
-            <div><small>BET+AI MODEL VALIDATION & RISK LAB • V153–V158</small><strong>Ensemble • Sharp Disagreement • Audit • Error Analysis • Portfolio Risk</strong></div>
+            <div><small>BET+AI MODEL VALIDATION & RISK LAB • V153–V166</small><strong>Pure Ensemble • Sharp Disagreement • Audit • Error Analysis • Portfolio Risk</strong></div>
             <span className={`health-${String(modelPerformance?.controlCenter?.health || 'pending').toLowerCase()}`}>{modelPerformance?.controlCenter?.health || 'PENDING'}</span>
           </header>
           <div className="sim-ensemble-v158">

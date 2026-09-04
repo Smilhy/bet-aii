@@ -172,6 +172,23 @@ async function settleShadowBetsV151(supabase, fixtureId, score, clv, now) {
   }
 }
 
+
+async function voidModelExperimentsV160(supabase, fixtureId, now, fixtureStatus = '') {
+  const { error } = await supabase.from('match_model_experiments').update({
+    status: 'void', fixture_status: fixtureStatus || null, settled_at: now, updated_at: now
+  }).eq('fixture_id', String(fixtureId)).eq('status', 'pending')
+  if (error && !/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) throw error
+}
+
+async function settleModelExperimentsV160(supabase, fixtureId, score, now, fixtureStatus = '') {
+  const { error } = await supabase.from('match_model_experiments').update({
+    status: 'settled', fixture_status: fixtureStatus || null,
+    actual_home_goals: Number(score.home), actual_away_goals: Number(score.away),
+    settled_at: now, updated_at: now
+  }).eq('fixture_id', String(fixtureId)).eq('status', 'pending')
+  if (error && !/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) throw error
+}
+
 async function mapConcurrent(items, limit, mapper) {
   let cursor = 0
   const results = new Array(items.length)
@@ -241,6 +258,7 @@ exports.handler = async function handler(event = {}) {
         }).eq('fixture_id', row.fixture_id).is('settled_at', null)
         if (updateError) throw updateError
         try { await voidShadowBetsV151(supabase, row.fixture_id, now) } catch (_) {}
+        try { await voidModelExperimentsV160(supabase, row.fixture_id, now, fixtureStatus) } catch (_) {}
         voided += 1
         return
       }
@@ -269,6 +287,7 @@ exports.handler = async function handler(event = {}) {
       if (updateError) throw updateError
       try { await markClosingOdds(supabase, row.fixture_id, row.fixture_date) } catch (_) {}
       try { await settleShadowBetsV151(supabase, row.fixture_id, score, clv, now) } catch (_) {}
+      try { await settleModelExperimentsV160(supabase, row.fixture_id, score, now, fixtureStatus) } catch (_) {}
       settled += 1
     } catch (err) {
       errors.push({ fixture_id: row.fixture_id, error: err?.message || String(err) })

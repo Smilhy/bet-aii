@@ -464,6 +464,212 @@ async function fetchSettled(supabase, limit = 5000) {
 }
 
 
+async function fetchModelExperimentsV160(supabase, limit = 10000) {
+  const { data, error } = await supabase
+    .from('match_model_experiments')
+    .select('fixture_id,fixture_date,home_team,away_team,league,country,model_role,model_version,active_at_capture,data_quality,forecast,status,actual_home_goals,actual_away_goals,settled_at')
+    .eq('status', 'settled')
+    .not('actual_home_goals', 'is', null)
+    .not('actual_away_goals', 'is', null)
+    .order('settled_at', { ascending: false })
+    .limit(Math.max(100, Math.min(20000, limit)))
+  if (error) {
+    if (/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) return []
+    throw error
+  }
+  return Array.isArray(data) ? data : []
+}
+
+function aggregateVariantRows(rows = [], variantResolver = null) {
+  const records = []
+  for (const row of rows) {
+    const variant = typeof variantResolver === 'function' ? variantResolver(row) : row?.forecast
+    if (!variant) continue
+    records.push(...predictionRecords({ ...row, forecast: variant }, 'calibrated'))
+  }
+  const markets = ['oneXTwo', 'over15', 'over25', 'over35', 'btts'].map(key => aggregateMarket(records, key))
+  return {
+    matches: rows.length,
+    gradedPredictions: records.length,
+    avgBrier: records.length ? round(mean(records.map(item => item.brier)), 4) : 0,
+    accuracy: records.length ? round(records.filter(item => item.correct).length / records.length * 100, 1) : 0,
+    markets
+  }
+}
+
+function buildChampionChallengerV160(snapshotRows = [], experimentRows = []) {
+  const pairs = []
+  if (Array.isArray(experimentRows) && experimentRows.length) {
+    const grouped = new Map()
+    for (const row of experimentRows) {
+      const key = String(row?.fixture_id || '')
+      if (!key) continue
+      if (!grouped.has(key)) grouped.set(key, {})
+      grouped.get(key)[String(row?.model_role || '').toLowerCase()] = row
+    }
+    for (const [fixtureId, group] of grouped.entries()) {
+      if (!group.champion || !group.challenger) continue
+      pairs.push({ fixtureId, champion: group.champion, challenger: group.challenger })
+    }
+  }
+  if (!pairs.length) {
+    for (const row of snapshotRows) {
+      const champion = row?.forecast?.modelVariants?.champion
+      const challenger = row?.forecast?.modelVariants?.challenger
+      if (!champion || !challenger) continue
+      pairs.push({
+        fixtureId: row.fixture_id,
+        champion: { ...row, forecast: champion },
+        challenger: { ...row, forecast: challenger }
+      })
+    }
+  }
+  const championRows = pairs.map(pair => ({ ...pair.champion, forecast: pair.champion?.forecast || pair.champion }))
+  const challengerRows = pairs.map(pair => ({ ...pair.challenger, forecast: pair.challenger?.forecast || pair.challenger }))
+  const champion = aggregateVariantRows(championRows)
+  const challenger = aggregateVariantRows(challengerRows)
+  const pairedSamples = pairs.length
+  const brierDelta = pairedSamples ? round(n(champion.avgBrier) - n(challenger.avgBrier), 4) : 0
+  const marketRegressions = challenger.markets.filter(item => {
+    const base = champion.markets.find(row => row.key === item.key)
+    return n(item.samples) >= 50 && n(base?.samples) >= 50 && n(item.brier) > n(base?.brier) + 0.015
+  })
+  let activeModel = 'champion'
+  let status = pairedSamples ? 'LEARNING' : 'COLLECTING'
+  let reason = `Challenger ma ${pairedSamples}/100 rozliczonych par. Champion pozostaje aktywny.`
+  if (pairedSamples >= 100) {
+    if (brierDelta >= 0.005 && !marketRegressions.length) {
+      activeModel = 'challenger'
+      status = 'CHALLENGER_PROMOTED'
+      reason = `Challenger obniża Brier o ${brierDelta.toFixed(4)} przy ${pairedSamples} porównaniach i nie ma istotnej regresji rynkowej.`
+    } else if (brierDelta <= -0.005) {
+      status = 'CHAMPION_WIN'
+      reason = `Champion pozostaje lepszy o ${Math.abs(brierDelta).toFixed(4)} Brier przy ${pairedSamples} porównaniach.`
+    } else {
+      status = 'NO_CLEAR_WINNER'
+      reason = `Brak wystarczającej przewagi jakościowej. Wymagamy co najmniej 0.005 poprawy Brier bez regresji rynków.`
+    }
+  }
+  return {
+    version: 'BETAI_CHAMPION_CHALLENGER_V160',
+    activeModel,
+    status,
+    reason,
+    pairedSamples,
+    requiredSamples: 100,
+    promotionBrierLift: 0.005,
+    brierDelta,
+    champion: { version: 'BETAI_CHAMPION_V158_CORE', ...champion },
+    challenger: { version: 'BETAI_CHALLENGER_V166_DC_STRENGTH', ...challenger },
+    marketRegressions: marketRegressions.map(item => item.key)
+  }
+}
+
+function wilsonInterval(successes = 0, total = 0, z = 1.96) {
+  const nTotal = Math.max(0, Number(total || 0))
+  if (!nTotal) return null
+  const p = Math.max(0, Math.min(1, Number(successes || 0) / nTotal))
+  const z2 = z * z
+  const denominator = 1 + z2 / nTotal
+  const center = (p + z2 / (2 * nTotal)) / denominator
+  const margin = z * Math.sqrt((p * (1 - p) / nTotal) + (z2 / (4 * nTotal * nTotal))) / denominator
+  return { low: round(Math.max(0, center - margin) * 100, 1), high: round(Math.min(1, center + margin) * 100, 1) }
+}
+
+function buildStatisticalConfidenceV161(all = {}, shadowRows = []) {
+  const markets = (all?.markets || []).map(market => {
+    const samples = n(market?.samples)
+    const successes = Math.round(samples * n(market?.accuracy) / 100)
+    const accuracy95 = wilsonInterval(successes, samples)
+    const width = accuracy95 ? accuracy95.high - accuracy95.low : 100
+    const level = samples >= 250 && width <= 12 ? 'HIGH' : samples >= 100 ? 'MEDIUM' : samples >= 30 ? 'LOW' : 'PENDING'
+    return { key: market.key, label: market.label, samples, accuracy: n(market.accuracy), brier: n(market.brier), accuracy95, level }
+  })
+  const settled = shadowRows.filter(row => ['won','lost'].includes(String(row?.status || '').toLowerCase()))
+  const returns = settled.map(row => {
+    const stake = Math.max(.01, n(row?.stake_units, 1))
+    return n(row?.profit_units) / stake
+  })
+  const roi = returns.length ? mean(returns) * 100 : 0
+  const sd = stddev(returns)
+  const se = returns.length ? sd / Math.sqrt(returns.length) : 0
+  const roi95 = returns.length ? { low: round((mean(returns) - 1.96 * se) * 100, 1), high: round((mean(returns) + 1.96 * se) * 100, 1) } : null
+  const portfolioLevel = returns.length >= 250 && roi95?.low > 0 ? 'HIGH' : returns.length >= 100 ? 'MEDIUM' : returns.length >= 30 ? 'LOW' : 'PENDING'
+  return {
+    version: 'BETAI_STAT_CONFIDENCE_V161',
+    markets,
+    portfolio: { samples: returns.length, roi: round(roi, 1), roi95, standardDeviationUnits: round(sd, 3), level: portfolioLevel }
+  }
+}
+
+function buildAutoGateV162(all = {}, drift = {}) {
+  const rows = (all?.markets || []).map(market => {
+    const driftRow = (drift?.markets || []).find(item => item.key === market.key) || null
+    const trust = trustScoreForMarket(market, driftRow)
+    const samples = n(market.samples)
+    const brier = n(market.brier)
+    const driftStatus = String(driftRow?.status || 'PENDING').toUpperCase()
+    let status = 'ACTIVE'
+    let reason = 'Historyczna jakość rynku jest stabilna.'
+    if (samples < 30) {
+      status = 'WATCH'
+      reason = `Za mała próbka: ${samples}/30.`
+    } else if (driftStatus === 'DRIFT' || (samples >= 50 && brier >= .30) || (samples >= 50 && trust.score < 45)) {
+      status = 'BLOCKED'
+      reason = driftStatus === 'DRIFT' ? 'Wykryto MODEL DRIFT.' : brier >= .30 ? `Brier ${brier.toFixed(3)} przekracza limit.` : `Trust Score ${trust.score}/100 jest zbyt niski.`
+    } else if (driftStatus === 'WATCH' || brier >= .265 || trust.score < 60) {
+      status = 'WATCH'
+      reason = driftStatus === 'WATCH' ? 'Rynek ma status DRIFT WATCH.' : brier >= .265 ? `Brier ${brier.toFixed(3)} wymaga obserwacji.` : `Trust Score ${trust.score}/100 wymaga obserwacji.`
+    }
+    return { key: market.key, label: market.label, status, reason, samples, brier: round(brier, 4), driftStatus, trustScore: trust.score }
+  })
+  return {
+    version: 'BETAI_AUTO_GATE_V162',
+    markets: rows,
+    blocked: rows.filter(item => item.status === 'BLOCKED').map(item => item.key),
+    watch: rows.filter(item => item.status === 'WATCH').map(item => item.key)
+  }
+}
+
+function buildTeamStrengthV164(rows = []) {
+  const ratings = new Map()
+  const stats = new Map()
+  const get = team => ratings.has(team) ? ratings.get(team) : 1500
+  const touch = team => {
+    if (!stats.has(team)) stats.set(team, { team, matches: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0 })
+    return stats.get(team)
+  }
+  const chronological = [...rows].sort((a, b) => rowTime(a) - rowTime(b))
+  for (const row of chronological) {
+    const home = String(row?.home_team || '').trim()
+    const away = String(row?.away_team || '').trim()
+    const hg = Number(row?.actual_home_goals)
+    const ag = Number(row?.actual_away_goals)
+    if (!home || !away || !Number.isFinite(hg) || !Number.isFinite(ag)) continue
+    const rh = get(home), ra = get(away)
+    const expectedHome = 1 / (1 + Math.pow(10, -((rh + 55) - ra) / 400))
+    const actualHome = hg > ag ? 1 : hg === ag ? .5 : 0
+    const margin = 1 + Math.log1p(Math.abs(hg - ag)) * .28
+    const k = 20 * margin
+    ratings.set(home, rh + k * (actualHome - expectedHome))
+    ratings.set(away, ra + k * ((1 - actualHome) - (1 - expectedHome)))
+    const hs = touch(home), as = touch(away)
+    hs.matches += 1; as.matches += 1
+    hs.goalsFor += hg; hs.goalsAgainst += ag; as.goalsFor += ag; as.goalsAgainst += hg
+    if (hg > ag) { hs.wins += 1; as.losses += 1 }
+    else if (hg < ag) { as.wins += 1; hs.losses += 1 }
+    else { hs.draws += 1; as.draws += 1 }
+  }
+  const teams = [...stats.values()].map(item => ({
+    ...item,
+    rating: Math.round(get(item.team)),
+    ppg: item.matches ? round((item.wins * 3 + item.draws) / item.matches, 2) : 0,
+    goalDiffPerMatch: item.matches ? round((item.goalsFor - item.goalsAgainst) / item.matches, 2) : 0
+  })).sort((a, b) => b.matches - a.matches || b.rating - a.rating).slice(0, 800)
+  return { version: 'BETAI_TEAM_STRENGTH_V164', method: 'Opponent-adjusted Elo from settled Bet+AI fixtures', teams, trackedTeams: stats.size }
+}
+
+
 
 // WERSJA 154 / 157 / 158 — walidacja modelu, analiza błędów i risk lab.
 function resultForMarketKey(row = {}, key = '') {
@@ -636,6 +842,10 @@ function buildPortfolioRisk(rows = []) {
   if (roi < 0) riskScore += 10
   riskScore = Math.round(clamp(riskScore, 0, 100))
   const level = riskScore >= 75 ? 'HIGH' : riskScore >= 55 ? 'MEDIUM' : 'LOW'
+  const marketCounts = new Map()
+  for (const row of settled) marketCounts.set(String(row?.market_key || 'unknown'), (marketCounts.get(String(row?.market_key || 'unknown')) || 0) + 1)
+  const marketShares = [...marketCounts.entries()].map(([key, count]) => ({ key, count, sharePct: settled.length ? round(count / settled.length * 100, 1) : 0 })).sort((a,b) => b.count - a.count)
+  const concentrationHhi = settled.length ? round(marketShares.reduce((sum, item) => sum + (item.sharePct / 100) ** 2, 0), 3) : 0
   return {
     settled: settled.length,
     roi: round(roi, 1),
@@ -645,6 +855,7 @@ function buildPortfolioRisk(rows = []) {
     maxDrawdownAtBet: worstPoint,
     riskScore,
     level,
+    concentration: { hhi: concentrationHhi, largestMarket: marketShares[0] || null, markets: marketShares.slice(0, 8) },
     rolling: {
       w50: rollingPortfolioWindows(settled, 50),
       w100: rollingPortfolioWindows(settled, 100),
@@ -654,7 +865,7 @@ function buildPortfolioRisk(rows = []) {
   }
 }
 
-function buildControlCenter({ all = {}, last30 = {}, drift = {}, leagueTrust = [], versions = [], paperPortfolio = {}, portfolioRisk = {}, errorAnalysis = {} } = {}) {
+function buildControlCenter({ all = {}, last30 = {}, drift = {}, leagueTrust = [], versions = [], paperPortfolio = {}, portfolioRisk = {}, errorAnalysis = {}, championChallenger = null, statisticalConfidence = null, autoGate = null } = {}) {
   const driftRows = Array.isArray(drift?.markets) ? drift.markets : []
   const driftCount = driftRows.filter(item => String(item?.status || '').toUpperCase() === 'DRIFT').length
   const watchCount = driftRows.filter(item => String(item?.status || '').toUpperCase() === 'WATCH').length
@@ -670,11 +881,14 @@ function buildControlCenter({ all = {}, last30 = {}, drift = {}, leagueTrust = [
   if (n(all?.matches) < 100) alerts.push('Próbka historyczna jest nadal mała (<100 meczów).')
   if (n(portfolioRisk?.riskScore) >= 75) alerts.push('Shadow Portfolio ma wysoki historyczny profil ryzyka.')
   if (n(errorAnalysis?.categories?.[0]?.sharePct) >= 35) alerts.push(`Dominujący błąd: ${errorAnalysis.categories[0].label}.`)
+  if ((autoGate?.blocked || []).length) alerts.push(`AUTO-GATE blokuje: ${(autoGate.blocked || []).join(', ')}.`)
+  if (championChallenger?.status === 'CHALLENGER_PROMOTED') alerts.push('Challenger został promowany na aktywny model po walidacji paired-sample.')
+  if (statisticalConfidence?.portfolio?.roi95 && Number(statisticalConfidence.portfolio.roi95.low) <= 0) alerts.push('95% CI Shadow ROI obejmuje 0 — przewaga portfela nie jest jeszcze statystycznie potwierdzona.')
   let health = 'HEALTHY'
   if (driftCount >= 2 || n(all?.avgBrier) > .30 || n(portfolioRisk?.riskScore) >= 82) health = 'CRITICAL'
   else if (driftCount || watchCount >= 2 || n(all?.avgBrier) > .26 || n(portfolioRisk?.riskScore) >= 60) health = 'WATCH'
   return {
-    version: 'BETAI_MODEL_CONTROL_V158',
+    version: 'BETAI_MODEL_CONTROL_V166',
     health,
     alerts,
     settledPredictions: n(all?.matches),
@@ -688,7 +902,11 @@ function buildControlCenter({ all = {}, last30 = {}, drift = {}, leagueTrust = [
     worstLeague: worstLeague ? { name: worstLeague.name, score: n(worstLeague.overallScore), matches: n(worstLeague.matches) } : null,
     bestMarket: bestMarket ? { key: bestMarket.key, label: bestMarket.label, brier: n(bestMarket.brier), samples: n(bestMarket.samples) } : null,
     worstMarket: worstMarket ? { key: worstMarket.key, label: worstMarket.label, brier: n(worstMarket.brier), samples: n(worstMarket.samples) } : null,
-    activeModelVersion: versions?.[0]?.name || 'BETAI_FORECAST_V158'
+    activeModelVersion: championChallenger?.activeModel === 'challenger' ? 'BETAI_CHALLENGER_V166_DC_STRENGTH' : 'BETAI_CHAMPION_V158_CORE',
+    activeModel: championChallenger?.activeModel || 'champion',
+    championChallengerStatus: championChallenger?.status || 'COLLECTING',
+    statConfidence: statisticalConfidence?.portfolio?.level || 'PENDING',
+    blockedMarkets: autoGate?.blocked || []
   }
 }
 
@@ -721,7 +939,13 @@ exports.handler = async function handler(event = {}) {
     } catch (_) {}
     const errorAnalysis = buildErrorAnalysis(rows)
     const portfolioRisk = buildPortfolioRisk(shadowRows)
-    const controlCenter = buildControlCenter({ all, last30: last30Stats, drift, leagueTrust, versions, paperPortfolio, portfolioRisk, errorAnalysis })
+    let experimentRows = []
+    try { experimentRows = await fetchModelExperimentsV160(supabase, 12000) } catch (_) {}
+    const championChallenger = buildChampionChallengerV160(rows, experimentRows)
+    const statisticalConfidence = buildStatisticalConfidenceV161(all, shadowRows)
+    const autoGate = buildAutoGateV162(all, drift)
+    const teamStrength = buildTeamStrengthV164(rows)
+    const controlCenter = buildControlCenter({ all, last30: last30Stats, drift, leagueTrust, versions, paperPortfolio, portfolioRisk, errorAnalysis, championChallenger, statisticalConfidence, autoGate })
     return json(200, {
       ok: true,
       available: true,
@@ -736,6 +960,10 @@ exports.handler = async function handler(event = {}) {
       paperPortfolio,
       errorAnalysis,
       portfolioRisk,
+      championChallenger,
+      statisticalConfidence,
+      autoGate,
+      teamStrength,
       controlCenter,
       note: rows.length < 100 ? 'Mała próbka — wyniki kalibracji, drift i trust score będą stabilniejsze po zebraniu większej liczby meczów.' : ''
     })
@@ -744,4 +972,4 @@ exports.handler = async function handler(event = {}) {
   }
 }
 
-exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio, buildErrorAnalysis, buildPortfolioRisk, buildControlCenter }
+exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio, buildErrorAnalysis, buildPortfolioRisk, buildControlCenter, buildChampionChallengerV160, buildStatisticalConfidenceV161, buildAutoGateV162, buildTeamStrengthV164 }

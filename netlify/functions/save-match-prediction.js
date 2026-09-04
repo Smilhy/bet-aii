@@ -151,7 +151,7 @@ async function captureShadowBetV151(supabase, fixtureId, fixtureDate, body = {},
 
 async function capturePredictionAuditV153(supabase, fixtureId, fixtureDate, body = {}, forecast = {}) {
   const compact = {
-    modelVersion: clean(forecast?.version || 'BETAI_FORECAST_V158', 80),
+    modelVersion: clean(forecast?.version || 'BETAI_FORECAST_V166', 80),
     generatedAt: forecast?.generatedAt || null,
     dataQuality: Number(forecast?.dataQuality || 0),
     xg: forecast?.xg || null,
@@ -161,6 +161,9 @@ async function capturePredictionAuditV153(supabase, fixtureId, fixtureDate, body
     ensembleValidation: forecast?.ensembleValidation || null,
     reliability: forecast?.reliability || null,
     professionalLab: forecast?.professionalLab || null,
+    modelLab: forecast?.modelLab || null,
+    modelVariants: forecast?.modelVariants || null,
+    marketValidation: forecast?.marketValidation || null,
     valueTop3: Array.isArray(forecast?.value?.top3) ? forecast.value.top3.slice(0, 3) : [],
     consensus: forecast?.consensus || null,
     factors: Array.isArray(forecast?.factors) ? forecast.factors.slice(0, 12) : [],
@@ -175,7 +178,7 @@ async function capturePredictionAuditV153(supabase, fixtureId, fixtureDate, body
     away_team: clean(body?.awayTeam, 180),
     league: clean(body?.league, 180),
     country: clean(body?.country, 120),
-    model_version: clean(forecast?.version || 'BETAI_FORECAST_V158', 80),
+    model_version: clean(forecast?.version || 'BETAI_FORECAST_V166', 80),
     audit_hash: auditHash,
     data_quality: Math.max(0, Math.min(100, Math.round(Number(forecast?.dataQuality || 0)))),
     decision: clean(forecast?.professionalLab?.decisionCard?.decision || forecast?.value?.state || '', 40),
@@ -190,6 +193,41 @@ async function capturePredictionAuditV153(supabase, fixtureId, fixtureDate, body
     throw error
   }
   return { captured: true, auditHash }
+}
+
+
+async function captureModelExperimentsV160(supabase, fixtureId, fixtureDate, body = {}, forecast = {}) {
+  const variants = forecast?.modelVariants || {}
+  const rows = []
+  const add = (role, variant) => {
+    if (!variant || typeof variant !== 'object') return
+    rows.push({
+      fixture_id: String(fixtureId),
+      fixture_date: fixtureDate || null,
+      home_team: clean(body?.homeTeam, 180),
+      away_team: clean(body?.awayTeam, 180),
+      league: clean(body?.league, 180),
+      country: clean(body?.country, 120),
+      model_role: role,
+      model_version: clean(variant?.version || (role === 'champion' ? 'BETAI_CHAMPION_V158_CORE' : 'BETAI_CHALLENGER_V166_DC_STRENGTH'), 100),
+      active_at_capture: String(forecast?.activeModel || 'champion') === role,
+      data_quality: Math.max(0, Math.min(100, Math.round(Number(forecast?.dataQuality || 0)))),
+      forecast: variant,
+      status: 'pending',
+      updated_at: new Date().toISOString()
+    })
+  }
+  add('champion', variants?.champion)
+  add('challenger', variants?.challenger)
+  if (!rows.length) return { captured: false, reason: 'no_variants' }
+  const { error } = await supabase
+    .from('match_model_experiments')
+    .upsert(rows, { onConflict: 'fixture_id,model_role,model_version' })
+  if (error) {
+    if (/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) return { captured: false, reason: 'table_missing' }
+    throw error
+  }
+  return { captured: true, rows: rows.length }
 }
 
 exports.handler = async function(event) {
@@ -280,6 +318,8 @@ exports.handler = async function(event) {
   try { shadowBet = await captureShadowBetV151(supabase, fixtureId, body.fixtureDate || null, body, forecast) } catch (_) {}
   let audit = null
   try { audit = await capturePredictionAuditV153(supabase, fixtureId, body.fixtureDate || null, body, forecast) } catch (_) {}
+  let modelExperiments = null
+  try { modelExperiments = await captureModelExperimentsV160(supabase, fixtureId, body.fixtureDate || null, body, forecast) } catch (_) {}
 
-  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality, oddsHistory, shadowBet, audit })
+  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality, oddsHistory, shadowBet, audit, modelExperiments })
 }

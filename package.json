@@ -11,7 +11,8 @@
     "test:ai-prediction-stats": "node TEST_WERSJA_13_AI_PREDICTION_STATS.js",
     "test:ai-prediction-results": "node TEST_WERSJA_14_AI_PREDICTION_RESULTS.js",
     "test:algorithm": "node TEST_WERSJA_1882_ALGORITHM_MODEL.js",
-    "test:typer-stake": "node TEST_WERSJA_26_TYPER_EXPERT_PENDING_STAKE.js"
+    "test:typer-stake": "node TEST_WERSJA_26_TYPER_EXPERT_PENDING_STAKE.js",
+    "test:prediction-v166": "node TEST_WERSJA_166_PREDICTION_ENGINE_2.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.3",

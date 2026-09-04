@@ -84282,3 +84282,40 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 .sim-control-alerts-v158{display:flex;flex-wrap:wrap;gap:6px;padding:9px 11px;border-top:1px solid rgba(255,255,255,.045);background:rgba(86,56,9,.04)}.sim-control-alerts-v158 span{color:#d8b96c;font-size:6.6px;font-weight:800}.sim-control-alerts-v158.ok{color:#65dbb0;background:rgba(30,150,111,.035);font-size:6.8px;font-weight:800}
 @media(max-width:1500px){.sim-ensemble-v158{grid-template-columns:repeat(4,minmax(0,1fr))}.sim-ensemble-v158 article.ensemble-main{grid-column:span 2}.sim-validation-grid-v158,.sim-error-analysis-v158>div{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.sim-validation-head-v158{align-items:flex-start;flex-direction:column}.sim-ensemble-v158,.sim-validation-grid-v158,.sim-error-analysis-v158>div,.sim-risk-windows-v158{grid-template-columns:1fr}.sim-ensemble-v158 article.ensemble-main{grid-column:auto}}
+
+/* ============================================================
+   WERSJA 166 — PREDICTION ENGINE 2.0 ALL-IN
+   V159–V166 Professional Model Dashboard
+   ============================================================ */
+.sim-model-dashboard-v166{
+  margin:18px 0 16px;padding:18px;border:1px solid rgba(79,220,235,.22);border-radius:20px;
+  background:linear-gradient(145deg,rgba(5,20,31,.98),rgba(9,27,40,.96));box-shadow:0 18px 50px rgba(0,0,0,.24)
+}
+.sim-model-dashboard-head-v166{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
+.sim-model-dashboard-head-v166 small{display:block;color:#77e7ef;font-size:11px;font-weight:900;letter-spacing:.08em}
+.sim-model-dashboard-head-v166 strong{display:block;color:#fff;font-size:21px;line-height:1.15;margin-top:3px}
+.sim-model-dashboard-head-v166 p{margin:6px 0 0;color:#8da5b5;font-size:12px}
+.sim-model-dashboard-head-v166>span{min-width:120px;text-align:center;padding:9px 12px;border-radius:999px;background:rgba(46,217,195,.12);border:1px solid rgba(46,217,195,.35);color:#84f4df;font-size:12px;font-weight:900;letter-spacing:.08em}
+.sim-model-dashboard-v166.health-watch .sim-model-dashboard-head-v166>span{background:rgba(255,188,69,.1);border-color:rgba(255,188,69,.35);color:#ffd37a}
+.sim-model-dashboard-v166.health-critical .sim-model-dashboard-head-v166>span{background:rgba(255,87,112,.1);border-color:rgba(255,87,112,.35);color:#ff8ea0}
+.sim-model-dashboard-grid-v166{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.sim-model-dashboard-grid-v166 article{min-height:92px;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.075);background:rgba(255,255,255,.025);display:flex;flex-direction:column;gap:4px}
+.sim-model-dashboard-grid-v166 article.primary{border-color:rgba(79,220,235,.28);background:rgba(79,220,235,.055)}
+.sim-model-dashboard-grid-v166 article small{color:#7893a4;font-size:10px;font-weight:900;letter-spacing:.075em}
+.sim-model-dashboard-grid-v166 article b{color:#f6fbff;font-size:18px;line-height:1.15}
+.sim-model-dashboard-grid-v166 article span{color:#8ba3b2;font-size:11px;line-height:1.35;margin-top:auto}
+.sim-model-dashboard-grid-v166 .gate-active{border-color:rgba(44,220,157,.22)}
+.sim-model-dashboard-grid-v166 .gate-watch,.sim-model-dashboard-grid-v166 .risk-medium{border-color:rgba(255,190,73,.28)}
+.sim-model-dashboard-grid-v166 .gate-blocked,.sim-model-dashboard-grid-v166 .risk-high{border-color:rgba(255,84,108,.34)}
+.sim-model-separation-v166{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:11px}
+.sim-model-separation-v166>div{padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.06)}
+.sim-model-separation-v166 b{display:block;color:#a5ecf2;font-size:10px;letter-spacing:.055em;margin-bottom:4px}
+.sim-model-separation-v166 span{display:block;color:#8199a8;font-size:11px;line-height:1.35}
+.sim-auto-gates-v166{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:11px}
+.sim-auto-gates-v166>span{padding:9px;border-radius:11px;border:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.16)}
+.sim-auto-gates-v166 small,.sim-auto-gates-v166 b,.sim-auto-gates-v166 em{display:block}
+.sim-auto-gates-v166 small{color:#7d95a4;font-size:9px;font-weight:900}.sim-auto-gates-v166 b{color:#f3f8fb;font-size:12px;margin:2px 0}.sim-auto-gates-v166 em{color:#778d9a;font-style:normal;font-size:9px}
+.sim-auto-gates-v166 .gate-active{border-color:rgba(45,219,156,.2)}.sim-auto-gates-v166 .gate-watch{border-color:rgba(255,190,73,.3)}.sim-auto-gates-v166 .gate-blocked{border-color:rgba(255,84,108,.36)}
+@media(max-width:1100px){.sim-model-dashboard-grid-v166{grid-template-columns:repeat(3,minmax(0,1fr))}.sim-auto-gates-v166{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.sim-model-dashboard-v166{padding:13px;border-radius:16px}.sim-model-dashboard-head-v166{flex-direction:column}.sim-model-dashboard-grid-v166{grid-template-columns:repeat(2,minmax(0,1fr))}.sim-model-separation-v166{grid-template-columns:1fr}.sim-auto-gates-v166{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:460px){.sim-model-dashboard-grid-v166{grid-template-columns:1fr}.sim-auto-gates-v166{grid-template-columns:1fr}}
