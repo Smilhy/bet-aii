@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import MatchOperationsV211 from './MatchOperationsV211'
 import MatchIntelligenceV260 from './MatchIntelligenceV260'
+import LivePreMatchV280 from './LivePreMatchV280'
 import { applyContextOverlayV220 } from './matchIntelligenceV260'
 import { buildChallengerRawV180, chooseActiveModelV173, buildModelLabV200, adaptiveCalibrateTripletV172, adaptiveCalibrateBinaryV172, applyDataScienceTripletV200, applyDataScienceBinaryV200, applyEnsembleStackingV197, buildReliabilityGuardV190, applyReliabilityDecisionV190 } from './predictionLabV200'
 
@@ -1637,7 +1638,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   const reliabilityGuardV190 = useMemo(() => forecast ? buildReliabilityGuardV190({ match, data, forecast, performance: modelPerformance, oddsHistory }) : null, [match, data, forecast, modelPerformance, oddsHistory])
   const professionalLabBase = useMemo(() => forecast ? buildProfessionalPredictionLabV152({ match, forecast, reliability, performance: modelPerformance, oddsHistory, ensembleValidation, modelLab }) : null, [match, forecast, reliability, modelPerformance, oddsHistory, ensembleValidation, modelLab])
   const professionalLab = useMemo(() => applyReliabilityDecisionV190(professionalLabBase, reliabilityGuardV190), [professionalLabBase, reliabilityGuardV190])
-  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V260', validationVersion: 'BETAI_MATCH_CONTEXT_MARKET_MEMORY_V260', operationsVersion: 'BETAI_PRODUCTION_OPS_REPLAY_V211', contextSuiteVersion: 'BETAI_V212_260_ALL_IN', reliability: reliability || null, reliabilityV190: reliabilityGuardV190 || null, dataScienceV200: modelPerformance?.dataScience || null, ensembleValidation: ensembleValidation || null, modelLab: modelLab || null, marketValidation: modelLab?.marketValidation || null, professionalLab: professionalLab || null } : null, [forecast, reliability, reliabilityGuardV190, modelPerformance, ensembleValidation, modelLab, professionalLab])
+  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V260', validationVersion: 'BETAI_MATCH_CONTEXT_MARKET_MEMORY_V260', operationsVersion: 'BETAI_PRODUCTION_OPS_REPLAY_V211', contextSuiteVersion: 'BETAI_V212_260_ALL_IN', livePreMatchVersion: 'BETAI_LIVE_PREMATCH_V280', alertsWorkflowVersion: 'BETAI_ALERTS_WORKFLOW_V280', reliability: reliability || null, reliabilityV190: reliabilityGuardV190 || null, dataScienceV200: modelPerformance?.dataScience || null, ensembleValidation: ensembleValidation || null, modelLab: modelLab || null, marketValidation: modelLab?.marketValidation || null, professionalLab: professionalLab || null } : null, [forecast, reliability, reliabilityGuardV190, modelPerformance, ensembleValidation, modelLab, professionalLab])
   const preparedData = useMemo(() => data ? { ...data, externalConsensus: consensus || null, predictionEngine: forecastWithReliability || null } : null, [data, consensus, forecastWithReliability])
   const phaseIndex = Math.min(phases.length - 1, Math.floor(progress / (100 / phases.length)))
 
@@ -2005,6 +2006,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
         </section> : null}
 
         <MatchIntelligenceV260 match={match} data={preparedData || data} forecast={forecastWithReliability} professionalLab={professionalLab} />
+        <LivePreMatchV280 lang={lang} match={match} data={preparedData || data} forecast={forecastWithReliability} />
 
         <MatchOperationsV211 match={match} forecast={forecastWithReliability} />
 

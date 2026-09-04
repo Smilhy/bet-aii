@@ -131,3 +131,18 @@
 # WERSJA 206 — skan anomalii danych bez requestów API-Football.
 [functions."match-ops-anomaly-scan"]
   schedule = "23 * * * *"
+
+# WERSJA 261–270 — Live Pre-Match Intelligence.
+# Kontrole są przesunięte względem Odds Timeline. Każdy fixture ma tylko konkretne
+# okna T-120/T-90/T-60/T-45/T-30/T-15, więc scheduler nie odpytuje tego samego meczu bez końca.
+[functions."capture-live-prematch-v280"]
+  schedule = "8,23,38,53 * * * *"
+
+# WERSJA 266 — budowanie profilu sędziego wyłącznie z zakończonych, wcześniej śledzonych spotkań.
+# Twardy budżet funkcji ogranicza dodatkowe requesty do API-Football.
+[functions."rebuild-referee-intelligence-v280"]
+  schedule = "51 * * * *"
+
+# WERSJA 277 — dzienny digest watchlisty (w aplikacji; bez zewnętrznego mail/push providera).
+[functions."build-daily-prematch-digest-v280"]
+  schedule = "17 7 * * *"

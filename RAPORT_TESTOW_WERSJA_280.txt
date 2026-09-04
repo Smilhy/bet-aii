@@ -1,0 +1,38 @@
+Bet+AI V280 — RAPORT TESTÓW
+
+1) TEST_WERSJA_280_LIVE_PREMATCH_ALERTS.cjs: PASS
+   - due windows T60/T15
+   - lineup comparison
+   - formation/rotation detection
+   - weather impact
+   - travel impact
+   - pre-match re-score
+   - decision downgrade BET -> WATCH on material shock
+   - alert threshold rules
+
+2) TEST_WERSJA_260_MATCH_CONTEXT_MARKET_MEMORY.cjs: PASS
+3) TEST_WERSJA_200_RELIABILITY_DATA_SCIENCE.cjs: PASS
+4) TEST_WERSJA_211_PRODUCTION_OPS_REPLAY.cjs: PASS with local Supabase import stub (test imports backend module only; no DB call)
+5) TEST_WERSJA_180_SELF_LEARNING_ENGINE.cjs: PASS with local Supabase import stub (no DB call)
+
+6) Node --check: PASS
+   - _lib/prematch-v280.js
+   - _lib/prematch-schedule-v280.js
+   - capture-live-prematch-v280.js
+   - rebuild-referee-intelligence-v280.js
+   - get-live-prematch-v280.js
+   - get-live-prematch-control-center-v280.js
+   - match-user-workflow-v280.js
+   - build-daily-prematch-digest-v280.js
+
+7) TypeScript transpile parser (JSX syntax): 0 diagnostics
+   - LivePreMatchV280.jsx
+   - MatchSimulatorPreparationView.jsx
+   - MatchIntelligenceV260.jsx
+
+8) netlify.toml: TOML parse PASS
+9) package.json: JSON parse PASS
+
+10) Full npm/Vite build: NOT EXECUTED LOCALLY.
+    npm ci --offline failed because vite-8.1.4 is not present in the local npm cache (ENOTCACHED).
+    Final deploy package intentionally contains no node_modules; Netlify should perform a clean dependency install from package-lock.json.
