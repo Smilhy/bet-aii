@@ -101,6 +101,51 @@ async function getOddsHistorySummary(supabase, fixtureId, fixtureDate) {
   return { fixtureId, markets }
 }
 
+
+async function captureShadowBetV151(supabase, fixtureId, fixtureDate, body = {}, forecast = {}) {
+  const card = forecast?.professionalLab?.decisionCard || null
+  if (!card || String(card?.decision || '').toUpperCase() !== 'BET') return { captured: false, reason: 'not_a_bet' }
+  const marketKey = clean(card?.key, 50)
+  const bookmaker = clean(card?.bookmaker || 'Bookmaker', 120)
+  const odds = Number(card?.bookmakerOdds || 0)
+  if (!marketKey || !(odds > 1)) return { captured: false, reason: 'missing_market_or_odds' }
+  const row = {
+    fixture_id: String(fixtureId),
+    fixture_date: fixtureDate || null,
+    home_team: clean(body?.homeTeam, 180),
+    away_team: clean(body?.awayTeam, 180),
+    league: clean(body?.league, 180),
+    country: clean(body?.country, 120),
+    market_key: marketKey,
+    market_label: clean(card?.label || marketKey, 120),
+    bookmaker,
+    odds,
+    model_version: clean(forecast?.version || 'BETAI_FORECAST_V152', 80),
+    raw_probability: Number(card?.rawProbability || 0),
+    calibrated_probability: Number(card?.calibratedProbability || 0),
+    uncertainty_pp: Number(card?.uncertaintyPp || 0),
+    conservative_probability: Number(card?.conservativeProbability || 0),
+    fair_odds: Number(card?.fairOdds || 0),
+    no_vig_probability: Number(card?.noVigProbability || 0),
+    edge_pp: Number(card?.conservativeEdgePp || 0),
+    expected_value_pct: Number(card?.expectedValuePct || 0),
+    reliability: Math.round(Number(card?.reliability || 0)),
+    league_trust: Math.round(Number(card?.leagueTrust || 0)),
+    drift_status: clean(card?.driftStatus || 'PENDING', 40),
+    stake_units: Math.max(0.01, Number(card?.stakeUnits || 1)),
+    decision: 'BET',
+    status: 'pending'
+  }
+  const { error } = await supabase
+    .from('match_shadow_bets')
+    .upsert(row, { onConflict: 'fixture_id,market_key,bookmaker,model_version', ignoreDuplicates: true })
+  if (error) {
+    if (/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) return { captured: false, reason: 'table_missing' }
+    throw error
+  }
+  return { captured: true, marketKey, bookmaker }
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
   if (event.httpMethod !== 'POST') return json(405, { ok: false, error: 'Method not allowed' })
@@ -183,6 +228,8 @@ exports.handler = async function(event) {
   try { await captureOddsHistory(supabase, fixtureId, body.fixtureDate || null, forecast) } catch (_) {}
   let oddsHistory = null
   try { oddsHistory = await getOddsHistorySummary(supabase, fixtureId, body.fixtureDate || null) } catch (_) {}
+  let shadowBet = null
+  try { shadowBet = await captureShadowBetV151(supabase, fixtureId, body.fixtureDate || null, body, forecast) } catch (_) {}
 
-  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality, oddsHistory })
+  return json(200, { ok: true, saved: true, reused: false, fixtureId, dataQuality: newQuality, oddsHistory, shadowBet })
 }

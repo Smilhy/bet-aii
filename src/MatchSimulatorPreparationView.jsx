@@ -885,6 +885,271 @@ function buildReliabilityEngine({ match = {}, data = {}, forecast = null, consen
     },
     sourceCount,
     bookmakerCount
+
+  }
+}
+
+function isBetAiLabTestV152(match = {}) {
+  return Boolean(match?.isBetAiLabTest || String(match?.id || '') === 'betai-lab-test-v152')
+}
+
+function makeTestLineupV152(prefix = 'HOME', tone = 'home') {
+  const grids = ['1:1','2:1','2:2','2:3','2:4','3:1','3:2','3:3','4:1','4:2','4:3']
+  const positions = ['G','D','D','D','D','M','M','M','F','F','F']
+  const numbers = tone === 'home' ? [1,2,4,5,3,6,8,10,7,9,11] : [1,2,3,4,5,6,8,10,7,9,11]
+  return {
+    formation: '4-3-3', official: false, predicted: true, predictionConfidence: 82,
+    predictionSource: 'betai-lab-test', sourceMatches: 8,
+    coach: { name: 'Bet+AI Lab' },
+    colors: tone === 'home'
+      ? { player: { primary: '20d8dc', number: '06151d', border: 'eaffff' }, goalkeeper: { primary: 'f2cf45', number: '07131b', border: 'ffffff' } }
+      : { player: { primary: '5178ef', number: 'ffffff', border: 'f5f8ff' }, goalkeeper: { primary: 'f2cf45', number: '07131b', border: 'ffffff' } },
+    startXI: grids.map((grid, index) => ({
+      id: `${tone}-${index + 1}`,
+      name: `${prefix} ${['Keeper','Right','Centre A','Centre B','Left','Anchor','Eight','Creator','Wing R','Striker','Wing L'][index]}`,
+      number: numbers[index], pos: positions[index], grid
+    })),
+    substitutes: Array.from({ length: 7 }, (_, index) => ({ id: `${tone}-sub-${index + 1}`, name: `${prefix} Rezerwowy ${index + 1}`, number: 12 + index, pos: index < 2 ? 'D' : index < 5 ? 'M' : 'F' }))
+  }
+}
+
+function buildBetAiLabTestDataV152(match = {}) {
+  const recentHome = [
+    { gf: 2, ga: 0, result: 'W' }, { gf: 2, ga: 1, result: 'W' }, { gf: 1, ga: 1, result: 'D' }, { gf: 3, ga: 1, result: 'W' },
+    { gf: 1, ga: 0, result: 'W' }, { gf: 2, ga: 2, result: 'D' }, { gf: 1, ga: 2, result: 'L' }, { gf: 3, ga: 0, result: 'W' }
+  ]
+  const recentAway = [
+    { gf: 1, ga: 1, result: 'D' }, { gf: 2, ga: 1, result: 'W' }, { gf: 0, ga: 1, result: 'L' }, { gf: 2, ga: 2, result: 'D' },
+    { gf: 1, ga: 2, result: 'L' }, { gf: 2, ga: 0, result: 'W' }, { gf: 1, ga: 1, result: 'D' }, { gf: 0, ga: 2, result: 'L' }
+  ]
+  const fixtureDate = match?.fixture_date || match?.commence_time || new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString()
+  return {
+    ok: true,
+    generatedAt: new Date().toISOString(),
+    source: 'BET+AI LAB TEST • OFFLINE • 0 API REQUESTS',
+    apiAvailable: false,
+    partial: false,
+    errors: [],
+    fixture: {
+      id: 'betai-lab-test-v152', date: fixtureDate, league: 'BET+AI PROFESSIONAL LAB', country: 'TEST 0 API', round: 'Scenariusz kontrolny',
+      home: { id: 'lab-home', name: match?.home || 'BET+AI Home', logo: '' },
+      away: { id: 'lab-away', name: match?.away || 'BET+AI Away', logo: '' }
+    },
+    prediction: {
+      available: true,
+      percent: { home: 57, draw: 25, away: 18 },
+      comparison: { attack: { home: 64, away: 51 }, defence: { home: 61, away: 48 } },
+      advice: 'TEST: scenariusz laboratoryjny do sprawdzenia interfejsu i logiki bez API.',
+      underOver: 'Over 2.5'
+    },
+    h2h: { available: true, summary: { count: 6, homeWins: 3, draws: 2, awayWins: 1, avgGoals: 2.83 } },
+    injuries: { available: true, homeCount: 1, awayCount: 2, home: [], away: [] },
+    lineups: { available: true, home: makeTestLineupV152('HOME', 'home'), away: makeTestLineupV152('AWAY', 'away') },
+    standings: { available: true, home: { rank: 3, points: 54 }, away: { rank: 8, points: 41 } },
+    recent: { home: recentHome, away: recentAway },
+    teamStats: {
+      home: { available: true, source: 'recent-fixtures', sampleSize: 8, goalsForAvg: 1.88, goalsAgainstAvg: 0.88 },
+      away: { available: true, source: 'recent-fixtures', sampleSize: 8, goalsForAvg: 1.13, goalsAgainstAvg: 1.25 }
+    },
+    odds: {
+      available: true,
+      books: [
+        { bookmaker: 'BET+AI TEST BOOK', home: 1.98, draw: 3.65, away: 4.25, over15: 1.30, under15: 3.55, over25: 1.92, under25: 1.96, over35: 3.05, under35: 1.40, bttsYes: 1.91, bttsNo: 1.94 },
+        { bookmaker: 'LAB MARKET', home: 2.02, draw: 3.55, away: 4.10, over15: 1.31, under15: 3.45, over25: 1.95, under25: 1.93, over35: 3.10, under35: 1.39, bttsYes: 1.93, bttsNo: 1.92 }
+      ],
+      markets: []
+    },
+    rateLimitShield: { cachedResponses: 1, staleFallbacks: 0, rateLimited: false, budgetLimited: false },
+    simulationQuality: { score: 100, eligible: true, reasons: [], warnings: ['TRYB TESTOWY — dane kontrolne, nie używać jako realnej rekomendacji.'], checks: { form: true, teamStats: true, injuries: true, lineups: true, prediction: true } },
+    snapshot: { enabled: false, reused: true, fallback: false, source: 'offline-test', qualityScore: 100, eligible: true, note: 'TRYB TESTOWY V152 • 0 requestów API • dane kontrolne nie trafiają do backtestu.' }
+  }
+}
+
+function testMarketSummaryV152(key, label, samples = 180, accuracy = 64, brier = 0.218) {
+  return {
+    key, label, samples, accuracy, brier, avgConfidence: 64,
+    calibration: [
+      { range: '50-55%', samples: 32, avgConfidence: 52.8, actualAccuracy: 53.1, calibrationGap: 0.3 },
+      { range: '55-60%', samples: 38, avgConfidence: 57.4, actualAccuracy: 58.2, calibrationGap: 0.8 },
+      { range: '60-65%', samples: 44, avgConfidence: 62.1, actualAccuracy: 63.6, calibrationGap: 1.5 },
+      { range: '65-70%', samples: 36, avgConfidence: 67.2, actualAccuracy: 66.7, calibrationGap: -0.5 },
+      { range: '70-75%', samples: 30, avgConfidence: 72.0, actualAccuracy: 70.0, calibrationGap: -2.0 }
+    ]
+  }
+}
+
+function buildBetAiLabTestPerformanceV152() {
+  const markets = [
+    testMarketSummaryV152('oneXTwo', '1X2', 420, 58.3, 0.229),
+    testMarketSummaryV152('over15', 'Over 1.5', 398, 72.1, 0.184),
+    testMarketSummaryV152('over25', 'Over 2.5', 392, 64.0, 0.213),
+    testMarketSummaryV152('over35', 'Over 3.5', 374, 67.1, 0.205),
+    testMarketSummaryV152('btts', 'BTTS', 386, 62.4, 0.219)
+  ]
+  const league = { name: 'BET+AI PROFESSIONAL LAB', matches: 210, markets, avgBrier: 0.210, oneXTwoAccuracy: 58.3 }
+  return {
+    ok: true, available: true, isDemoPerformance: true,
+    all: { matches: 420, markets, avgBrier: 0.211, rawAvgBrier: 0.226, calibrationBrierLift: 0.015, oneXTwoAccuracy: 58.3, valueRoi: 7.8, valueBets: 128, avgClv: 3.6, clvSamples: 81, calibration: markets[2].calibration },
+    last30: { matches: 96, avgBrier: 0.207, valueRoi: 5.9 },
+    leagues: [league],
+    versions: [{ name: 'BETAI_FORECAST_V152', matches: 210, avgBrier: 0.204 }],
+    walkForward: {
+      samples: 350, rawBrier: 0.228, walkForwardBrier: 0.209, lift: 0.019,
+      markets: [
+        { key: 'oneXTwo', samples: 330, rawBrier: 0.241, walkForwardBrier: 0.229, lift: 0.012 },
+        { key: 'over15', samples: 342, rawBrier: 0.196, walkForwardBrier: 0.181, lift: 0.015 },
+        { key: 'over25', samples: 338, rawBrier: 0.229, walkForwardBrier: 0.207, lift: 0.022 },
+        { key: 'over35', samples: 322, rawBrier: 0.222, walkForwardBrier: 0.205, lift: 0.017 },
+        { key: 'btts', samples: 331, rawBrier: 0.232, walkForwardBrier: 0.215, lift: 0.017 }
+      ]
+    },
+    drift: {
+      markets: [
+        { key: 'oneXTwo', status: 'STABLE', score: 88, windows: { w30: { samples: 30, brier: 0.224, accuracy: 60 }, w50: { samples: 50, brier: 0.228, accuracy: 58 }, w100: { samples: 100, brier: 0.231, accuracy: 58 } } },
+        { key: 'over15', status: 'STABLE', score: 91, windows: { w30: { samples: 30, brier: 0.177, accuracy: 73 }, w50: { samples: 50, brier: 0.182, accuracy: 72 }, w100: { samples: 100, brier: 0.185, accuracy: 71 } } },
+        { key: 'over25', status: 'STABLE', score: 90, windows: { w30: { samples: 30, brier: 0.205, accuracy: 67 }, w50: { samples: 50, brier: 0.210, accuracy: 64 }, w100: { samples: 100, brier: 0.214, accuracy: 63 } } },
+        { key: 'over35', status: 'WATCH', score: 72, windows: { w30: { samples: 30, brier: 0.226, accuracy: 63 }, w50: { samples: 50, brier: 0.218, accuracy: 66 }, w100: { samples: 100, brier: 0.207, accuracy: 67 } } },
+        { key: 'btts', status: 'STABLE', score: 85, windows: { w30: { samples: 30, brier: 0.214, accuracy: 63 }, w50: { samples: 50, brier: 0.218, accuracy: 62 }, w100: { samples: 100, brier: 0.220, accuracy: 62 } } }
+      ]
+    },
+    leagueTrust: [{ name: 'BET+AI PROFESSIONAL LAB', overallScore: 87, label: 'HIGH', markets: [
+      { key: 'oneXTwo', score: 78, label: 'GOOD', samples: 210 }, { key: 'over15', score: 92, label: 'HIGH', samples: 198 },
+      { key: 'over25', score: 89, label: 'HIGH', samples: 196 }, { key: 'over35', score: 74, label: 'GOOD', samples: 187 }, { key: 'btts', score: 84, label: 'HIGH', samples: 193 }
+    ] }],
+    paperPortfolio: { bets: 128, settled: 116, pending: 12, wins: 67, losses: 49, profitUnits: 9.05, roi: 7.8, yield: 7.8, maxDrawdownUnits: 7.2, maxWinStreak: 8, maxLoseStreak: 5, avgClv: 3.6, clvSamples: 81 }
+  }
+}
+
+function buildBetAiLabConsensusV152() {
+  return {
+    ok: true, enabled: true, isTest: true,
+    consensus: { available: true, percent: { home: 55, draw: 26, away: 19 }, sourceCount: 5, agreement: 78, confidence: 78, summary: 'TEST consensus • dane kontrolne offline.' },
+    goals: { available: true, over25: 64, under25: 36, sourceCount: 4, confidence: 76, bttsAvailable: true, bttsYes: 57, bttsNo: 43 },
+    sources: [], sourceRegistry: []
+  }
+}
+
+function rawProbabilityForKeyV152(forecast = {}, key = '') {
+  if (['home','draw','away'].includes(key)) return Number(forecast?.raw?.oneXTwo?.[key] || forecast?.oneXTwo?.[key] || 0)
+  if (key === 'over15') return Number(forecast?.raw?.goals?.over15 || forecast?.goals?.over15 || 0)
+  if (key === 'under15') return 100 - Number(forecast?.raw?.goals?.over15 || forecast?.goals?.over15 || 0)
+  if (key === 'over25') return Number(forecast?.raw?.goals?.over25 || forecast?.goals?.over25 || 0)
+  if (key === 'under25') return 100 - Number(forecast?.raw?.goals?.over25 || forecast?.goals?.over25 || 0)
+  if (key === 'over35') return Number(forecast?.raw?.goals?.over35 || forecast?.goals?.over35 || 0)
+  if (key === 'under35') return 100 - Number(forecast?.raw?.goals?.over35 || forecast?.goals?.over35 || 0)
+  if (['btts','bttsYes'].includes(key)) return Number(forecast?.raw?.goals?.btts || forecast?.goals?.btts || 0)
+  if (key === 'bttsNo') return 100 - Number(forecast?.raw?.goals?.btts || forecast?.goals?.btts || 0)
+  return 0
+}
+
+function findLeagueTrustV150(performance = null, league = '', key = '') {
+  const leagueRow = Array.isArray(performance?.leagueTrust)
+    ? performance.leagueTrust.find(item => normalizeName(item?.name) === normalizeName(league)) || null
+    : null
+  const marketKey = performanceMarketKey(key)
+  const market = leagueRow?.markets?.find(item => item?.key === marketKey) || null
+  if (market) return market
+  if (leagueRow) return { key: marketKey, score: Number(leagueRow.overallScore || 50), label: leagueRow.label || 'PENDING', samples: Number(leagueRow.matches || 0) }
+  return { key: marketKey, score: 50, label: 'PENDING', samples: 0 }
+}
+
+function findDriftV149(performance = null, key = '') {
+  const marketKey = performanceMarketKey(key)
+  return performance?.drift?.markets?.find(item => item?.key === marketKey) || { key: marketKey, status: 'PENDING', score: 50, windows: {} }
+}
+
+function findWalkForwardV147(performance = null, key = '') {
+  const marketKey = performanceMarketKey(key)
+  return performance?.walkForward?.markets?.find(item => item?.key === marketKey) || { key: marketKey, samples: 0, rawBrier: 0, walkForwardBrier: 0, lift: 0 }
+}
+
+function findClvForCandidateV152(oddsHistory = null, candidate = null) {
+  if (!candidate || !Array.isArray(oddsHistory?.markets)) return null
+  const exact = oddsHistory.markets.find(item => item?.marketKey === candidate.key && normalizeName(item?.bookmaker) === normalizeName(candidate?.bookmaker))
+  const fallback = oddsHistory.markets.find(item => item?.marketKey === candidate.key)
+  return exact || fallback || null
+}
+
+function buildProfessionalPredictionLabV152({ match = {}, forecast = null, reliability = null, performance = null, oddsHistory = null } = {}) {
+  if (!forecast) return null
+  const candidate = forecast?.value?.top3?.[0] || forecast?.value?.top || null
+  if (!candidate) return {
+    version: 'BETAI_PRO_LAB_V152', decisionCard: { decision: 'NO_BET', reason: 'Brak pełnego rynku kursowego do policzenia przewagi.', key: '', label: 'BRAK RYNKU' },
+    uncertainty: { pp: 10, conservativeProbability: 0 }, leagueTrust: { score: 50, label: 'PENDING', samples: 0 }, drift: { status: 'PENDING', score: 50 }, walkForward: { samples: 0 }, paperPortfolio: performance?.paperPortfolio || null
+  }
+  const league = match?.league || ''
+  const rawProbability = rawProbabilityForKeyV152(forecast, candidate.key)
+  const calibratedProbability = Number(candidate?.probability || 0)
+  const relScore = Number(reliability?.score || 0)
+  const quality = Number(forecast?.dataQuality || 0)
+  const modelAgreement = Number(reliability?.components?.modelAgreement || forecast?.value?.modelAgreement || 60)
+  const sourceCount = Number(forecast?.consensus?.sourceCount || 0)
+  const consensusAgreement = Number(forecast?.consensus?.agreement || 0)
+  const calibrationSamples = Number(candidate?.calibration?.samples || reliability?.calibration?.samples || 0)
+  const trust = findLeagueTrustV150(performance, league, candidate.key)
+  const drift = findDriftV149(performance, candidate.key)
+  const walkForward = findWalkForwardV147(performance, candidate.key)
+
+  let uncertainty = 2.4
+  uncertainty += Math.max(0, 92 - quality) * 0.055
+  uncertainty += Math.max(0, 82 - relScore) * 0.045
+  uncertainty += Math.max(0, 82 - modelAgreement) * 0.035
+  if (sourceCount < 3) uncertainty += 1.0
+  if (sourceCount >= 3 && consensusAgreement < 65) uncertainty += Math.min(1.5, (65 - consensusAgreement) * 0.04)
+  if (calibrationSamples < 30) uncertainty += 2.4
+  else if (calibrationSamples < 100) uncertainty += 0.8
+  if (String(drift?.status || '').toUpperCase() === 'WATCH') uncertainty += 1.1
+  if (String(drift?.status || '').toUpperCase() === 'DRIFT') uncertainty += 2.8
+  if (Number(trust?.score || 0) >= 80) uncertainty -= 0.6
+  if (Number(trust?.score || 0) < 60) uncertainty += 1.4
+  uncertainty = round1(clampNum(uncertainty, 2.5, 12, 7))
+
+  const conservativeProbability = round1(clampNum(calibratedProbability - uncertainty, 1, 99, calibratedProbability))
+  const conservativeFairOdds = fairOdd(conservativeProbability)
+  const noVig = Number(candidate?.noVigImplied || 0)
+  const conservativeEdge = noVig > 0 ? round1(conservativeProbability - noVig) : null
+  const threshold = Number(candidate?.threshold || 5)
+  const clv = findClvForCandidateV152(oddsHistory, candidate)
+
+  let decision = 'NO_BET'
+  let reason = 'Brak wystarczającej przewagi po konserwatywnej korekcie.'
+  if (!(Number(candidate?.bookmakerOdds || 0) > 1) || !(noVig > 0)) {
+    reason = 'Brak pełnych kursów potrzebnych do obliczenia rynku no-vig.'
+  } else if (String(drift?.status || '').toUpperCase() === 'DRIFT') {
+    reason = 'NO BET: wykryto pogorszenie modelu (MODEL DRIFT).'
+  } else if (Number(trust?.score || 0) < 55 && Number(trust?.samples || 0) >= 20) {
+    reason = 'NO BET: niski League & Market Trust Score.'
+  } else if (relScore < 65) {
+    reason = 'NO BET: zbyt niska wiarygodność analizy.'
+  } else if (calibrationSamples < 30) {
+    decision = 'WATCH'
+    reason = `WATCH: kalibracja ma ${calibrationSamples}/30 wymaganych prób.`
+  } else if (conservativeEdge != null && conservativeEdge >= threshold && Number(candidate?.expectedValuePct || 0) > 0) {
+    decision = 'BET'
+    reason = `BET: przewaga pozostaje dodatnia nawet po odjęciu ±${uncertainty} pp niepewności.`
+  } else if (conservativeEdge != null && conservativeEdge > 0) {
+    decision = 'WATCH'
+    reason = 'WATCH: dodatnia przewaga istnieje, ale nie przechodzi konserwatywnego progu wejścia.'
+  }
+
+  return {
+    version: 'BETAI_PRO_LAB_V152',
+    walkForwardVersion: 'BETAI_WALK_FORWARD_V1', uncertaintyVersion: 'BETAI_UNCERTAINTY_V1', driftVersion: 'BETAI_DRIFT_V1', trustVersion: 'BETAI_TRUST_V1', shadowVersion: 'BETAI_SHADOW_PORTFOLIO_V1',
+    uncertainty: { pp: uncertainty, rawProbability: round1(rawProbability), calibratedProbability: round1(calibratedProbability), conservativeProbability, conservativeFairOdds },
+    leagueTrust: trust,
+    drift,
+    walkForward,
+    paperPortfolio: performance?.paperPortfolio || null,
+    clv: clv ? { openOdds: Number(clv.openOdds || 0), latestOdds: Number(clv.latestOdds || 0), clvPct: clv.clvPct, nearKickoff: Boolean(clv.nearKickoff), snapshots: Number(clv.snapshots || 0) } : null,
+    decisionCard: {
+      decision, reason, key: candidate.key, label: forecastLabel(candidate.key), marketGroup: candidate.marketGroup,
+      rawProbability: round1(rawProbability), calibratedProbability: round1(calibratedProbability), uncertaintyPp: uncertainty, conservativeProbability,
+      fairOdds: conservativeFairOdds, modelFairOdds: Number(candidate.fairOdds || 0), bookmakerOdds: Number(candidate.bookmakerOdds || 0), bookmaker: candidate.bookmaker || '',
+      noVigProbability: noVig ? round1(noVig) : null, conservativeEdgePp: conservativeEdge, rawEdgePp: Number(candidate.edgePp || 0), expectedValuePct: Number(candidate.expectedValuePct || 0),
+      reliability: relScore, dataQuality: quality, leagueTrust: Number(trust?.score || 0), trustLabel: trust?.label || 'PENDING', sampleSize: calibrationSamples,
+      driftStatus: drift?.status || 'PENDING', walkForwardSamples: Number(walkForward?.samples || 0), walkForwardBrier: Number(walkForward?.walkForwardBrier || 0),
+      clvPct: clv?.clvPct ?? null, stakeUnits: 1
+    }
   }
 }
 
@@ -907,6 +1172,12 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   const forecastSavedRef = useRef('')
 
   const loadConsensus = async (payload) => {
+    if (isBetAiLabTestV152(match)) {
+      setConsensus(buildBetAiLabConsensusV152())
+      setConsensusLoading(false)
+      setConsensusError('')
+      return
+    }
     const fixture = payload?.fixture || {}
     const params = new URLSearchParams({
       home: fixture?.home?.name || match?.home || '',
@@ -934,6 +1205,23 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   }
 
   const load = async () => {
+    if (isBetAiLabTestV152(match)) {
+      setLoading(true)
+      setError('')
+      setData(null)
+      setProgress(18)
+      setRateShieldState({ active: true, attempt: 0, retryMs: 0, mode: 'cache' })
+      await pause(180)
+      if (!mountedRef.current) return
+      const testData = buildBetAiLabTestDataV152(match)
+      setData(testData)
+      setConsensus(buildBetAiLabConsensusV152())
+      setConsensusError('')
+      setConsensusLoading(false)
+      setProgress(100)
+      setLoading(false)
+      return
+    }
     const id = match?.apiFixtureId || match?.id
     if (!id) {
       setError('Brak fixture ID')
@@ -1004,6 +1292,11 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   // przed kickoffem i później rozliczonych prawdziwym wynikiem z API-Football.
   useEffect(() => {
     let cancelled = false
+    if (isBetAiLabTestV152(match)) {
+      setModelPerformance(buildBetAiLabTestPerformanceV152())
+      setModelPerformanceLoading(false)
+      return () => { cancelled = true }
+    }
     setModelPerformanceLoading(true)
     fetch('/.netlify/functions/get-match-prediction-performance?limit=5000', { cache: 'no-store' })
       .then(response => response.json().catch(() => ({})).then(payload => ({ response, payload })))
@@ -1014,7 +1307,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
       .catch(() => {})
       .finally(() => { if (!cancelled && mountedRef.current) setModelPerformanceLoading(false) })
     return () => { cancelled = true }
-  }, [])
+  }, [match?.id, match?.apiFixtureId])
 
   const checks = useMemo(() => data ? buildChecks(match, data, copy) : [], [match, data, copy])
   const completeness = useMemo(() => {
@@ -1026,11 +1319,16 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   const eligibility = useMemo(() => data ? buildEligibility(match, data, checks) : { eligible: false, reasons: [] }, [match, data, checks])
   const forecast = useMemo(() => data && eligibility.eligible ? buildForecast(match, data, consensus, checks, modelPerformance) : null, [match, data, consensus, checks, eligibility.eligible, modelPerformance])
   const reliability = useMemo(() => forecast ? buildReliabilityEngine({ match, data, forecast, consensus, performance: modelPerformance }) : null, [match, data, forecast, consensus, modelPerformance])
-  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, reliability: reliability || null } : null, [forecast, reliability])
+  const professionalLab = useMemo(() => forecast ? buildProfessionalPredictionLabV152({ match, forecast, reliability, performance: modelPerformance, oddsHistory }) : null, [match, forecast, reliability, modelPerformance, oddsHistory])
+  const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V152', reliability: reliability || null, professionalLab: professionalLab || null } : null, [forecast, reliability, professionalLab])
   const preparedData = useMemo(() => data ? { ...data, externalConsensus: consensus || null, predictionEngine: forecastWithReliability || null } : null, [data, consensus, forecastWithReliability])
   const phaseIndex = Math.min(phases.length - 1, Math.floor(progress / (100 / phases.length)))
 
   useEffect(() => {
+    if (isBetAiLabTestV152(match)) {
+      setForecastSaveState('test')
+      return
+    }
     if (!forecastWithReliability || !eligibility.eligible || consensusLoading || modelPerformanceLoading) return
     const fixtureId = String(match?.apiFixtureId || match?.id || data?.fixture?.id || '')
     if (!fixtureId) return
@@ -1280,6 +1578,44 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
           <footer><span>Backtest: <b>{reliability.calibration.samples}</b> prób • {reliability.calibration.status}</span><span>Źródła consensus: <b>{reliability.sourceCount}</b></span><span>Bukmacherzy: <b>{reliability.bookmakerCount}</b></span></footer>
         </section> : null}
 
+        {professionalLab ? <section className={`sim-pro-lab-v152 decision-${String(professionalLab?.decisionCard?.decision || 'no_bet').toLowerCase()}`}>
+          <header className="sim-pro-lab-head-v152">
+            <div><small>BET+AI PROFESSIONAL PREDICTION LAB • V147–V152</small><strong>Finalna decyzja modelu</strong><p>Walk-Forward • Uncertainty • Drift • League Trust • Shadow Portfolio • Conservative Value</p></div>
+            <div className={`sim-pro-lab-decision-v152 ${String(professionalLab?.decisionCard?.decision || '').toLowerCase()}`}><span>BET+AI</span><b>{professionalLab?.decisionCard?.decision === 'BET' ? 'BET' : professionalLab?.decisionCard?.decision === 'WATCH' ? 'WATCH' : 'NO BET'}</b></div>
+          </header>
+          <div className="sim-pro-lab-main-v152">
+            <article className="pick"><small>RYNEK</small><strong>{professionalLab.decisionCard.label || '—'}</strong><span>{professionalLab.decisionCard.bookmakerOdds ? `@ ${Number(professionalLab.decisionCard.bookmakerOdds).toFixed(2)} • ${professionalLab.decisionCard.bookmaker}` : 'Brak pełnego rynku kursowego'}</span></article>
+            <article><small>RAW MODEL</small><b>{professionalLab.decisionCard.rawProbability || 0}%</b><span>przed kalibracją</span></article>
+            <article><small>CALIBRATED</small><b>{professionalLab.decisionCard.calibratedProbability || 0}%</b><span>po historii</span></article>
+            <article className="uncertainty"><small>UNCERTAINTY</small><b>±{professionalLab.decisionCard.uncertaintyPp || 0} pp</b><span>margines modelu</span></article>
+            <article className="conservative"><small>CONSERVATIVE P</small><b>{professionalLab.decisionCard.conservativeProbability || 0}%</b><span>używane do decyzji</span></article>
+            <article><small>FAIR ODDS</small><b>{professionalLab.decisionCard.fairOdds ? Number(professionalLab.decisionCard.fairOdds).toFixed(2) : '—'}</b><span>konserwatywne</span></article>
+            <article><small>MARKET NO-VIG</small><b>{professionalLab.decisionCard.noVigProbability == null ? '—' : `${professionalLab.decisionCard.noVigProbability}%`}</b><span>bez marży</span></article>
+            <article className={Number(professionalLab.decisionCard.conservativeEdgePp || 0) > 0 ? 'positive' : 'negative'}><small>CONS. EDGE</small><b>{professionalLab.decisionCard.conservativeEdgePp == null ? '—' : `${professionalLab.decisionCard.conservativeEdgePp > 0 ? '+' : ''}${professionalLab.decisionCard.conservativeEdgePp} pp`}</b><span>po uncertainty</span></article>
+          </div>
+          <div className="sim-pro-lab-guards-v152">
+            <article><header><small>RELIABILITY</small><b>{professionalLab.decisionCard.reliability || 0}/100</b></header><span>{reliability?.label || 'PENDING'}</span></article>
+            <article><header><small>LEAGUE / MARKET TRUST</small><b>{professionalLab.decisionCard.leagueTrust || 0}/100</b></header><span>{professionalLab.decisionCard.trustLabel || 'PENDING'} • {professionalLab.leagueTrust?.samples || 0} prób</span></article>
+            <article className={`drift-${String(professionalLab.decisionCard.driftStatus || 'pending').toLowerCase()}`}><header><small>MODEL DRIFT</small><b>{professionalLab.decisionCard.driftStatus || 'PENDING'}</b></header><span>30 / 50 / 100 ostatnich prognoz</span></article>
+            <article><header><small>WALK-FORWARD</small><b>{professionalLab.decisionCard.walkForwardSamples || 0}</b></header><span>Brier {professionalLab.decisionCard.walkForwardBrier ? Number(professionalLab.decisionCard.walkForwardBrier).toFixed(3) : '—'}</span></article>
+            <article><header><small>SAMPLE SIZE</small><b>{professionalLab.decisionCard.sampleSize || 0}</b></header><span>min. 30 do decyzji BET</span></article>
+            <article><header><small>CLV</small><b>{professionalLab.decisionCard.clvPct == null ? '—' : `${Number(professionalLab.decisionCard.clvPct) > 0 ? '+' : ''}${Number(professionalLab.decisionCard.clvPct).toFixed(1)}%`}</b></header><span>{professionalLab.clv?.snapshots ? `${professionalLab.clv.snapshots} snapshotów kursu` : 'zbieranie historii'}</span></article>
+          </div>
+          <div className="sim-pro-lab-reason-v152"><b>{professionalLab.decisionCard.reason}</b><span>Decision Card używa konserwatywnego prawdopodobieństwa. Symulator nie gwarantuje zysku ani wyniku meczu.</span></div>
+          {professionalLab.paperPortfolio ? <div className="sim-shadow-portfolio-v152">
+            <header><div><small>PAPER BETTING / SHADOW PORTFOLIO</small><strong>Test rekomendacji bez stawiania pieniędzy</strong></div><span>1.00u / typ</span></header>
+            <div>
+              <article><small>ROZLICZONE</small><b>{professionalLab.paperPortfolio.settled || 0}</b></article>
+              <article><small>PROFIT</small><b className={Number(professionalLab.paperPortfolio.profitUnits || 0) >= 0 ? 'positive' : 'negative'}>{Number(professionalLab.paperPortfolio.profitUnits || 0) > 0 ? '+' : ''}{Number(professionalLab.paperPortfolio.profitUnits || 0).toFixed(2)}u</b></article>
+              <article><small>ROI / YIELD</small><b>{Number(professionalLab.paperPortfolio.roi || 0).toFixed(1)}%</b></article>
+              <article><small>MAX DRAWDOWN</small><b>-{Number(professionalLab.paperPortfolio.maxDrawdownUnits || 0).toFixed(2)}u</b></article>
+              <article><small>W/L STREAK</small><b>{professionalLab.paperPortfolio.maxWinStreak || 0} / {professionalLab.paperPortfolio.maxLoseStreak || 0}</b></article>
+              <article><small>AVG CLV</small><b>{Number(professionalLab.paperPortfolio.avgClv || 0) > 0 ? '+' : ''}{Number(professionalLab.paperPortfolio.avgClv || 0).toFixed(1)}%</b></article>
+            </div>
+          </div> : null}
+          {isBetAiLabTestV152(match) ? <footer className="sim-pro-lab-test-note-v152">⚠ TRYB TESTOWY: wszystkie dane tego jednego meczu są kontrolne/offline i NIE są zapisywane do realnego backtestu, portfolio ani Supabase.</footer> : null}
+        </section> : null}
+
         <section className="sim-prep-backtest-v137">
           <div className="sim-prep-backtest-head-v137">
             <div><small>BET+AI BACKTEST & CALIBRATION</small><strong>Rzeczywista skuteczność modelu</strong></div>
@@ -1304,6 +1640,16 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
             {modelPerformance.note ? <p className="sim-prep-backtest-note-v137">⚠ {modelPerformance.note}</p> : <p className="sim-prep-backtest-note-v137 ok">✓ Wyniki są liczone wyłącznie z zamrożonych prognoz pre-match i prawdziwych rezultatów.</p>}
           </> : <p className="sim-prep-backtest-empty-v137">Pierwsze statystyki pojawią się po zakończeniu i automatycznym rozliczeniu zapisanych prognoz. Forecast po kickoffie jest zablokowany, więc wynik nie może zmienić historycznej predykcji.</p>}
         </section>
+
+        {modelPerformance?.walkForward ? <section className="sim-model-monitor-v152">
+          <header><div><small>PROFESSIONAL MODEL MONITORING</small><strong>Walk-Forward • Drift 30/50/100 • Trust Score</strong></div><span>{isBetAiLabTestV152(match) ? 'TEST HISTORY' : 'REAL PRE-MATCH HISTORY'}</span></header>
+          <div className="sim-model-monitor-grid-v152">
+            <article><small>WALK-FORWARD SAMPLES</small><b>{modelPerformance.walkForward.samples || 0}</b><span>chronologicznie • bez danych z przyszłości</span></article>
+            <article><small>WF BRIER</small><b>{Number(modelPerformance.walkForward.walkForwardBrier || 0).toFixed(3)}</b><span>RAW {Number(modelPerformance.walkForward.rawBrier || 0).toFixed(3)} • lift {Number(modelPerformance.walkForward.lift || 0) > 0 ? '+' : ''}{Number(modelPerformance.walkForward.lift || 0).toFixed(3)}</span></article>
+            <article><small>MODEL DRIFT</small><b>{professionalLab?.drift?.status || 'PENDING'}</b><span>30: {professionalLab?.drift?.windows?.w30?.samples || 0} • 50: {professionalLab?.drift?.windows?.w50?.samples || 0} • 100: {professionalLab?.drift?.windows?.w100?.samples || 0}</span></article>
+            <article><small>LEAGUE TRUST</small><b>{professionalLab?.leagueTrust?.score || 0}/100</b><span>{professionalLab?.leagueTrust?.label || 'PENDING'} • {professionalLab?.leagueTrust?.samples || 0} prób rynku</span></article>
+          </div>
+        </section> : null}
 
         <div className={`sim-prep-quality-gate-v126 ${eligibility.eligible ? 'accepted' : 'rejected'}`}>
           <div>

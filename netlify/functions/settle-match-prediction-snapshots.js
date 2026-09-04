@@ -118,6 +118,60 @@ function regularTimeScore(fixture) {
   return { home, away }
 }
 
+
+function shadowOutcomeV151(marketKey = '', score = null) {
+  if (!score) return null
+  const key = String(marketKey || '')
+  const hg = Number(score.home), ag = Number(score.away)
+  const total = hg + ag
+  const map = {
+    home: hg > ag, draw: hg === ag, away: hg < ag,
+    over15: total >= 2, under15: total < 2,
+    over25: total >= 3, under25: total < 3,
+    over35: total >= 4, under35: total < 4,
+    btts: hg > 0 && ag > 0, bttsYes: hg > 0 && ag > 0, bttsNo: !(hg > 0 && ag > 0)
+  }
+  return Object.prototype.hasOwnProperty.call(map, key) ? Boolean(map[key]) : null
+}
+
+async function voidShadowBetsV151(supabase, fixtureId, now) {
+  try {
+    await supabase.from('match_shadow_bets').update({ status: 'void', profit_units: 0, settled_at: now, updated_at: now }).eq('fixture_id', String(fixtureId)).eq('status', 'pending')
+  } catch (_) {}
+}
+
+async function settleShadowBetsV151(supabase, fixtureId, score, clv, now) {
+  const { data, error } = await supabase
+    .from('match_shadow_bets')
+    .select('id,market_key,odds,stake_units,status')
+    .eq('fixture_id', String(fixtureId))
+    .eq('status', 'pending')
+  if (error) {
+    if (/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) return
+    throw error
+  }
+  for (const bet of Array.isArray(data) ? data : []) {
+    const won = shadowOutcomeV151(bet.market_key, score)
+    if (won == null) {
+      await supabase.from('match_shadow_bets').update({ status: 'void', profit_units: 0, actual_home_goals: score.home, actual_away_goals: score.away, settled_at: now, updated_at: now }).eq('id', bet.id)
+      continue
+    }
+    const stake = Math.max(0.01, Number(bet.stake_units || 1))
+    const odds = Number(bet.odds || 0)
+    const profit = won ? (odds - 1) * stake : -stake
+    await supabase.from('match_shadow_bets').update({
+      status: won ? 'won' : 'lost',
+      profit_units: Math.round(profit * 10000) / 10000,
+      actual_home_goals: score.home,
+      actual_away_goals: score.away,
+      clv_pct: clv && Number.isFinite(Number(clv.clvPct)) ? Number(clv.clvPct) : null,
+      closing_odds: clv && Number(clv.closingOdds) > 1 ? Number(clv.closingOdds) : null,
+      settled_at: now,
+      updated_at: now
+    }).eq('id', bet.id)
+  }
+}
+
 async function mapConcurrent(items, limit, mapper) {
   let cursor = 0
   const results = new Array(items.length)
@@ -186,6 +240,7 @@ exports.handler = async function handler(event = {}) {
           updated_at: now
         }).eq('fixture_id', row.fixture_id).is('settled_at', null)
         if (updateError) throw updateError
+        try { await voidShadowBetsV151(supabase, row.fixture_id, now) } catch (_) {}
         voided += 1
         return
       }
@@ -213,6 +268,7 @@ exports.handler = async function handler(event = {}) {
       }).eq('fixture_id', row.fixture_id).is('settled_at', null)
       if (updateError) throw updateError
       try { await markClosingOdds(supabase, row.fixture_id, row.fixture_date) } catch (_) {}
+      try { await settleShadowBetsV151(supabase, row.fixture_id, score, clv, now) } catch (_) {}
       settled += 1
     } catch (err) {
       errors.push({ fixture_id: row.fixture_id, error: err?.message || String(err) })
@@ -229,4 +285,4 @@ exports.handler = async function handler(event = {}) {
   })
 }
 
-exports._test = { fixtureClass, regularTimeScore }
+exports._test = { fixtureClass, regularTimeScore, shadowOutcomeV151 }

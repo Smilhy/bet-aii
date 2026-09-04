@@ -93,6 +93,27 @@ function fixtureKey(row = {}) {
   return String(row.apiFixtureId || row.id || `${row.home}|${row.away}|${row.commence_time}`)
 }
 
+
+function createBetAiLabTestMatchV152(nowMs = Date.now()) {
+  const kickoff = new Date(Number(nowMs) + 2 * 60 * 60 * 1000).toISOString()
+  return {
+    id: 'betai-lab-test-v152',
+    apiFixtureId: '',
+    isBetAiLabTest: true,
+    source: 'demo',
+    home: 'BET+AI Home',
+    away: 'BET+AI Away',
+    league: 'BET+AI PROFESSIONAL LAB',
+    country: 'TEST 0 API',
+    commence_time: kickoff,
+    fixture_date: kickoff,
+    status_short: 'NS',
+    status_long: 'Test przedmeczowy',
+    hasRealOdds: false,
+    markets: []
+  }
+}
+
 function getFixtureStartMs(row = {}) {
   const directCandidates = [
     row.commence_time,
@@ -433,6 +454,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   const scanAbortRef = useRef(null)
   const clientTimeZone = useMemo(() => getBrowserTimeZone(), [])
   const todayKey = useMemo(() => getDateKeyInTimeZone(nowMs, clientTimeZone), [nowMs, clientTimeZone])
+  const labTestMatch = useMemo(() => createBetAiLabTestMatchV152(nowMs), [todayKey])
 
   const normalizeRealRows = (payload, requestNowMs = Date.now()) => {
     const seen = new Set()
@@ -698,6 +720,14 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         </aside>
 
         <div className="sim-day-main-v98">
+          <section className="sim-lab-test-v152">
+            <div className="sim-lab-test-copy-v152">
+              <small>BET+AI PROFESSIONAL PREDICTION LAB • TEST OFFLINE</small>
+              <strong>1 mecz testowy • 0 requestów API</strong>
+              <p>Twój limit API może być wyczerpany — ten jeden scenariusz działa lokalnie i pozwala sprawdzić Calibration, Uncertainty, Drift, Trust Score, Shadow Portfolio, Decision Card i pełną symulację 2D.</p>
+            </div>
+            <button type="button" onClick={() => handleSelect(labTestMatch)}>▶ URUCHOM TEST V152</button>
+          </section>
           {loading && <div className="sim-day-loading-v99"><i /><strong>{copy.loading}</strong><span>API-Football • {formatDateLabel(todayKey)}</span></div>}
           {!loading && error && <div className="sim-day-error-v99">⚠ {error}<button type="button" onClick={startLoadMatches}>{copy.refresh}</button></div>}
           {!loading && !error && qualifying && !filteredMatches.length && <div className="sim-day-loading-v99"><i /><strong>Sprawdzam realne statystyki meczów…</strong><span>{qualificationProgress.done}/{qualificationProgress.total} sprawdzonych</span></div>}
