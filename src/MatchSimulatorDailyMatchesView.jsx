@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 const COPY = {
   pl: {
     title: 'Mecze dnia',
-    subtitle: 'Tylko realne mecze z kursami 1X2. Pełna jakość danych jest sprawdzana przed symulacją.',
+    subtitle: 'Tylko realne mecze z wystarczającą formą i statystykami obu drużyn. Skład XI i kursy są opcjonalne.',
     search: 'Wyszukaj mecz, ligę lub kraj',
     sport: 'Sport',
     football: 'Piłka nożna',
@@ -13,8 +13,8 @@ const COPY = {
     open: 'Symuluj',
     more: 'Więcej',
     refresh: 'Odśwież API',
-    loading: 'Pobieram realne mecze dnia z API-Football…',
-    empty: 'Brak kolejnych nierozpoczętych meczów na dzisiaj.',
+    loading: 'Pobieram i kwalifikuję realne mecze dnia…',
+    empty: 'Brak kolejnych meczów z wystarczającymi realnymi statystykami na dzisiaj.',
     error: 'Nie udało się pobrać realnych meczów.',
     real: 'API-Football LIVE',
     odds: 'Realne kursy',
@@ -24,7 +24,7 @@ const COPY = {
   },
   en: {
     title: 'Matches of the day',
-    subtitle: 'Only real fixtures with 1X2 odds. Full data quality is checked before simulation.',
+    subtitle: 'Only real fixtures with sufficient team form and statistics. Lineups and odds are optional.',
     search: 'Search match, league or country',
     sport: 'Sport',
     football: 'Football',
@@ -33,8 +33,8 @@ const COPY = {
     open: 'Simulate',
     more: 'More',
     refresh: 'Refresh API',
-    loading: 'Loading real fixtures from API-Football…',
-    empty: 'No more upcoming real fixtures today.',
+    loading: 'Loading and qualifying real fixtures…',
+    empty: 'No more upcoming fixtures with sufficient real statistics today.',
     error: 'Could not load real fixtures.',
     real: 'API-Football LIVE',
     odds: 'Real odds',
@@ -179,13 +179,35 @@ function getReal1X2(row = {}) {
   }
 }
 
+async function qualifyFixtureForSimulator(row = {}) {
+  const fixtureId = row.apiFixtureId || row.id
+  const homeTeamId = row.homeTeamId || ''
+  const awayTeamId = row.awayTeamId || ''
+  if (!fixtureId || !homeTeamId || !awayTeamId) return false
+  try {
+    const params = new URLSearchParams({
+      fixture: String(fixtureId),
+      quality_only: '1',
+      home_team_id: String(homeTeamId),
+      away_team_id: String(awayTeamId)
+    })
+    const response = await fetch(`/.netlify/functions/get-match-simulator-data?${params.toString()}`, { cache: 'no-store' })
+    const payload = await response.json().catch(() => ({}))
+    return Boolean(response.ok && payload?.ok && payload?.simulationQuality?.eligible)
+  } catch (_) {
+    return false
+  }
+}
+
 export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMatch }) {
   const copy = COPY[lang] || COPY.pl
   const [query, setQuery] = useState('')
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
+  const [qualifying, setQualifying] = useState(false)
   const [error, setError] = useState('')
   const [sourceMessage, setSourceMessage] = useState('')
+  const [qualificationProgress, setQualificationProgress] = useState({ done: 0, total: 0 })
   const [selectedId, setSelectedId] = useState('')
   const [nowMs, setNowMs] = useState(() => Date.now())
   const clientTimeZone = useMemo(() => getBrowserTimeZone(), [])
@@ -255,12 +277,38 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         }
       }
 
-      setMatches(realRows)
-      setSourceMessage(realRows.length
-        ? `${realRows.length} realnych, nierozpoczętych meczów • kolejność wg kickoffu${usedFallback ? ' • kursy pominięte' : ''}`
-        : 'Brak kolejnych nierozpoczętych meczów na dzisiaj.')
+      // WERSJA 135: użytkownik widzi WYŁĄCZNIE mecze, które przejdą
+      // pre-check realnej formy i statystyk. Skład XI nie jest wymagany.
+      // Lista pojawia się progresywnie — nie czekamy na sprawdzenie całego dnia.
+      setMatches([])
+      setLoading(false)
+      setQualifying(true)
+      setQualificationProgress({ done: 0, total: realRows.length })
+      setSourceMessage(realRows.length ? `Sprawdzam jakość danych 0/${realRows.length}…` : 'Brak kolejnych nierozpoczętych meczów na dzisiaj.')
+      const approved = []
+      const concurrency = 6
+      for (let i = 0; i < realRows.length; i += concurrency) {
+        const batch = realRows.slice(i, i + concurrency)
+        const verdicts = await Promise.all(batch.map(async row => ({ row, ok: await qualifyFixtureForSimulator(row) })))
+        verdicts.forEach(item => { if (item.ok) approved.push(item.row) })
+        approved.sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b))
+        const done = Math.min(realRows.length, i + batch.length)
+        setMatches([...approved])
+        setQualificationProgress({ done, total: realRows.length })
+        setSourceMessage(`Sprawdzono ${done}/${realRows.length} meczów • zakwalifikowane ${approved.length}${usedFallback ? ' • kursy pominięte' : ''}`)
+      }
+      if (!realRows.length) {
+        setSourceMessage('Brak kolejnych nierozpoczętych meczów na dzisiaj.')
+      } else if (!approved.length) {
+        setSourceMessage(`Sprawdzono ${realRows.length}/${realRows.length} • brak meczów spełniających próg realnych statystyk.`)
+      } else {
+        setSourceMessage(`${approved.length} zakwalifikowanych meczów • tylko realna forma i statystyki • kolejność wg kickoffu`)
+      }
+      setQualifying(false)
     } catch (err) {
       setMatches([])
+      setQualificationProgress({ done: 0, total: 0 })
+      setQualifying(false)
       setError(err?.message || copy.error)
       setSourceMessage('')
     } finally {
@@ -326,7 +374,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         <div className="sim-day-main-v98">
           {loading && <div className="sim-day-loading-v99"><i /><strong>{copy.loading}</strong><span>API-Football • {formatDateLabel(todayKey)}</span></div>}
           {!loading && error && <div className="sim-day-error-v99">⚠ {error}<button type="button" onClick={loadMatches}>{copy.refresh}</button></div>}
-          {!loading && !error && !filteredMatches.length && <div className="sim-day-empty-v98">{copy.empty}</div>}
+          {!loading && !error && qualifying && !filteredMatches.length && <div className="sim-day-loading-v99"><i /><strong>Sprawdzam realne statystyki meczów…</strong><span>{qualificationProgress.done}/{qualificationProgress.total} sprawdzonych</span></div>}
+          {!loading && !error && !qualifying && !filteredMatches.length && <div className="sim-day-empty-v98">{copy.empty}</div>}
 
           {!loading && !error && filteredMatches.map((match) => {
             const odds = getReal1X2(match)

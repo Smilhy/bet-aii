@@ -503,16 +503,17 @@ function buildSimulationQuality({ prediction, h2h, injuriesFetchOk, lineups, sta
     teamStats: Boolean(teamStats?.home?.available && teamStats?.away?.available),
     prediction: Boolean(prediction?.available)
   }
-  // Najważniejsze są realne dane sportowe. Kursy nie są częścią gate'a jakości.
-  // H2H, tabela, absencje i zewnętrzna prognoza wzmacniają model, ale ich brak sam w sobie nie blokuje meczu.
-  const required = ['form', 'lineups', 'teamStats']
-  const weights = { form: 25, lineups: 30, teamStats: 30, prediction: 7, injuries: 3, h2h: 3, standings: 2 }
-  const score = Object.entries(checks).reduce((sum, [key, ok]) => sum + (ok ? weights[key] : 0), 0)
+  // WERSJA 135: skład XI NIE jest warunkiem dopuszczenia meczu.
+  // Oficjalny/przewidywany skład wzbogaca animację, ale brak XI nie może blokować
+  // rzetelnej symulacji opartej na realnej formie i statystykach obu drużyn.
+  const required = ['form', 'teamStats']
+  const weights = { form: 45, lineups: 0, teamStats: 45, prediction: 4, injuries: 2, h2h: 2, standings: 2 }
+  const score = Object.entries(checks).reduce((sum, [key, ok]) => sum + (ok ? (weights[key] || 0) : 0), 0)
   const labels = {
     form: 'minimum 5 ostatnich realnych meczów obu drużyn',
     h2h: 'historia H2H',
     injuries: 'sprawdzenie absencji',
-    lineups: 'oficjalny lub wiarygodny przewidywany XI z pozycjami',
+    lineups: 'oficjalny lub przewidywany XI (opcjonalne)',
     standings: 'pozycja obu drużyn w tabeli',
     teamStats: 'rzetelne statystyki obu drużyn (sezon lub min. 5 ostatnich meczów)',
     prediction: 'prognoza API'
@@ -593,7 +594,62 @@ exports.handler = async function(event) {
   const fixtureId = clean(qs.fixture || qs.fixture_id).replace(/[^0-9A-Za-z_-]/g, '').slice(0, 100)
   if (!fixtureId) return json(400, { error: 'Brak fixture id' })
   const forceRefresh = ['1', 'true', 'yes'].includes(String(qs.refresh || qs.force_refresh || '').toLowerCase())
+  const qualityOnly = ['1', 'true', 'yes'].includes(String(qs.quality_only || qs.qualityOnly || '').toLowerCase())
+  const qualityHomeTeamId = clean(qs.home_team_id || qs.homeTeamId).replace(/[^0-9A-Za-z_-]/g, '').slice(0, 100)
+  const qualityAwayTeamId = clean(qs.away_team_id || qs.awayTeamId).replace(/[^0-9A-Za-z_-]/g, '').slice(0, 100)
   const cachedSnapshot = await readSimulatorSnapshot(fixtureId)
+
+  // WERSJA 135: lekki pre-check listy meczów. Nie pobieramy składów, kursów,
+  // H2H ani dodatkowych źródeł. Do kwalifikacji na liście wymagamy tylko
+  // minimum 5 realnych ostatnich meczów obu drużyn i statystyk wyliczonych z nich.
+  if (qualityOnly && qualityHomeTeamId && qualityAwayTeamId) {
+    // Jeżeli ten mecz był już wcześniej analizowany, najpierw kwalifikujemy go
+    // z trwałego snapshotu Supabase — bez kolejnych zapytań do API-Football.
+    if (cachedSnapshot?.payload) {
+      const snap = cachedSnapshot.payload
+      const snapshotQuality = buildSimulationQuality({
+        prediction: snap.prediction || { available: false },
+        h2h: snap.h2h || { summary: { count: 0 } },
+        injuriesFetchOk: Boolean(snap.simulationQuality?.checks?.injuries),
+        lineups: snap.lineups || { home: {}, away: {} },
+        standings: snap.standings || {},
+        recent: snap.recent || { home: [], away: [] },
+        teamStats: snap.teamStats || { home: {}, away: {} }
+      })
+      if (snapshotQuality.eligible) {
+        return json(200, {
+          ok: true, qualityOnly: true, fixtureId, simulationQuality: snapshotQuality,
+          source: 'supabase-snapshot', cached: true
+        })
+      }
+    }
+
+    const [recentHomeR, recentAwayR] = await Promise.all([
+      apiGet('/fixtures', { team: qualityHomeTeamId, last: 8 }),
+      apiGet('/fixtures', { team: qualityAwayTeamId, last: 8 })
+    ])
+    const recent = {
+      home: normalizeRecent(recentHomeR.data || [], qualityHomeTeamId),
+      away: normalizeRecent(recentAwayR.data || [], qualityAwayTeamId)
+    }
+    const teamStats = {
+      home: deriveRecentTeamStatistics(recent.home),
+      away: deriveRecentTeamStatistics(recent.away)
+    }
+    const quality = buildSimulationQuality({
+      prediction: { available: false }, h2h: { summary: { count: 0 } }, injuriesFetchOk: false,
+      lineups: { home: {}, away: {} }, standings: {}, recent, teamStats
+    })
+    return json(200, {
+      ok: true,
+      qualityOnly: true,
+      fixtureId,
+      simulationQuality: quality,
+      recent: { home: recent.home.length, away: recent.away.length },
+      teamStats: { home: Boolean(teamStats.home?.available), away: Boolean(teamStats.away?.available) }
+    })
+  }
+
 
   // Stabilność przede wszystkim: jeżeli mamy wcześniej zapisany, zakwalifikowany snapshot
   // i nie trzeba jeszcze próbować podmienić przewidywanego XI na oficjalny, zwracamy go od razu.
