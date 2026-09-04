@@ -562,6 +562,13 @@ function buildSimulationModel(data = {}) {
   homeXg = clamp(homeXg, 0.25, 3.4)
   awayXg = clamp(awayXg, 0.2, 3.2)
 
+  // WERSJA 136: Match Engine follows the pre-match Prediction Engine profile.
+  // The animation visualises the forecast; it does not invent a separate prediction.
+  if (safeNum(data?.predictionEngine?.xg?.home, 0) > 0 && safeNum(data?.predictionEngine?.xg?.away, 0) > 0) {
+    homeXg = clamp(safeNum(data.predictionEngine.xg.home), 0.2, 3.8)
+    awayXg = clamp(safeNum(data.predictionEngine.xg.away), 0.18, 3.6)
+  }
+
   const seed = hashString(`${fixture.id}|${fixture.home?.name}|${fixture.away?.name}`)
   const random = mulberry32(seed)
   const samples = 10000
@@ -589,11 +596,13 @@ function buildSimulationModel(data = {}) {
     }
     : mc
 
-  const blendSum = blended.home + blended.draw + blended.away
+  const preMatchForecast = normalizeOutcomePercent(data?.predictionEngine?.oneXTwo || {})
+  const finalBlend = preMatchForecast || blended
+  const blendSum = finalBlend.home + finalBlend.draw + finalBlend.away
   const probabilities = {
-    home: Math.round(blended.home * 1000 / blendSum) / 10,
-    draw: Math.round(blended.draw * 1000 / blendSum) / 10,
-    away: Math.round(blended.away * 1000 / blendSum) / 10
+    home: Math.round(finalBlend.home * 1000 / blendSum) / 10,
+    draw: Math.round(finalBlend.draw * 1000 / blendSum) / 10,
+    away: Math.round(finalBlend.away * 1000 / blendSum) / 10
   }
 
   const scoreRows = [...scoreMap.entries()].sort((a, b) => b[1] - a[1])
