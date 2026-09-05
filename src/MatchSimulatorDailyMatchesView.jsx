@@ -21,6 +21,10 @@ const COPY = {
     noOdds: 'Brak kursów',
     nearest: 'NAJBLIŻSZY MECZ',
     startsIn: 'Start za',
+    homeLabel: 'GOSPODARZE',
+    awayLabel: 'GOŚCIE',
+    availableSoon: 'Dostępne wkrótce',
+    venueUnknown: 'Stadion — dane w przygotowaniu',
   },
   en: {
     title: 'Matches of the day',
@@ -41,6 +45,10 @@ const COPY = {
     noOdds: 'No odds',
     nearest: 'NEXT MATCH',
     startsIn: 'Starts in',
+    homeLabel: 'HOME',
+    awayLabel: 'AWAY',
+    availableSoon: 'Available soon',
+    venueUnknown: 'Venue data pending',
   }
 }
 
@@ -199,6 +207,44 @@ function normalizeLeagueV140(value = '') {
 }
 
 const TOP_SIMULATOR_LEAGUE_IDS_V324 = new Set([39, 40, 78, 94, 106, 107, 140, 141, 135, 136, 88, 61, 62, 2, 3, 848, 253])
+
+
+const LEAGUE_UI_META_V328 = {
+  39:  { pl: 'Najwyższa liga w Anglii', en: 'England top division', flag: '🇬🇧', countryPl: 'Anglia', countryEn: 'England' },
+  40:  { pl: 'Drugi poziom rozgrywkowy w Anglii', en: 'England second tier', flag: '🇬🇧', countryPl: 'Anglia', countryEn: 'England' },
+  78:  { pl: 'Najwyższa liga w Niemczech', en: 'Germany top division', flag: '🇩🇪', countryPl: 'Niemcy', countryEn: 'Germany' },
+  94:  { pl: 'Najwyższa liga w Portugalii', en: 'Portugal top division', flag: '🇵🇹', countryPl: 'Portugalia', countryEn: 'Portugal' },
+  106: { pl: 'Najwyższa liga piłkarska w Polsce', en: 'Poland top division', flag: '🇵🇱', countryPl: 'Polska', countryEn: 'Poland' },
+  107: { pl: 'Drugi poziom rozgrywkowy w Polsce', en: 'Poland second tier', flag: '🇵🇱', countryPl: 'Polska', countryEn: 'Poland' },
+  140: { pl: 'Najwyższa liga w Hiszpanii', en: 'Spain top division', flag: '🇪🇸', countryPl: 'Hiszpania', countryEn: 'Spain' },
+  141: { pl: 'Drugi poziom rozgrywkowy w Hiszpanii', en: 'Spain second tier', flag: '🇪🇸', countryPl: 'Hiszpania', countryEn: 'Spain' },
+  135: { pl: 'Najwyższa liga we Włoszech', en: 'Italy top division', flag: '🇮🇹', countryPl: 'Włochy', countryEn: 'Italy' },
+  136: { pl: 'Druga liga we Włoszech', en: 'Italy second tier', flag: '🇮🇹', countryPl: 'Włochy', countryEn: 'Italy' },
+  88:  { pl: 'Najwyższa liga w Holandii', en: 'Netherlands top division', flag: '🇳🇱', countryPl: 'Holandia', countryEn: 'Netherlands' },
+  61:  { pl: 'Najwyższa liga we Francji', en: 'France top division', flag: '🇫🇷', countryPl: 'Francja', countryEn: 'France' },
+  62:  { pl: 'Drugi poziom rozgrywkowy we Francji', en: 'France second tier', flag: '🇫🇷', countryPl: 'Francja', countryEn: 'France' },
+  2:   { pl: 'Elitarne klubowe rozgrywki UEFA', en: 'UEFA elite club competition', flag: '🇪🇺', countryPl: 'Europa', countryEn: 'Europe' },
+  3:   { pl: 'UEFA Europa League', en: 'UEFA Europa League', flag: '🇪🇺', countryPl: 'Europa', countryEn: 'Europe' },
+  848: { pl: 'UEFA Conference League', en: 'UEFA Conference League', flag: '🇪🇺', countryPl: 'Europa', countryEn: 'Europe' },
+  253: { pl: 'Major League Soccer', en: 'Major League Soccer', flag: '🇺🇸', countryPl: 'USA / Kanada', countryEn: 'USA / Canada' },
+}
+
+function getLeagueUiMetaV328(row = {}, lang = 'pl') {
+  const id = Number(row.leagueId ?? row.league_id)
+  const meta = LEAGUE_UI_META_V328[id] || {}
+  return {
+    description: meta[lang === 'en' ? 'en' : 'pl'] || (lang === 'en' ? 'Selected Bet+AI competition' : 'Wybrana liga Bet+AI'),
+    flag: meta.flag || '🌍',
+    country: (lang === 'en' ? meta.countryEn : meta.countryPl) || row.country || 'Świat'
+  }
+}
+
+function getLeagueAcronymV328(name = '') {
+  const words = String(name || '').replace(/UEFA/gi, '').trim().split(/\s+/).filter(Boolean)
+  if (!words.length) return 'L'
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+  return words.slice(0, 2).map(word => word[0]).join('').toUpperCase()
+}
 
 function isForbiddenSimulatorFixtureV324(row = {}) {
   const haystack = normalizeLeagueV140([
@@ -784,32 +830,79 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
             const key = fixtureKey(match)
             const startMs = getFixtureStartMs(match)
             const isNearest = key === nearestKey
+            const leagueUi = getLeagueUiMetaV328(match, lang)
+            const venueLabel = [match.venueName, match.venueCity].filter(Boolean).join('  |  ')
             return (
-              <article key={key} className={`sim-day-matchrow-v98 sim-day-realrow-v99 ${isNearest ? 'nearest-v117' : ''} ${selectedId === key ? 'selected' : ''}`}>
-                <div className="sim-day-matchmeta-v98">
-                  <div className="sim-day-matchmeta-left-v117">
-                    <small>⚽ {match.league} <em>• {match.country || 'Świat'}</em></small>
-                    {isNearest ? <div className="sim-day-nearest-line-v117"><strong>⚡ {copy.nearest}</strong><span>{formatKickoffCountdown(startMs, nowMs, copy)}</span></div> : null}
+              <article key={key} className={`sim-pro-match-card-v328 ${isNearest ? 'nearest-v328' : ''} ${selectedId === key ? 'selected-v328' : ''}`}>
+                <div className="sim-pro-league-v328">
+                  <div className="sim-pro-league-logo-v328">
+                    {match.leagueLogo ? <img src={match.leagueLogo} alt={`${match.league || ''} logo`} /> : <span>{getLeagueAcronymV328(match.league)}</span>}
+                  </div>
+                  <div className="sim-pro-league-copy-v328">
+                    <div className="sim-pro-league-title-v328">
+                      <strong>{match.league}</strong>
+                      <span>• {leagueUi.country}</span>
+                    </div>
+                    <small>{leagueUi.description}</small>
+                    <div className="sim-pro-league-subline-v328">
+                      {match.leagueFlag ? <img src={match.leagueFlag} alt="" /> : <span>{leagueUi.flag}</span>}
+                      {match.round ? <em>{match.round}</em> : null}
+                    </div>
+                    {isNearest ? <div className="sim-pro-nearest-v328"><b>⚡ {copy.nearest}</b><span>{formatKickoffCountdown(startMs, nowMs, copy)}</span></div> : null}
                   </div>
                 </div>
-                <div className="sim-day-matchcontent-v98">
-                  <div className="sim-day-teamblock-v98 sim-day-teamblock-real-v99">
-                    <div className="sim-day-team-v99">
-                      {match.homeLogo ? <img src={match.homeLogo} alt="" /> : <i>⚽</i>}
+
+                <div className="sim-pro-match-center-v328">
+                  <div className="sim-pro-team-v328 home-v328">
+                    <div className="sim-pro-team-logo-v328">
+                      {match.homeLogo ? <img src={match.homeLogo} alt="" /> : <span>⚽</span>}
+                    </div>
+                    <div className="sim-pro-team-name-v328">
                       <strong>{match.home}</strong>
+                      <em>{copy.homeLabel}</em>
                     </div>
-                    <span>{copy.today}<b>{formatKickoffTime(startMs, clientTimeZone)}</b></span>
-                    <div className="sim-day-team-v99 away">
-                      {match.awayLogo ? <img src={match.awayLogo} alt="" /> : <i>⚽</i>}
+                  </div>
+
+                  <div className="sim-pro-kickoff-v328">
+                    <small>{copy.today}</small>
+                    <b>{formatKickoffTime(startMs, clientTimeZone)}</b>
+                  </div>
+
+                  <div className="sim-pro-team-v328 away-v328">
+                    <div className="sim-pro-team-logo-v328">
+                      {match.awayLogo ? <img src={match.awayLogo} alt="" /> : <span>⚽</span>}
+                    </div>
+                    <div className="sim-pro-team-name-v328">
                       <strong>{match.away}</strong>
+                      <em>{copy.awayLabel}</em>
                     </div>
                   </div>
 
-                  {odds ? <div className="sim-day-odds-v99" title={copy.odds}><span>1 <b>{odds.home}</b></span><span>X <b>{odds.draw}</b></span><span>2 <b>{odds.away}</b></span></div> : <div className="sim-day-noodds-v99">{copy.noOdds}</div>}
-
-                  <div className="sim-day-actions-v98">
-                    <button type="button" onClick={() => handleSelect(match)}>{copy.open}</button>
+                  <div className="sim-pro-venue-v328">
+                    <span className="sim-pro-venue-icon-v328">◉</span>
+                    <span>{venueLabel || copy.venueUnknown}</span>
                   </div>
+                </div>
+
+                <div className="sim-pro-market-v328">
+                  {odds ? (
+                    <div className="sim-pro-odds-v328" title={copy.odds}>
+                      <span><small>1</small><b>{odds.home}</b></span>
+                      <span><small>X</small><b>{odds.draw}</b></span>
+                      <span><small>2</small><b>{odds.away}</b></span>
+                    </div>
+                  ) : (
+                    <div className="sim-pro-noodds-v328">
+                      <i><span /><span /><span /></i>
+                      <div><b>{copy.noOdds}</b><small>{copy.availableSoon}</small></div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="sim-pro-action-v328">
+                  <button type="button" onClick={() => handleSelect(match)}>
+                    <span>{copy.open}</span><b>→</b>
+                  </button>
                 </div>
               </article>
             )

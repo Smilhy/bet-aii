@@ -84570,3 +84570,153 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
     border-radius:18px!important;
   }
 }
+
+/* =========================================================
+   V328 — ULTRA PRO MATCH CARDS 1:1 MOCKUP IMPLEMENTATION
+   UI only. Zero changes to simulator/prediction logic.
+   ========================================================= */
+.sim-day-main-v98{gap:14px}
+.sim-pro-match-card-v328{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(250px,290px) minmax(0,1fr) minmax(150px,190px) 154px;
+  align-items:stretch;
+  min-height:142px;
+  overflow:hidden;
+  border:1px solid rgba(42,188,226,.28);
+  border-radius:21px;
+  background:
+    radial-gradient(circle at 43% -30%,rgba(20,132,205,.13),transparent 42%),
+    linear-gradient(90deg,rgba(4,26,43,.985),rgba(8,35,55,.965) 45%,rgba(4,24,39,.99));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035),
+    0 15px 34px rgba(0,0,0,.18);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.sim-pro-match-card-v328::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.42;
+  background:
+    linear-gradient(112deg,transparent 0 28%,rgba(36,184,225,.045) 28.4% 28.8%,transparent 29.2% 100%),
+    radial-gradient(ellipse at 72% 110%,rgba(42,151,210,.11),transparent 46%);
+}
+.sim-pro-match-card-v328::after{
+  content:"";
+  position:absolute;
+  left:28%;right:9%;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(74,225,255,.32),transparent);
+  box-shadow:0 0 18px rgba(57,222,249,.3);
+  pointer-events:none;
+}
+.sim-pro-match-card-v328:hover{
+  transform:translateY(-2px);
+  border-color:rgba(61,226,244,.48);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 20px 38px rgba(0,0,0,.24),0 0 24px rgba(33,211,235,.065);
+}
+.sim-pro-match-card-v328.nearest-v328{
+  border-color:rgba(49,229,244,.72);
+  box-shadow:inset 0 0 0 1px rgba(38,235,250,.12),0 0 28px rgba(32,216,238,.14),0 18px 40px rgba(0,0,0,.22);
+}
+.sim-pro-match-card-v328.nearest-v328::before{
+  opacity:.72;
+  background:
+    linear-gradient(90deg,rgba(10,68,93,.28),transparent 24%),
+    radial-gradient(circle at 17% 50%,rgba(17,203,229,.13),transparent 37%),
+    radial-gradient(circle at 57% -20%,rgba(24,135,210,.17),transparent 42%);
+}
+.sim-pro-match-card-v328.nearest-v328>.sim-pro-league-v328::before{
+  content:"";position:absolute;left:0;top:18px;bottom:18px;width:3px;border-radius:0 4px 4px 0;
+  background:linear-gradient(180deg,#31f4ff,#1fb9ef);box-shadow:0 0 18px rgba(39,231,245,.62)
+}
+.sim-pro-match-card-v328.selected-v328{border-color:#35e6f3;box-shadow:0 0 0 1px rgba(51,231,244,.18) inset,0 0 30px rgba(34,221,239,.12)}
+
+.sim-pro-league-v328{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:88px minmax(0,1fr);gap:15px;align-items:center;
+  padding:20px 18px 20px 22px;
+  border-right:1px solid rgba(89,187,219,.15);
+}
+.sim-pro-league-logo-v328{
+  width:78px;height:78px;border-radius:18px;display:grid;place-items:center;
+  background:linear-gradient(145deg,rgba(8,39,58,.9),rgba(2,21,35,.92));
+  border:1px solid rgba(67,211,235,.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 28px rgba(0,0,0,.18),0 0 18px rgba(28,203,229,.04);
+}
+.sim-pro-league-logo-v328 img{width:66px;height:66px;object-fit:contain;filter:drop-shadow(0 7px 10px rgba(0,0,0,.4))}
+.sim-pro-league-logo-v328>span{display:grid;place-items:center;width:56px;height:56px;border-radius:16px;background:rgba(17,86,111,.32);color:#e9fbff;font-size:21px;font-weight:1000;letter-spacing:.04em;border:1px solid rgba(66,230,244,.26)}
+.sim-pro-league-copy-v328{min-width:0;display:flex;flex-direction:column;align-items:flex-start}
+.sim-pro-league-title-v328{display:flex;align-items:baseline;gap:7px;min-width:0;width:100%}
+.sim-pro-league-title-v328 strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f5fbff;font-size:17px;font-weight:950;letter-spacing:-.015em}
+.sim-pro-league-title-v328>span{color:#80a6bd;font-size:14px;font-weight:800;white-space:nowrap}
+.sim-pro-league-copy-v328>small{margin-top:6px;color:#7ea6bb;font-size:11px;font-weight:650;line-height:1.25}
+.sim-pro-league-subline-v328{display:flex;align-items:center;gap:7px;margin-top:9px;min-height:18px}
+.sim-pro-league-subline-v328 img{width:21px;height:14px;object-fit:cover;border-radius:2px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.sim-pro-league-subline-v328>span{font-size:17px;line-height:1}
+.sim-pro-league-subline-v328 em{max-width:155px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#668a9e;font-size:9px;font-weight:850;font-style:normal;text-transform:uppercase;letter-spacing:.04em}
+.sim-pro-nearest-v328{display:flex;align-items:center;gap:7px;margin-top:8px;max-width:100%}
+.sim-pro-nearest-v328 b{display:inline-flex;align-items:center;padding:5px 9px;border:1px solid rgba(54,234,244,.48);border-radius:999px;background:rgba(8,72,89,.45);color:#6af6fc;font-size:9px;font-weight:1000;letter-spacing:.05em;white-space:nowrap;box-shadow:0 0 16px rgba(43,228,241,.09)}
+.sim-pro-nearest-v328 span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#5de6ef;font-size:9px;font-weight:900}
+
+.sim-pro-match-center-v328{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-columns:minmax(150px,1fr) 92px minmax(150px,1fr);
+  grid-template-rows:1fr auto;
+  align-items:center;column-gap:16px;
+  min-width:0;padding:18px 22px 14px;
+}
+.sim-pro-team-v328{display:flex;align-items:center;min-width:0;gap:13px}
+.sim-pro-team-v328.home-v328{justify-content:flex-end;text-align:right}
+.sim-pro-team-v328.away-v328{justify-content:flex-start;text-align:left}
+.sim-pro-team-logo-v328{flex:0 0 54px;width:54px;height:54px;display:grid;place-items:center}
+.sim-pro-team-logo-v328 img{width:50px;height:50px;object-fit:contain;filter:drop-shadow(0 7px 12px rgba(0,0,0,.35))}
+.sim-pro-team-logo-v328>span{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:rgba(13,55,77,.72);border:1px solid rgba(68,207,231,.17);font-size:21px}
+.sim-pro-team-name-v328{display:flex;flex-direction:column;min-width:0}
+.sim-pro-team-v328.home-v328 .sim-pro-team-name-v328{align-items:flex-end}
+.sim-pro-team-v328.away-v328 .sim-pro-team-name-v328{align-items:flex-start}
+.sim-pro-team-name-v328 strong{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f8fcff;font-size:18px;font-weight:1000;letter-spacing:-.015em;text-shadow:0 2px 10px rgba(0,0,0,.24)}
+.sim-pro-team-name-v328 em{display:inline-flex;margin-top:6px;padding:4px 10px;border:1px solid rgba(46,214,238,.35);border-radius:999px;background:rgba(7,58,78,.32);color:#90dff0;font-size:8px;font-weight:950;font-style:normal;letter-spacing:.08em}
+.sim-pro-kickoff-v328{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;height:72px;border-left:1px solid rgba(81,181,215,.16);border-right:1px solid rgba(81,181,215,.16)}
+.sim-pro-kickoff-v328 small{color:#8eafc1;font-size:10px;font-weight:800}
+.sim-pro-kickoff-v328 b{margin-top:2px;color:#fff;font-size:25px;font-weight:1000;letter-spacing:-.035em;text-shadow:0 0 15px rgba(81,222,245,.12)}
+.sim-pro-venue-v328{grid-column:1 / 4;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:7px;min-width:0;color:#91b6c9;font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sim-pro-venue-icon-v328{display:grid;place-items:center;width:18px;height:18px;color:#84e8f2;font-size:10px;border:1px solid rgba(61,213,235,.3);border-radius:50%;box-shadow:0 0 10px rgba(45,218,237,.09)}
+
+.sim-pro-market-v328{
+  position:relative;z-index:1;display:flex;align-items:center;justify-content:center;
+  padding:16px;border-left:1px solid rgba(86,183,217,.15)
+}
+.sim-pro-noodds-v328{display:flex;align-items:center;gap:12px;color:#7898ab}
+.sim-pro-noodds-v328>i{display:flex;align-items:flex-end;gap:3px;height:25px;font-style:normal}
+.sim-pro-noodds-v328>i span{display:block;width:4px;border-radius:2px;background:#6db3cd;box-shadow:0 0 7px rgba(89,198,226,.15)}
+.sim-pro-noodds-v328>i span:nth-child(1){height:8px}.sim-pro-noodds-v328>i span:nth-child(2){height:15px}.sim-pro-noodds-v328>i span:nth-child(3){height:22px}
+.sim-pro-noodds-v328>div{display:flex;flex-direction:column}
+.sim-pro-noodds-v328 b{color:#9db9c8;font-size:11px;font-weight:900}
+.sim-pro-noodds-v328 small{margin-top:3px;color:#58798d;font-size:9px;font-weight:700}
+.sim-pro-odds-v328{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%}
+.sim-pro-odds-v328 span{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:42px;height:52px;padding:5px;border:1px solid rgba(64,199,225,.14);border-radius:11px;background:rgba(2,19,31,.62)}
+.sim-pro-odds-v328 small{color:#607f90;font-size:8px;font-weight:900}.sim-pro-odds-v328 b{margin-top:3px;color:#eafaff;font-size:13px;font-weight:1000}
+
+.sim-pro-action-v328{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;padding:16px;border-left:1px solid rgba(86,183,217,.15)}
+.sim-pro-action-v328 button{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-width:122px;height:58px;padding:0 18px;border:0;border-radius:15px;background:linear-gradient(95deg,#22deef,#30f2ff);color:#032331;font-size:16px;font-weight:1000;cursor:pointer;box-shadow:0 12px 28px rgba(20,220,237,.24),inset 0 1px 0 rgba(255,255,255,.45);transition:transform .16s ease,box-shadow .16s ease,filter .16s ease}
+.sim-pro-action-v328 button b{font-size:20px;line-height:1;font-weight:700}.sim-pro-action-v328 button:hover{transform:translateY(-1px) scale(1.015);filter:brightness(1.05);box-shadow:0 16px 34px rgba(20,220,237,.31),inset 0 1px 0 rgba(255,255,255,.5)}
+
+@media(max-width:1550px){
+  .sim-pro-match-card-v328{grid-template-columns:minmax(225px,255px) minmax(0,1fr) 150px 134px;min-height:132px}
+  .sim-pro-league-v328{grid-template-columns:70px minmax(0,1fr);gap:12px;padding:16px 14px 16px 18px}.sim-pro-league-logo-v328{width:66px;height:66px}.sim-pro-league-logo-v328 img{width:56px;height:56px}
+  .sim-pro-match-center-v328{grid-template-columns:minmax(125px,1fr) 78px minmax(125px,1fr);column-gap:11px;padding:14px 14px 11px}.sim-pro-team-logo-v328{flex-basis:46px;width:46px;height:46px}.sim-pro-team-logo-v328 img{width:44px;height:44px}.sim-pro-team-name-v328 strong{font-size:15px;max-width:170px}.sim-pro-kickoff-v328 b{font-size:21px}.sim-pro-kickoff-v328{height:65px}.sim-pro-action-v328{padding:12px}.sim-pro-action-v328 button{height:52px;font-size:14px;min-width:104px}
+}
+@media(max-width:1250px){
+  .sim-pro-match-card-v328{grid-template-columns:220px minmax(0,1fr) 126px;grid-template-areas:"league center action" "league market action"}
+  .sim-pro-league-v328{grid-area:league}.sim-pro-match-center-v328{grid-area:center}.sim-pro-market-v328{grid-area:market;border-left:0;border-top:1px solid rgba(86,183,217,.12);padding:7px 14px}.sim-pro-action-v328{grid-area:action}.sim-pro-noodds-v328 small{display:none}
+}
+@media(max-width:900px){
+  .sim-pro-match-card-v328{display:grid;grid-template-columns:1fr 116px;grid-template-areas:"league league" "center center" "market action";min-height:auto}
+  .sim-pro-league-v328{grid-area:league;border-right:0;border-bottom:1px solid rgba(86,183,217,.12);grid-template-columns:58px minmax(0,1fr);padding:13px 15px}.sim-pro-league-logo-v328{width:54px;height:54px;border-radius:14px}.sim-pro-league-logo-v328 img{width:46px;height:46px}.sim-pro-league-title-v328 strong{font-size:15px}.sim-pro-league-copy-v328>small{font-size:10px}.sim-pro-match-center-v328{grid-template-columns:minmax(0,1fr) 72px minmax(0,1fr);padding:16px 10px 10px}.sim-pro-team-v328{gap:7px}.sim-pro-team-logo-v328{flex-basis:38px;width:38px;height:38px}.sim-pro-team-logo-v328 img{width:36px;height:36px}.sim-pro-team-name-v328 strong{font-size:13px;max-width:120px}.sim-pro-team-name-v328 em{font-size:7px;padding:3px 7px}.sim-pro-kickoff-v328 b{font-size:18px}.sim-pro-venue-v328{font-size:9px}.sim-pro-market-v328{justify-content:flex-start}.sim-pro-action-v328{padding:9px}.sim-pro-action-v328 button{height:46px;padding:0 10px;gap:7px}
+}
+@media(max-width:560px){
+  .sim-pro-match-card-v328{grid-template-columns:1fr;grid-template-areas:"league" "center" "market" "action"}.sim-pro-match-center-v328{grid-template-columns:1fr;grid-template-rows:auto;gap:10px}.sim-pro-team-v328.home-v328,.sim-pro-team-v328.away-v328{justify-content:flex-start;text-align:left}.sim-pro-team-v328.home-v328 .sim-pro-team-name-v328,.sim-pro-team-v328.away-v328 .sim-pro-team-name-v328{align-items:flex-start}.sim-pro-kickoff-v328{order:-1;height:auto;padding:8px;border:1px solid rgba(81,181,215,.14);border-radius:12px}.sim-pro-venue-v328{grid-column:auto}.sim-pro-action-v328{border-left:0;border-top:1px solid rgba(86,183,217,.12)}
+}

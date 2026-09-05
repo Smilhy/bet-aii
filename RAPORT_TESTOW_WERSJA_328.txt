@@ -1,0 +1,14 @@
+BET+AI V328 — RAPORT TESTÓW
+
+PASS — TypeScript transpile parser: 0 błędów JSX w MatchSimulatorDailyMatchesView.jsx
+PASS — CSS brace balance: 0
+PASS — logo ligi używa istniejącego match.leagueLogo z get-sports-events
+PASS — venueName / venueCity używane bez dodatkowych requestów
+PASS — whitelist 17 rozgrywek pozostaje bez zmian
+PASS — V327 pełny dzień pozostaje bez zmian
+PASS — get-sports-events backend niezmieniony
+PASS — Prediction Engine / V320 niezmienione
+PASS — responsywne breakpointy: 1550 / 1250 / 900 / 560 px
+
+UWAGA
+Pełny npm/Vite production build nie był uruchamiany w tej sesji, ponieważ paczka źródłowa nie zawiera node_modules.
