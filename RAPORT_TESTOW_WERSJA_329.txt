@@ -1,0 +1,7 @@
+RAPORT TESTÓW — WERSJA 329
+
+1. Test V158 ukryty przez stały feature switch — PASS
+2. Kod testu zachowany do łatwego przywrócenia — PASS
+3. Brak zmian w logice symulacji — PASS
+4. Brak zmian w Prediction Engine — PASS
+5. Brak zmian w SQL/Supabase — PASS

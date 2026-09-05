@@ -1,0 +1,23 @@
+BET+AI V330 — FULL SITE PACKAGE
+
+Zakres:
+- pełna paczka strony bazująca na V329,
+- wszystkie pliki projektu zachowane,
+- MatchSimulatorDailyMatchesView.jsx podmieniony na V330,
+- styles.css podmieniony na V330,
+- logika Prediction Engine / V320 / whitelist 17 lig / V327 / V328 / V329 zachowana.
+
+Kontrole:
+PASS — pełna struktura projektu istnieje
+PASS — package.json istnieje
+PASS — netlify.toml istnieje
+PASS — src/main.jsx istnieje
+PASS — src/MatchSimulatorDailyMatchesView.jsx istnieje
+PASS — src/styles.css istnieje
+PASS — public/ istnieje
+PASS — netlify/functions istnieje
+PASS — V158 offline test pozostaje ukryty
+PASS — V330 czytelne rynki obecne
+PASS — V330 ciemny tekst przycisku Symuluj obecny
+
+SQL: brak nowej migracji.

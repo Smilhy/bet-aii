@@ -84720,3 +84720,66 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 @media(max-width:560px){
   .sim-pro-match-card-v328{grid-template-columns:1fr;grid-template-areas:"league" "center" "market" "action"}.sim-pro-match-center-v328{grid-template-columns:1fr;grid-template-rows:auto;gap:10px}.sim-pro-team-v328.home-v328,.sim-pro-team-v328.away-v328{justify-content:flex-start;text-align:left}.sim-pro-team-v328.home-v328 .sim-pro-team-name-v328,.sim-pro-team-v328.away-v328 .sim-pro-team-name-v328{align-items:flex-start}.sim-pro-kickoff-v328{order:-1;height:auto;padding:8px;border:1px solid rgba(81,181,215,.14);border-radius:12px}.sim-pro-venue-v328{grid-column:auto}.sim-pro-action-v328{border-left:0;border-top:1px solid rgba(86,183,217,.12)}
 }
+
+
+/* V330 — clearer markets + ultra CTA */
+.sim-value-scanner-card-v330{
+  background:linear-gradient(180deg,rgba(10,22,36,.95),rgba(6,14,26,.96));
+  border:1px solid rgba(68,194,224,.15);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 10px 24px rgba(0,0,0,.16);
+}
+.sim-value-scanner-card-v330:hover{box-shadow:0 16px 34px rgba(0,0,0,.32),0 0 0 1px rgba(51,205,234,.22)}
+.sim-value-scanner-card-v330 .sim-value-scanner-pick-v330{
+  align-items:stretch;
+  gap:14px;
+  margin-top:12px;
+  padding:14px;
+  border:1px solid rgba(255,214,102,.18);
+  border-radius:14px;
+  background:linear-gradient(135deg,rgba(255,214,102,.08),rgba(255,214,102,.02) 30%,rgba(9,23,36,.25) 80%);
+  box-shadow:inset 0 0 22px rgba(255,215,64,.05),0 0 18px rgba(255,214,102,.04);
+}
+.sim-value-market-main-v330{min-width:0;display:flex;flex-direction:column;gap:5px}
+.sim-value-market-main-v330 small{color:#ffd76d;font-size:9px;font-weight:1000;letter-spacing:1px}
+.sim-value-market-row-v330{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sim-value-market-badge-v330{display:inline-flex;align-items:center;justify-content:center;padding:5px 9px;border-radius:999px;border:1px solid rgba(255,214,102,.38);background:linear-gradient(180deg,rgba(255,219,90,.18),rgba(255,193,7,.07));color:#ffe28f;font-size:10px;font-weight:1000;letter-spacing:.04em;box-shadow:0 0 16px rgba(255,214,102,.14)}
+.sim-value-market-main-v330 b{font-size:18px;color:#ffffff;line-height:1.15;text-shadow:0 0 12px rgba(255,214,102,.10)}
+.sim-value-market-main-v330 em{font-style:normal;color:#9ab2c4;font-size:11px;line-height:1.35}
+.sim-value-market-odds-v330{margin-left:auto;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;min-width:86px;padding-left:12px;border-left:1px solid rgba(255,255,255,.08)}
+.sim-value-market-odds-v330 small{color:#8ba3b7;font-size:9px;font-weight:900;letter-spacing:.9px}
+.sim-value-market-odds-v330 span{margin-top:4px;color:#4de9f7;font-size:20px;font-weight:1000;white-space:nowrap}
+.sim-value-scanner-metrics-v330 span{border:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.045)}
+.sim-value-scanner-metrics-v330 small{font-size:7px}
+.sim-value-scanner-metrics-v330 b{font-size:11px}
+
+.sim-pro-odds-v330 span{border-color:rgba(255,214,102,.12);background:linear-gradient(180deg,rgba(255,214,102,.04),rgba(5,18,31,.85));box-shadow:inset 0 0 12px rgba(255,214,102,.03)}
+.sim-pro-odds-v330 small{color:#c9b57d;font-size:9px;letter-spacing:.05em}
+.sim-pro-odds-v330 b{color:#f7fbff;font-size:13px}
+
+.sim-pro-action-v330 button{
+  position:relative;
+  gap:9px;
+  flex-direction:column;
+  height:64px;
+  border:1px solid rgba(255,255,255,.28);
+  background:linear-gradient(180deg,#39e9f5,#1fd8eb);
+  color:#051018 !important;
+  text-shadow:none;
+  box-shadow:0 16px 30px rgba(20,220,237,.24), inset 0 1px 0 rgba(255,255,255,.55), inset 0 -8px 18px rgba(0,0,0,.08);
+}
+.sim-pro-action-v330 button span{display:block;color:#051018;font-size:18px;font-weight:1000;line-height:1}
+.sim-pro-action-v330 button small{display:block;color:rgba(5,16,24,.72);font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;line-height:1}
+.sim-pro-action-v330 button b{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#051018;font-size:21px;font-weight:1000}
+.sim-pro-action-v330 button:hover{filter:brightness(1.03);box-shadow:0 18px 36px rgba(20,220,237,.29), inset 0 1px 0 rgba(255,255,255,.6), inset 0 -8px 18px rgba(0,0,0,.08)}
+
+@media(max-width:900px){
+  .sim-value-market-odds-v330{min-width:72px}
+  .sim-value-market-main-v330 b{font-size:16px}
+  .sim-pro-action-v330 button{height:56px}
+  .sim-pro-action-v330 button span{font-size:15px}
+  .sim-pro-action-v330 button small{font-size:8px}
+}
+@media(max-width:700px){
+  .sim-value-scanner-card-v330 .sim-value-scanner-pick-v330{flex-direction:column}
+  .sim-value-market-odds-v330{align-items:flex-start;border-left:0;padding-left:0;border-top:1px solid rgba(255,255,255,.08);padding-top:8px;margin-left:0}
+}

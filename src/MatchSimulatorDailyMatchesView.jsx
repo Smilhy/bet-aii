@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
+// V329: offline test V158 is kept in code but hidden from production UI.
+// Set to true only when the diagnostic scenario is needed again.
+const SHOW_V158_OFFLINE_TEST = false
 
 const COPY = {
   pl: {
@@ -363,9 +366,29 @@ async function qualifyFixtureForSimulator(row = {}, { signal } = {}) {
 
 
 const SCANNER_LABELS = {
-  home: '1 • Gospodarze', draw: 'X • Remis', away: '2 • Goście',
-  over15: 'Over 1.5', under15: 'Under 1.5', over25: 'Over 2.5', under25: 'Under 2.5',
-  over35: 'Over 3.5', under35: 'Under 3.5', bttsYes: 'BTTS • TAK', bttsNo: 'BTTS • NIE'
+  home: '1X2 • 1', draw: '1X2 • X', away: '1X2 • 2',
+  over15: 'GOLE • OVER 1.5', under15: 'GOLE • UNDER 1.5', over25: 'GOLE • OVER 2.5', under25: 'GOLE • UNDER 2.5',
+  over35: 'GOLE • OVER 3.5', under35: 'GOLE • UNDER 3.5', bttsYes: 'BTTS • TAK', bttsNo: 'BTTS • NIE'
+}
+
+function getScannerMarketMetaV330(item, match) {
+  const home = match?.home || 'Gospodarze'
+  const away = match?.away || 'Goście'
+  const key = String(item?.key || '')
+  const map = {
+    home: { category: 'RYNEK 1X2', badge: '1X2 • 1', title: `Wygra ${home}`, detail: 'Typ: wygrana gospodarzy' },
+    draw: { category: 'RYNEK 1X2', badge: '1X2 • X', title: 'Remis w meczu', detail: 'Typ: mecz zakończy się remisem' },
+    away: { category: 'RYNEK 1X2', badge: '1X2 • 2', title: `Wygra ${away}`, detail: 'Typ: wygrana gości' },
+    over15: { category: 'RYNEK GOLOWY', badge: 'OVER 1.5', title: 'Powyżej 1.5 gola', detail: 'Typ: minimum 2 gole w meczu' },
+    under15: { category: 'RYNEK GOLOWY', badge: 'UNDER 1.5', title: 'Poniżej 1.5 gola', detail: 'Typ: maksymalnie 1 gol w meczu' },
+    over25: { category: 'RYNEK GOLOWY', badge: 'OVER 2.5', title: 'Powyżej 2.5 gola', detail: 'Typ: minimum 3 gole w meczu' },
+    under25: { category: 'RYNEK GOLOWY', badge: 'UNDER 2.5', title: 'Poniżej 2.5 gola', detail: 'Typ: maksymalnie 2 gole w meczu' },
+    over35: { category: 'RYNEK GOLOWY', badge: 'OVER 3.5', title: 'Powyżej 3.5 gola', detail: 'Typ: minimum 4 gole w meczu' },
+    under35: { category: 'RYNEK GOLOWY', badge: 'UNDER 3.5', title: 'Poniżej 3.5 gola', detail: 'Typ: maksymalnie 3 gole w meczu' },
+    bttsYes: { category: 'RYNEK BTTS', badge: 'BTTS • TAK', title: 'Obie drużyny strzelą', detail: 'Typ: obie drużyny zdobędą gola' },
+    bttsNo: { category: 'RYNEK BTTS', badge: 'BTTS • NIE', title: 'Nie obie strzelą', detail: 'Typ: przynajmniej jedna drużyna bez gola' }
+  }
+  return map[key] || { category: 'RYNEK', badge: SCANNER_LABELS[key] || key || 'BRAK', title: SCANNER_LABELS[key] || 'Brak rynku', detail: 'Typ wskazany przez model' }
 }
 
 function scannerMarketKey(key = '') {
@@ -786,14 +809,16 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         </aside>
 
         <div className="sim-day-main-v98">
-          <section className="sim-lab-test-v152">
-            <div className="sim-lab-test-copy-v152">
-              <small>BET+AI MODEL VALIDATION & RISK LAB V158 • TEST OFFLINE</small>
-              <strong>1 mecz testowy • 0 requestów API</strong>
-              <p>Twój limit API może być wyczerpany — ten jeden scenariusz działa lokalnie i pozwala sprawdzić Ensemble, Sharp Disagreement, Audit Trail, Error Analysis, Portfolio Risk, Model Control Center oraz pełną symulację 2D.</p>
-            </div>
-            <button type="button" onClick={() => handleSelect(labTestMatch)}>▶ URUCHOM TEST V158</button>
-          </section>
+          {SHOW_V158_OFFLINE_TEST && (
+            <section className="sim-lab-test-v152">
+              <div className="sim-lab-test-copy-v152">
+                <small>BET+AI MODEL VALIDATION & RISK LAB V158 • TEST OFFLINE</small>
+                <strong>1 mecz testowy • 0 requestów API</strong>
+                <p>Twój limit API może być wyczerpany — ten jeden scenariusz działa lokalnie i pozwala sprawdzić Ensemble, Sharp Disagreement, Audit Trail, Error Analysis, Portfolio Risk, Model Control Center oraz pełną symulację 2D.</p>
+              </div>
+              <button type="button" onClick={() => handleSelect(labTestMatch)}>▶ URUCHOM TEST V158</button>
+            </section>
+          )}
           {loading && <div className="sim-day-loading-v99"><i /><strong>{copy.loading}</strong><span>API-Football • {formatDateLabel(todayKey)}</span></div>}
           {!loading && error && <div className="sim-day-error-v99">⚠ {error}<button type="button" onClick={startLoadMatches}>{copy.refresh}</button></div>}
           {!loading && !error && qualifying && !filteredMatches.length && <div className="sim-day-loading-v99"><i /><strong>Sprawdzam realne statystyki meczów…</strong><span>{qualificationProgress.done}/{qualificationProgress.total} sprawdzonych</span></div>}
@@ -808,11 +833,25 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
               {scannerEntries.slice(0, 5).map(({ key, match: scanMatch, scan }, index) => {
                 const item = scan.topFinal
                 const rel = item.reliability || {}
-                return <button type="button" key={`scan-${key}`} className={`sim-value-scanner-card-v139 ${String(item.decision || '').toLowerCase()}`} onClick={() => handleSelect(scanMatch)}>
+                const marketMeta = getScannerMarketMetaV330(item, scanMatch)
+                return <button type="button" key={`scan-${key}`} className={`sim-value-scanner-card-v139 sim-value-scanner-card-v330 ${String(item.decision || '').toLowerCase()}`} onClick={() => handleSelect(scanMatch)}>
                   <header><span>#{index + 1} • {scanMatch.league}</span><em>{scannerDecisionLabel(item.decision)}</em></header>
                   <strong>{scanMatch.home} <i>vs</i> {scanMatch.away}</strong>
-                  <div className="sim-value-scanner-pick-v139"><b>{SCANNER_LABELS[item.key] || item.key || 'Brak rynku'}</b><span>{item.bookmakerOdds ? `@ ${Number(item.bookmakerOdds).toFixed(2)}` : 'bez kursu'}</span></div>
-                  <div className="sim-value-scanner-metrics-v139">
+                  <div className="sim-value-scanner-pick-v139 sim-value-scanner-pick-v330">
+                    <div className="sim-value-market-main-v330">
+                      <small>{marketMeta.category}</small>
+                      <div className="sim-value-market-row-v330">
+                        <span className="sim-value-market-badge-v330">{marketMeta.badge}</span>
+                        <b>{marketMeta.title}</b>
+                      </div>
+                      <em>{marketMeta.detail}</em>
+                    </div>
+                    <div className="sim-value-market-odds-v330">
+                      <small>KURS</small>
+                      <span>{item.bookmakerOdds ? `@ ${Number(item.bookmakerOdds).toFixed(2)}` : 'bez kursu'}</span>
+                    </div>
+                  </div>
+                  <div className="sim-value-scanner-metrics-v139 sim-value-scanner-metrics-v330">
                     <span><small>BET+AI CAL.</small><b>{item.probability ? `${item.probability}%` : '—'}</b>{item.calibrated ? <em>RAW {item.rawProbability}%</em> : null}</span>
                     <span><small>FAIR</small><b>{item.fairOdds ? Number(item.fairOdds).toFixed(2) : '—'}</b></span>
                     <span><small>EDGE</small><b>{Number.isFinite(Number(item.edgePp)) ? `${Number(item.edgePp) > 0 ? '+' : ''}${item.edgePp} pp` : '—'}</b></span>
@@ -886,10 +925,10 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
                 <div className="sim-pro-market-v328">
                   {odds ? (
-                    <div className="sim-pro-odds-v328" title={copy.odds}>
-                      <span><small>1</small><b>{odds.home}</b></span>
-                      <span><small>X</small><b>{odds.draw}</b></span>
-                      <span><small>2</small><b>{odds.away}</b></span>
+                    <div className="sim-pro-odds-v328 sim-pro-odds-v330" title={copy.odds}>
+                      <span><small>1 • DOM</small><b>{odds.home}</b></span>
+                      <span><small>X • REMIS</small><b>{odds.draw}</b></span>
+                      <span><small>2 • GOŚCIE</small><b>{odds.away}</b></span>
                     </div>
                   ) : (
                     <div className="sim-pro-noodds-v328">
@@ -899,9 +938,9 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                   )}
                 </div>
 
-                <div className="sim-pro-action-v328">
-                  <button type="button" onClick={() => handleSelect(match)}>
-                    <span>{copy.open}</span><b>→</b>
+                <div className="sim-pro-action-v328 sim-pro-action-v330">
+                  <button type="button" onClick={() => handleSelect(match)} aria-label={`${copy.open} ${match.home} kontra ${match.away}`}>
+                    <span>{copy.open}</span><small>analiza + live coach</small><b>→</b>
                   </button>
                 </div>
               </article>
