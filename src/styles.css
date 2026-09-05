@@ -84975,9 +84975,9 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
 .ticket-match-league-logo-v338 img{width:40px;height:40px;object-fit:contain}
 .ticket-match-league-logo-v338 b{font-size:10px;color:#7beefa;letter-spacing:.04em}
 .ticket-match-league-copy-v338{display:flex;flex-direction:column;min-width:0;gap:3px}
-.ticket-match-league-copy-v338 strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f5fbff;font-size:13px;font-weight:1000}
+.ticket-match-league-copy-v338 strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f5fbff;font-size:15px;font-weight:1000}
 .ticket-match-league-copy-v338 strong em{font-style:normal;color:#88aabc;font-weight:800}
-.ticket-match-league-copy-v338 small{display:flex;align-items:center;gap:6px;color:#7294a8;font-size:8px;font-weight:900;letter-spacing:.07em;text-transform:uppercase}
+.ticket-match-league-copy-v338 small{display:flex;align-items:center;gap:6px;color:#7294a8;font-size:10px;font-weight:900;letter-spacing:.07em;text-transform:uppercase}
 .ticket-match-league-copy-v338 small i{font-style:normal;font-size:12px;line-height:1}
 .ticket-match-country-flag-v341{display:inline-flex!important;align-items:center;justify-content:center;width:18px;height:12px;flex:0 0 18px;overflow:hidden;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.10),0 2px 5px rgba(0,0,0,.22)}
 .ticket-match-country-flag-v341 img{display:block;width:18px;height:12px;object-fit:cover}

@@ -16830,7 +16830,6 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
             <div className="ticket-match-bottom-v338">
               {dashboardVenueV338 ? <span>◉ {dashboardVenueV338}</span> : <span>⚽ {t(cardMatchLabel)}</span>}
-              {!dashboardVenueV338 && dashboardKickoffV338.date ? <em>{dashboardKickoffV338.date}</em> : null}
             </div>
           </div>
         )}
