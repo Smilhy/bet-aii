@@ -1,0 +1,8 @@
+RAPORT TESTÓW — WERSJA 326
+
+1. Slajd 2 ma plik 2048x472 px — PASS
+2. Slajd 2 jest nadal drugi w staticHeroSlides — PASS
+3. Klasa jest-moc-slide-v326 przypisana tylko do slide-hero-jest-moc — PASS
+4. object-fit: cover + padding:0 dla slajdu 2 — PASS
+5. Slajd 1 niezmieniony — PASS
+6. Brak zmian Prediction Engine / API / Supabase / SQL — PASS

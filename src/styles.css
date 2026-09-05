@@ -84544,3 +84544,29 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
 @media(max-width:1080px){.sim-prep-match-v322{grid-template-columns:1fr!important;gap:14px!important}.sim-match-league-v322,.sim-match-venue-v322{justify-content:center!important;padding:0!important;border:0!important}.sim-match-venue-v322>div{text-align:left}.sim-quick-head-v322{align-items:flex-start!important}.sim-quick-head-meta-v322{justify-content:flex-start}.sim-quick-hero-v322{grid-template-columns:1fr!important}.sim-quick-decision-v322{min-height:150px!important}.sim-quick-meta-v322{grid-template-columns:repeat(3,minmax(0,1fr))!important}.sim-quick-meta-v322 article.xg{grid-column:span 2}.sim-quick-bottom-v322{grid-template-columns:1fr!important}.sim-quick-actions-v322{display:grid!important;grid-template-columns:1fr 1fr!important}.sim-action-status-v322{grid-column:1/-1}.sim-quick-actions-v322>span{grid-column:1/-1}}
 @media(max-width:760px){.sim-prep-head-v116{padding:18px!important}.sim-prep-match-v322{padding:16px 12px!important}.sim-match-main-v322{grid-template-columns:1fr 68px 1fr!important;gap:8px!important}.sim-team-v322{flex-direction:column!important;gap:7px!important;text-align:center!important}.sim-team-v322.home,.sim-team-v322.away{justify-content:center!important;text-align:center!important}.sim-team-v322.away strong{order:2}.sim-team-v322.away .sim-team-logo-v322{order:1}.sim-team-v322>strong{max-width:100%;font-size:14px!important}.sim-team-logo-v322{width:46px;height:46px;flex-basis:46px}.sim-team-logo-v322 img{width:42px!important;height:42px!important}.sim-quick-head-v322{padding:16px 14px 13px!important}.sim-quick-title-icon-v322{width:40px;height:40px;flex-basis:40px}.sim-quick-head-v322 strong{font-size:18px!important}.sim-quick-picks-v322{grid-template-columns:1fr 1fr!important}.sim-quick-picks-v322>article.primary{grid-column:1/-1}.sim-quick-meta-v322{grid-template-columns:1fr 1fr!important}.sim-quick-meta-v322 article.xg{grid-column:1/-1}.sim-quick-reasons-v322>div{grid-template-columns:1fr!important}.sim-quick-progress-v322{grid-template-columns:1fr!important;gap:7px!important}.sim-quick-progress-v322>em{max-width:none}.sim-quick-actions-v322{grid-template-columns:1fr!important}.sim-action-status-v322,.sim-quick-actions-v322>span{grid-column:auto}}
 @media(max-width:480px){.sim-prep-match-v322{border-radius:17px!important}.sim-match-league-v322{justify-content:flex-start!important}.sim-match-venue-v322{justify-content:flex-start!important}.sim-quick-summary-v322{border-radius:18px!important}.sim-quick-title-v322{align-items:flex-start}.sim-quick-head-meta-v322>span:not(.sim-quick-live-v321){display:none}.sim-quick-picks-v322{grid-template-columns:1fr!important}.sim-quick-picks-v322>article.primary{grid-column:auto}.sim-quick-picks-v322>article{min-height:145px!important}.sim-quick-meta-v322{grid-template-columns:1fr!important}.sim-quick-meta-v322 article.xg{grid-column:auto}.sim-quick-bottom-v322{padding-inline:10px!important}.sim-quick-progress-v322{margin-inline:10px!important}}
+
+
+/* WERSJA 326 — JEST MOC jako pełny hero slide bez zwężenia / letterbox */
+.betai-dashboard-hero-v551 .betai-dashboard-slide-v551.jest-moc-slide-v326{
+  padding:0!important;
+  overflow:hidden!important;
+}
+.betai-dashboard-hero-v551 .betai-dashboard-slide-v551.jest-moc-slide-v326 img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+  border-radius:26px!important;
+  background:transparent!important;
+  filter:saturate(1.05) contrast(1.02)!important;
+}
+@media(max-width:900px){
+  .betai-dashboard-hero-v551 .betai-dashboard-slide-v551.jest-moc-slide-v326 img{
+    object-position:center center!important;
+  }
+}
+@media(max-width:640px){
+  .betai-dashboard-hero-v551 .betai-dashboard-slide-v551.jest-moc-slide-v326 img{
+    border-radius:18px!important;
+  }
+}
