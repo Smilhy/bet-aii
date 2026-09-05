@@ -16736,7 +16736,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   }
 
   return (
-    <article className={`profile-ticket-v6 dashboard-ticket-v6 dashboard-ticket-v339 ${isPremium ? 'premium' : 'free'} ${effectiveIsLocked ? 'locked' : 'unlocked'} ${isAkoCard ? 'ako' : 'single'} ${startedReadOnly ? 'started-read-only-v1833' : ''}`}>
+    <article className={`profile-ticket-v6 dashboard-ticket-v6 dashboard-ticket-v340 ${isPremium ? 'premium' : 'free'} ${effectiveIsLocked ? 'locked' : 'unlocked'} ${isAkoCard ? 'ako' : 'single'} ${startedReadOnly ? 'started-read-only-v1833' : ''}`}>
       <div className="profile-ticket-v6-left">
         <span className={`profile-ticket-v6-avatar ${authorAvatarUrl ? 'has-avatar' : ''}`} style={authorAvatarUrl ? { '--avatar-image': `url("${authorAvatarUrl}")` } : undefined}>
           {authorAvatarUrl ? '' : cardAuthor.slice(0, 2).toUpperCase()}
