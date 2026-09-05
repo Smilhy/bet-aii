@@ -405,6 +405,47 @@ function getScannerMarketMetaV330(item, match) {
   return map[key] || { category: 'RYNEK', badge: SCANNER_LABELS[key] || key || 'BRAK', title: SCANNER_LABELS[key] || 'Brak rynku', detail: 'Typ wskazany przez model' }
 }
 
+
+function getCardBestMarketV332(rawScan, match, performance) {
+  if (!rawScan) return null
+  const enriched = enrichScannerResult(rawScan, performance)
+  const top = enriched?.topFinal
+  if (top && top.key && top.decision !== 'NO_ODDS') {
+    const meta = getScannerMarketMetaV330(top, match)
+    return {
+      source: 'value', meta,
+      probability: Number(top.probability || top.rawProbability || 0),
+      bookmakerOdds: Number(top.bookmakerOdds || 0),
+      fairOdds: Number(top.fairOdds || 0),
+      decision: String(top.decision || 'NO_BET'),
+      reason: top.reason || '', edgePp: Number(top.edgePp || 0),
+      reliability: Number(top.reliability?.score || 0)
+    }
+  }
+  const p = rawScan?.probabilities || {}
+  const one = p.oneXTwo || {}
+  const goals = p.goals || {}
+  const candidates = [
+    ['home', Number(one.home || 0)], ['draw', Number(one.draw || 0)], ['away', Number(one.away || 0)],
+    ['over15', Number(goals.over15 || 0)], ['under15', 100 - Number(goals.over15 || 0)],
+    ['over25', Number(goals.over25 || 0)], ['under25', 100 - Number(goals.over25 || 0)],
+    ['over35', Number(goals.over35 || 0)], ['under35', 100 - Number(goals.over35 || 0)],
+    ['bttsYes', Number(goals.btts || 0)], ['bttsNo', 100 - Number(goals.btts || 0)]
+  ].filter(([, prob]) => Number.isFinite(prob) && prob > 0 && prob < 100)
+  if (!candidates.length) return null
+  candidates.sort((a, b) => b[1] - a[1])
+  const [key, probability] = candidates[0]
+  return {
+    source: 'model', meta: getScannerMarketMetaV330({ key }, match),
+    probability: Math.round(probability * 10) / 10, bookmakerOdds: 0,
+    fairOdds: probability > 0 ? Math.round((100 / probability) * 100) / 100 : 0,
+    decision: 'MODEL_ONLY',
+    reason: 'Brak realnego kursu bukmachera — pokazany jest najmocniejszy kierunek modelu.',
+    edgePp: 0,
+    reliability: Math.round(Number(rawScan?.dataQuality || 0) * .6 + Number(rawScan?.modelAgreement || 0) * .4)
+  }
+}
+
 function scannerMarketKey(key = '') {
   if (['home', 'draw', 'away'].includes(key)) return 'oneXTwo'
   if (['over15', 'under15'].includes(key)) return 'over15'
@@ -891,6 +932,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
             const isNearest = key === nearestKey
             const leagueUi = getLeagueUiMetaV328(match, lang)
             const venueLabel = [match.venueName, match.venueCity].filter(Boolean).join('  |  ')
+            const cardBestMarket = getCardBestMarketV332(scannerResults[key], match, scannerPerformance)
             return (
               <article key={key} className={`sim-pro-match-card-v328 ${isNearest ? 'nearest-v328' : ''} ${selectedId === key ? 'selected-v328' : ''}`}>
                 <div className="sim-pro-league-v328">
@@ -943,8 +985,26 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                   </div>
                 </div>
 
-                <div className="sim-pro-market-v328">
-                  {odds ? (
+                <div className="sim-pro-market-v328 sim-pro-market-v332">
+                  {cardBestMarket ? (
+                    <div className={`sim-card-best-market-v332 ${cardBestMarket.source === 'value' ? 'has-real-odds-v332' : 'fair-only-v332'}`}>
+                      <div className="sim-card-market-head-v332">
+                        <small>{cardBestMarket.source === 'value' ? 'NAJLEPSZY RYNEK AI' : 'NAJMOCNIEJSZY KIERUNEK AI'}</small>
+                        <em>{cardBestMarket.source === 'value' ? scannerDecisionLabel(cardBestMarket.decision) : 'MODEL'}</em>
+                      </div>
+                      <div className="sim-card-market-main-v332">
+                        <span>{cardBestMarket.meta.badge}</span>
+                        <b>{cardBestMarket.meta.title}</b>
+                      </div>
+                      <div className="sim-card-market-stats-v332">
+                        <span><small>AI</small><b>{cardBestMarket.probability ? `${cardBestMarket.probability}%` : '—'}</b></span>
+                        {cardBestMarket.bookmakerOdds > 1
+                          ? <span className="market-price-v332"><small>KURS</small><b>@{cardBestMarket.bookmakerOdds.toFixed(2)}</b></span>
+                          : <span className="market-fair-v332"><small>FAIR AI</small><b>{cardBestMarket.fairOdds ? cardBestMarket.fairOdds.toFixed(2) : '—'}</b></span>}
+                      </div>
+                      <p>{cardBestMarket.bookmakerOdds > 1 ? `Realny kurs • FAIR ${cardBestMarket.fairOdds ? cardBestMarket.fairOdds.toFixed(2) : '—'}` : 'Brak kursu rynkowego • FAIR modelu'}</p>
+                    </div>
+                  ) : odds ? (
                     <div className="sim-pro-odds-wrap-v331" title={copy.odds}>
                       <div className="sim-pro-odds-caption-v331">KURSY 1X2{odds.bookmakers ? ` • ${odds.bookmakers} BUK.` : ''}</div>
                       <div className="sim-pro-odds-v328 sim-pro-odds-v330">
@@ -957,8 +1017,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                     <div className="sim-pro-noodds-v328">
                       <i><span /><span /><span /></i>
                       <div>
-                        <b>{scannerActive && !scannerResults[key] ? 'Pobieram kursy…' : copy.noOdds}</b>
-                        <small>{scannerActive && !scannerResults[key] ? 'API-Football • 1X2' : copy.availableSoon}</small>
+                        <b>{scannerActive && !scannerResults[key] ? 'Analizuję rynek…' : copy.noOdds}</b>
+                        <small>{scannerActive && !scannerResults[key] ? 'statystyki + model Bet+AI' : copy.availableSoon}</small>
                       </div>
                     </div>
                   )}

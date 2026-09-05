@@ -84866,3 +84866,43 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
   .sim-pro-match-card-v328{grid-template-columns:1fr!important;grid-template-areas:"league" "center" "market" "action"!important}
   .sim-pro-league-title-v328 strong{white-space:normal!important}
 }
+
+/* =========================================================
+   V332 — BEST MARKET ON MATCH CARD
+   ========================================================= */
+.sim-pro-match-card-v328{
+  grid-template-columns:minmax(330px,360px) minmax(0,1fr) minmax(240px,285px) 164px!important;
+}
+.sim-pro-market-v332{padding:10px 12px!important}
+.sim-card-best-market-v332{width:100%;min-width:0;display:flex;flex-direction:column;gap:7px;padding:10px 11px;border-radius:13px;border:1px solid rgba(255,214,102,.18);background:linear-gradient(145deg,rgba(255,210,68,.075),rgba(5,22,35,.82) 46%,rgba(5,15,26,.9));box-shadow:inset 0 0 22px rgba(255,210,68,.035),0 0 16px rgba(255,210,68,.035)}
+.sim-card-best-market-v332.has-real-odds-v332{border-color:rgba(255,212,78,.34);box-shadow:inset 0 0 24px rgba(255,210,60,.05),0 0 18px rgba(255,204,45,.07)}
+.sim-card-market-head-v332{display:flex;align-items:center;justify-content:space-between;gap:7px}
+.sim-card-market-head-v332 small{color:#f5ca63;font-size:7px;font-weight:1000;letter-spacing:.08em;white-space:nowrap}
+.sim-card-market-head-v332 em{font-style:normal;padding:3px 6px;border-radius:999px;background:rgba(255,255,255,.05);color:#8ea9ba;font-size:7px;font-weight:1000;letter-spacing:.05em;white-space:nowrap}
+.sim-card-best-market-v332.has-real-odds-v332 .sim-card-market-head-v332 em{background:rgba(255,205,52,.1);color:#ffd86e}
+.sim-card-market-main-v332{display:flex;align-items:center;gap:7px;min-width:0}
+.sim-card-market-main-v332>span{flex:0 0 auto;display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;border:1px solid rgba(255,213,81,.35);background:rgba(255,205,55,.07);color:#ffdd78;font-size:8px;font-weight:1000;letter-spacing:.04em}
+.sim-card-market-main-v332>b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f8fcff;font-size:12px;font-weight:1000;letter-spacing:-.01em}
+.sim-card-market-stats-v332{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sim-card-market-stats-v332>span{display:flex;align-items:baseline;justify-content:space-between;gap:5px;padding:6px 7px;border:1px solid rgba(255,255,255,.05);border-radius:8px;background:rgba(255,255,255,.035)}
+.sim-card-market-stats-v332 small{color:#718ea1;font-size:7px;font-weight:900;letter-spacing:.06em}
+.sim-card-market-stats-v332 b{color:#f0f9ff;font-size:11px;font-weight:1000;white-space:nowrap}
+.sim-card-market-stats-v332 .market-price-v332 b{color:#46edf7;text-shadow:0 0 10px rgba(70,237,247,.13)}
+.sim-card-market-stats-v332 .market-fair-v332 b{color:#ffd76f}
+.sim-card-best-market-v332>p{margin:0;color:#647f91;font-size:7px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+@media(max-width:1550px){
+  .sim-pro-match-card-v328{grid-template-columns:minmax(290px,315px) minmax(0,1fr) 230px 144px!important}
+  .sim-card-market-main-v332>b{font-size:11px}.sim-card-market-head-v332 small{font-size:6px}
+}
+@media(max-width:1250px){
+  .sim-pro-match-card-v328{grid-template-columns:260px minmax(0,1fr) 132px!important;grid-template-areas:"league center action" "league market action"!important}
+  .sim-pro-market-v332{padding:9px 12px!important}.sim-card-best-market-v332{max-width:420px}
+}
+@media(max-width:900px){
+  .sim-pro-match-card-v328{grid-template-columns:1fr 116px!important;grid-template-areas:"league league" "center center" "market action"!important}
+}
+@media(max-width:560px){
+  .sim-pro-match-card-v328{grid-template-columns:1fr!important;grid-template-areas:"league" "center" "market" "action"!important}
+  .sim-card-best-market-v332{max-width:none}
+}

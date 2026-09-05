@@ -1,0 +1,9 @@
+RAPORT TESTÓW V332
+
+1. JSX/TS transpile diagnostics: PASS — 0 błędów.
+2. V331 layout/readability preserved: PASS.
+3. Best-market panel uses existing scannerResults: PASS.
+4. Real bookmaker odds displayed only when bookmakerOdds > 1: PASS.
+5. Fallback without bookmaker odds uses FAIR AI and is explicitly labelled: PASS.
+6. No new API endpoint/request introduced: PASS.
+7. No SQL/schema changes: PASS.
