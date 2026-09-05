@@ -147,6 +147,11 @@ async function reserveSlot(spacingMs = 275) {
 
 
 async function takeDailyBudget(options = {}) {
+  // V341: user-requested removal of Bet+AI's INTERNAL daily Simulator budget cap.
+  // Provider-side API-Football limits, cache, in-flight dedupe and per-minute spacing remain active.
+  return { allowed: true, enabled: false, internalDailyBudgetDisabled: true }
+
+  /* Easy rollback path (kept below intentionally):
   const scope = clean(options.budgetScope)
   if (!scope) return { allowed: true, enabled: false }
 
@@ -178,6 +183,7 @@ async function takeDailyBudget(options = {}) {
     // Jeżeli SQL v140 nie został jeszcze uruchomiony, nie psujemy istniejącej strony.
     return { allowed: true, enabled: false }
   }
+  */
 }
 
 function normalizeCached(entry, extra = {}) {

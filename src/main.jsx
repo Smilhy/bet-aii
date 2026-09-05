@@ -16395,23 +16395,36 @@ function getTipLeagueMetaV338(tip = {}) {
   const league = String(tip?.league || 'Liga').trim()
   const explicitCountry = String(tip?.country || '').trim()
   const low = league.toLowerCase()
+  // V341: real league branding fallback for older/public tips that do not store league_logo.
+  // These are static media assets only; they do not consume API-Football request quota.
   const rules = [
-    [/premier league|championship/, 'Anglia', '🇬🇧'],
-    [/bundesliga/, 'Niemcy', '🇩🇪'],
-    [/serie a|serie b/, 'Włochy', '🇮🇹'],
-    [/la liga|laliga|segunda/, 'Hiszpania', '🇪🇸'],
-    [/ligue 1|ligue 2/, 'Francja', '🇫🇷'],
-    [/eredivisie/, 'Holandia', '🇳🇱'],
-    [/ekstraklasa|i liga|1 liga/, 'Polska', '🇵🇱'],
-    [/primeira liga|liga portugal/, 'Portugalia', '🇵🇹'],
-    [/champions league|europa league|conference league/, 'Europa', '🇪🇺'],
-    [/mls|major league soccer/, 'USA', '🇺🇸']
+    [/champions league/, 'Europa', '🇪🇺', 2, 'eu'],
+    [/europa league/, 'Europa', '🇪🇺', 3, 'eu'],
+    [/conference league/, 'Europa', '🇪🇺', 848, 'eu'],
+    [/premier league|premier liga/, 'Anglia', '🇬🇧', 39, 'gb'],
+    [/championship/, 'Anglia', '🇬🇧', 40, 'gb'],
+    [/bundesliga/, 'Niemcy', '🇩🇪', 78, 'de'],
+    [/primeira liga|liga portugal/, 'Portugalia', '🇵🇹', 94, 'pt'],
+    [/ekstraklasa/, 'Polska', '🇵🇱', 106, 'pl'],
+    [/(^|\s)(i liga|1 liga)(\s|$)/, 'Polska', '🇵🇱', 107, 'pl'],
+    [/la liga|laliga/, 'Hiszpania', '🇪🇸', 140, 'es'],
+    [/segunda/, 'Hiszpania', '🇪🇸', 141, 'es'],
+    [/serie a/, 'Włochy', '🇮🇹', 135, 'it'],
+    [/serie b/, 'Włochy', '🇮🇹', 136, 'it'],
+    [/eredivisie/, 'Holandia', '🇳🇱', 88, 'nl'],
+    [/ligue 1/, 'Francja', '🇫🇷', 61, 'fr'],
+    [/ligue 2/, 'Francja', '🇫🇷', 62, 'fr'],
+    [/mls|major league soccer/, 'USA', '🇺🇸', 253, 'us']
   ]
   const hit = rules.find(([re]) => re.test(low))
   const country = explicitCountry || hit?.[1] || ''
   const flag = hit?.[2] || '🌐'
+  const leagueId = Number(hit?.[3] || 0)
+  const flagCode = String(hit?.[4] || '')
+  const logoUrl = leagueId ? `https://media.api-sports.io/football/leagues/${leagueId}.png` : ''
+  const flagUrl = flagCode ? `https://media.api-sports.io/flags/${flagCode}.svg` : ''
   const acronym = league.split(/\s+/).filter(Boolean).map(word => word[0]).join('').slice(0, 3).toUpperCase() || 'L'
-  return { league, country, flag, acronym }
+  return { league, country, flag, acronym, logoUrl, flagUrl }
 }
 
 function getTipKickoffUiV338(tip = {}, nowMs = Date.now(), lang = 'pl') {
@@ -16781,12 +16794,19 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         ) : (
           <div className="ticket-match-pro-v338">
             <div className="ticket-match-league-v338">
-              <span className={`ticket-match-league-logo-v338 ${tip.league_logo ? 'has-logo' : ''}`}>
-                {tip.league_logo ? <img src={tip.league_logo} alt="" /> : <b>{dashboardLeagueMetaV338.acronym}</b>}
+              <span className={`ticket-match-league-logo-v338 ${(tip.league_logo || dashboardLeagueMetaV338.logoUrl) ? 'has-logo' : ''}`}>
+                {(tip.league_logo || dashboardLeagueMetaV338.logoUrl)
+                  ? <img src={tip.league_logo || dashboardLeagueMetaV338.logoUrl} alt={`${dashboardLeagueMetaV338.league} logo`} />
+                  : <b>{dashboardLeagueMetaV338.acronym}</b>}
               </span>
               <span className="ticket-match-league-copy-v338">
                 <strong>{t(dashboardLeagueMetaV338.league)}{dashboardLeagueMetaV338.country ? <em> • {t(dashboardLeagueMetaV338.country)}</em> : null}</strong>
-                <small><i>{dashboardLeagueMetaV338.flag}</i>{t('Piłka nożna')}{tip.league_round ? ` • ${t(tip.league_round)}` : ''}</small>
+                <small>
+                  <i className="ticket-match-country-flag-v341">
+                    {dashboardLeagueMetaV338.flagUrl ? <img src={dashboardLeagueMetaV338.flagUrl} alt="" /> : dashboardLeagueMetaV338.flag}
+                  </i>
+                  {t('Piłka nożna')}{tip.league_round ? ` • ${t(tip.league_round)}` : ''}
+                </small>
               </span>
             </div>
 

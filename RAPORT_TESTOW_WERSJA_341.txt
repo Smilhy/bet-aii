@@ -1,0 +1,13 @@
+RAPORT TESTÓW V341
+
+BAZA: V338 przesłana przez użytkownika.
+V339/V340: NIE UŻYTE.
+
+PASS — main.jsx: fallback logo ligi dodany dla 17 wybranych rozgrywek.
+PASS — main.jsx: flaga kraju ligi jako obraz + fallback emoji.
+PASS — styles.css: herby klubów desktop 46px -> 52px (lekka zmiana).
+PASS — styles.css: logo ligi 38px -> 44px.
+PASS — match-simulator-rate-shield.js: wewnętrzny daily budget wyłączony.
+PASS — match-simulator-rate-shield.js: provider rate-limit / cache / spacing pozostają aktywne.
+PASS — Node syntax check dla match-simulator-rate-shield.js.
+INFO — pełny Vite build nie został uruchomiony, ponieważ paczka V338 nie zawiera node_modules.
