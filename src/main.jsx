@@ -6287,6 +6287,8 @@ function AnimatedDashboardHero() {
   }, [dashboardNewsSource])
 
   const staticHeroSlides = [
+    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-hero-football-manager-new.png', lang), alt: 'Bet+AI Football Manager — nowość, symulacja meczów i zaawansowana inteligencja piłkarska' },
+    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-hero-jest-moc.png', lang), alt: 'JEST MOC — Smilytv, statystyki, społeczność i sportowa pasja' },
     { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/you-vs-ai-hero.png', lang), alt: 'TY vs AI — przewiduj, kopiuj i rywalizuj z inteligencją Bet+AI' },
     { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-1.png', lang), alt: 'Bet+AI platforma — typy, analiza i społeczność' },
     { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-2.png', lang), alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
@@ -6311,7 +6313,7 @@ function AnimatedDashboardHero() {
     index
   }))
 
-  const heroSlides = [...newsHeroSlides, ...staticHeroSlides]
+  const heroSlides = [...staticHeroSlides, ...newsHeroSlides]
   const liteMobileHeroV50 = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 900px)').matches
 
   useEffect(() => { setPanel(0) }, [lang])

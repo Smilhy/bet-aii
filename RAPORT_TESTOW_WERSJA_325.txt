@@ -1,0 +1,8 @@
+RAPORT TESTÓW — WERSJA 325
+
+1. Dodanie dwóch nowych hero slide'ów — PASS
+2. Oba slajdy ustawione jako pierwsze w staticHeroSlides — PASS
+3. Kolejność heroSlides ustawiona jako staticHeroSlides + newsHeroSlides — PASS
+4. Ścieżki lokalizacyjne /dashboard-hero-v551 oraz /dashboard-hero-v551/en — PASS
+5. Aktualizacja OG/Twitter image w index.html — PASS
+6. Brak zmian w logice symulatora / prediction engine / SQL — PASS
