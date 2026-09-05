@@ -1,0 +1,13 @@
+RAPORT TESTÓW V336
+- Full-site package based on V335: PASS
+- EN simulator intro assets preserved: PASS
+- EN post-load simulator banner preserved: PASS
+- V336 complete EN DOM translation table installed: PASS
+- Preparation screen key Polish labels covered: PASS
+- V320 live UI key Polish labels covered: PASS
+- V320 generated match commentary patterns covered: PASS
+- PL mode unaffected by translator guard (lang === en only): PASS
+- Prediction/model/API logic changed: NO
+- SQL required: NO
+- Added V336 second translation pass for remaining preparation/model-lab strings: PASS
+- Added dynamic match commentary translations (passing lane, through-ball, transitions): PASS
