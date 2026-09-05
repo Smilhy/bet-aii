@@ -1,0 +1,7 @@
+V337 TEST REPORT
+- sidebar algorithm label = Algorytm AI: PASS
+- sidebar simulator label = FM AI: PASS
+- English mapping Algorytm AI -> AI Algorithm: PASS
+- English mapping FM AI -> FM AI: PASS
+- no CSS changes: PASS
+- no simulator/model/backend changes: PASS
