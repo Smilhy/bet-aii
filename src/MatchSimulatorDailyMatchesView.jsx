@@ -583,11 +583,14 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       }
 
       if (signal?.aborted) return
-      setMatches([])
+      // V327: pokaż wszystkie prawdziwe mecze z 17 zatwierdzonych rozgrywek OD RAZU.
+      // Pre-check jakości działa w tle i służy Value Scannerowi / readiness, ale nie może
+      // ucinać późniejszych spotkań tylko dlatego, że Budget Guard zatrzymał kolejne requesty.
+      setMatches(realRows)
       setLoading(false)
       setQualifying(true)
       setQualificationProgress({ done: 0, total: realRows.length })
-      setSourceMessage(realRows.length ? `17 WYBRANYCH LIG • sprawdzam jakość 0/${realRows.length}…` : 'Brak kolejnych meczów z topowych lig na dzisiaj.')
+      setSourceMessage(realRows.length ? `17 WYBRANYCH LIG • znaleziono ${realRows.length} meczów • sprawdzam jakość 0/${realRows.length}…` : 'Brak kolejnych meczów z topowych lig na dzisiaj.')
 
       const approved = []
       // WERSJA 138: tylko 2 mecze jednocześnie. Każdy pre-check wymaga maks. 2
@@ -609,9 +612,10 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         })
         approved.sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b))
         const done = Math.min(realRows.length, i + batch.length)
-        setMatches([...approved])
+        // V327: lista pozostaje pełnym realRows; approved jest osobną listą dla
+        // skanera jakości i nie steruje już widocznością meczów.
         setQualificationProgress({ done, total: realRows.length })
-        setSourceMessage(`TOP LEAGUES • ${done}/${realRows.length} • gotowe ${approved.length} • cache ${cacheHits}${rateLimitHits ? ` • auto-retry ${rateLimitHits}` : ''}${budgetLimitHits ? ` • budget guard ${budgetLimitHits}` : ''}${usedFallback ? ' • fallback' : ''}`)
+        setSourceMessage(`17 LIG • widoczne ${realRows.length} • sprawdzone ${done}/${realRows.length} • gotowe ${approved.length} • cache ${cacheHits}${rateLimitHits ? ` • auto-retry ${rateLimitHits}` : ''}${budgetLimitHits ? ` • budget guard ${budgetLimitHits}` : ''}${usedFallback ? ' • fallback' : ''}`)
 
         // Krótka pauza między batchami zapobiega burstowi 300/min. Snapshot/cache
         // powoduje, że kolejne wejścia są dużo szybsze i praktycznie nie zużywają API.
@@ -623,9 +627,9 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       } else if (!approved.length) {
         setSourceMessage(`Sprawdzono ${realRows.length}/${realRows.length} • brak meczów spełniających próg realnych statystyk.`)
       } else if (budgetLimitHits) {
-        setSourceMessage(`${approved.length} zakwalifikowanych • API Budget Guard zatrzymał świeże requesty Symulatora • pakiet zachowany dla reszty strony • cache ${cacheHits}`)
+        setSourceMessage(`${realRows.length} meczów widocznych • ${approved.length} sprawdzonych jako gotowe • Budget Guard nie ukrywa już późniejszych spotkań • cache ${cacheHits}`)
       } else {
-        setSourceMessage(`${approved.length} zakwalifikowanych • TYLKO 17 WYBRANYCH ROZGRYWEK • API Budget Guard aktywny • cache ${cacheHits}`)
+        setSourceMessage(`${realRows.length} meczów • TYLKO 17 WYBRANYCH ROZGRYWEK • ${approved.length} gotowych po pre-checku • cache ${cacheHits}`)
       }
       setQualifying(false)
       if (approved.length && !signal?.aborted) await scanQualifiedMatches([...approved], signal)

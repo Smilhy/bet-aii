@@ -1910,33 +1910,43 @@ exports.handler = async function(event) {
       let dayResponses = []
 
       if (topOnly && cfg.type === 'football' && mode !== 'search') {
-        // V323: Symulator NIE robi już globalnego skanu wszystkich rozgrywek.
-        // Każde zapytanie jest celowane wyłącznie w jedną z 17 zatwierdzonych lig/pucharów.
+        // V327: Symulator zawsze sprawdza komplet 17 zatwierdzonych rozgrywek.
+        // Nie strzelamy 17 requestami równocześnie, bo API-Football / Netlify może
+        // odrzucić część równoległych żądań i wtedy lista wygląda jak ucięta w połowie dnia.
+        // Match Shield nadal cache'uje każde league+date osobno, więc kolejne odświeżenia
+        // nie muszą oznaczać 17 realnych requestów do API.
         const targetEnd = addDaysToDateKey(safeStart, safeDays) || safeStart
-        dayResponses = await Promise.all(TOP_SIMULATOR_LEAGUES_V140.map(async (competition) => {
-          const params = {
-            league: String(competition.id),
-            season: String(getSimulatorCompetitionSeasonV323(competition, safeStart)),
-            timezone: APP_TIMEZONE,
-          }
-          if (mode === 'league-today' || mode === 'today' || mode === 'all-today' || safeDays === 0) {
-            params.date = safeStart
-          } else {
-            params.from = safeStart
-            params.to = targetEnd
-          }
-          try {
-            const shield = await matchShieldApiGet(cfg.path, params, { forceRefresh, ttlMs: 5 * 60 * 1000, attempts: 3 })
-            if (!shield.ok) {
-              errors.push(`${cfg.key}/sim-league-${competition.id}: ${shield.error || 'API error'}`)
+        const targetedResponses = []
+        const batchSize = 4
+        for (let offset = 0; offset < TOP_SIMULATOR_LEAGUES_V140.length; offset += batchSize) {
+          const batch = TOP_SIMULATOR_LEAGUES_V140.slice(offset, offset + batchSize)
+          const batchResponses = await Promise.all(batch.map(async (competition) => {
+            const params = {
+              league: String(competition.id),
+              season: String(getSimulatorCompetitionSeasonV323(competition, safeStart)),
+              timezone: APP_TIMEZONE,
+            }
+            if (mode === 'league-today' || mode === 'today' || mode === 'all-today' || safeDays === 0) {
+              params.date = safeStart
+            } else {
+              params.from = safeStart
+              params.to = targetEnd
+            }
+            try {
+              const shield = await matchShieldApiGet(cfg.path, params, { forceRefresh, ttlMs: 5 * 60 * 1000, attempts: 3 })
+              if (!shield.ok) {
+                errors.push(`${cfg.key}/sim-league-${competition.id}: ${shield.error || 'API error'}`)
+                return []
+              }
+              return Array.isArray(shield.data) ? shield.data : []
+            } catch (error) {
+              errors.push(`${cfg.key}/sim-league-${competition.id}: ${error.message}`)
               return []
             }
-            return Array.isArray(shield.data) ? shield.data : []
-          } catch (error) {
-            errors.push(`${cfg.key}/sim-league-${competition.id}: ${error.message}`)
-            return []
-          }
-        }))
+          }))
+          targetedResponses.push(...batchResponses)
+        }
+        dayResponses = targetedResponses
       } else if (leagueFilter && mode !== 'search') {
         // Dla konkretnej ligi pobieramy ją bezpośrednio jednym zapytaniem league+season+from+to.
         // To jest dokładniejsze niż globalne pobieranie dzień po dniu, zużywa mniej requestów
@@ -2093,7 +2103,11 @@ exports.handler = async function(event) {
       }
     }
 
-    if (!forceRefresh && mode !== 'search') {
+    // V327: dla topOnly (Symulacja AI) NIE wolno kończyć requestu na podstawie
+    // pierwszego niepustego cache dnia. Taki cache mógł zawierać tylko część lig
+    // i powodował efekt: lista kończy się np. na 15:00 mimo późniejszych meczów.
+    // Pełna whitelista jest sprawdzana niżej; Match Shield ogranicza koszt API.
+    if (!forceRefresh && mode !== 'search' && !topOnly) {
       const cachedFixtures = (await readCachedFixtures({}))
         .filter(item => allLeagues || matchesRequestedFootballScope(item))
         .filter(item => {

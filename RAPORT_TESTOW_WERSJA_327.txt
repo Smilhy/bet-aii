@@ -1,0 +1,10 @@
+RAPORT TESTÓW — V327
+
+- get-sports-events.js: node --check PASS
+- twarda whitelista: 17 competition IDs PASS
+- cache short-circuit wyłączony dla topOnly PASS
+- kontrolowane batchowanie 17 lig po 4 PASS
+- frontend pokazuje realRows zamiast tylko approved PASS
+- pre-check jakości nadal zachowany dla Value Scanner PASS
+- brak zmian SQL PASS
+- brak zmian Prediction Engine / V320 PASS
