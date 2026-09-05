@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-320-realistic-match-engine-live-ai-coach-all-in",
-  "version": "320.0.0",
+  "name": "betai-wersja-321-fast-scan-summary-ui-all-in",
+  "version": "321.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",

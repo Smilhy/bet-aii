@@ -1,0 +1,16 @@
+BET+AI WERSJA 321 — RAPORT TESTÓW
+
+Zakres: UI-only Fast Scan Summary na MatchSimulatorPreparationView.
+
+PASS:
+- V320 Realistic Match Engine regression: TEST_V320_OK
+- V300 Production Platform regression: TEST_V300_OK
+- V280 Live Pre-Match regression: TEST_V280_OK
+- V260 Match Context regression: TEST_V260_OK
+- V200 Reliability/Data Science regression: PASS
+
+Zmiany logiczne Prediction Engine: BRAK.
+Nowy SQL: BRAK.
+Nowe requesty API: BRAK.
+
+Nie oznaczono pełnego npm/Vite build jako PASS, ponieważ npm install w tym środowisku przekroczył limit czasu.

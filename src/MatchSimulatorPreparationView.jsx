@@ -1642,6 +1642,76 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
   const forecastWithReliability = useMemo(() => forecast ? { ...forecast, version: 'BETAI_FORECAST_V260', validationVersion: 'BETAI_MATCH_CONTEXT_MARKET_MEMORY_V260', operationsVersion: 'BETAI_PRODUCTION_OPS_REPLAY_V211', contextSuiteVersion: 'BETAI_V212_260_ALL_IN', livePreMatchVersion: 'BETAI_LIVE_PREMATCH_V280', alertsWorkflowVersion: 'BETAI_ALERTS_WORKFLOW_V280', reliability: reliability || null, reliabilityV190: reliabilityGuardV190 || null, dataScienceV200: modelPerformance?.dataScience || null, ensembleValidation: ensembleValidation || null, modelLab: modelLab || null, marketValidation: modelLab?.marketValidation || null, professionalLab: professionalLab || null } : null, [forecast, reliability, reliabilityGuardV190, modelPerformance, ensembleValidation, modelLab, professionalLab])
   const preparedData = useMemo(() => data ? { ...data, externalConsensus: consensus || null, predictionEngine: forecastWithReliability || null } : null, [data, consensus, forecastWithReliability])
   const phaseIndex = Math.min(phases.length - 1, Math.floor(progress / (100 / phases.length)))
+  const quickSummaryV321 = useMemo(() => {
+    if (!forecast) return null
+
+    const oneXTwoRows = [
+      { key: 'home', label: `1 • ${safeTextV158(match?.home, 'Gospodarze')}`, shortLabel: '1 • Gospodarze', probability: Number(forecast?.oneXTwo?.home || 0), fairOdds: Number(forecast?.fairOdds?.home || 0) },
+      { key: 'draw', label: 'X • Remis', shortLabel: 'X • Remis', probability: Number(forecast?.oneXTwo?.draw || 0), fairOdds: Number(forecast?.fairOdds?.draw || 0) },
+      { key: 'away', label: `2 • ${safeTextV158(match?.away, 'Goście')}`, shortLabel: '2 • Goście', probability: Number(forecast?.oneXTwo?.away || 0), fairOdds: Number(forecast?.fairOdds?.away || 0) }
+    ].sort((a, b) => b.probability - a.probability)
+
+    const goalRows = [
+      { key: 'over15', label: 'Powyżej 1.5', probability: Number(forecast?.goals?.over15 || 0), fairOdds: Number(forecast?.fairOdds?.over15 || 0) },
+      { key: 'over25', label: 'Powyżej 2.5', probability: Number(forecast?.goals?.over25 || 0), fairOdds: Number(forecast?.fairOdds?.over25 || 0) },
+      { key: 'btts', label: 'BTTS • TAK', probability: Number(forecast?.goals?.btts || 0), fairOdds: Number(forecast?.fairOdds?.btts || 0) },
+      { key: 'over35', label: 'Powyżej 3.5', probability: Number(forecast?.goals?.over35 || 0), fairOdds: Number(forecast?.fairOdds?.over35 || 0) }
+    ].sort((a, b) => b.probability - a.probability)
+
+    const card = professionalLab?.decisionCard || null
+    const decision = String(card?.decision || (forecast?.value?.state === 'STRONG_VALUE' || forecast?.value?.state === 'VALUE' ? 'BET' : forecast?.value?.state === 'SMALL_EDGE' ? 'WATCH' : 'NO_BET')).toUpperCase()
+    const decisionLabel = decision === 'BET' ? 'BET' : decision === 'WATCH' ? 'WATCH' : 'NO BET'
+    const decisionReason = card?.reason || (forecast?.value?.state === 'CALIBRATION_PENDING' ? 'Za mała próbka historyczna do rekomendacji.' : forecast?.value?.top?.reason || 'Model nie znajduje wystarczająco mocnego sygnału do rekomendacji.')
+
+    const candidateKey = String(card?.key || '')
+    const oneXTwoByKey = oneXTwoRows.find(item => item.key === candidateKey)
+    const goalByKey = goalRows.find(item => item.key === candidateKey || (candidateKey === 'bttsYes' && item.key === 'btts'))
+    const primary = oneXTwoByKey || goalByKey || oneXTwoRows[0]
+    const primaryLabel = card?.label || primary?.label || '—'
+    const primaryProbability = Number(card?.calibratedProbability || primary?.probability || 0)
+    const primaryFairOdds = Number(card?.modelFairOdds || primary?.fairOdds || 0)
+    const rawEdge = Number(card?.rawEdgePp ?? forecast?.value?.top?.edgePp)
+    const conservativeEdge = card?.conservativeEdgePp == null ? null : Number(card.conservativeEdgePp)
+    const edge = conservativeEdge != null && Number.isFinite(conservativeEdge) ? conservativeEdge : (Number.isFinite(rawEdge) ? rawEdge : null)
+
+    const homeXg = Number(forecast?.xg?.home || 0)
+    const awayXg = Number(forecast?.xg?.away || 0)
+    const xgLeader = homeXg === awayXg ? null : homeXg > awayXg ? safeTextV158(match?.home, 'Gospodarze') : safeTextV158(match?.away, 'Goście')
+    const best1x2 = oneXTwoRows[0]
+    const goalTop = goalRows.slice(0, 2)
+    const reasons = []
+    reasons.push(xgLeader ? `${xgLeader} ma wyższe xG w modelu: ${homeXg.toFixed(2)} – ${awayXg.toFixed(2)}.` : `Model daje równe xG: ${homeXg.toFixed(2)} – ${awayXg.toFixed(2)}.`)
+    reasons.push(`Najwyższy kierunek 1X2: ${best1x2.shortLabel} — ${best1x2.probability.toFixed(1)}%.`)
+    reasons.push(`Profil bramkowy: ${goalTop.map(item => `${item.label} ${item.probability.toFixed(1)}%`).join(' • ')}.`)
+    if (card?.bookmakerOdds > 1 && card?.noVigProbability != null) {
+      reasons.push(`Rynek: ${card.label || primaryLabel} @ ${Number(card.bookmakerOdds).toFixed(2)} • no-vig ${Number(card.noVigProbability).toFixed(1)}%${edge == null ? '' : ` • edge po kontroli ${edge > 0 ? '+' : ''}${edge.toFixed(1)} pp`}.`)
+    } else if (forecast?.value?.bookmakerCount) {
+      reasons.push(`Dostępne kursy: ${forecast.value.bookmakerCount} źródeł bukmacherskich; Value Engine pozostaje niezależny od modelu.`)
+    } else {
+      reasons.push('Brak pełnego rynku no-vig — kurs nie wpływa na samą prognozę modelu.')
+    }
+    const sample = Number(card?.sampleSize ?? reliability?.calibration?.samples ?? 0)
+    reasons.push(`${decisionLabel}: ${sample ? `próbka kalibracyjna ${sample}/30` : 'kalibracja nadal zbiera próbki'} • wiarygodność ${Number(reliability?.score || card?.reliability || 0)}/100.`)
+
+    return {
+      decision,
+      decisionLabel,
+      decisionReason,
+      primaryLabel,
+      primaryProbability,
+      primaryFairOdds,
+      edge,
+      best1x2,
+      goalCards: goalRows.slice(0, 3),
+      reasons,
+      homeXg,
+      awayXg,
+      reliability: Number(reliability?.score || card?.reliability || 0),
+      reliabilityLabel: String(reliability?.label || 'PENDING').toUpperCase(),
+      dataQuality: Number(forecast?.dataQuality || completeness || 0),
+      sampleSize: sample
+    }
+  }, [forecast, professionalLab, reliability, match, completeness])
 
   useEffect(() => {
     if (isBetAiLabTestV152(match)) {
@@ -1705,6 +1775,64 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
         </div>
       </div>
 
+      {quickSummaryV321 ? <section className={`sim-quick-summary-v321 decision-${quickSummaryV321.decision.toLowerCase().replace('_','-')}`}>
+        <header className="sim-quick-head-v321">
+          <div>
+            <small>BET+AI • FAST SCAN V321</small>
+            <strong>Szybkie podsumowanie analizy</strong>
+            <p>Najważniejsze wnioski z całego silnika w jednym miejscu. Szczegółowa analiza pozostaje poniżej.</p>
+          </div>
+          <span className="sim-quick-live-v321">● MODEL GOTOWY</span>
+        </header>
+
+        <div className="sim-quick-hero-v321">
+          <article className={`sim-quick-decision-v321 ${quickSummaryV321.decision.toLowerCase().replace('_','-')}`}>
+            <small>FINALNA DECYZJA MODELU</small>
+            <b>{quickSummaryV321.decisionLabel}</b>
+            <strong>{quickSummaryV321.decisionReason}</strong>
+            <span>{quickSummaryV321.decision === 'BET' ? 'Sygnał przeszedł konserwatywne filtry modelu.' : quickSummaryV321.decision === 'WATCH' ? 'Kierunek wart obserwacji, ale model nie daje jeszcze pełnego BET.' : 'Poniższe kierunki są informacyjne — system nie rekomenduje obecnie stawki.'}</span>
+          </article>
+
+          <div className="sim-quick-picks-v321">
+            <article className="primary">
+              <small>★ NAJMOCNIEJSZY KIERUNEK MODELU</small>
+              <strong>{quickSummaryV321.primaryLabel}</strong>
+              <b>{quickSummaryV321.primaryProbability.toFixed(1)}%</b>
+              <footer>
+                <span>{quickSummaryV321.primaryFairOdds > 1 ? `fair ${quickSummaryV321.primaryFairOdds.toFixed(2)}` : 'fair —'}</span>
+                {quickSummaryV321.edge == null ? null : <em className={quickSummaryV321.edge >= 0 ? 'positive' : 'negative'}>edge {quickSummaryV321.edge > 0 ? '+' : ''}{quickSummaryV321.edge.toFixed(1)} pp</em>}
+              </footer>
+            </article>
+            {quickSummaryV321.goalCards.map((item, index) => <article key={item.key} className={index === 0 ? 'goal-best' : ''}>
+              <small>{index === 0 ? '⚽ NAJMOCNIEJSZY RYNEK BRAMKOWY' : 'RYNEK MODELU'}</small>
+              <strong>{item.label}</strong>
+              <b>{item.probability.toFixed(1)}%</b>
+              <footer><span>{item.fairOdds > 1 ? `fair ${item.fairOdds.toFixed(2)}` : 'fair —'}</span></footer>
+            </article>)}
+          </div>
+        </div>
+
+        <div className="sim-quick-meta-v321">
+          <article className="xg"><small>xG • OCZEKIWANE GOLE</small><b>{quickSummaryV321.homeXg.toFixed(2)} <i>—</i> {quickSummaryV321.awayXg.toFixed(2)}</b><span>{safeTextV158(match?.home, 'Home')} &nbsp; / &nbsp; {safeTextV158(match?.away, 'Away')}</span></article>
+          <article><small>WIARYGODNOŚĆ</small><b>{quickSummaryV321.reliability}/100</b><span>{quickSummaryV321.reliabilityLabel}</span></article>
+          <article><small>DATA QUALITY</small><b>{quickSummaryV321.dataQuality}%</b><span>{quickSummaryV321.dataQuality >= 80 ? 'WYSOKA' : quickSummaryV321.dataQuality >= 60 ? 'ŚREDNIA' : 'NISKA'}</span></article>
+          <article><small>KALIBRACJA</small><b>{quickSummaryV321.sampleSize}/30</b><span>{quickSummaryV321.sampleSize >= 30 ? 'PRÓG SPEŁNIONY' : 'ZBIERANIE PRÓB'}</span></article>
+          <article><small>NAJLEPSZE 1X2</small><b>{quickSummaryV321.best1x2.shortLabel}</b><span>{quickSummaryV321.best1x2.probability.toFixed(1)}%</span></article>
+        </div>
+
+        <div className="sim-quick-bottom-v321">
+          <div className="sim-quick-reasons-v321">
+            <small>NAJWAŻNIEJSZE POWODY</small>
+            <div>{quickSummaryV321.reasons.map((reason, index) => <p key={index}><i>{index + 1}</i><span>{reason}</span></p>)}</div>
+          </div>
+          <div className="sim-quick-actions-v321">
+            <button type="button" className="primary" disabled={!eligibility.eligible} onClick={() => eligibility.eligible && onStart?.(match, preparedData)}>{eligibility.eligible ? `▶ ${copy.start}` : `✕ ${copy.rejectedButton}`}</button>
+            <button type="button" className="secondary" onClick={() => document.getElementById('sim-full-analysis-v321')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>↓ Pokaż pełną analizę</button>
+            <span>Symulacja korzysta z tej samej zamrożonej prognozy Bet+AI.</span>
+          </div>
+        </div>
+      </section> : null}
+
       <div className="sim-prep-loader-v116">
         <div className="sim-prep-loader-top-v116">
           <div><small>{loading ? copy.loading : error ? 'BŁĄD' : copy.ready}</small><strong>{error || phases[phaseIndex]}</strong></div>
@@ -1765,7 +1893,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
           </>}
         </div>
 
-        {forecast ? <section className="sim-prep-forecast-v136">
+        {forecast ? <section id="sim-full-analysis-v321" className="sim-prep-forecast-v136">
           <div className="sim-prep-forecast-head-v136">
             <div><small>BET+AI PREDICTION ENGINE V2</small><strong>Prognoza przedmeczowa + Value Engine</strong></div>
             <div className="sim-prep-forecast-badges-v136"><span>DATA {forecast.dataQuality}/100</span><span>MODEL {String(forecast.activeModel || 'champion').toUpperCase()}</span><span>{forecast.consensus.sourceCount ? `CONSENSUS ${forecast.consensus.sourceCount}` : 'MODEL DATA'}</span><span>ODDS {forecast.value?.bookmakerCount || 0}</span>{forecastSaveState === 'saved' ? <span className="saved">SUPABASE ✓</span> : null}</div>
