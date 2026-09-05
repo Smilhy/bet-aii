@@ -84783,3 +84783,86 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-beta-info{
   .sim-value-scanner-card-v330 .sim-value-scanner-pick-v330{flex-direction:column}
   .sim-value-market-odds-v330{align-items:flex-start;border-left:0;padding-left:0;border-top:1px solid rgba(255,255,255,.08);padding-top:8px;margin-left:0}
 }
+
+
+/* =========================================================
+   V331 — MATCH CARD READABILITY + REAL 1X2 ODDS
+   ========================================================= */
+/* Więcej miejsca dla nazwy ligi/kraju — bez Bunde... */
+.sim-pro-match-card-v328{
+  grid-template-columns:minmax(330px,360px) minmax(0,1fr) minmax(180px,210px) 164px!important;
+}
+.sim-pro-league-v328{
+  grid-template-columns:82px minmax(0,1fr)!important;
+  gap:16px!important;
+  padding-left:24px!important;
+  padding-right:22px!important;
+}
+.sim-pro-league-title-v328{gap:7px!important;overflow:visible!important}
+.sim-pro-league-title-v328 strong{
+  flex:0 0 auto!important;
+  max-width:none!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:nowrap!important;
+}
+.sim-pro-league-title-v328>span{flex:0 0 auto!important}
+.sim-pro-league-copy-v328>small{max-width:100%!important;white-space:normal!important}
+.sim-pro-nearest-v328{flex-wrap:wrap!important;overflow:visible!important}
+.sim-pro-nearest-v328 span{
+  flex:1 0 100%!important;
+  width:100%!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  line-height:1.25!important;
+}
+
+/* Kursy wykorzystują istniejący request /odds Value Scannera — bez nowego API call. */
+.sim-pro-odds-wrap-v331{width:100%;display:flex;flex-direction:column;gap:7px;min-width:0}
+.sim-pro-odds-caption-v331{text-align:center;color:#d9bd68;font-size:8px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.sim-pro-odds-v331{}
+.sim-pro-odds-v330{gap:5px!important}
+.sim-pro-odds-v330 span{min-width:46px!important;height:50px!important;padding:5px 3px!important}
+.sim-pro-odds-v330 small{font-size:7px!important;white-space:nowrap!important}
+.sim-pro-odds-v330 b{font-size:13px!important}
+
+/* SYMULUJ — wymuszony czarny tekst w każdej przeglądarce. */
+html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 button,
+html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 button span,
+html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 button small,
+html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 button b{
+  color:#02090d!important;
+  -webkit-text-fill-color:#02090d!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 button span{
+  font-weight:1000!important;
+  font-size:17px!important;
+}
+html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 button small{
+  font-weight:950!important;
+  font-size:8px!important;
+  letter-spacing:.055em!important;
+}
+
+@media(max-width:1550px){
+  .sim-pro-match-card-v328{grid-template-columns:minmax(290px,315px) minmax(0,1fr) 160px 144px!important}
+  .sim-pro-league-v328{grid-template-columns:68px minmax(0,1fr)!important;gap:13px!important;padding-left:18px!important;padding-right:16px!important}
+  .sim-pro-league-logo-v328{width:64px!important;height:64px!important}.sim-pro-league-logo-v328 img{width:55px!important;height:55px!important}
+  .sim-pro-league-title-v328 strong{font-size:15px!important}.sim-pro-league-title-v328>span{font-size:12px!important}
+  html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 button span{font-size:15px!important}
+}
+@media(max-width:1250px){
+  .sim-pro-match-card-v328{grid-template-columns:260px minmax(0,1fr) 132px!important;grid-template-areas:"league center action" "league market action"!important}
+  .sim-pro-league-title-v328{flex-wrap:wrap!important}
+  .sim-pro-league-title-v328 strong{white-space:normal!important;line-height:1.1!important}
+}
+@media(max-width:900px){
+  .sim-pro-match-card-v328{grid-template-columns:1fr 116px!important;grid-template-areas:"league league" "center center" "market action"!important}
+}
+@media(max-width:560px){
+  .sim-pro-match-card-v328{grid-template-columns:1fr!important;grid-template-areas:"league" "center" "market" "action"!important}
+  .sim-pro-league-title-v328 strong{white-space:normal!important}
+}

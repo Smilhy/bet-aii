@@ -1,0 +1,11 @@
+RAPORT TESTÓW — BET+AI V331
+
+PASS — backend get-match-value-scan.js: node --check
+PASS — frontend patch obecny: listOdds1X2 / Pobieram kursy / KURSY 1X2
+PASS — CSS: czarny tekst przycisku wymuszony przez color + -webkit-text-fill-color + !important
+PASS — CSS: lewa kolumna ligi poszerzona i nazwa ligi bez ellipsis w desktop layout
+PASS — odds reuse: displayOdds1X2 pochodzi z oddsBooks już pobieranych przez Value Scanner
+PASS — brak nowego endpointu i brak dodatkowego request loop tylko dla kafli
+PASS — SQL bez zmian
+
+Pełnego npm/Vite builda nie uruchomiono, ponieważ paczka źródłowa nie zawiera node_modules w środowisku roboczym.

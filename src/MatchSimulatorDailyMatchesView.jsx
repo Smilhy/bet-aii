@@ -296,6 +296,18 @@ function formatKickoffCountdown(startMs, nowMs, copy) {
 }
 
 function getReal1X2(row = {}) {
+  // V331: jeśli Value Scanner już pobrał /odds dla tego fixture, wykorzystujemy
+  // dokładnie ten sam wynik także na kaflu meczu. Zero dodatkowych requestów API.
+  const scanOdds = row?.listOdds1X2
+  if (scanOdds && (scanOdds.home || scanOdds.draw || scanOdds.away)) {
+    return {
+      home: scanOdds.home ? Number(scanOdds.home).toFixed(2) : '—',
+      draw: scanOdds.draw ? Number(scanOdds.draw).toFixed(2) : '—',
+      away: scanOdds.away ? Number(scanOdds.away).toFixed(2) : '—',
+      bookmakers: Number(scanOdds.bookmakers || 0),
+      source: scanOdds.source || 'API-Football'
+    }
+  }
   if (!row.hasRealOdds || !Array.isArray(row.markets)) return null
   const items = row.markets.filter(item => String(item.market || '').toLowerCase() === '1x2')
   const home = items.find(item => String(item.pick || '').toLowerCase().includes(String(row.home || '').toLowerCase()) && String(item.pick || '').toLowerCase().includes('wygra'))
@@ -305,7 +317,9 @@ function getReal1X2(row = {}) {
   return {
     home: home?.odds ? Number(home.odds).toFixed(2) : '—',
     draw: draw?.odds ? Number(draw.odds).toFixed(2) : '—',
-    away: away?.odds ? Number(away.odds).toFixed(2) : '—'
+    away: away?.odds ? Number(away.odds).toFixed(2) : '—',
+    bookmakers: 0,
+    source: 'API-Football'
   }
 }
 
@@ -607,7 +621,13 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         const response = await fetch(`/.netlify/functions/get-match-value-scan?${params.toString()}`, { cache: 'no-store', signal })
         const payload = await response.json().catch(() => ({}))
         if (response.ok && payload?.ok) {
-          setScannerResults(prev => ({ ...prev, [fixtureKey(row)]: payload }))
+          const rowKey = fixtureKey(row)
+          setScannerResults(prev => ({ ...prev, [rowKey]: payload }))
+          if (payload?.displayOdds1X2 && (payload.displayOdds1X2.home || payload.displayOdds1X2.draw || payload.displayOdds1X2.away)) {
+            setMatches(prev => prev.map(match => fixtureKey(match) === rowKey
+              ? { ...match, listOdds1X2: payload.displayOdds1X2, hasRealOdds: true }
+              : match))
+          }
         }
       } catch (error) {
         if (error?.name === 'AbortError') return
@@ -925,15 +945,21 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
                 <div className="sim-pro-market-v328">
                   {odds ? (
-                    <div className="sim-pro-odds-v328 sim-pro-odds-v330" title={copy.odds}>
-                      <span><small>1 • DOM</small><b>{odds.home}</b></span>
-                      <span><small>X • REMIS</small><b>{odds.draw}</b></span>
-                      <span><small>2 • GOŚCIE</small><b>{odds.away}</b></span>
+                    <div className="sim-pro-odds-wrap-v331" title={copy.odds}>
+                      <div className="sim-pro-odds-caption-v331">KURSY 1X2{odds.bookmakers ? ` • ${odds.bookmakers} BUK.` : ''}</div>
+                      <div className="sim-pro-odds-v328 sim-pro-odds-v330">
+                        <span><small>1 • DOM</small><b>{odds.home}</b></span>
+                        <span><small>X • REMIS</small><b>{odds.draw}</b></span>
+                        <span><small>2 • GOŚCIE</small><b>{odds.away}</b></span>
+                      </div>
                     </div>
                   ) : (
                     <div className="sim-pro-noodds-v328">
                       <i><span /><span /><span /></i>
-                      <div><b>{copy.noOdds}</b><small>{copy.availableSoon}</small></div>
+                      <div>
+                        <b>{scannerActive && !scannerResults[key] ? 'Pobieram kursy…' : copy.noOdds}</b>
+                        <small>{scannerActive && !scannerResults[key] ? 'API-Football • 1X2' : copy.availableSoon}</small>
+                      </div>
                     </div>
                   )}
                 </div>

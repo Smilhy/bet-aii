@@ -241,6 +241,28 @@ function normalizeOdds(rows = []) {
   return [...books.values()].filter(book => Object.keys(book).length > 1)
 }
 
+function bestDisplay1X2(books = []) {
+  const best = { home: 0, draw: 0, away: 0 }
+  const bookNames = new Set()
+  for (const book of Array.isArray(books) ? books : []) {
+    let used = false
+    for (const key of ['home', 'draw', 'away']) {
+      const value = oddsValue(book?.[key])
+      if (value > best[key]) best[key] = value
+      if (value > 1) used = true
+    }
+    if (used && book?.bookmaker) bookNames.add(clean(book.bookmaker))
+  }
+  if (!(best.home > 1 || best.draw > 1 || best.away > 1)) return null
+  return {
+    home: best.home > 1 ? round(best.home, 2) : null,
+    draw: best.draw > 1 ? round(best.draw, 2) : null,
+    away: best.away > 1 ? round(best.away, 2) : null,
+    bookmakers: bookNames.size,
+    source: 'API-Football • best available 1X2'
+  }
+}
+
 function marketGroup(key) {
   if (['home', 'draw', 'away'].includes(key)) return '1X2'
   if (['bttsYes', 'bttsNo'].includes(key)) return 'BTTS'
@@ -350,6 +372,7 @@ function buildScan({ fixtureId, fixtureDate, home, away, league, country, recent
     modelAgreement,
     sourceFlags: { recent: true, apiPrediction: Boolean(prediction?.available), realOdds: oddsBooks.length > 0 },
     bookmakerCount: oddsBooks.length,
+    displayOdds1X2: bestDisplay1X2(oddsBooks),
     candidates: candidates.slice(0, 8),
     top: candidates[0] || null,
     generatedAt: new Date().toISOString()
@@ -406,4 +429,4 @@ exports.handler = async function handler(event = {}) {
   }
 }
 
-exports._test = { deriveStats, poissonForecast, valueCandidates, buildScan }
+exports._test = { deriveStats, poissonForecast, valueCandidates, buildScan, bestDisplay1X2 }
