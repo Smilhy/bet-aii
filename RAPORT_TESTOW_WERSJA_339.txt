@@ -1,7 +1,0 @@
-V339 UI TEST REPORT
-- Full-site base: V338 — OK
-- TipCard data bindings preserved — OK
-- New league description/season labels — UI-only — OK
-- Countdown/nearest badge uses existing kickoff timestamp — OK
-- No betting/settlement/backend logic changed — OK
-- Responsive fallback below 1260px preserved — OK
