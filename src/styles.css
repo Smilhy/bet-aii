@@ -84906,3 +84906,56 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
   .sim-pro-match-card-v328{grid-template-columns:1fr!important;grid-template-areas:"league" "center" "market" "action"!important}
   .sim-card-best-market-v332{max-width:none}
 }
+
+/* ============================================================
+   V333 — BEST MARKET CARD: UNIFIED CYAN / TEAL PALETTE
+   Visual-only change. No market / odds / model logic modified.
+   ============================================================ */
+.sim-card-best-market-v332{
+  border-color:rgba(55,220,238,.28)!important;
+  background:linear-gradient(145deg,rgba(31,211,230,.075),rgba(5,28,42,.88) 44%,rgba(4,17,29,.94))!important;
+  box-shadow:inset 0 0 24px rgba(39,226,239,.045),0 0 17px rgba(23,205,225,.045)!important;
+}
+.sim-card-best-market-v332.has-real-odds-v332{
+  border-color:rgba(55,230,241,.42)!important;
+  box-shadow:inset 0 0 26px rgba(39,226,239,.065),0 0 20px rgba(23,205,225,.075)!important;
+}
+.sim-card-market-head-v332 small{
+  color:#72e9f3!important;
+}
+.sim-card-market-head-v332 em,
+.sim-card-best-market-v332.has-real-odds-v332 .sim-card-market-head-v332 em{
+  background:rgba(37,211,229,.10)!important;
+  border:1px solid rgba(72,226,239,.16)!important;
+  color:#a8f4f8!important;
+}
+.sim-card-market-main-v332>span{
+  border-color:rgba(71,226,239,.38)!important;
+  background:linear-gradient(180deg,rgba(31,220,236,.14),rgba(13,139,162,.075))!important;
+  color:#8ff5fb!important;
+  box-shadow:0 0 13px rgba(31,220,236,.08)!important;
+}
+.sim-card-market-main-v332>b{
+  color:#f5fdff!important;
+}
+.sim-card-market-stats-v332>span{
+  border-color:rgba(67,208,226,.09)!important;
+  background:rgba(21,76,94,.15)!important;
+}
+.sim-card-market-stats-v332 small{
+  color:#7da7b8!important;
+}
+.sim-card-market-stats-v332 b{
+  color:#ecfbff!important;
+}
+.sim-card-market-stats-v332 .market-price-v332 b{
+  color:#46edf7!important;
+  text-shadow:0 0 10px rgba(70,237,247,.14)!important;
+}
+.sim-card-market-stats-v332 .market-fair-v332 b{
+  color:#8feaf2!important;
+  text-shadow:0 0 9px rgba(87,220,235,.10)!important;
+}
+.sim-card-best-market-v332>p{
+  color:#6f97a8!important;
+}
