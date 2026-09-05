@@ -1454,6 +1454,37 @@ function buildProfessionalPredictionLabV152({ match = {}, forecast = null, relia
   }
 }
 
+
+function UiIconV322({ name, size = 18 }) {
+  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
+  if (name === 'bolt') return <svg {...common}><path d="M13 2 4.5 13h6L9.8 22 19.5 10h-6L13 2Z" /></svg>
+  if (name === 'shield') return <svg {...common}><path d="M12 3 19 6v5c0 4.8-2.8 8-7 10-4.2-2-7-5.2-7-10V6l7-3Z" /><path d="m9.5 12 1.6 1.6 3.5-3.7" /></svg>
+  if (name === 'ban') return <svg {...common}><circle cx="12" cy="12" r="8.5" /><path d="m6 6 12 12" /></svg>
+  if (name === 'target') return <svg {...common}><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><path d="M12 3v3M21 12h-3M12 21v-3M3 12h3" /></svg>
+  if (name === 'ball') return <svg {...common}><circle cx="12" cy="12" r="8.5" /><path d="m9.2 9.5 2.8-2 2.8 2-1.1 3.3h-3.4L9.2 9.5Z" /><path d="m12 7.5-.8-3M9.2 9.5l-3.1-1.1m4.2 4.4-2 2.7m5.4-2.7 2 2.7m-.9-6 3.1-1.1" /></svg>
+  if (name === 'chart') return <svg {...common}><path d="M4 19V9m5 10V5m5 14v-7m5 7V3" /></svg>
+  if (name === 'eye') return <svg {...common}><path d="M2.8 12s3.4-5.2 9.2-5.2S21.2 12 21.2 12 17.8 17.2 12 17.2 2.8 12 2.8 12Z" /><circle cx="12" cy="12" r="2.4" /></svg>
+  if (name === 'database') return <svg {...common}><ellipse cx="12" cy="5.5" rx="7.5" ry="3" /><path d="M4.5 5.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6M4.5 11.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6" /></svg>
+  if (name === 'flask') return <svg {...common}><path d="M9 3h6M10 3v5l-4.7 8.2A3 3 0 0 0 7.9 21h8.2a3 3 0 0 0 2.6-4.8L14 8V3" /><path d="M7.5 15h9" /></svg>
+  if (name === 'calendar') return <svg {...common}><rect x="3.5" y="5" width="17" height="15" rx="2.5" /><path d="M8 3v4M16 3v4M3.5 9.5h17" /></svg>
+  if (name === 'stadium') return <svg {...common}><path d="M4 9c2.3-3.7 13.7-3.7 16 0v7c-2.3 3.7-13.7 3.7-16 0V9Z" /><path d="M7 10.5c2-1.7 8-1.7 10 0v4c-2 1.7-8 1.7-10 0v-4ZM4 9l3 1.5M20 9l-3 1.5" /></svg>
+  if (name === 'play') return <svg {...common}><path d="m9 7 8 5-8 5V7Z" /></svg>
+  if (name === 'layers') return <svg {...common}><path d="m12 3 9 5-9 5-9-5 9-5Z" /><path d="m3 12 9 5 9-5M3 16l9 5 9-5" /></svg>
+  if (name === 'info') return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7.5h.01" /></svg>
+  return <svg {...common}><circle cx="12" cy="12" r="8.5" /></svg>
+}
+
+function formatFixtureDateV322(value) {
+  if (!value) return ''
+  const parsed = new Date(value)
+  if (!Number.isFinite(parsed.getTime())) return String(value)
+  try {
+    return parsed.toLocaleDateString('pl-PL', { day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '')
+  } catch (_) {
+    return String(value)
+  }
+}
+
 export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBack, onStart }) {
   const copy = COPY[lang] || COPY.pl
   const phases = lang === 'en' ? LOAD_PHASES_EN : LOAD_PHASES_PL
@@ -1750,6 +1781,14 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
       .catch(() => { if (mountedRef.current) setForecastSaveState('local') })
   }, [forecastWithReliability, eligibility.eligible, consensusLoading, modelPerformanceLoading, match, data, consensus])
 
+  const matchLeagueLogoV322 = safeTextV158(match?.leagueLogo || match?.league_logo || data?.fixture?.leagueLogo || data?.fixture?.league_logo || '', '')
+  const matchCountryV322 = safeTextV158(match?.country || data?.fixture?.country || '', '')
+  const matchVenueNameV322 = safeTextV158(match?.venueName || match?.venue || data?.fixture?.venueName || data?.fixture?.venue?.name || '', '')
+  const matchVenueCityV322 = safeTextV158(match?.venueCity || data?.fixture?.venueCity || data?.fixture?.venue?.city || '', '')
+  const matchRoundV322 = safeTextV158(match?.round || data?.fixture?.round || '', '')
+  const matchDateV322 = formatFixtureDateV322(match?.commence_time || match?.fixture_date || match?.rawDate || data?.fixture?.date || match?.date || '')
+  const summaryProgressV322 = loading ? progress : data ? 100 : progress
+
   return (
     <section className="sim-prep-v116">
       <div className="sim-prep-head-v116">
@@ -1759,43 +1798,67 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
         <p>{copy.subtitle}</p>
       </div>
 
-      <div className="sim-prep-match-v116">
-        <div className="sim-prep-team-v116 home">
-          {match?.homeLogo ? <img src={match.homeLogo} alt="" /> : null}
-          <strong>{safeTextV158(match?.home, '—')}</strong>
-        </div>
-        <div className="sim-prep-vs-v116">
-          <small>{safeTextV158(match?.league, 'Mecz')}</small>
-          <b>VS</b>
-          <span>{match?.time || '—'}</span>
-        </div>
-        <div className="sim-prep-team-v116 away">
-          <strong>{safeTextV158(match?.away, '—')}</strong>
-          {match?.awayLogo ? <img src={match.awayLogo} alt="" /> : null}
-        </div>
-      </div>
-
-      {quickSummaryV321 ? <section className={`sim-quick-summary-v321 decision-${quickSummaryV321.decision.toLowerCase().replace('_','-')}`}>
-        <header className="sim-quick-head-v321">
+      <section className="sim-prep-match-v116 sim-prep-match-v322">
+        <div className="sim-match-league-v322">
+          <span className="sim-match-league-logo-v322">
+            {matchLeagueLogoV322 ? <img src={matchLeagueLogoV322} alt="" /> : <UiIconV322 name="layers" size={22} />}
+          </span>
           <div>
-            <small>BET+AI • FAST SCAN V321</small>
-            <strong>Szybkie podsumowanie analizy</strong>
-            <p>Najważniejsze wnioski z całego silnika w jednym miejscu. Szczegółowa analiza pozostaje poniżej.</p>
+            <small>{matchCountryV322 || 'Piłka nożna'}</small>
+            <strong>{safeTextV158(match?.league, 'Mecz')}</strong>
+            {matchRoundV322 ? <span>{matchRoundV322}</span> : null}
           </div>
-          <span className="sim-quick-live-v321">● MODEL GOTOWY</span>
+        </div>
+        <div className="sim-match-main-v322">
+          <div className="sim-prep-team-v116 home sim-team-v322">
+            <span className="sim-team-logo-v322">{match?.homeLogo ? <img src={match.homeLogo} alt="" /> : <b>{safeTextV158(match?.home, 'H').slice(0, 1)}</b>}</span>
+            <strong>{safeTextV158(match?.home, '—')}</strong>
+          </div>
+          <div className="sim-prep-vs-v116 sim-vs-v322">
+            <small>{matchDateV322 || 'DZISIAJ'}</small>
+            <b>VS</b>
+            <span>{match?.time || '—'}</span>
+          </div>
+          <div className="sim-prep-team-v116 away sim-team-v322">
+            <strong>{safeTextV158(match?.away, '—')}</strong>
+            <span className="sim-team-logo-v322">{match?.awayLogo ? <img src={match.awayLogo} alt="" /> : <b>{safeTextV158(match?.away, 'A').slice(0, 1)}</b>}</span>
+          </div>
+        </div>
+        <div className="sim-match-venue-v322">
+          <span><UiIconV322 name="stadium" size={20} /></span>
+          <div><small>STADION</small><strong>{matchVenueNameV322 || 'Dane stadionu oczekują'}</strong>{matchVenueCityV322 ? <em>{matchVenueCityV322}</em> : null}</div>
+        </div>
+      </section>
+
+      {quickSummaryV321 ? <section className={`sim-quick-summary-v321 sim-quick-summary-v322 decision-${quickSummaryV321.decision.toLowerCase().replace('_','-')}`}>
+        <header className="sim-quick-head-v321 sim-quick-head-v322">
+          <div className="sim-quick-title-v322">
+            <span className="sim-quick-title-icon-v322"><UiIconV322 name="bolt" size={25} /></span>
+            <div>
+              <small>BET+AI • EXECUTIVE MATCH BRIEF V322</small>
+              <strong>Szybkie podsumowanie analizy</strong>
+              <p>Najważniejsza decyzja, kierunki i ryzyko — bez czytania całego raportu.</p>
+            </div>
+          </div>
+          <div className="sim-quick-head-meta-v322">
+            <span><UiIconV322 name="shield" size={13} /> {quickSummaryV321.reliabilityLabel}</span>
+            <span><UiIconV322 name="database" size={13} /> DATA {quickSummaryV321.dataQuality}/100</span>
+            <span className="sim-quick-live-v321">MODEL CHAMPION</span>
+          </div>
         </header>
 
-        <div className="sim-quick-hero-v321">
-          <article className={`sim-quick-decision-v321 ${quickSummaryV321.decision.toLowerCase().replace('_','-')}`}>
-            <small>FINALNA DECYZJA MODELU</small>
+        <div className="sim-quick-hero-v321 sim-quick-hero-v322">
+          <article className={`sim-quick-decision-v321 sim-quick-decision-v322 ${quickSummaryV321.decision.toLowerCase().replace('_','-')}`}>
+            <div className="sim-card-kicker-v322"><span className="sim-icon-box-v322 danger"><UiIconV322 name={quickSummaryV321.decision === 'BET' ? 'target' : quickSummaryV321.decision === 'WATCH' ? 'eye' : 'ban'} size={22} /></span><small>FINALNA DECYZJA MODELU</small></div>
             <b>{quickSummaryV321.decisionLabel}</b>
             <strong>{quickSummaryV321.decisionReason}</strong>
-            <span>{quickSummaryV321.decision === 'BET' ? 'Sygnał przeszedł konserwatywne filtry modelu.' : quickSummaryV321.decision === 'WATCH' ? 'Kierunek wart obserwacji, ale model nie daje jeszcze pełnego BET.' : 'Poniższe kierunki są informacyjne — system nie rekomenduje obecnie stawki.'}</span>
+            <span>{quickSummaryV321.decision === 'BET' ? 'Sygnał przeszedł konserwatywne filtry modelu.' : quickSummaryV321.decision === 'WATCH' ? 'Kierunek wart obserwacji, ale model nie daje jeszcze pełnego BET.' : 'Kierunki poniżej pozostają informacyjne — model nie rekomenduje obecnie stawki.'}</span>
+            <footer><i /> <em>Decision Guard • Conservative Value</em></footer>
           </article>
 
-          <div className="sim-quick-picks-v321">
+          <div className="sim-quick-picks-v321 sim-quick-picks-v322">
             <article className="primary">
-              <small>★ NAJMOCNIEJSZY KIERUNEK MODELU</small>
+              <div className="sim-card-kicker-v322"><span className="sim-icon-box-v322"><UiIconV322 name="target" size={20} /></span><small>NAJMOCNIEJSZY KIERUNEK</small></div>
               <strong>{quickSummaryV321.primaryLabel}</strong>
               <b>{quickSummaryV321.primaryProbability.toFixed(1)}%</b>
               <footer>
@@ -1804,7 +1867,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
               </footer>
             </article>
             {quickSummaryV321.goalCards.map((item, index) => <article key={item.key} className={index === 0 ? 'goal-best' : ''}>
-              <small>{index === 0 ? '⚽ NAJMOCNIEJSZY RYNEK BRAMKOWY' : 'RYNEK MODELU'}</small>
+              <div className="sim-card-kicker-v322"><span className="sim-icon-box-v322 subtle"><UiIconV322 name={index === 2 ? 'chart' : 'ball'} size={18} /></span><small>{index === 0 ? 'RYNEK BRAMKOWY' : 'RYNEK MODELU'}</small></div>
               <strong>{item.label}</strong>
               <b>{item.probability.toFixed(1)}%</b>
               <footer><span>{item.fairOdds > 1 ? `fair ${item.fairOdds.toFixed(2)}` : 'fair —'}</span></footer>
@@ -1812,24 +1875,31 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
           </div>
         </div>
 
-        <div className="sim-quick-meta-v321">
-          <article className="xg"><small>xG • OCZEKIWANE GOLE</small><b>{quickSummaryV321.homeXg.toFixed(2)} <i>—</i> {quickSummaryV321.awayXg.toFixed(2)}</b><span>{safeTextV158(match?.home, 'Home')} &nbsp; / &nbsp; {safeTextV158(match?.away, 'Away')}</span></article>
-          <article><small>WIARYGODNOŚĆ</small><b>{quickSummaryV321.reliability}/100</b><span>{quickSummaryV321.reliabilityLabel}</span></article>
-          <article><small>DATA QUALITY</small><b>{quickSummaryV321.dataQuality}%</b><span>{quickSummaryV321.dataQuality >= 80 ? 'WYSOKA' : quickSummaryV321.dataQuality >= 60 ? 'ŚREDNIA' : 'NISKA'}</span></article>
-          <article><small>KALIBRACJA</small><b>{quickSummaryV321.sampleSize}/30</b><span>{quickSummaryV321.sampleSize >= 30 ? 'PRÓG SPEŁNIONY' : 'ZBIERANIE PRÓB'}</span></article>
-          <article><small>NAJLEPSZE 1X2</small><b>{quickSummaryV321.best1x2.shortLabel}</b><span>{quickSummaryV321.best1x2.probability.toFixed(1)}%</span></article>
+        <div className="sim-quick-meta-v321 sim-quick-meta-v322">
+          <article className="xg"><span className="sim-meta-icon-v322"><UiIconV322 name="chart" size={18} /></span><div><small>xG • OCZEKIWANE GOLE</small><b>{quickSummaryV321.homeXg.toFixed(2)} <i>—</i> {quickSummaryV321.awayXg.toFixed(2)}</b><span>{safeTextV158(match?.home, 'Home')} / {safeTextV158(match?.away, 'Away')}</span></div></article>
+          <article><span className="sim-meta-icon-v322"><UiIconV322 name="shield" size={17} /></span><div><small>WIARYGODNOŚĆ</small><b>{quickSummaryV321.reliability}/100</b><span>{quickSummaryV321.reliabilityLabel}</span></div></article>
+          <article><span className="sim-meta-icon-v322"><UiIconV322 name="database" size={17} /></span><div><small>DATA QUALITY</small><b>{quickSummaryV321.dataQuality}%</b><span>{quickSummaryV321.dataQuality >= 80 ? 'WYSOKA' : quickSummaryV321.dataQuality >= 60 ? 'ŚREDNIA' : 'NISKA'}</span></div></article>
+          <article><span className="sim-meta-icon-v322"><UiIconV322 name="flask" size={17} /></span><div><small>KALIBRACJA</small><b>{quickSummaryV321.sampleSize}/30</b><span>{quickSummaryV321.sampleSize >= 30 ? 'PRÓG SPEŁNIONY' : 'ZBIERANIE PRÓB'}</span></div></article>
+          <article><span className="sim-meta-icon-v322"><UiIconV322 name="target" size={17} /></span><div><small>NAJLEPSZE 1X2</small><b>{quickSummaryV321.best1x2.shortLabel}</b><span>{quickSummaryV321.best1x2.probability.toFixed(1)}%</span></div></article>
         </div>
 
-        <div className="sim-quick-bottom-v321">
-          <div className="sim-quick-reasons-v321">
-            <small>NAJWAŻNIEJSZE POWODY</small>
+        <div className="sim-quick-bottom-v321 sim-quick-bottom-v322">
+          <div className="sim-quick-reasons-v321 sim-quick-reasons-v322">
+            <header><span className="sim-icon-box-v322 subtle"><UiIconV322 name="info" size={17} /></span><div><small>NAJWAŻNIEJSZE POWODY</small><strong>Co naprawdę wpływa na ocenę tego meczu</strong></div></header>
             <div>{quickSummaryV321.reasons.map((reason, index) => <p key={index}><i>{index + 1}</i><span>{reason}</span></p>)}</div>
           </div>
-          <div className="sim-quick-actions-v321">
-            <button type="button" className="primary" disabled={!eligibility.eligible} onClick={() => eligibility.eligible && onStart?.(match, preparedData)}>{eligibility.eligible ? `▶ ${copy.start}` : `✕ ${copy.rejectedButton}`}</button>
-            <button type="button" className="secondary" onClick={() => document.getElementById('sim-full-analysis-v321')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>↓ Pokaż pełną analizę</button>
-            <span>Symulacja korzysta z tej samej zamrożonej prognozy Bet+AI.</span>
+          <div className="sim-quick-actions-v321 sim-quick-actions-v322">
+            <div className="sim-action-status-v322"><span><UiIconV322 name="layers" size={15} /></span><div><small>PROFIL SYMULACJI</small><strong>Zamrożony model Bet+AI</strong></div></div>
+            <button type="button" className="primary" disabled={!eligibility.eligible} onClick={() => eligibility.eligible && onStart?.(match, preparedData)}><UiIconV322 name="play" size={18} /> {eligibility.eligible ? copy.start : copy.rejectedButton}</button>
+            <button type="button" className="secondary" onClick={() => document.getElementById('sim-full-analysis-v321')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Pokaż pełną analizę <span>↓</span></button>
+            <span>V322 zmienia tylko interfejs. Prediction Engine i decyzje pozostają bez zmian.</span>
           </div>
+        </div>
+
+        <div className="sim-quick-progress-v322">
+          <div><small>POSTĘP PRZYGOTOWANIA</small><strong>{summaryProgressV322}%</strong></div>
+          <span><i style={{ width: `${summaryProgressV322}%` }} /></span>
+          <em>{loading ? phases[phaseIndex] : data ? 'Analiza gotowa do symulacji' : 'Oczekiwanie na dane'}</em>
         </div>
       </section> : null}
 

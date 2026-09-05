@@ -1232,6 +1232,15 @@ exports.handler = async function(event) {
       sportKey: cfg.key,
       country: countryName || 'Świat',
       league: leagueName || cfg.sportName,
+      // V322 UI metadata: presentation-only fields from the same API-Football fixture payload.
+      // No extra request and no influence on Prediction Engine calculations.
+      leagueId: firstText(item?.league?.id, item?.competition?.id),
+      leagueLogo: firstText(item?.league?.logo, item?.competition?.logo),
+      leagueFlag: firstText(item?.league?.flag, item?.country?.flag),
+      season: item?.league?.season ?? item?.season ?? null,
+      round: firstText(item?.league?.round, item?.round),
+      venueName: firstText(item?.fixture?.venue?.name, item?.venue?.name),
+      venueCity: firstText(item?.fixture?.venue?.city, item?.venue?.city),
       home,
       away,
       date: parts.date,

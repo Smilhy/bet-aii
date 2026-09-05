@@ -1,0 +1,14 @@
+Bet+AI V322 — RAPORT TESTÓW
+
+TypeScript parser JSX: PASS — MatchSimulatorPreparationView.jsx 0 parse errors
+Node syntax: PASS — get-sports-events.js
+Regression V320: PASS
+Regression V300: PASS
+Regression V280: PASS
+Regression V260: PASS
+Regression V200: PASS
+Prediction Engine changes: NONE
+Additional API-Football requests: 0
+SQL required: NO
+
+Pełny npm/Vite build: NIE POTWIERDZONY w środowisku roboczym; npm install przekroczył limit czasu i nie pozostawił node_modules.
