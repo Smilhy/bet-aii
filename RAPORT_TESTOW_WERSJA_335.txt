@@ -1,0 +1,17 @@
+RAPORT TESTÓW — BET+AI V335
+
+[PASS] PL intro nadal korzysta z betai-symulator-loading-v1.png
+[PASS] EN intro korzysta z betai-symulator-loading-v1-en.png
+[PASS] animacja progress/scan/light pozostaje w MatchSimulatorIntroView
+[PASS] PL daily hero nadal korzysta z symulator-ai-hero-banner-v100.png
+[PASS] EN daily hero korzysta z symulator-ai-hero-banner-v100-en.png
+[PASS] angielska wersja nazw rynków 1X2 / Goals / BTTS
+[PASS] angielska warstwa obejmuje flow: matches -> prep -> match
+[PASS] tłumaczenie ograniczone do .match-simulator-flow-v87
+[PASS] brak zmian w Netlify Functions
+[PASS] brak zmian SQL / Supabase
+[PASS] brak dodatkowych requestów API-Football
+
+UWAGA TESTOWA
+Pełny npm/Vite build nie został oznaczony jako PASS — instalacja npm w środowisku testowym przekroczyła limit czasu.
+Zmiany są lokalne dla komponentów UI i assetów Symulacji AI.

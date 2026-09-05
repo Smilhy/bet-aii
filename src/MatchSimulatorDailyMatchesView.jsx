@@ -385,11 +385,24 @@ const SCANNER_LABELS = {
   over35: 'GOLE • OVER 3.5', under35: 'GOLE • UNDER 3.5', bttsYes: 'BTTS • TAK', bttsNo: 'BTTS • NIE'
 }
 
-function getScannerMarketMetaV330(item, match) {
+function getScannerMarketMetaV330(item, match, lang = 'pl') {
   const home = match?.home || 'Gospodarze'
   const away = match?.away || 'Goście'
   const key = String(item?.key || '')
-  const map = {
+  const en = lang === 'en'
+  const map = en ? {
+    home: { category: '1X2 MARKET', badge: '1X2 • 1', title: `${home} to win`, detail: 'Pick: home win' },
+    draw: { category: '1X2 MARKET', badge: '1X2 • X', title: 'Match draw', detail: 'Pick: match to finish level' },
+    away: { category: '1X2 MARKET', badge: '1X2 • 2', title: `${away} to win`, detail: 'Pick: away win' },
+    over15: { category: 'GOALS MARKET', badge: 'OVER 1.5', title: 'Over 1.5 goals', detail: 'Pick: at least 2 goals' },
+    under15: { category: 'GOALS MARKET', badge: 'UNDER 1.5', title: 'Under 1.5 goals', detail: 'Pick: maximum 1 goal' },
+    over25: { category: 'GOALS MARKET', badge: 'OVER 2.5', title: 'Over 2.5 goals', detail: 'Pick: at least 3 goals' },
+    under25: { category: 'GOALS MARKET', badge: 'UNDER 2.5', title: 'Under 2.5 goals', detail: 'Pick: maximum 2 goals' },
+    over35: { category: 'GOALS MARKET', badge: 'OVER 3.5', title: 'Over 3.5 goals', detail: 'Pick: at least 4 goals' },
+    under35: { category: 'GOALS MARKET', badge: 'UNDER 3.5', title: 'Under 3.5 goals', detail: 'Pick: maximum 3 goals' },
+    bttsYes: { category: 'BTTS MARKET', badge: 'BTTS • YES', title: 'Both teams to score', detail: 'Pick: both teams score' },
+    bttsNo: { category: 'BTTS MARKET', badge: 'BTTS • NO', title: 'Both teams not to score', detail: 'Pick: at least one team does not score' }
+  } : {
     home: { category: 'RYNEK 1X2', badge: '1X2 • 1', title: `Wygra ${home}`, detail: 'Typ: wygrana gospodarzy' },
     draw: { category: 'RYNEK 1X2', badge: '1X2 • X', title: 'Remis w meczu', detail: 'Typ: mecz zakończy się remisem' },
     away: { category: 'RYNEK 1X2', badge: '1X2 • 2', title: `Wygra ${away}`, detail: 'Typ: wygrana gości' },
@@ -402,7 +415,7 @@ function getScannerMarketMetaV330(item, match) {
     bttsYes: { category: 'RYNEK BTTS', badge: 'BTTS • TAK', title: 'Obie drużyny strzelą', detail: 'Typ: obie drużyny zdobędą gola' },
     bttsNo: { category: 'RYNEK BTTS', badge: 'BTTS • NIE', title: 'Nie obie strzelą', detail: 'Typ: przynajmniej jedna drużyna bez gola' }
   }
-  return map[key] || { category: 'RYNEK', badge: SCANNER_LABELS[key] || key || 'BRAK', title: SCANNER_LABELS[key] || 'Brak rynku', detail: 'Typ wskazany przez model' }
+  return map[key] || { category: en ? 'MARKET' : 'RYNEK', badge: SCANNER_LABELS[key] || key || (en ? 'N/A' : 'BRAK'), title: SCANNER_LABELS[key] || (en ? 'No market' : 'Brak rynku'), detail: en ? 'Pick selected by the model' : 'Typ wskazany przez model' }
 }
 
 
@@ -848,7 +861,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   return (
     <section className="sim-day-page-v98 sim-day-real-v99">
       <section className="sim-day-hero-v100" aria-label="Symulator AI hero">
-        <img src="/symulator-ai-hero-banner-v100.png" alt="Bet+AI Football Manager AI – realna symulacja meczu" />
+        <img src={lang === 'en' ? '/symulator-ai-hero-banner-v100-en.png' : '/symulator-ai-hero-banner-v100.png'} alt={lang === 'en' ? 'Bet+AI Football Manager AI — real match simulation' : 'Bet+AI Football Manager AI – realna symulacja meczu'} />
       </section>
 
       <div className="sim-day-layout-v98">
@@ -894,7 +907,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
               {scannerEntries.slice(0, 5).map(({ key, match: scanMatch, scan }, index) => {
                 const item = scan.topFinal
                 const rel = item.reliability || {}
-                const marketMeta = getScannerMarketMetaV330(item, scanMatch)
+                const marketMeta = getScannerMarketMetaV330(item, scanMatch, lang)
                 return <button type="button" key={`scan-${key}`} className={`sim-value-scanner-card-v139 sim-value-scanner-card-v330 ${String(item.decision || '').toLowerCase()}`} onClick={() => handleSelect(scanMatch)}>
                   <header><span>#{index + 1} • {scanMatch.league}</span><em>{scannerDecisionLabel(item.decision)}</em></header>
                   <strong>{scanMatch.home} <i>vs</i> {scanMatch.away}</strong>

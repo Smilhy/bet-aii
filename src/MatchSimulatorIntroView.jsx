@@ -80,7 +80,7 @@ export default function MatchSimulatorIntroView({ lang = 'pl', onComplete }) {
 
   return (
     <section className={`simulator-splash-v87 simulator-splash-large-v91 ${finishing ? 'is-finishing' : ''}`}>
-      <img className="simulator-splash-image-v87" src="/betai-symulator-loading-v1.png" alt="Bet+AI Football Manager" />
+      <img className="simulator-splash-image-v87" src={lang === 'en' ? '/betai-symulator-loading-v1-en.png' : '/betai-symulator-loading-v1.png'} alt="Bet+AI Football Manager" />
       <div className="simulator-splash-vignette-v87" aria-hidden="true" />
       <div className="simulator-splash-light-v87" aria-hidden="true" />
       <div className="simulator-splash-scan-v87" aria-hidden="true" />
