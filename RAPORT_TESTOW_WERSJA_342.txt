@@ -1,0 +1,5 @@
+V342 TEST
+PASS — usunięty drugi/trzeci zapis daty z ticket-match-bottom-v338.
+PASS — centralny kickoff zachowany: day/date + time.
+PASS — venue zachowane, gdy dostępne.
+PASS — brak zmian logiki aplikacji.
