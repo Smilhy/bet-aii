@@ -16416,7 +16416,20 @@ function getTipLeagueMetaV338(tip = {}) {
     [/ligue 2/, 'Francja', '🇫🇷', 62, 'fr'],
     [/mls|major league soccer/, 'USA', '🇺🇸', 253, 'us']
   ]
-  const hit = rules.find(([re]) => re.test(low))
+  let hit = rules.find(([re]) => re.test(low))
+  const countryLow = explicitCountry.toLowerCase()
+  let forceBranding = false
+
+  // V344: names such as "Serie A" exist in more than one country.
+  // Prefer the explicit country stored on the tip before the generic league-name fallback.
+  if (/brazylia|brazil/.test(countryLow)) {
+    if (/serie a/.test(low)) { hit = [/serie a/, 'Brazylia', '🇧🇷', 71, 'br']; forceBranding = true }
+    else if (/serie b/.test(low)) { hit = [/serie b/, 'Brazylia', '🇧🇷', 72, 'br']; forceBranding = true }
+  } else if (/włochy|wlochy|italy|italia/.test(countryLow)) {
+    if (/serie a/.test(low)) { hit = [/serie a/, 'Włochy', '🇮🇹', 135, 'it']; forceBranding = true }
+    else if (/serie b/.test(low)) { hit = [/serie b/, 'Włochy', '🇮🇹', 136, 'it']; forceBranding = true }
+  }
+
   const country = explicitCountry || hit?.[1] || ''
   const flag = hit?.[2] || '🌐'
   const leagueId = Number(hit?.[3] || 0)
@@ -16424,7 +16437,7 @@ function getTipLeagueMetaV338(tip = {}) {
   const logoUrl = leagueId ? `https://media.api-sports.io/football/leagues/${leagueId}.png` : ''
   const flagUrl = flagCode ? `https://media.api-sports.io/flags/${flagCode}.svg` : ''
   const acronym = league.split(/\s+/).filter(Boolean).map(word => word[0]).join('').slice(0, 3).toUpperCase() || 'L'
-  return { league, country, flag, acronym, logoUrl, flagUrl }
+  return { league, country, flag, acronym, logoUrl, flagUrl, forceBranding }
 }
 
 function getTipKickoffUiV338(tip = {}, nowMs = Date.now(), lang = 'pl') {
@@ -16794,9 +16807,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         ) : (
           <div className="ticket-match-pro-v338">
             <div className="ticket-match-league-v338">
-              <span className={`ticket-match-league-logo-v338 ${(tip.league_logo || dashboardLeagueMetaV338.logoUrl) ? 'has-logo' : ''}`}>
-                {(tip.league_logo || dashboardLeagueMetaV338.logoUrl)
-                  ? <img src={tip.league_logo || dashboardLeagueMetaV338.logoUrl} alt={`${dashboardLeagueMetaV338.league} logo`} />
+              <span className={`ticket-match-league-logo-v338 ${(dashboardLeagueMetaV338.forceBranding ? dashboardLeagueMetaV338.logoUrl : (tip.league_logo || dashboardLeagueMetaV338.logoUrl)) ? 'has-logo' : ''}`}>
+                {(dashboardLeagueMetaV338.forceBranding ? dashboardLeagueMetaV338.logoUrl : (tip.league_logo || dashboardLeagueMetaV338.logoUrl))
+                  ? <img src={dashboardLeagueMetaV338.forceBranding ? dashboardLeagueMetaV338.logoUrl : (tip.league_logo || dashboardLeagueMetaV338.logoUrl)} alt={`${dashboardLeagueMetaV338.league} logo`} />
                   : <b>{dashboardLeagueMetaV338.acronym}</b>}
               </span>
               <span className="ticket-match-league-copy-v338">
