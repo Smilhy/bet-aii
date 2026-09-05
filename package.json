@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-338-dashboard-tip-card-2in1-ultra-pro",
-  "version": "338.0.0",
+  "name": "betai-wersja-339-dashboard-tip-card-pixel-premium",
+  "version": "339.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",

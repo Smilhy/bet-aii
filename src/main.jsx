@@ -16414,6 +16414,41 @@ function getTipLeagueMetaV338(tip = {}) {
   return { league, country, flag, acronym }
 }
 
+function getTipLeagueDescriptionV339(league = '', lang = 'pl') {
+  const low = String(league || '').toLowerCase()
+  const en = lang === 'en'
+  const rules = [
+    [/premier league/, en ? 'Top division in England' : 'Najwyższa liga w Anglii'],
+    [/championship/, en ? 'Second tier in England' : 'Drugi poziom rozgrywkowy w Anglii'],
+    [/bundesliga/, en ? 'Top division in Germany' : 'Najwyższa liga w Niemczech'],
+    [/serie a/, en ? 'Top division in Italy' : 'Najwyższa liga we Włoszech'],
+    [/serie b/, en ? 'Second tier in Italy' : 'Druga liga we Włoszech'],
+    [/la liga|laliga/, en ? 'Top division in Spain' : 'Najwyższa liga w Hiszpanii'],
+    [/segunda/, en ? 'Second tier in Spain' : 'Druga liga w Hiszpanii'],
+    [/ligue 1/, en ? 'Top division in France' : 'Najwyższa liga we Francji'],
+    [/ligue 2/, en ? 'Second tier in France' : 'Druga liga we Francji'],
+    [/eredivisie/, en ? 'Top division in the Netherlands' : 'Najwyższa liga w Holandii'],
+    [/ekstraklasa/, en ? 'Top division in Poland' : 'Najwyższa liga piłkarska w Polsce'],
+    [/(^|\s)(i liga|1 liga)(\s|$)/, en ? 'Second tier in Poland' : 'Drugi poziom rozgrywkowy w Polsce'],
+    [/primeira liga|liga portugal/, en ? 'Top division in Portugal' : 'Najwyższa liga w Portugalii'],
+    [/champions league/, en ? 'UEFA Champions League' : 'Liga Mistrzów UEFA'],
+    [/europa league/, en ? 'UEFA Europa League' : 'Liga Europy UEFA'],
+    [/conference league/, en ? 'UEFA Conference League' : 'Liga Konferencji UEFA'],
+    [/mls|major league soccer/, en ? 'Major League Soccer' : 'Major League Soccer']
+  ]
+  return rules.find(([re]) => re.test(low))?.[1] || (en ? 'Football competition' : 'Rozgrywki piłkarskie')
+}
+
+function getTipSeasonLabelV339(tip = {}, lang = 'pl') {
+  const season = String(tip?.season || tip?.league_season || '').trim()
+  const round = String(tip?.league_round || tip?.round || '').trim()
+  const cleanRound = round.replace(/regular season\s*-?\s*/i, '').trim()
+  if (season && cleanRound) return lang === 'en' ? `Season ${season} • Round ${cleanRound}` : `Sezon ${season} • Kolejka ${cleanRound}`
+  if (season) return lang === 'en' ? `Season ${season}` : `Sezon ${season}`
+  if (round) return round
+  return lang === 'en' ? 'Current season' : 'Bieżący sezon'
+}
+
 function getTipKickoffUiV338(tip = {}, nowMs = Date.now(), lang = 'pl') {
   const ts = getTipKickoffTimestamp(tip)
   if (!Number.isFinite(ts)) return { day: lang === 'en' ? 'Match' : 'Mecz', time: '—', date: '', countdown: '' }
@@ -16569,6 +16604,8 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardMatchLabel = formatBetaiTipCardWallTimeV1719(tip)
   const dashboardLeagueMetaV338 = getTipLeagueMetaV338(tip)
   const dashboardKickoffV338 = getTipKickoffUiV338(tip, nowMs, lang)
+  const dashboardLeagueDescriptionV339 = getTipLeagueDescriptionV339(dashboardLeagueMetaV338.league, lang)
+  const dashboardSeasonLabelV339 = getTipSeasonLabelV339(tip, lang)
   const dashboardVenueV338 = [tip.venue_name, tip.venue_city].filter(Boolean).join(' | ')
   const cardStatusLabel = startedReadOnly ? 'Rozpoczęty' : (tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący')
   const kickoffFlameStateV79 = cardStatusLabel === 'Oczekujący'
@@ -16699,7 +16736,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   }
 
   return (
-    <article className={`profile-ticket-v6 dashboard-ticket-v6 ${isPremium ? 'premium' : 'free'} ${effectiveIsLocked ? 'locked' : 'unlocked'} ${isAkoCard ? 'ako' : 'single'} ${startedReadOnly ? 'started-read-only-v1833' : ''}`}>
+    <article className={`profile-ticket-v6 dashboard-ticket-v6 dashboard-ticket-v339 ${isPremium ? 'premium' : 'free'} ${effectiveIsLocked ? 'locked' : 'unlocked'} ${isAkoCard ? 'ako' : 'single'} ${startedReadOnly ? 'started-read-only-v1833' : ''}`}>
       <div className="profile-ticket-v6-left">
         <span className={`profile-ticket-v6-avatar ${authorAvatarUrl ? 'has-avatar' : ''}`} style={authorAvatarUrl ? { '--avatar-image': `url("${authorAvatarUrl}")` } : undefined}>
           {authorAvatarUrl ? '' : cardAuthor.slice(0, 2).toUpperCase()}
@@ -16780,14 +16817,16 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           </>
         ) : (
           <div className="ticket-match-pro-v338">
-            <div className="ticket-match-league-v338">
-              <span className={`ticket-match-league-logo-v338 ${tip.league_logo ? 'has-logo' : ''}`}>
+            <div className="ticket-match-league-v338 ticket-match-league-v339">
+              <span className={`ticket-match-league-logo-v338 ticket-match-league-logo-v339 ${tip.league_logo ? 'has-logo' : ''}`}>
                 {tip.league_logo ? <img src={tip.league_logo} alt="" /> : <b>{dashboardLeagueMetaV338.acronym}</b>}
               </span>
-              <span className="ticket-match-league-copy-v338">
+              <span className="ticket-match-league-copy-v338 ticket-match-league-copy-v339">
                 <strong>{t(dashboardLeagueMetaV338.league)}{dashboardLeagueMetaV338.country ? <em> • {t(dashboardLeagueMetaV338.country)}</em> : null}</strong>
-                <small><i>{dashboardLeagueMetaV338.flag}</i>{t('Piłka nożna')}{tip.league_round ? ` • ${t(tip.league_round)}` : ''}</small>
+                <span className="ticket-match-league-desc-v339">{dashboardLeagueDescriptionV339}</span>
+                <small><i>{dashboardLeagueMetaV338.flag}</i>{dashboardSeasonLabelV339}</small>
               </span>
+              {dashboardKickoffV338.countdown ? <span className="ticket-match-nearest-v339">⚡ {lang === 'en' ? 'NEXT MATCH' : 'NAJBLIŻSZY MECZ'}</span> : null}
             </div>
 
             <div className="ticket-match-teams-v338">
@@ -16808,9 +16847,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
               </div>
             </div>
 
-            <div className="ticket-match-bottom-v338">
+            <div className="ticket-match-bottom-v338 ticket-match-bottom-v339">
               {dashboardVenueV338 ? <span>◉ {dashboardVenueV338}</span> : <span>⚽ {t(cardMatchLabel)}</span>}
-              {!dashboardVenueV338 && dashboardKickoffV338.date ? <em>{dashboardKickoffV338.date}</em> : null}
+              {dashboardKickoffV338.date ? <em>{dashboardKickoffV338.date}</em> : null}
             </div>
           </div>
         )}
