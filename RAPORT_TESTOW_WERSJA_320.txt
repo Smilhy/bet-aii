@@ -1,0 +1,20 @@
+BET+AI V320 — RAPORT TESTÓW
+
+1. matchEngineV320.js — node --check: PASS
+2. save-match-simulation-v320.js — node --check: PASS
+3. MatchSimulatorView.jsx — TypeScript JSX transpile diagnostics: 0 errors
+4. RealisticMatchCanvasV320.jsx — TypeScript JSX transpile diagnostics: 0 errors
+5. LiveAICoachV320.jsx — TypeScript JSX transpile diagnostics: 0 errors
+6. TEST_WERSJA_320_REALISTIC_MATCH_ENGINE.mjs: TEST_V320_OK
+7. Seed replay: ten sam seed = ten sam scenariusz: PASS
+8. New Scenario: kolejny ordinal = inny seed: PASS
+9. Continuous movement: >250 action segments / match: PASS
+10. xG drift guard: PASS
+11. LIVE AI Coach probabilities finite + TOP3: PASS
+12. Batch calibration test 160 scenarios dla profilu 54/26/20: ok. 53.8/26.3/20.0 w aktualnym teście.
+13. Regression: V300 PASS
+14. Regression: V280 PASS
+15. Regression: V260 PASS
+16. Regression: V200 PASS
+
+Pełnego npm/Vite build nie uruchomiono, ponieważ paczka źródłowa V300 nie zawiera node_modules. Zmienione JSX zostały sprawdzone parserem TypeScript; nowy backend przez node --check.

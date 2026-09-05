@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-300-production-platform-2-all-in",
-  "version": "300.0.0",
+  "name": "betai-wersja-320-realistic-match-engine-live-ai-coach-all-in",
+  "version": "320.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
@@ -18,7 +18,8 @@
     "test:ops-v211": "node TEST_WERSJA_211_PRODUCTION_OPS_REPLAY.cjs",
     "test:v260": "node TEST_WERSJA_260_MATCH_CONTEXT_MARKET_MEMORY.cjs",
     "test:v280": "node TEST_WERSJA_280_LIVE_PREMATCH_ALERTS.cjs",
-    "test:v300": "node TEST_WERSJA_300_PRODUCTION_PLATFORM_2.cjs"
+    "test:v300": "node TEST_WERSJA_300_PRODUCTION_PLATFORM_2.cjs",
+    "test:v320": "node TEST_WERSJA_320_REALISTIC_MATCH_ENGINE.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.3",

@@ -1,4 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import RealisticMatchCanvasV320 from './RealisticMatchCanvasV320'
+import LiveAICoachV320 from './LiveAICoachV320'
+import { buildRealisticMatchV320, collectLiveStatsV320 } from './matchEngineV320'
 
 const MATCH_TOTAL_SECONDS = 90 * 60
 const HALF_SECONDS = 45 * 60
@@ -1589,6 +1592,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
   const [speed, setSpeed] = useState(1)
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [soundVolume, setSoundVolume] = useState(.62)
+  const [simulationOrdinal, setSimulationOrdinal] = useState(0)
   const [audioUnlocked, setAudioUnlocked] = useState(false)
   const autoLoaded = useRef(false)
   const autoStarted = useRef(false)
@@ -1599,20 +1603,24 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
   const startCuePlayedRef = useRef(false)
   const halftimeCuePlayedRef = useRef(false)
   const fulltimeCuePlayedRef = useRef(false)
+  const savedV320RunsRef = useRef(new Set())
 
   const model = useMemo(() => data ? buildSimulationModel(data) : null, [data])
-  const timeline = useMemo(() => data && model ? buildTimeline(data, model) : [], [data, model])
+  // V320: boisko jest wykonawcą istniejącego Prediction Engine. Nie tworzy osobnej prognozy.
+  const engineV320 = useMemo(() => data && model ? buildRealisticMatchV320(data, model, simulationOrdinal) : null, [data, model, simulationOrdinal])
+  const timeline = useMemo(() => engineV320?.events || [], [engineV320])
+  const liveStatsV320 = useMemo(() => engineV320 ? collectLiveStatsV320(engineV320, clockSec) : null, [engineV320, Math.floor(clockSec)])
   const visibleEvents = useMemo(() => timeline.filter(event => event.second <= clockSec).slice(-8).reverse(), [timeline, clockSec])
   const currentScore = useMemo(() => ({
     home: timeline.filter(event => event.type === 'goal' && event.team === 'home' && event.second <= clockSec).length,
     away: timeline.filter(event => event.type === 'goal' && event.team === 'away' && event.second <= clockSec).length
   }), [timeline, clockSec])
   const liveCounters = useMemo(() => ({
-    homeShots: timeline.filter(event => ['shot', 'goal'].includes(event.type) && event.team === 'home' && event.second <= clockSec).length,
-    awayShots: timeline.filter(event => ['shot', 'goal'].includes(event.type) && event.team === 'away' && event.second <= clockSec).length,
-    homeCorners: timeline.filter(event => event.type === 'corner' && event.team === 'home' && event.second <= clockSec).length,
-    awayCorners: timeline.filter(event => event.type === 'corner' && event.team === 'away' && event.second <= clockSec).length
-  }), [timeline, clockSec])
+    homeShots: liveStatsV320?.home?.shots || 0,
+    awayShots: liveStatsV320?.away?.shots || 0,
+    homeCorners: liveStatsV320?.home?.corners || 0,
+    awayCorners: liveStatsV320?.away?.corners || 0
+  }), [liveStatsV320])
 
   useEffect(() => {
     if (!running) {
@@ -1778,6 +1786,33 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
     realAudioBankRef.current = null
   }, [])
 
+  // V320: best-effort audit of completed seeded simulations. Failure never blocks the match UI.
+  useEffect(() => {
+    if (!engineV320 || clockSec < MATCH_TOTAL_SECONDS) return
+    const key = `${engineV320.fixtureId}:${engineV320.seed}`
+    if (savedV320RunsRef.current.has(key)) return
+    savedV320RunsRef.current.add(key)
+    const finalStats = collectLiveStatsV320(engineV320, MATCH_TOTAL_SECONDS)
+    fetch('/.netlify/functions/save-match-simulation-v320', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fixtureId: engineV320.fixtureId,
+        seed: engineV320.seed,
+        simulationOrdinal,
+        engineVersion: engineV320.version,
+        predictionVersion: engineV320.sourcePredictionVersion,
+        activeModel: engineV320.sourceActiveModel,
+        homeTeam: data?.fixture?.home?.name || '',
+        awayTeam: data?.fixture?.away?.name || '',
+        league: data?.fixture?.league || '',
+        preMatch: engineV320.preMatch,
+        finalScore: engineV320.finalScore,
+        finalStats
+      })
+    }).catch(() => {})
+  }, [clockSec >= MATCH_TOTAL_SECONDS, engineV320, simulationOrdinal, data?.fixture])
+
   const liveCards = useMemo(() => ({
     home: timeline.filter(event => ['card','redCard'].includes(event.type) && event.team === 'home' && event.second <= clockSec).length,
     away: timeline.filter(event => ['card','redCard'].includes(event.type) && event.team === 'away' && event.second <= clockSec).length
@@ -1802,14 +1837,23 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
   }, [timeline, clockSec])
   const elapsedRatio = clamp(clockSec / MATCH_TOTAL_SECONDS, 0, 1)
   const xgLive = {
-    home: Math.round(model?.xg?.home * elapsedRatio * 100) / 100 || 0,
-    away: Math.round(model?.xg?.away * elapsedRatio * 100) / 100 || 0
+    home: Math.round((liveStatsV320?.home?.xg || 0) * 100) / 100,
+    away: Math.round((liveStatsV320?.away?.xg || 0) * 100) / 100
   }
   const shotsOnTarget = {
-    home: Math.min(liveCounters.homeShots, currentScore.home + Math.floor(liveCounters.homeShots * 0.38)),
-    away: Math.min(liveCounters.awayShots, currentScore.away + Math.floor(liveCounters.awayShots * 0.38))
+    home: liveStatsV320?.home?.onTarget || 0,
+    away: liveStatsV320?.away?.onTarget || 0
   }
-  const displayKeyStats = useMemo(() => buildDisplayKeyStats({ data, model, clockSec, liveCounters, shotsOnTarget }), [data, model, clockSec, liveCounters, shotsOnTarget])
+  const displayKeyStatsBase = useMemo(() => buildDisplayKeyStats({ data, model, clockSec, liveCounters, shotsOnTarget }), [data, model, clockSec, liveCounters, shotsOnTarget])
+  const displayKeyStats = useMemo(() => ({
+    ...displayKeyStatsBase,
+    passes: { home: liveStatsV320?.home?.passes || 0, away: liveStatsV320?.away?.passes || 0 },
+    accuracy: {
+      home: liveStatsV320?.home?.passes ? Math.round((liveStatsV320.home.completedPasses || 0) / liveStatsV320.home.passes * 100) : 0,
+      away: liveStatsV320?.away?.passes ? Math.round((liveStatsV320.away.completedPasses || 0) / liveStatsV320.away.passes * 100) : 0
+    },
+    offsides: { home: liveStatsV320?.home?.offsides || 0, away: liveStatsV320?.away?.offsides || 0 }
+  }), [displayKeyStatsBase, liveStatsV320])
   const latestEvent = visibleEvents[0]
   const homeLineupReady = (data?.lineups?.home?.startXI?.length || 0) >= 11
   const awayLineupReady = (data?.lineups?.away?.startXI?.length || 0) >= 11
@@ -1823,7 +1867,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
       {data && model ? <>
         <header className="fm119-scorebar">
           <div className="fm119-score-meta">
-            <div><span>BET+AI SIMULATOR</span><em className={running ? 'live' : ''}>{running ? 'LIVE' : clockSec >= MATCH_TOTAL_SECONDS ? 'FT' : 'PAUZA'}</em>{data?.externalConsensus?.consensus?.available ? <em className="multi-source-v128">MULTI-SOURCE {data.externalConsensus.consensus.sourceCount}</em> : null}<em className="fm146-engine-badge">EVENT ENGINE 2.0</em></div>
+            <div><span>BET+AI SIMULATOR</span><em className={running ? 'live' : ''}>{running ? 'LIVE' : clockSec >= MATCH_TOTAL_SECONDS ? 'FT' : 'PAUZA'}</em>{data?.externalConsensus?.consensus?.available ? <em className="multi-source-v128">MULTI-SOURCE {data.externalConsensus.consensus.sourceCount}</em> : null}<em className="fm146-engine-badge">REALISTIC ENGINE V320</em></div>
             <small>{safeDisplayText(data.fixture?.league, 'Liga')} • {safeDisplayText(data.fixture?.round, 'Mecz')}</small>
           </div>
           <div className="fm119-score-team home">
@@ -1846,7 +1890,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
             <h3>STATYSTYKI MECZU</h3>
             <StatCompare label="Strzały" home={liveCounters.homeShots} away={liveCounters.awayShots} />
             <StatCompare label="Strzały celne" home={shotsOnTarget.home} away={shotsOnTarget.away} />
-            <StatCompare label="Posiadanie piłki" home={model.possession.home} away={model.possession.away} suffix="%" max={100} />
+            <StatCompare label="Posiadanie piłki" home={liveStatsV320?.possession?.home ?? model.possession.home} away={liveStatsV320?.possession?.away ?? model.possession.away} suffix="%" max={100} />
             <StatCompare label="Rzuty rożne" home={liveCounters.homeCorners} away={liveCounters.awayCorners} />
             <StatCompare label="Kartki" home={liveCards.home} away={liveCards.away} />
             <div className="fm121-card-footer">Pełne statystyki</div>
@@ -1898,10 +1942,25 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
                 <select value={speed} onChange={event => { tickRef.current = null; setSpeed(Number(event.target.value)) }}>
                   <option value={1}>x1</option><option value={2}>x2</option><option value={4}>x4</option><option value={8}>x8</option>
                 </select>
-                <button onClick={() => { setRunning(false); setClockSec(0); tickRef.current = null; autoStarted.current = true }}>↺</button>
+                <button title="Powtórz ten sam seed" onClick={() => { setRunning(false); setClockSec(0); tickRef.current = null; autoStarted.current = true }}>↺</button>
+                <button className="v320-new-sim" title="Nowy scenariusz z tego samego profilu Bet+AI" onClick={() => { setRunning(false); setClockSec(0); tickRef.current = null; autoStarted.current = true; setSimulationOrdinal(value => value + 1) }}>NOWY SCENARIUSZ</button>
               </div>
             </div>
-            <MatchPitch data={data} model={model} clockSec={clockSec} timeline={timeline} />
+            <RealisticMatchCanvasV320
+              engine={engineV320}
+              clockSec={clockSec}
+              running={running}
+              speed={speed}
+              lineups={data?.lineups || {}}
+              homeName={safeDisplayText(data.fixture?.home?.name, 'Gospodarze')}
+              awayName={safeDisplayText(data.fixture?.away?.name, 'Goście')}
+            />
+            <LiveAICoachV320
+              engine={engineV320}
+              clockSec={clockSec}
+              homeName={safeDisplayText(data.fixture?.home?.name, 'Gospodarze')}
+              awayName={safeDisplayText(data.fixture?.away?.name, 'Goście')}
+            />
             <div className="fm119-pitch-legend"><span className="home">● {safeDisplayText(data.fixture?.home?.name, 'Gospodarze')}</span><span className="away">● {safeDisplayText(data.fixture?.away?.name, 'Goście')}</span></div>
           </main>
 
@@ -1942,17 +2001,17 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
         </section>
 
         {clockSec >= MATCH_TOTAL_SECONDS ? <section className="fm146-fulltime-report">
-          <header><div><small>EVENT ENGINE 2.0 • FULL TIME REPORT</small><strong>Raport końcowy symulacji</strong></div><span>90:00 • MODEL PRE-MATCH</span></header>
+          <header><div><small>REALISTIC MATCH ENGINE V320 • FULL TIME REPORT</small><strong>Raport końcowy symulacji</strong></div><span>90:00 • MODEL PRE-MATCH</span></header>
           <div className="fm146-fulltime-score"><b>{safeDisplayText(data.fixture?.home?.name, 'Gospodarze')}</b><strong>{currentScore.home} : {currentScore.away}</strong><b>{safeDisplayText(data.fixture?.away?.name, 'Goście')}</b></div>
           <div className="fm146-fulltime-grid">
-            <article><small>xG MODEL</small><b>{model.xg.home.toFixed(2)} – {model.xg.away.toFixed(2)}</b></article>
+            <article><small>xG LIVE / MODEL</small><b>{xgLive.home.toFixed(2)} – {xgLive.away.toFixed(2)}</b><em>pre {model.xg.home.toFixed(2)} – {model.xg.away.toFixed(2)}</em></article>
             <article><small>STRZAŁY</small><b>{liveCounters.homeShots} – {liveCounters.awayShots}</b></article>
             <article><small>ROŻNE</small><b>{liveCounters.homeCorners} – {liveCounters.awayCorners}</b></article>
             <article><small>KARTKI</small><b>{liveCards.home} – {liveCards.away}</b><em>czerwone {liveRedCards.home}:{liveRedCards.away}</em></article>
             <article><small>ZMIANY</small><b>{liveSubs.home} – {liveSubs.away}</b></article>
             <article><small>MVP SYMULACJI</small><b>{simulatedMvp ? shortPlayerName(simulatedMvp) : '—'}</b></article>
           </div>
-          <footer>Ten przebieg jest jedną reprezentatywną symulacją wygenerowaną z zamrożonego profilu przedmeczowego. Prawdopodobieństwa i VALUE są liczone przed animacją, nie z jej wyniku.</footer>
+          <footer>V320 generuje posiadania, ruch, podania i sytuacje z zamrożonego profilu Bet+AI. LIVE AI Coach aktualizuje prawdopodobieństwa wyłącznie z przebiegu tej symulacji; bez kursu live nie potwierdza VALUE.</footer>
         </section> : null}
       </> : null}
     </section>
