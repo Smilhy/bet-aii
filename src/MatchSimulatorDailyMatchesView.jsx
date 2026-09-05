@@ -198,17 +198,31 @@ function normalizeLeagueV140(value = '') {
     .trim()
 }
 
+const TOP_SIMULATOR_LEAGUE_IDS_V324 = new Set([39, 40, 78, 94, 106, 107, 140, 141, 135, 136, 88, 61, 62, 2, 3, 848, 253])
+
+function isForbiddenSimulatorFixtureV324(row = {}) {
+  const haystack = normalizeLeagueV140([
+    row.league, row.leagueName, row.home, row.away, row.home_name, row.away_name
+  ].filter(Boolean).join(' '))
+  if (!haystack) return false
+  return /(^| )(u ?1[6-9]|u ?2[0-3]|under ?1[6-9]|under ?2[0-3]|youth|junior|juniors|reserve|reserves|women|womens|female|feminine|feminin|frauen|primavera)( |$)/.test(haystack)
+}
+
 function isTopSimulatorLeagueV140(row = {}) {
+  if (isForbiddenSimulatorFixtureV324(row)) return false
+
+  const numericLeagueId = Number(row.leagueId ?? row.league_id)
+  if (Number.isFinite(numericLeagueId) && numericLeagueId > 0) {
+    return TOP_SIMULATOR_LEAGUE_IDS_V324.has(numericLeagueId)
+  }
+
   const country = normalizeLeagueV140(row.country || row.leagueCountry || '')
   const league = normalizeLeagueV140(row.league || row.leagueName || '')
   if (!league) return false
   return TOP_SIMULATOR_LEAGUES_V140.some(item => {
     const wantedCountry = normalizeLeagueV140(item.country)
-    if (wantedCountry && country !== wantedCountry && !country.includes(wantedCountry)) return false
-    return item.leagues.some(name => {
-      const wantedLeague = normalizeLeagueV140(name)
-      return league === wantedLeague || league.includes(wantedLeague)
-    })
+    if (wantedCountry && country !== wantedCountry) return false
+    return item.leagues.some(name => league === normalizeLeagueV140(name))
   })
 }
 
@@ -463,7 +477,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     const seen = new Set()
     return (Array.isArray(payload?.fixtures) ? payload.fixtures : [])
       .filter(isRealApiFootballFixture)
-      // WERSJA 323: twardy wymóg — tylko 17 zatwierdzonych rozgrywek.
+      // WERSJA 324: twardy wymóg — tylko 17 zatwierdzonych SENIORSKICH rozgrywek.
       // Wszystkie pozostałe ligi są odrzucane przed kosztowną analizą formy/statystyk.
       .filter(isTopSimulatorLeagueV140)
       .filter(row => isPreMatchFixture(row, requestNowMs))

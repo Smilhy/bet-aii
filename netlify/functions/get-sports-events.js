@@ -214,17 +214,36 @@ exports.handler = async function(event) {
     { id: 253, country: 'USA', leagues: ['Major League Soccer', 'MLS'], seasonMode: 'calendar' },
   ]
 
+  // V324: ścisła whitelista. V323 używał `includes()`, przez co np.
+  // `U19 Bundesliga` przechodziła jako `Bundesliga`. Teraz najpierw ufamy
+  // dokładnemu ID API-Football, a bez ID wymagamy DOKŁADNEJ nazwy aliasu.
+  const TOP_SIMULATOR_LEAGUE_IDS_V324 = new Set(TOP_SIMULATOR_LEAGUES_V140.map(item => Number(item.id)))
+
+  const isForbiddenSimulatorFixtureV324 = (fixture = {}) => {
+    const haystack = normalizeLoose([
+      fixture?.league, fixture?.leagueName, fixture?.home, fixture?.away,
+      fixture?.home_name, fixture?.away_name, fixture?.competition
+    ].filter(Boolean).join(' '))
+    if (!haystack) return false
+    return /(^| )(u ?1[6-9]|u ?2[0-3]|under ?1[6-9]|under ?2[0-3]|youth|junior|juniors|reserve|reserves|women|womens|female|feminine|feminin|frauen|primavera)( |$)/.test(haystack)
+  }
+
   const isTopSimulatorLeagueV140 = (fixture = {}) => {
+    if (isForbiddenSimulatorFixtureV324(fixture)) return false
+
+    const rawLeagueId = fixture?.leagueId ?? fixture?.league_id ?? fixture?.raw?.league?.id
+    const numericLeagueId = Number(rawLeagueId)
+    if (Number.isFinite(numericLeagueId) && numericLeagueId > 0) {
+      return TOP_SIMULATOR_LEAGUE_IDS_V324.has(numericLeagueId)
+    }
+
     const actualCountry = normalizeLoose(fixture?.country || '')
     const actualLeague = normalizeLoose(fixture?.league || '')
     if (!actualLeague) return false
     return TOP_SIMULATOR_LEAGUES_V140.some(item => {
       const wantedCountry = normalizeLoose(item.country)
-      if (wantedCountry && actualCountry !== wantedCountry && !actualCountry.includes(wantedCountry)) return false
-      return item.leagues.some(name => {
-        const wantedLeague = normalizeLoose(name)
-        return actualLeague === wantedLeague || actualLeague.includes(wantedLeague)
-      })
+      if (wantedCountry && actualCountry !== wantedCountry) return false
+      return item.leagues.some(name => actualLeague === normalizeLoose(name))
     })
   }
 
@@ -2180,7 +2199,7 @@ exports.handler = async function(event) {
       }
     } else {
       oddsMessage = topOnly
-        ? 'Symulator V323: pomijam globalny skan The Odds API i pobieram wyłącznie 17 zatwierdzonych rozgrywek z API-Football.'
+        ? 'Symulator V324: pomijam globalny skan The Odds API i pobieram wyłącznie 17 zatwierdzonych rozgrywek z API-Football.'
         : 'Brak ODDS_API_KEY — używam API-Sports do realnych wydarzeń.'
     }
 
@@ -2199,7 +2218,7 @@ exports.handler = async function(event) {
             source: 'supabase-fixture-cache-fallback',
             cacheHit: true,
             cacheHours: FIXTURE_CACHE_HOURS,
-            fixtures: cachedFallback.slice(0, MAX_FIXTURES_RETURN),
+            fixtures: applyTopSimulatorFilterV140(cachedFallback).slice(0, MAX_FIXTURES_RETURN),
             message: `API chwilowo niedostępne lub limit wyczerpany — pokazuję zapisane mecze z ostatnich ${FIXTURE_CACHE_HOURS} h.`
           })
         }

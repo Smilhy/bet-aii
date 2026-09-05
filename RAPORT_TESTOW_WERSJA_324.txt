@@ -1,0 +1,18 @@
+BET+AI V324 — TEST STRICT 17 COMPETITIONS
+
+PASS: Bundesliga senior (leagueId 78) -> ALLOW
+PASS: U19 Bundesliga -> BLOCK
+PASS: Borussia Dortmund U19 vs Rot-Weiss Essen U19 -> BLOCK
+PASS: U18 Premier Liga - North -> BLOCK
+PASS: Stoke City U18 vs Manchester City U18 -> BLOCK
+PASS: 2. Bundesliga -> BLOCK
+PASS: Championship (leagueId 40) -> ALLOW
+PASS: Serie B -> ALLOW
+PASS: Frauen-Bundesliga / Women -> BLOCK
+PASS: MLS (leagueId 253) -> ALLOW
+PASS: backend syntax get-sports-events.js
+PASS: backend syntax refresh-fixture-cache.js
+PASS: cache fallback is filtered through strict whitelist
+
+LOGIKA PREDYKCJI / V320: NIEZMIENIONA.
+SQL: BRAK.
