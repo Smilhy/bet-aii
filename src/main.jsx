@@ -6287,8 +6287,8 @@ function AnimatedDashboardHero() {
   }, [dashboardNewsSource])
 
   const staticHeroSlides = [
-    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-hero-football-manager-new.png', lang), alt: 'Bet+AI Football Manager — nowość, symulacja meczów i zaawansowana inteligencja piłkarska' },
-    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-hero-jest-moc.png', lang), alt: 'JEST MOC — Smilytv, statystyki, społeczność i sportowa pasja' },
+    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-hero-football-manager-new.png', lang), alt: lang === 'en' ? 'Bet+AI Football Manager — new AI match simulation and advanced football intelligence' : 'Bet+AI Football Manager — nowość, symulacja meczów i zaawansowana inteligencja piłkarska' },
+    { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-hero-jest-moc.png', lang), alt: lang === 'en' ? "WE'VE GOT IT — Smilytv, statistics, community and sports passion" : 'JEST MOC — Smilytv, statystyki, społeczność i sportowa pasja' },
     { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/you-vs-ai-hero.png', lang), alt: 'TY vs AI — przewiduj, kopiuj i rywalizuj z inteligencją Bet+AI' },
     { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-1.png', lang), alt: 'Bet+AI platforma — typy, analiza i społeczność' },
     { type: 'image', src: getLocalizedDashboardHeroSrc('/dashboard-hero-v551/slide-2.png', lang), alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },

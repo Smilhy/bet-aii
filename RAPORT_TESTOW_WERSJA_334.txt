@@ -1,0 +1,7 @@
+RAPORT TESTÓW V334
+1. PL hero images pozostają bez zmian — PASS
+2. EN Football Manager hero istnieje w /dashboard-hero-v551/en/ — PASS
+3. EN Smilytv hero istnieje w /dashboard-hero-v551/en/ — PASS
+4. Oba EN bannery mają 2048x472 — PASS
+5. getLocalizedDashboardHeroSrc dla lang=en kieruje do /dashboard-hero-v551/en/ — PASS
+6. Brak zmian w Prediction Engine / Symulacja AI / SQL — PASS
