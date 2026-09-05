@@ -14,7 +14,7 @@ exports.handler = async function(event) {
   const forceRefresh = String(qs.forceRefresh || '') === '1'
   const skipOdds = String(qs.skipOdds || '') === '1'
   const topOnly = String(qs.topOnly || qs.top_only || '') === '1'
-  const maxTopFixtures = Math.max(1, Math.min(120, Number(qs.maxTopFixtures || qs.max_top_fixtures || 60) || 60))
+  const maxTopFixtures = Math.max(1, Math.min(200, Number(qs.maxTopFixtures || qs.max_top_fixtures || 160) || 160))
   const allLeagues = String(qs.allLeagues || '') === '1' || String(league || '').toLowerCase().includes('wszystkie')
   const addDaysToPlainDate = (dateKey, addDays) => {
     const [year, month, day] = String(dateKey || '').split('-').map(Number)
@@ -190,23 +190,28 @@ exports.handler = async function(event) {
     .trim()
 
 
-  // WERSJA 140: twarda whitelista dla Symulatora AI. Endpoint nadal może
-  // obsługiwać pełną stronę (Dodaj typ, live scores itd.), ale gdy przychodzi
-  // topOnly=1 zwraca wyłącznie ligi, które chcemy kosztownie analizować.
+  // WERSJA 323: BEZWZGLĘDNA WHITELISTA SYMULATORA.
+  // topOnly=1 oznacza: pobieraj, pokazuj i analizuj TYLKO te 17 rozgrywek.
+  // Pozostałe ligi/kraje/puchary nie są kandydatami do Symulacji AI.
+  // ID są stałymi ID API-Football v3 używanymi do celowanych zapytań /fixtures.
   const TOP_SIMULATOR_LEAGUES_V140 = [
-    { country: 'England', leagues: ['Premier League', 'Championship'] },
-    { country: 'Spain', leagues: ['La Liga', 'Primera Division'] },
-    { country: 'Italy', leagues: ['Serie A'] },
-    { country: 'Germany', leagues: ['Bundesliga'] },
-    { country: 'France', leagues: ['Ligue 1'] },
-    { country: 'Netherlands', leagues: ['Eredivisie'] },
-    { country: 'Portugal', leagues: ['Primeira Liga', 'Liga Portugal'] },
-    { country: 'Belgium', leagues: ['Pro League', 'First Division A', 'Jupiler Pro League'] },
-    { country: 'Scotland', leagues: ['Premiership'] },
-    { country: 'Poland', leagues: ['Ekstraklasa'] },
-    { country: '', leagues: ['UEFA Champions League', 'Champions League'] },
-    { country: '', leagues: ['UEFA Europa League', 'Europa League'] },
-    { country: '', leagues: ['UEFA Conference League', 'Conference League'] },
+    { id: 39, country: 'England', leagues: ['Premier League'], seasonMode: 'europe' },
+    { id: 40, country: 'England', leagues: ['Championship'], seasonMode: 'europe' },
+    { id: 78, country: 'Germany', leagues: ['Bundesliga'], seasonMode: 'europe' },
+    { id: 94, country: 'Portugal', leagues: ['Primeira Liga', 'Liga Portugal'], seasonMode: 'europe' },
+    { id: 106, country: 'Poland', leagues: ['Ekstraklasa'], seasonMode: 'europe' },
+    { id: 107, country: 'Poland', leagues: ['I Liga', '1 Liga'], seasonMode: 'europe' },
+    { id: 140, country: 'Spain', leagues: ['La Liga', 'Primera Division'], seasonMode: 'europe' },
+    { id: 141, country: 'Spain', leagues: ['Segunda División', 'Segunda Division', 'LaLiga 2'], seasonMode: 'europe' },
+    { id: 135, country: 'Italy', leagues: ['Serie A'], seasonMode: 'europe' },
+    { id: 136, country: 'Italy', leagues: ['Serie B'], seasonMode: 'europe' },
+    { id: 88, country: 'Netherlands', leagues: ['Eredivisie'], seasonMode: 'europe' },
+    { id: 61, country: 'France', leagues: ['Ligue 1'], seasonMode: 'europe' },
+    { id: 62, country: 'France', leagues: ['Ligue 2'], seasonMode: 'europe' },
+    { id: 2, country: '', leagues: ['UEFA Champions League', 'Champions League'], seasonMode: 'europe' },
+    { id: 3, country: '', leagues: ['UEFA Europa League', 'Europa League'], seasonMode: 'europe' },
+    { id: 848, country: '', leagues: ['UEFA Conference League', 'UEFA Europa Conference League', 'Conference League'], seasonMode: 'europe' },
+    { id: 253, country: 'USA', leagues: ['Major League Soccer', 'MLS'], seasonMode: 'calendar' },
   ]
 
   const isTopSimulatorLeagueV140 = (fixture = {}) => {
@@ -469,15 +474,29 @@ exports.handler = async function(event) {
       nationalliga: 'national league',
       nationalleague: 'national league',
       laliga: 'la liga',
+      segundadivision: 'segunda division',
+      laliga2: 'segunda division',
       bundesliga: 'bundesliga',
       seriea: 'serie a',
+      serieb: 'serie b',
       ligue1: 'ligue 1',
+      ligue2: 'ligue 2',
       eredivisie: 'eredivisie',
       primeiraliga: 'primeira liga',
+      liga1: 'i liga',
+      iliga: 'i liga',
       mls: 'mls',
+      majorleaguesoccer: 'mls',
       ligamistrzow: 'liga mistrzow',
       championsleague: 'liga mistrzow',
       uefachampionsleague: 'liga mistrzow',
+      ligaeuropy: 'liga europy',
+      europaleague: 'liga europy',
+      uefaeuropaleague: 'liga europy',
+      ligakonferencji: 'liga konferencji',
+      conferenceleague: 'liga konferencji',
+      uefaconferenceleague: 'liga konferencji',
+      uefaeuropaconferenceleague: 'liga konferencji',
     }
     return aliases[clean.replace(/\s+/g, '')] || clean
   }
@@ -497,18 +516,24 @@ exports.handler = async function(event) {
   const apiFootballLeagueIds = {
     'anglia|premier league': 39,
     'anglia|championship': 40,
-    'anglia|league one': 41,
-    'anglia|league two': 42,
-    'anglia|national league': 43,
-    'hiszpania|la liga': 140,
     'niemcy|bundesliga': 78,
-    'wlochy|serie a': 135,
-    'francja|ligue 1': 61,
-    'holandia|eredivisie': 88,
     'portugalia|primeira liga': 94,
+    'polska|ekstraklasa': 106,
+    'polska|i liga': 107,
+    'hiszpania|la liga': 140,
+    'hiszpania|segunda division': 141,
+    'wlochy|serie a': 135,
+    'wlochy|serie b': 136,
+    'holandia|eredivisie': 88,
+    'francja|ligue 1': 61,
+    'francja|ligue 2': 62,
     'usa|mls': 253,
     'swiat|liga mistrzow': 2,
     'world|liga mistrzow': 2,
+    'swiat|liga europy': 3,
+    'world|liga europy': 3,
+    'swiat|liga konferencji': 848,
+    'world|liga konferencji': 848,
   }
 
   const getApiFootballSeasonForDate = (dateKey = '') => {
@@ -517,6 +542,17 @@ exports.handler = async function(event) {
     // Europejskie sezony piłkarskie zaczynają się latem. Maj 2026 = sezon 2025.
     return month >= 7 ? year : year - 1
   }
+
+
+  const getCalendarSeasonForDateV323 = (dateKey = '') => {
+    const [year] = String(dateKey || new Date().toISOString().slice(0, 10)).split('-').map(Number)
+    return year || new Date().getUTCFullYear()
+  }
+
+  const getSimulatorCompetitionSeasonV323 = (competition, dateKey = '') =>
+    competition?.seasonMode === 'calendar'
+      ? getCalendarSeasonForDateV323(dateKey)
+      : getApiFootballSeasonForDate(dateKey)
 
   const getApiFootballLeagueFilter = (dateKey = '') => {
     if (allLeagues) return null
@@ -1827,11 +1863,11 @@ exports.handler = async function(event) {
 
     if (mode === 'search' && query) {
       const searched = await searchApiFootballFixtures(apiKey, query)
-      if (searched.fixtures.length) {
-        // Wyszukiwarka działała poprawnie dla meczów, ale wcześniej zwracała je
-        // przed wzbogaceniem o realne kursy z /odds. Efekt: lista znajdowała np.
-        // Barcelona vs Real Madrid, ale nie miała 1/X/2 ani popularnych rynków.
-        const oddsEnriched = await enrichSearchFixturesWithApiFootballOdds(apiKey, configs[0], searched.fixtures)
+      const searchedFixtures = topOnly ? applyTopSimulatorFilterV140(searched.fixtures) : searched.fixtures
+      if (searchedFixtures.length) {
+        // WERSJA 323: nawet wyszukiwanie tekstowe w trybie Symulatora nie może
+        // przemycić meczu spoza zatwierdzonej whitelisty.
+        const oddsEnriched = await enrichSearchFixturesWithApiFootballOdds(apiKey, configs[0], searchedFixtures)
         const message = oddsEnriched.errors.length ? oddsEnriched.errors.join(' | ') : ''
         return { configs: configs.map(item => item.key), fixtures: oddsEnriched.fixtures, message }
       }
@@ -1854,7 +1890,35 @@ exports.handler = async function(event) {
       const leagueFilter = cfg.type === 'football' ? getApiFootballLeagueFilter(safeStart) : null
       let dayResponses = []
 
-      if (leagueFilter && mode !== 'search') {
+      if (topOnly && cfg.type === 'football' && mode !== 'search') {
+        // V323: Symulator NIE robi już globalnego skanu wszystkich rozgrywek.
+        // Każde zapytanie jest celowane wyłącznie w jedną z 17 zatwierdzonych lig/pucharów.
+        const targetEnd = addDaysToDateKey(safeStart, safeDays) || safeStart
+        dayResponses = await Promise.all(TOP_SIMULATOR_LEAGUES_V140.map(async (competition) => {
+          const params = {
+            league: String(competition.id),
+            season: String(getSimulatorCompetitionSeasonV323(competition, safeStart)),
+            timezone: APP_TIMEZONE,
+          }
+          if (mode === 'league-today' || mode === 'today' || mode === 'all-today' || safeDays === 0) {
+            params.date = safeStart
+          } else {
+            params.from = safeStart
+            params.to = targetEnd
+          }
+          try {
+            const shield = await matchShieldApiGet(cfg.path, params, { forceRefresh, ttlMs: 5 * 60 * 1000, attempts: 3 })
+            if (!shield.ok) {
+              errors.push(`${cfg.key}/sim-league-${competition.id}: ${shield.error || 'API error'}`)
+              return []
+            }
+            return Array.isArray(shield.data) ? shield.data : []
+          } catch (error) {
+            errors.push(`${cfg.key}/sim-league-${competition.id}: ${error.message}`)
+            return []
+          }
+        }))
+      } else if (leagueFilter && mode !== 'search') {
         // Dla konkretnej ligi pobieramy ją bezpośrednio jednym zapytaniem league+season+from+to.
         // To jest dokładniejsze niż globalne pobieranie dzień po dniu, zużywa mniej requestów
         // i gwarantuje, że Premier League nie zostanie zastąpiona np. MLS.
@@ -2071,7 +2135,7 @@ exports.handler = async function(event) {
     let oddsMessage = ''
     let oddsSportKeys = []
 
-    if (oddsKey) {
+    if (oddsKey && !topOnly) {
       if (allLeagues || requestedAllSports) {
         const wide = await fetchWideRealFixtures(oddsKey, daysAhead, date)
         oddsSportKeys = wide.sportKeys || []
@@ -2115,7 +2179,9 @@ exports.handler = async function(event) {
         oddsMessage = oddsMessage || 'The Odds API nie zwróciło kursów, przełączam na API-Sports.'
       }
     } else {
-      oddsMessage = 'Brak ODDS_API_KEY — używam API-Sports do realnych wydarzeń.'
+      oddsMessage = topOnly
+        ? 'Symulator V323: pomijam globalny skan The Odds API i pobieram wyłącznie 17 zatwierdzonych rozgrywek z API-Football.'
+        : 'Brak ODDS_API_KEY — używam API-Sports do realnych wydarzeń.'
     }
 
     const apiSports = await fetchApiSportsFixtures(apiSportsKey, daysAhead, date)

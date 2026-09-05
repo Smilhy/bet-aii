@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 const COPY = {
   pl: {
     title: 'Mecze dnia',
-    subtitle: 'Tylko topowe ligi + Polska Ekstraklasa z wystarczającymi realnymi danymi. Skład XI i kursy są opcjonalne.',
+    subtitle: 'Tylko 17 wybranych rozgrywek. Inne ligi są całkowicie pomijane przez Symulację AI. Skład XI i kursy są opcjonalne.',
     search: 'Wyszukaj mecz, ligę lub kraj',
     sport: 'Sport',
     football: 'Piłka nożna',
@@ -24,7 +24,7 @@ const COPY = {
   },
   en: {
     title: 'Matches of the day',
-    subtitle: 'Top leagues + Polish Ekstraklasa only, with sufficient real data. Lineups and odds are optional.',
+    subtitle: 'Only 17 approved competitions. Every other league is ignored by AI Simulation. Lineups and odds are optional.',
     search: 'Search match, league or country',
     sport: 'Sport',
     football: 'Football',
@@ -167,23 +167,26 @@ function isRealApiFootballFixture(row = {}) {
 }
 
 const TOP_SIMULATOR_LEAGUES_V140 = [
-  { country: 'England', leagues: ['Premier League', 'Championship'] },
-  { country: 'Spain', leagues: ['La Liga', 'Primera Division'] },
-  { country: 'Italy', leagues: ['Serie A'] },
+  { country: 'England', leagues: ['Premier League'] },
+  { country: 'England', leagues: ['Championship'] },
   { country: 'Germany', leagues: ['Bundesliga'] },
-  { country: 'France', leagues: ['Ligue 1'] },
-  { country: 'Netherlands', leagues: ['Eredivisie'] },
   { country: 'Portugal', leagues: ['Primeira Liga', 'Liga Portugal'] },
-  { country: 'Belgium', leagues: ['Pro League', 'First Division A', 'Jupiler Pro League'] },
-  { country: 'Scotland', leagues: ['Premiership'] },
-  // Polska liga ma zostać zawsze uwzględniona w trybie TOP.
   { country: 'Poland', leagues: ['Ekstraklasa'] },
+  { country: 'Poland', leagues: ['I Liga', '1 Liga'] },
+  { country: 'Spain', leagues: ['La Liga', 'Primera Division'] },
+  { country: 'Spain', leagues: ['Segunda División', 'Segunda Division', 'LaLiga 2'] },
+  { country: 'Italy', leagues: ['Serie A'] },
+  { country: 'Italy', leagues: ['Serie B'] },
+  { country: 'Netherlands', leagues: ['Eredivisie'] },
+  { country: 'France', leagues: ['Ligue 1'] },
+  { country: 'France', leagues: ['Ligue 2'] },
   { country: '', leagues: ['UEFA Champions League', 'Champions League'] },
   { country: '', leagues: ['UEFA Europa League', 'Europa League'] },
-  { country: '', leagues: ['UEFA Conference League', 'Conference League'] },
+  { country: '', leagues: ['UEFA Conference League', 'UEFA Europa Conference League', 'Conference League'] },
+  { country: 'USA', leagues: ['Major League Soccer', 'MLS'] },
 ]
 
-const MAX_TOP_SIMULATOR_MATCHES_V140 = 60
+const MAX_TOP_SIMULATOR_MATCHES_V140 = 160
 const MAX_VALUE_SCANNER_MATCHES_V140 = 24
 
 function normalizeLeagueV140(value = '') {
@@ -460,9 +463,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     const seen = new Set()
     return (Array.isArray(payload?.fixtures) ? payload.fixtures : [])
       .filter(isRealApiFootballFixture)
-      // WERSJA 140: Symulator AI nie skanuje już setek lig. Najpierw twarda
-      // whitelista topowych lig + Polska Ekstraklasa, dopiero potem kosztowne
-      // sprawdzanie formy/statystyk.
+      // WERSJA 323: twardy wymóg — tylko 17 zatwierdzonych rozgrywek.
+      // Wszystkie pozostałe ligi są odrzucane przed kosztowną analizą formy/statystyk.
       .filter(isTopSimulatorLeagueV140)
       .filter(row => isPreMatchFixture(row, requestNowMs))
       .filter(row => getDateKeyInTimeZone(getFixtureStartMs(row), clientTimeZone) === todayKey)
@@ -571,7 +573,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       setLoading(false)
       setQualifying(true)
       setQualificationProgress({ done: 0, total: realRows.length })
-      setSourceMessage(realRows.length ? `TOP LEAGUES • Ekstraklasa • sprawdzam jakość 0/${realRows.length}…` : 'Brak kolejnych meczów z topowych lig na dzisiaj.')
+      setSourceMessage(realRows.length ? `17 WYBRANYCH LIG • sprawdzam jakość 0/${realRows.length}…` : 'Brak kolejnych meczów z topowych lig na dzisiaj.')
 
       const approved = []
       // WERSJA 138: tylko 2 mecze jednocześnie. Każdy pre-check wymaga maks. 2
@@ -609,7 +611,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       } else if (budgetLimitHits) {
         setSourceMessage(`${approved.length} zakwalifikowanych • API Budget Guard zatrzymał świeże requesty Symulatora • pakiet zachowany dla reszty strony • cache ${cacheHits}`)
       } else {
-        setSourceMessage(`${approved.length} zakwalifikowanych • TOP LEAGUES + Ekstraklasa • API Budget Guard aktywny • cache ${cacheHits}`)
+        setSourceMessage(`${approved.length} zakwalifikowanych • TYLKO 17 WYBRANYCH ROZGRYWEK • API Budget Guard aktywny • cache ${cacheHits}`)
       }
       setQualifying(false)
       if (approved.length && !signal?.aborted) await scanQualifiedMatches([...approved], signal)

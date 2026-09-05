@@ -28,6 +28,9 @@ exports.handler = async function () {
   url.searchParams.set('daysAhead', String(daysAhead))
   url.searchParams.set('realOnly', '1')
   url.searchParams.set('allLeagues', '1')
+  // V323: cache dla Symulatora również tylko z zatwierdzonej whitelisty 17 rozgrywek.
+  url.searchParams.set('topOnly', '1')
+  url.searchParams.set('maxTopFixtures', '160')
   url.searchParams.set('mode', 'upcoming')
   url.searchParams.set('forceRefresh', '1')
 

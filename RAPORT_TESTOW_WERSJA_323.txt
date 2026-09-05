@@ -1,0 +1,31 @@
+BET+AI WERSJA 323 — TESTY WHITELISTY SYMULATORA
+
+PASS — backend Node syntax: get-sports-events.js
+PASS — backend Node syntax: refresh-fixture-cache.js
+PASS — dokładnie 17 zatwierdzonych competition IDs
+PASS — frontend i backend mają tę samą whitelistę
+PASS — Belgium/Scotland usunięte z whitelisty Symulatora
+PASS — topOnly=1 omija globalny wide scan The Odds API
+PASS — topOnly=1 pobiera API-Football tylko po 17 wskazanych league IDs
+PASS — daily fixture cache używa topOnly=1
+PASS — limit listy podniesiony do 160, aby nie ucinać wybranych lig w bogaty dzień
+PASS — Prediction Engine / V320 niezmienione
+
+Competition IDs:
+39 Premier League
+40 Championship
+78 Bundesliga
+94 Primeira Liga
+106 Ekstraklasa
+107 I Liga
+140 La Liga
+141 Segunda Division
+135 Serie A
+136 Serie B
+88 Eredivisie
+61 Ligue 1
+62 Ligue 2
+2 UEFA Champions League
+3 UEFA Europa League
+848 UEFA Conference League
+253 Major League Soccer
