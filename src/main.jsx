@@ -3974,7 +3974,11 @@ function normalizeTipRow(row = {}) {
     author_email: row.author_email || row.email || row.user_email || null,
     author_avatar_url: row.author_avatar_url || row.avatar_url || row.profile_avatar_url || null,
     league: row.league || 'Liga',
-    league_logo: row.league_logo || row.leagueLogo || row.fixture_json?.leagueLogo || null,
+    league_logo: row.league_logo || row.leagueLogo || row.fixture_json?.leagueLogo || row.fixture_json?.league?.logo || null,
+    country: row.country || row.league_country || row.country_name || row.fixture_json?.country || row.fixture_json?.league?.country || null,
+    venue_name: row.venue_name || row.stadium || row.stadium_name || row.fixture_json?.venueName || row.fixture_json?.venue?.name || null,
+    venue_city: row.venue_city || row.city || row.fixture_json?.venueCity || row.fixture_json?.venue?.city || null,
+    league_round: row.league_round || row.round || row.fixture_json?.round || null,
     team_home: knownSlaviaManualBugV53 ? 'SK Slavia Praha' : (repairedEmbeddedTeamsV53?.home || row.team_home || row.home_team || parsedMatchV53.home || 'Drużyna 1'),
     team_away: knownSlaviaManualBugV53 ? 'FK Pardubice' : (repairedEmbeddedTeamsV53?.away || row.team_away || row.away_team || parsedMatchV53.away || 'Drużyna 2'),
     home_team_id: row.home_team_id || row.homeTeamId || row.fixture_json?.homeTeamId || null,
@@ -16386,6 +16390,59 @@ function TipKickoffFlameV80({ state }) {
   )
 }
 
+// V338 — premium 2-in-1 match identity for Dashboard tip cards.
+function getTipLeagueMetaV338(tip = {}) {
+  const league = String(tip?.league || 'Liga').trim()
+  const explicitCountry = String(tip?.country || '').trim()
+  const low = league.toLowerCase()
+  const rules = [
+    [/premier league|championship/, 'Anglia', '🇬🇧'],
+    [/bundesliga/, 'Niemcy', '🇩🇪'],
+    [/serie a|serie b/, 'Włochy', '🇮🇹'],
+    [/la liga|laliga|segunda/, 'Hiszpania', '🇪🇸'],
+    [/ligue 1|ligue 2/, 'Francja', '🇫🇷'],
+    [/eredivisie/, 'Holandia', '🇳🇱'],
+    [/ekstraklasa|i liga|1 liga/, 'Polska', '🇵🇱'],
+    [/primeira liga|liga portugal/, 'Portugalia', '🇵🇹'],
+    [/champions league|europa league|conference league/, 'Europa', '🇪🇺'],
+    [/mls|major league soccer/, 'USA', '🇺🇸']
+  ]
+  const hit = rules.find(([re]) => re.test(low))
+  const country = explicitCountry || hit?.[1] || ''
+  const flag = hit?.[2] || '🌐'
+  const acronym = league.split(/\s+/).filter(Boolean).map(word => word[0]).join('').slice(0, 3).toUpperCase() || 'L'
+  return { league, country, flag, acronym }
+}
+
+function getTipKickoffUiV338(tip = {}, nowMs = Date.now(), lang = 'pl') {
+  const ts = getTipKickoffTimestamp(tip)
+  if (!Number.isFinite(ts)) return { day: lang === 'en' ? 'Match' : 'Mecz', time: '—', date: '', countdown: '' }
+  const locale = lang === 'en' ? 'en-GB' : 'pl-PL'
+  const zone = BETAI_WARSAW_TIMEZONE_V1716
+  const dateObj = new Date(ts)
+  const nowObj = new Date(Number(nowMs || Date.now()))
+  const ymd = (d) => {
+    try { return new Intl.DateTimeFormat('en-CA', { timeZone: zone, year:'numeric', month:'2-digit', day:'2-digit' }).format(d) } catch (_) { return d.toISOString().slice(0,10) }
+  }
+  let time = '—', date = ''
+  try {
+    time = new Intl.DateTimeFormat(locale, { timeZone: zone, hour:'2-digit', minute:'2-digit', hour12:false }).format(dateObj)
+    date = new Intl.DateTimeFormat(locale, { timeZone: zone, day:'2-digit', month:'2-digit', year:'numeric' }).format(dateObj)
+  } catch (_) {}
+  const sameDay = ymd(dateObj) === ymd(nowObj)
+  const day = sameDay ? (lang === 'en' ? 'Today' : 'Dzisiaj') : date
+  const diffMin = Math.ceil((ts - Number(nowMs || Date.now())) / 60000)
+  let countdown = ''
+  if (diffMin > 0 && diffMin <= 360) {
+    if (diffMin < 60) countdown = lang === 'en' ? `Starts in ${diffMin}m` : `Start za ${diffMin} min`
+    else {
+      const h = Math.floor(diffMin / 60), m = diffMin % 60
+      countdown = lang === 'en' ? `Starts in ${h}h ${m}m` : `Start za ${h}h ${m} min`
+    }
+  }
+  return { day, time, date, countdown }
+}
+
 function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast, allTips = [], startedReadOnly = false, nowMs = Date.now() }) {
   const lang = useBetaiLanguageState()
   const t = (value) => translateBetaiTextValue(value, lang)
@@ -16510,6 +16567,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardMarketLabelV1711 = isAkoCard ? 'AKO' : (rawMarketLabelV1711 || '')
   const cardAnalysis = cleanAkoAnalysisText(tip.analysis || tip.description || '')
   const cardMatchLabel = formatBetaiTipCardWallTimeV1719(tip)
+  const dashboardLeagueMetaV338 = getTipLeagueMetaV338(tip)
+  const dashboardKickoffV338 = getTipKickoffUiV338(tip, nowMs, lang)
+  const dashboardVenueV338 = [tip.venue_name, tip.venue_city].filter(Boolean).join(' | ')
   const cardStatusLabel = startedReadOnly ? 'Rozpoczęty' : (tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący')
   const kickoffFlameStateV79 = cardStatusLabel === 'Oczekujący'
     ? getKickoffFlameStateV79(tip, nowMs)
@@ -16684,9 +16744,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       </div>
 
       <div className="profile-ticket-v6-main">
-        <div className="profile-ticket-v6-sport-row"><span className="profile-ticket-v6-sport-badge"><span aria-hidden="true">⚽</span><strong>{t('Piłka nożna')}</strong></span><span className="profile-ticket-v6-league"><strong>{t(isAkoCard ? 'Kupon AKO' : tip.league)}</strong></span></div>
         {isAkoCard ? (
-          <div className="profile-ticket-v6-ako-main">
+          <>
+            <div className="profile-ticket-v6-sport-row"><span className="profile-ticket-v6-sport-badge"><span aria-hidden="true">⚽</span><strong>{t('Piłka nożna')}</strong></span><span className="profile-ticket-v6-league"><strong>{t('Kupon AKO')}</strong></span></div>
+            <div className="profile-ticket-v6-ako-main">
             <div className="profile-ticket-v6-ako-head">
               <span className="profile-ticket-v6-ako-icon">AKO</span>
               <div>
@@ -16716,15 +16777,42 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
               ) : null}
             </div>
           </div>
-        ) : (
-          <>
-            <div className="profile-ticket-v6-match">
-              <div><TipTeamLogo logo={tip.home_logo || tip.homeLogo} teamId={tip.home_team_id || tip.homeTeamId} name={cardHome} /><strong>{t(cardHome)}</strong></div>
-              <span>vs</span>
-              <div><TipTeamLogo logo={tip.away_logo || tip.awayLogo} teamId={tip.away_team_id || tip.awayTeamId} name={cardAway} /><strong>{t(cardAway)}</strong></div>
-            </div>
-            <small>{cardMatchLabel}</small>
           </>
+        ) : (
+          <div className="ticket-match-pro-v338">
+            <div className="ticket-match-league-v338">
+              <span className={`ticket-match-league-logo-v338 ${tip.league_logo ? 'has-logo' : ''}`}>
+                {tip.league_logo ? <img src={tip.league_logo} alt="" /> : <b>{dashboardLeagueMetaV338.acronym}</b>}
+              </span>
+              <span className="ticket-match-league-copy-v338">
+                <strong>{t(dashboardLeagueMetaV338.league)}{dashboardLeagueMetaV338.country ? <em> • {t(dashboardLeagueMetaV338.country)}</em> : null}</strong>
+                <small><i>{dashboardLeagueMetaV338.flag}</i>{t('Piłka nożna')}{tip.league_round ? ` • ${t(tip.league_round)}` : ''}</small>
+              </span>
+            </div>
+
+            <div className="ticket-match-teams-v338">
+              <div className="ticket-match-team-v338 home-v338">
+                <TipTeamLogo logo={tip.home_logo || tip.homeLogo} teamId={tip.home_team_id || tip.homeTeamId} name={cardHome} />
+                <strong>{t(cardHome)}</strong>
+                <small>{lang === 'en' ? 'HOME' : 'GOSPODARZE'}</small>
+              </div>
+              <div className="ticket-match-kickoff-v338">
+                <span>{dashboardKickoffV338.day}</span>
+                <b>{dashboardKickoffV338.time}</b>
+                {dashboardKickoffV338.countdown ? <em>{dashboardKickoffV338.countdown}</em> : null}
+              </div>
+              <div className="ticket-match-team-v338 away-v338">
+                <TipTeamLogo logo={tip.away_logo || tip.awayLogo} teamId={tip.away_team_id || tip.awayTeamId} name={cardAway} />
+                <strong>{t(cardAway)}</strong>
+                <small>{lang === 'en' ? 'AWAY' : 'GOŚCIE'}</small>
+              </div>
+            </div>
+
+            <div className="ticket-match-bottom-v338">
+              {dashboardVenueV338 ? <span>◉ {dashboardVenueV338}</span> : <span>⚽ {t(cardMatchLabel)}</span>}
+              {!dashboardVenueV338 && dashboardKickoffV338.date ? <em>{dashboardKickoffV338.date}</em> : null}
+            </div>
+          </div>
         )}
       </div>
 

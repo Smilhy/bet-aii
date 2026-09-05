@@ -1,0 +1,9 @@
+V338 TEST REPORT
+- Dashboard TipCard markup updated: PASS
+- League logo uses existing league_logo with fallback: PASS
+- Team logos remain real TipTeamLogo data: PASS
+- Kickoff UI uses existing timestamp logic: PASS
+- Venue is optional and safe: PASS
+- Existing pick/stake/odds/analysis/status logic untouched: PASS
+- CSS scoped mainly to dashboard-ticket-v6 / V338 classes: PASS
+- SQL changes: NONE
