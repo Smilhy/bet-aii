@@ -4,6 +4,9 @@ import MatchSimulatorView from './MatchSimulatorView'
 import MatchSimulatorDailyMatchesView from './MatchSimulatorDailyMatchesView'
 import MatchSimulatorPreparationView from './MatchSimulatorPreparationView'
 
+// V345: intro is intentionally disabled. Set to true to restore it.
+const SHOW_FM_AI_INTRO_V345 = false
+
 
 
 // V335 — presentation-only EN translator for the whole AI Simulation flow.
@@ -290,7 +293,7 @@ function translateSimulatorDomV335(root) {
 }
 
 export default function MatchSimulatorFlowView({ lang = 'pl' }) {
-  const [stage, setStage] = useState('intro')
+  const [stage, setStage] = useState(() => SHOW_FM_AI_INTRO_V345 ? 'intro' : 'matches')
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [preparedData, setPreparedData] = useState(null)
   const flowRef = useRef(null)
@@ -325,7 +328,7 @@ export default function MatchSimulatorFlowView({ lang = 'pl' }) {
 
   return (
     <div ref={flowRef} className={`match-simulator-flow-v87 is-${stage}`} data-simulator-lang={lang}>
-      {stage === 'intro' && <MatchSimulatorIntroView key={`intro-${lang}`} lang={lang} onComplete={openDailyMatches} />}
+      {SHOW_FM_AI_INTRO_V345 && stage === 'intro' && <MatchSimulatorIntroView key={`intro-${lang}`} lang={lang} onComplete={openDailyMatches} />}
       {stage === 'matches' && <MatchSimulatorDailyMatchesView key={`matches-${lang}`} lang={lang} onSelectMatch={openPreparation} />}
       {stage === 'prep' && <MatchSimulatorPreparationView key={`prep-${lang}`} lang={lang} match={selectedMatch} onBack={backToMatches} onStart={openMatchEngine} />}
       {stage === 'match' && <div className="match-simulator-stage-v87"><MatchSimulatorView key={`match-${lang}`} lang={lang} selectedMatch={selectedMatch} preparedData={preparedData} /></div>}

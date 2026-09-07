@@ -1,0 +1,6 @@
+RAPORT V345
+- baza V344: OK
+- start FM AI = matches zamiast intro: OK
+- intro komponent zachowany do łatwego przywrócenia: OK
+- brak zmian w API / modelu / Supabase: OK
+- brak zmian SQL: OK
