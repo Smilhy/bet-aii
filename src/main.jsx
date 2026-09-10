@@ -26293,8 +26293,44 @@ function AuthView({ onAuth }) {
           draggable="false"
         />
 
-        <div className="auth609-overlay">
-          <section className="auth609-left-panel">
+        <div className="auth609-overlay auth346-overlay">
+          <section className="auth346-hero" aria-label={authLang === 'en' ? 'Bet+AI platform introduction' : 'Prezentacja platformy Bet+AI'}>
+            <div className="auth346-brand-row">
+              <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth346-brand-logo" draggable="false" />
+              <span>{authLang === 'en' ? 'MORE THAN PICKS' : 'WIĘCEJ NIŻ TYPY'}</span>
+            </div>
+            <div className="auth346-hero-copy">
+              <small>{authLang === 'en' ? 'SPORT • DATA • AI' : 'SPORT • DANE • AI'}</small>
+              <h1>
+                {authLang === 'en' ? <>SPORT + DATA + AI<br/><em>= MORE POSSIBILITIES</em></> : <>SPORT + DANE + AI<br/><em>= WIĘKSZE MOŻLIWOŚCI</em></>}
+              </h1>
+              <p>
+                {authLang === 'en'
+                  ? 'Join a new generation of sports analysis. AI insights, real community and live data in one place.'
+                  : 'Dołącz do nowej generacji analizy sportowej. Analizy AI, prawdziwa społeczność i dane live w jednym miejscu.'}
+              </p>
+            </div>
+            <div className="auth346-feature-grid">
+              <div><span>◉</span><b>{authLang === 'en' ? 'AI ANALYSIS' : 'ANALIZY AI'}</b><small>{authLang === 'en' ? 'Models and statistics' : 'Modele i statystyki'}</small></div>
+              <div><span>◎</span><b>{authLang === 'en' ? 'COMMUNITY' : 'SPOŁECZNOŚĆ'}</b><small>{authLang === 'en' ? 'Tipsters worldwide' : 'Typerzy z całego świata'}</small></div>
+              <div><span>▥</span><b>{authLang === 'en' ? 'LIVE RESULTS' : 'WYNIKI LIVE'}</b><small>{authLang === 'en' ? 'Matches and stats' : 'Mecze i statystyki'}</small></div>
+              <div><span>♛</span><b>{authLang === 'en' ? 'RANKING' : 'RANKING'}</b><small>{authLang === 'en' ? 'Build your record' : 'Buduj swoją skuteczność'}</small></div>
+            </div>
+            <div className="auth346-live-row">
+              {liveStatsCards.slice(0, 4).map(card => (
+                <div key={`hero-${card.key}`} className="auth346-live-stat">
+                  <b>{liveStats.loading ? '…' : card.value}</b>
+                  <small>{card.label}</small>
+                </div>
+              ))}
+            </div>
+            <div className="auth346-hero-bottom">
+              <button type="button" onClick={() => setPresentationOpen(true)} className="auth346-watch">▶ {authLang === 'en' ? 'Watch presentation' : 'Obejrzyj prezentację'}</button>
+              <span>bet-ai.app</span>
+            </div>
+          </section>
+
+          <section className="auth609-left-panel auth346-auth-panel">
             <div className="auth609-panel-shell auth609-panel-shell-fixed">
               <div className="auth609-center-wrap">
                 <div className="auth609-top-spacer" />
@@ -26324,6 +26360,12 @@ function AuthView({ onAuth }) {
                   </div>
                   <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth619-fused-logo auth620-fused-logo" draggable="false" />
                   <p className="auth609-subtitle-main auth620-subtitle-main">{mode === 'login' ? t.subtitleLogin : t.subtitleRegister}</p>
+                </div>
+
+                <div className="auth346-form-head">
+                  <small>{authLang === 'en' ? 'SECURE ACCESS' : 'BEZPIECZNY DOSTĘP'}</small>
+                  <h2>{mode === 'login' ? (authLang === 'en' ? 'Welcome back!' : 'Witaj ponownie!') : (authLang === 'en' ? 'Create your account' : 'Utwórz swoje konto')}</h2>
+                  <p>{mode === 'login' ? (authLang === 'en' ? 'Log in and return to your sports analytics.' : 'Zaloguj się i wróć do świata sportowych analiz.') : (authLang === 'en' ? 'Join Bet+AI in less than 30 seconds.' : 'Dołącz do Bet+AI w mniej niż 30 sekund.')}</p>
                 </div>
 
                 <div className={`auth481-tabs auth609-tabs auth609-tabs-fixed ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label={t.authModeLabel}>
