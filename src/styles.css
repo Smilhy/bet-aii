@@ -85943,3 +85943,179 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
     justify-content: center;
   }
 }
+
+/* ================================================================
+   FM AI V353 — MASTER CONSENSUS ENGINE
+   One prediction from Full Model + Daily Scanner + market no-vig.
+   ================================================================ */
+.sim-master-quick-v353 .sim-card-market-head-v332 em {
+  color: #79f7d0;
+  border-color: rgba(74, 235, 196, .28);
+}
+
+.sim-master-triplet-v353 {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+.sim-master-triplet-v353 > span {
+  min-width: 0;
+  padding: 5px 7px !important;
+}
+
+.sim-master-quick-v353 p b {
+  color: #f3d27b;
+}
+
+.sim-master-consensus-v353 {
+  margin: 14px 0 18px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(55, 223, 229, .26);
+  background:
+    radial-gradient(circle at 86% 16%, rgba(43, 211, 220, .10), transparent 30%),
+    linear-gradient(180deg, rgba(5, 24, 36, .96), rgba(5, 16, 27, .96));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.015), 0 16px 36px rgba(0,0,0,.18);
+}
+
+.sim-master-consensus-v353.disagreement-medium {
+  border-color: rgba(244, 190, 73, .34);
+}
+
+.sim-master-consensus-v353.disagreement-high {
+  border-color: rgba(255, 103, 115, .38);
+}
+
+.sim-master-consensus-v353 > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.sim-master-consensus-v353 > header small {
+  display: block;
+  color: #61dce9;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .11em;
+  margin-bottom: 5px;
+}
+
+.sim-master-consensus-v353 > header strong {
+  display: block;
+  color: #f5fbff;
+  font-size: 19px;
+  line-height: 1.2;
+}
+
+.sim-master-consensus-v353 > header p {
+  margin: 5px 0 0;
+  color: rgba(205, 224, 239, .75);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.sim-master-consensus-v353 > header > span {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 8px 11px;
+  border: 1px solid rgba(88, 232, 207, .28);
+  background: rgba(31, 180, 160, .08);
+  color: #82f4d1;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .05em;
+}
+
+.sim-master-consensus-v353.disagreement-medium > header > span {
+  color: #ffd170;
+  border-color: rgba(244, 190, 73, .35);
+  background: rgba(244, 190, 73, .07);
+}
+
+.sim-master-consensus-v353.disagreement-high > header > span {
+  color: #ff9aa4;
+  border-color: rgba(255, 103, 115, .4);
+  background: rgba(255, 103, 115, .07);
+}
+
+.sim-master-consensus-triplet-v353 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.sim-master-consensus-triplet-v353 article {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(105, 194, 221, .12);
+  background: rgba(10, 37, 52, .72);
+}
+
+.sim-master-consensus-triplet-v353 small,
+.sim-master-consensus-sources-v353 small {
+  display: block;
+  color: rgba(164, 201, 218, .72);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+.sim-master-consensus-triplet-v353 b {
+  display: block;
+  margin-top: 6px;
+  color: #fff;
+  font-size: 21px;
+}
+
+.sim-master-consensus-triplet-v353 em {
+  display: block;
+  margin-top: 3px;
+  color: rgba(184, 214, 228, .66);
+  font-size: 9px;
+  font-style: normal;
+}
+
+.sim-master-consensus-sources-v353 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 9px;
+}
+
+.sim-master-consensus-sources-v353 > span {
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.055);
+}
+
+.sim-master-consensus-sources-v353 b {
+  display: block;
+  color: #eaf9ff;
+  font-size: 11px;
+}
+
+.sim-master-consensus-sources-v353 em {
+  display: block;
+  margin: 3px 0 5px;
+  color: #6fe4d8;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .sim-master-consensus-v353 > header {
+    flex-direction: column;
+  }
+  .sim-master-consensus-triplet-v353,
+  .sim-master-consensus-sources-v353 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
