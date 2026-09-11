@@ -85307,3 +85307,231 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
   .sim-luxury-mini-kpis-v349 { grid-template-columns:1fr; }
   .sim-luxury-market-v349 { flex-direction:column; }
 }
+
+/* =====================================================================
+   FM AI V350 — SIMPLE VERDICT + ICON READABILITY
+   Scoped only to V349 luxury overview / top-picks. Original match cards remain untouched.
+   ===================================================================== */
+.sim-simple-top-pick-v350 {
+  position: relative;
+}
+
+.sim-simple-pick-lines-v350 {
+  display: grid;
+  grid-template-columns: 1.55fr .75fr .75fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.sim-simple-pick-lines-v350 > div {
+  position: relative;
+  min-width: 0;
+  min-height: 72px;
+  padding: 12px 12px 12px 42px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(2, 11, 20, .44), rgba(255,255,255,.025));
+  border: 1px solid rgba(255,255,255,.065);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sim-simple-pick-lines-v350 > div.verdict-good { border-color: rgba(70, 226, 157, .28); background: linear-gradient(180deg, rgba(41,159,111,.10), rgba(255,255,255,.025)); }
+.sim-simple-pick-lines-v350 > div.verdict-warn { border-color: rgba(243, 191, 80, .30); background: linear-gradient(180deg, rgba(187,133,29,.09), rgba(255,255,255,.025)); }
+.sim-simple-pick-lines-v350 > div.verdict-bad { border-color: rgba(255, 100, 100, .28); background: linear-gradient(180deg, rgba(177,55,55,.09), rgba(255,255,255,.025)); }
+.sim-simple-pick-lines-v350 > div.verdict-muted { border-color: rgba(121,166,209,.24); }
+
+.sim-simple-icon-v350 {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  line-height: 1;
+}
+
+.sim-simple-pick-lines-v350 small,
+.sim-simple-reason-v350 small,
+.sim-ai-verdict-bar-v350 small,
+.sim-confidence-v350 small,
+.sim-risk-v350 small,
+.sim-mini-verdict-v350 small {
+  color: rgba(196, 216, 237, .58);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.sim-simple-pick-lines-v350 b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.sim-simple-pick-lines-v350 .verdict-good b { color: #72efb8; }
+.sim-simple-pick-lines-v350 .verdict-warn b { color: #f4cf78; }
+.sim-simple-pick-lines-v350 .verdict-bad b { color: #ff9292; }
+
+.sim-simple-reason-v350 {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-top: 11px;
+  padding: 12px 14px;
+  border-radius: 13px;
+  background: rgba(72, 151, 255, .055);
+  border: 1px solid rgba(98, 168, 255, .11);
+}
+
+.sim-simple-reason-v350 > span {
+  flex: 0 0 auto;
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.sim-simple-reason-v350 > div { min-width: 0; }
+.sim-simple-reason-v350 b {
+  display: block;
+  margin-top: 4px;
+  color: rgba(238, 247, 255, .92);
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.45;
+}
+
+.sim-ai-verdict-bar-v350 {
+  display: grid;
+  grid-template-columns: minmax(250px, 1.6fr) minmax(190px, 1fr) minmax(145px, .72fr);
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.075);
+  background: linear-gradient(90deg, rgba(255,255,255,.035), rgba(0,0,0,.13));
+}
+
+.sim-ai-verdict-bar-v350.tone-good { border-color: rgba(68, 222, 154, .25); box-shadow: inset 3px 0 0 rgba(68,222,154,.55); }
+.sim-ai-verdict-bar-v350.tone-warn { border-color: rgba(239, 188, 77, .25); box-shadow: inset 3px 0 0 rgba(239,188,77,.55); }
+.sim-ai-verdict-bar-v350.tone-bad { border-color: rgba(255, 97, 97, .24); box-shadow: inset 3px 0 0 rgba(255,97,97,.55); }
+
+.sim-ai-verdict-bar-v350 > div:first-child {
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sim-ai-verdict-bar-v350 > div:first-child strong {
+  display: block;
+  margin-top: 4px;
+  color: #fff;
+  font-size: 17px;
+}
+
+.sim-confidence-v350,
+.sim-risk-v350 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: rgba(0,0,0,.16);
+  border: 1px solid rgba(255,255,255,.05);
+}
+
+.sim-confidence-v350 > span,
+.sim-risk-v350 > span {
+  flex: 0 0 auto;
+  font-size: 20px;
+}
+
+.sim-confidence-v350 > div,
+.sim-risk-v350 > div { min-width: 0; }
+.sim-confidence-v350 b,
+.sim-risk-v350 b {
+  display: block;
+  margin-top: 2px;
+  color: #fff;
+  font-size: 13px;
+}
+.sim-confidence-v350 em {
+  display: block;
+  margin-top: 2px;
+  color: rgba(210,226,242,.70);
+  font-size: 9px;
+  font-style: normal;
+}
+
+.sim-confidence-v350.tone-high { border-color: rgba(69,221,156,.20); }
+.sim-confidence-v350.tone-medium { border-color: rgba(239,187,75,.20); }
+.sim-confidence-v350.tone-low { border-color: rgba(255,102,102,.20); }
+.sim-risk-v350.tone-low { border-color: rgba(69,221,156,.20); }
+.sim-risk-v350.tone-medium { border-color: rgba(239,187,75,.20); }
+.sim-risk-v350.tone-high { border-color: rgba(255,102,102,.20); }
+
+.sim-simple-pick-v350 {
+  padding: 17px;
+}
+
+.sim-simple-pick-lines-v350.compact-v350 {
+  grid-template-columns: 1.35fr .72fr .72fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+.sim-simple-pick-lines-v350.compact-v350 > div {
+  min-height: 66px;
+  padding: 10px 9px 10px 37px;
+}
+.sim-simple-pick-lines-v350.compact-v350 .sim-simple-icon-v350 { left: 10px; font-size: 15px; }
+.sim-simple-pick-lines-v350.compact-v350 b { font-size: 12px; }
+
+.sim-simple-reason-v350.compact-v350 {
+  margin-top: 9px;
+  padding: 10px 12px;
+}
+
+.sim-simple-meter-row-v350 {
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.sim-mini-verdict-v350 {
+  margin-top: 9px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.06);
+}
+.sim-mini-verdict-v350 b {
+  display: block;
+  margin-top: 4px;
+  color: #fff;
+  font-size: 13px;
+}
+.sim-mini-verdict-v350.tone-good { border-color: rgba(70,226,157,.22); }
+.sim-mini-verdict-v350.tone-warn { border-color: rgba(243,191,80,.22); }
+.sim-mini-verdict-v350.tone-bad { border-color: rgba(255,100,100,.22); }
+
+@media (max-width: 1180px) {
+  .sim-simple-pick-lines-v350,
+  .sim-simple-pick-lines-v350.compact-v350 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sim-ai-verdict-bar-v350 { grid-template-columns: 1fr 1fr; }
+  .sim-ai-verdict-bar-v350 > div:first-child { grid-column: 1 / -1; }
+}
+
+@media (max-width: 720px) {
+  .sim-simple-pick-lines-v350,
+  .sim-simple-pick-lines-v350.compact-v350,
+  .sim-ai-verdict-bar-v350,
+  .sim-simple-meter-row-v350 { grid-template-columns: 1fr; }
+  .sim-ai-verdict-bar-v350 > div:first-child { grid-column: auto; }
+}

@@ -645,6 +645,62 @@ function compactPerformanceRowsV347(performance = null) {
   return { leagues, markets }
 }
 
+function simpleVerdictV350(decision = '', lang = 'pl') {
+  const key = String(decision || '').toUpperCase()
+  const pl = {
+    STRONG_VALUE: { icon: '✅', label: 'DOBRY TYP', sub: 'Warto rozważyć zakład', tone: 'good' },
+    VALUE: { icon: '✅', label: 'DOBRY TYP', sub: 'Warto rozważyć zakład', tone: 'good' },
+    SMALL_EDGE: { icon: '⚠️', label: 'OSTROŻNIE', sub: 'Przewaga jest mała', tone: 'warn' },
+    NO_BET: { icon: '⛔', label: 'NO BET', sub: 'Lepiej odpuścić', tone: 'bad' },
+    NO_ODDS: { icon: '⏳', label: 'OCZEKUJE', sub: 'Czekam na pełne dane rynku', tone: 'muted' }
+  }
+  const en = {
+    STRONG_VALUE: { icon: '✅', label: 'GOOD PICK', sub: 'Worth considering', tone: 'good' },
+    VALUE: { icon: '✅', label: 'GOOD PICK', sub: 'Worth considering', tone: 'good' },
+    SMALL_EDGE: { icon: '⚠️', label: 'CAUTION', sub: 'Only a small edge', tone: 'warn' },
+    NO_BET: { icon: '⛔', label: 'NO BET', sub: 'Better to skip', tone: 'bad' },
+    NO_ODDS: { icon: '⏳', label: 'WAITING', sub: 'Waiting for market data', tone: 'muted' }
+  }
+  const dict = lang === 'en' ? en : pl
+  return dict[key] || dict.NO_ODDS
+}
+
+function confidenceUiV350(item = {}, scan = {}, lang = 'pl') {
+  const reliability = Math.max(0, Math.min(100, Number(item?.reliability?.score || 0)))
+  const balance = Math.max(0, Math.min(100, Number(item?.dailyScore || 0)))
+  const agreement = Math.max(0, Math.min(100, Number(scan?.modelAgreement || item?.reliability?.modelAgreement || 0)))
+  const composite = reliability || balance || agreement
+    ? Math.max(0, Math.min(100, reliability * 0.55 + balance * 0.25 + agreement * 0.20))
+    : 0
+  const score10 = Math.round(composite) / 10
+  if (composite >= 82) return { icon: '🔥', label: 'High confidence', short: 'HIGH', score10, tone: 'high' }
+  if (composite >= 68) return { icon: '🙂', label: 'Moderate confidence', short: 'MEDIUM', score10, tone: 'medium' }
+  return { icon: '😬', label: 'Low confidence', short: 'LOW', score10, tone: 'low' }
+}
+
+function riskUiV350(item = {}, scan = {}, lang = 'pl') {
+  const flags = Array.isArray(item?.redFlags) ? item.redFlags : []
+  const agreement = Number(scan?.modelAgreement || item?.reliability?.modelAgreement || 0)
+  const hasBlock = flags.some(flag => String(flag?.level || '').toUpperCase() === 'BLOCK')
+  if (hasBlock || flags.length >= 3 || agreement > 0 && agreement < 55) return { icon: '🔴', label: lang === 'en' ? 'High' : 'Wysokie', tone: 'high' }
+  if (flags.length || agreement > 0 && agreement < 65) return { icon: '🟡', label: lang === 'en' ? 'Moderate' : 'Umiarkowane', tone: 'medium' }
+  return { icon: '🟢', label: lang === 'en' ? 'Low' : 'Niskie', tone: 'low' }
+}
+
+function shortReasonV350(scan = {}, item = {}, match = {}, lang = 'pl') {
+  const flags = Array.isArray(item?.redFlags) ? item.redFlags : []
+  const samples = Number(item?.reliability?.calibration?.samples || 0)
+  const agreement = Number(scan?.modelAgreement || 0)
+  const edge = Number(item?.edgePp || 0)
+  const decision = String(item?.decision || '').toUpperCase()
+  if (decision === 'NO_BET' && flags.length) return flags[0]?.text || (lang === 'en' ? 'The model detected a red flag.' : 'Model wykrył czerwoną flagę.')
+  if (samples > 0 && samples < 30) return lang === 'en' ? 'Too little historical data for a strong verdict.' : 'Za mało danych historycznych na mocny werdykt.'
+  if (agreement >= 70 && edge >= 8) return lang === 'en' ? 'The model sees a clear price edge and strong model agreement.' : 'Model widzi przewagę nad rynkiem i wysoką zgodność modeli.'
+  if (edge >= 8) return lang === 'en' ? 'The model sees a clear price edge versus the market.' : 'Model widzi wyraźną przewagę nad rynkiem.'
+  if (agreement >= 70) return lang === 'en' ? 'The models agree, but the price edge is limited.' : 'Modele są zgodne, ale przewaga kursowa jest ograniczona.'
+  return lang === 'en' ? 'The verdict combines market price, calibration and model reliability.' : 'Werdykt łączy kurs rynkowy, kalibrację i wiarygodność modelu.'
+}
+
 export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMatch }) {
   const copy = COPY[lang] || COPY.pl
   const [query, setQuery] = useState('')
@@ -1005,9 +1061,9 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           {!loading && !error ? <section className="sim-luxury-command-v349">
             <div className="sim-luxury-command-top-v349">
               <div className="sim-luxury-brand-v349">
-                <small>BET+AI • FM AI • LUXURY COMMAND CENTER V349</small>
-                <strong>Jedno spojrzenie. Jeden werdykt. Pełna moc pod spodem.</strong>
-                <p>Najważniejsze rzeczy są na wierzchu. Zaawansowana matematyka została zachowana i jest dostępna jednym kliknięciem.</p>
+                <small>BET+AI • FM AI • SIMPLE VERDICT LUXURY V350</small>
+                <strong>Jedno spojrzenie. Od razu wiesz co grać, czego unikać i dlaczego.</strong>
+                <p>Typ, kurs, szansa AI, werdykt, pewność i ryzyko są podane po ludzku. Cała matematyka nadal działa pod spodem.</p>
               </div>
               <button type="button" className={`sim-luxury-pro-toggle-v349 ${showAdvancedV349 ? 'active' : ''}`} onClick={() => setShowAdvancedV349(value => !value)}>
                 <span>{showAdvancedV349 ? 'UKRYJ' : 'POKAŻ'}</span>
@@ -1015,21 +1071,35 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
               </button>
             </div>
             <div className="sim-luxury-grid-v349">
-              <article className="sim-luxury-top-pick-v349">
-                <div className="sim-luxury-card-kicker-v349"><span>★</span> TOP PICK DNIA</div>
-                {luxurySummaryV349.top?.scan?.topFinal ? <>
-                  <strong>{luxurySummaryV349.top.match.home} <i>vs</i> {luxurySummaryV349.top.match.away}</strong>
-                  <b>{getScannerMarketMetaV330(luxurySummaryV349.top.scan.topFinal, luxurySummaryV349.top.match, lang).title}</b>
-                  <div className="sim-luxury-top-pick-meta-v349">
-                    <span><small>AI</small><b>{luxurySummaryV349.top.scan.topFinal.probability || '—'}%</b></span>
-                    <span><small>KURS</small><b>@ {Number(luxurySummaryV349.top.scan.topFinal.bookmakerOdds || 0).toFixed(2)}</b></span>
-                    <span><small>OCENA</small><b>{scannerDecisionLabel(luxurySummaryV349.top.scan.topFinal.decision)}</b></span>
-                  </div>
-                  <div className="sim-luxury-top-pick-actions-v349">
-                    <button type="button" onClick={() => openWhyAiV347(luxurySummaryV349.top)}>DLACZEGO AI?</button>
-                    <button type="button" onClick={() => handleSelect(luxurySummaryV349.top.match)}>PEŁNA ANALIZA →</button>
-                  </div>
-                </> : <div className="sim-luxury-wait-v349">Skanuję rynek i wybieram najlepszy typ dnia…</div>}
+              <article className="sim-luxury-top-pick-v349 sim-simple-top-pick-v350">
+                <div className="sim-luxury-card-kicker-v349"><span>🏆</span> TOP TYP DNIA</div>
+                {luxurySummaryV349.top?.scan?.topFinal ? (() => {
+                  const item = luxurySummaryV349.top.scan.topFinal
+                  const meta = getScannerMarketMetaV330(item, luxurySummaryV349.top.match, lang)
+                  const verdict = simpleVerdictV350(item.decision, lang)
+                  const confidence = confidenceUiV350(item, luxurySummaryV349.top.scan, lang)
+                  const risk = riskUiV350(item, luxurySummaryV349.top.scan, lang)
+                  const reason = shortReasonV350(luxurySummaryV349.top.scan, item, luxurySummaryV349.top.match, lang)
+                  return <>
+                    <strong>{luxurySummaryV349.top.match.home} <i>vs</i> {luxurySummaryV349.top.match.away}</strong>
+                    <div className="sim-simple-pick-lines-v350">
+                      <div><span className="sim-simple-icon-v350">🎯</span><small>TYP</small><b>{meta.title}</b></div>
+                      <div><span className="sim-simple-icon-v350">💷</span><small>KURS</small><b>@ {Number(item.bookmakerOdds || 0).toFixed(2)}</b></div>
+                      <div><span className="sim-simple-icon-v350">🤖</span><small>SZANSA AI</small><b>{item.probability || '—'}%</b></div>
+                      <div className={`verdict-${verdict.tone}`}><span className="sim-simple-icon-v350">{verdict.icon}</span><small>OCENA</small><b>{verdict.label}</b></div>
+                    </div>
+                    <div className="sim-simple-reason-v350"><span>💡</span><div><small>DLACZEGO?</small><b>{reason}</b></div></div>
+                    <div className={`sim-ai-verdict-bar-v350 tone-${verdict.tone}`}>
+                      <div><small>FM AI VERDICT</small><strong>{verdict.icon} {verdict.sub}</strong></div>
+                      <div className={`sim-confidence-v350 tone-${confidence.tone}`}><span>{confidence.icon}</span><div><small>PEWNOŚĆ</small><b>{confidence.score10.toFixed(1)}/10</b><em>{confidence.label}</em></div></div>
+                      <div className={`sim-risk-v350 tone-${risk.tone}`}><span>{risk.icon}</span><div><small>RYZYKO</small><b>{risk.label}</b></div></div>
+                    </div>
+                    <div className="sim-luxury-top-pick-actions-v349">
+                      <button type="button" onClick={() => openWhyAiV347(luxurySummaryV349.top)}>❓ DLACZEGO AI?</button>
+                      <button type="button" onClick={() => handleSelect(luxurySummaryV349.top.match)}>📊 PEŁNA ANALIZA →</button>
+                    </div>
+                  </>
+                })() : <div className="sim-luxury-wait-v349">Skanuję rynek i wybieram najlepszy typ dnia…</div>}
               </article>
               <div className="sim-luxury-kpis-v349">
                 <article><small>SPRAWDZONE</small><b>{luxurySummaryV349.total || availableMatches.length || 0}</b><span>meczów</span></article>
@@ -1084,13 +1154,26 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
               const status = String(item.decision || '').toUpperCase()
               const tone = ['STRONG_VALUE','VALUE'].includes(status) ? 'good' : status === 'SMALL_EDGE' ? 'warn' : 'bad'
               const why = buildWhyAiV347(entry.scan, item, entry.match)
-              return <article key={`lux-pick-${entry.key || index}`} className={`sim-luxury-pick-v349 ${tone}`}>
-                <header><span>#{index+1} • {entry.match.league}</span><em>{scannerDecisionLabel(item.decision)}</em></header>
+              const verdict = simpleVerdictV350(item.decision, lang)
+              const confidence = confidenceUiV350(item, entry.scan, lang)
+              const risk = riskUiV350(item, entry.scan, lang)
+              const reason = shortReasonV350(entry.scan, item, entry.match, lang)
+              return <article key={`lux-pick-${entry.key || index}`} className={`sim-luxury-pick-v349 sim-simple-pick-v350 ${tone}`}>
+                <header><span>#{index+1} • {entry.match.league}</span><em>{verdict.icon} {verdict.label}</em></header>
                 <strong>{entry.match.home} <i>vs</i> {entry.match.away}</strong>
-                <div className="sim-luxury-market-v349"><b>{meta.title}</b><span>{meta.badge} • @{Number(item.bookmakerOdds || 0).toFixed(2)}</span></div>
-                <div className="sim-luxury-mini-kpis-v349"><span><small>AI</small><b>{item.probability || '—'}%</b></span><span><small>WIARYGODNOŚĆ</small><b>{item.reliability?.score || 0}/100</b></span><span><small>RYZYKO</small><b>{(item.redFlags || []).length ? 'SPRAWDŹ' : 'NISKIE'}</b></span></div>
-                <p>{why.positives?.[0] || 'Model widzi przewagę ceny nad wyceną rynku.'}</p>
-                <footer><button type="button" onClick={() => openWhyAiV347(entry)}>WHY AI?</button><button type="button" onClick={() => handleSelect(entry.match)}>PEŁNA ANALIZA →</button></footer>
+                <div className="sim-simple-pick-lines-v350 compact-v350">
+                  <div><span className="sim-simple-icon-v350">🎯</span><small>TYP</small><b>{meta.title}</b></div>
+                  <div><span className="sim-simple-icon-v350">💷</span><small>KURS</small><b>@ {Number(item.bookmakerOdds || 0).toFixed(2)}</b></div>
+                  <div><span className="sim-simple-icon-v350">🤖</span><small>SZANSA AI</small><b>{item.probability || '—'}%</b></div>
+                  <div className={`verdict-${verdict.tone}`}><span className="sim-simple-icon-v350">{verdict.icon}</span><small>OCENA</small><b>{verdict.label}</b></div>
+                </div>
+                <div className="sim-simple-reason-v350 compact-v350"><span>💡</span><div><small>DLACZEGO?</small><b>{reason}</b></div></div>
+                <div className="sim-simple-meter-row-v350">
+                  <div className={`sim-confidence-v350 tone-${confidence.tone}`}><span>{confidence.icon}</span><div><small>PEWNOŚĆ</small><b>{confidence.score10.toFixed(1)}/10</b><em>{confidence.label}</em></div></div>
+                  <div className={`sim-risk-v350 tone-${risk.tone}`}><span>{risk.icon}</span><div><small>RYZYKO</small><b>{risk.label}</b></div></div>
+                </div>
+                <div className={`sim-mini-verdict-v350 tone-${verdict.tone}`}><small>FM AI VERDICT</small><b>{verdict.icon} {verdict.sub}</b></div>
+                <footer><button type="button" onClick={() => openWhyAiV347(entry)}>❓ DLACZEGO AI?</button><button type="button" onClick={() => handleSelect(entry.match)}>📊 PEŁNA ANALIZA →</button></footer>
               </article>
             })}</div> : <div className="sim-value-scanner-empty-v139"><i />Szukam najmocniejszych okazji…</div>}
           </section> : null}
