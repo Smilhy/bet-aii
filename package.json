@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-356-fm-ai-pixel-match",
-  "version": "356.0.0",
+  "name": "betai-wersja-353-fm-ai-master-consensus-engine",
+  "version": "353.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
@@ -22,7 +22,7 @@
     "test:v320": "node TEST_WERSJA_320_REALISTIC_MATCH_ENGINE.mjs",
     "test:fm-ai-v347": "node TEST_WERSJA_347_FM_AI_MODEL_INTELLIGENCE.cjs",
     "test:fm-ai-v352": "node TEST_WERSJA_352_FM_AI_PERSISTENT_CACHE.cjs",
-    "test:fm-ai-v355": "node TEST_WERSJA_355_FM_AI_PRO_SAFE.cjs"
+    "test:fm-ai-v353": "node TEST_WERSJA_353_MASTER_CONSENSUS.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.3",

@@ -4329,41 +4329,11 @@ function findProfileFromMap(profileMap, source = {}) {
 
 let BETAI_PUBLIC_PROFILES_CACHE_1426 = { at: 0, rows: [], promise: null }
 
-// V355 SAFE OPTIMIZATION: krótki cache + deduplikacja równoległych requestów.
-// Nie zmienia danych ani UI; ogranicza wielokrotne identyczne zapytania przy renderach/resume.
-const BETAI_REQUEST_MEMO_V355 = new Map()
-function memoRequestV355(key, ttlMs, loader) {
-  const now = Date.now()
-  const hit = BETAI_REQUEST_MEMO_V355.get(key)
-  if (hit?.value !== undefined && now - Number(hit.at || 0) < ttlMs) return Promise.resolve(hit.value)
-  if (hit?.promise) return hit.promise
-  const promise = Promise.resolve().then(loader).then(value => {
-    BETAI_REQUEST_MEMO_V355.set(key, { at: Date.now(), value, promise: null })
-    return value
-  }).catch(error => {
-    BETAI_REQUEST_MEMO_V355.delete(key)
-    throw error
-  })
-  BETAI_REQUEST_MEMO_V355.set(key, { at: Number(hit?.at || 0), value: hit?.value, promise })
-  return promise
-}
-
-function fetchPublicTipsCachedV355(limit = 500) {
-  const safeLimit = Math.max(1, Math.min(500, Number(limit || 500)))
-  return memoRequestV355(`public-tips:${safeLimit}`, 20 * 1000, () =>
-    fetch(`/.netlify/functions/get-public-tips?limit=${safeLimit}`, { cache: 'no-store' })
-      .then(response => response.ok ? response.json() : { tips: [] })
-      .catch(() => ({ tips: [] }))
-  )
-}
-
-const BETAI_REFERRAL_CACHE_V355 = new Map()
-
 async function fetchBetaiPublicProfiles() {
   if (!isSupabaseConfigured || !supabase) return []
 
   const now = Date.now()
-  if (BETAI_PUBLIC_PROFILES_CACHE_1426.rows?.length && now - BETAI_PUBLIC_PROFILES_CACHE_1426.at < 5 * 60 * 1000) {
+  if (BETAI_PUBLIC_PROFILES_CACHE_1426.rows?.length && now - BETAI_PUBLIC_PROFILES_CACHE_1426.at < 60 * 1000) {
     return BETAI_PUBLIC_PROFILES_CACHE_1426.rows
   }
   if (BETAI_PUBLIC_PROFILES_CACHE_1426.promise) return BETAI_PUBLIC_PROFILES_CACHE_1426.promise
@@ -35966,19 +35936,6 @@ function App() {
     }
     userId = expectedIdV76
 
-    const referralCacheHitV355 = BETAI_REFERRAL_CACHE_V355.get(String(userId))
-    if (referralCacheHitV355?.value && Date.now() - Number(referralCacheHitV355.at || 0) < 30 * 1000) {
-      if (stillCurrentV76()) setReferralData(referralCacheHitV355.value)
-      return
-    }
-    if (referralCacheHitV355?.promise) {
-      try {
-        const cachedValue = await referralCacheHitV355.promise
-        if (stillCurrentV76() && cachedValue) setReferralData(cachedValue)
-      } catch (_) {}
-      return
-    }
-
     const safeQuery = async (promise, fallback = null) => {
       try {
         const timeout = new Promise(resolve => setTimeout(() => resolve({ data: fallback, error: { message: 'timeout' } }), 4500))
@@ -36013,16 +35970,14 @@ function App() {
       )
 
       if (!stillCurrentV76()) return
-      const referralValueV355 = {
+      setReferralData({
         referral_code: row?.referral_code || profileFallback?.referral_code || referralCode,
         referrals_count: Number(row?.referrals_count ?? profileFallback?.referrals_count ?? 0),
         buyers_count: Number(row?.buyers_count ?? profileFallback?.buyers_count ?? 0),
         reward_total: Number(row?.reward_total ?? profileFallback?.referral_reward_total ?? 0),
         referrals: Array.isArray(referralsRows) ? referralsRows : [],
         rewards: Array.isArray(rewardsRows) ? rewardsRows : []
-      }
-      BETAI_REFERRAL_CACHE_V355.set(String(userId), { at: Date.now(), value: referralValueV355 })
-      setReferralData(referralValueV355)
+      })
     } catch (error) {
       console.error('fetchReferralData error', error)
     } finally {
@@ -36258,7 +36213,9 @@ function App() {
     if (requestedUserIdV76 && String(identityV76.id || '') !== requestedUserIdV76) return false
     if (!isSupabaseConfigured || !supabase || !stillCurrentV76()) return false
     try {
-      const publicTipsPromise = fetchPublicTipsCachedV355(160)
+      const publicTipsPromise = fetch(`/.netlify/functions/get-public-tips?limit=160&t=${Date.now()}`, { cache: 'no-store' })
+        .then(response => response.ok ? response.json() : { tips: [] })
+        .catch(() => ({ tips: [] }))
       const [{ data: tipsData, error: tipsError }, publicTipsPayload] = await Promise.all([
         supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(160),
         publicTipsPromise
@@ -36342,7 +36299,9 @@ function App() {
 
     setLoading(true)
 
-    const publicTipsPromise = fetchPublicTipsCachedV355(500)
+    const publicTipsPromise = fetch(`/.netlify/functions/get-public-tips?limit=500&t=${Date.now()}`, { cache: 'no-store' })
+      .then(response => response.ok ? response.json() : { tips: [] })
+      .catch(() => ({ tips: [] }))
 
     const [{ data: tipsData, error: tipsError }, publicTipsPayload, { data: unlockedData, error: unlockedError }] = await Promise.all([
       supabase

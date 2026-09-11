@@ -423,6 +423,135 @@ function dynamicSourceWeightsV143({ data = {}, consensus = null, performance = n
   }
 }
 
+function buildMasterConsensusV353({ match = {}, data = {}, baseForecast = null, dailyScan = null, consensus = null, performance = null } = {}) {
+  if (!baseForecast) return null
+  const fullOne = normalizeTriplet(baseForecast?.oneXTwo) || { home:33.4, draw:33.3, away:33.3 }
+  const scanOne = normalizeTriplet(dailyScan?.probabilities?.oneXTwo)
+  const marketOne = normalizeTriplet({
+    home: Number(dailyScan?.marketConsensus?.home?.avgNoVigProbability || 0),
+    draw: Number(dailyScan?.marketConsensus?.draw?.avgNoVigProbability || 0),
+    away: Number(dailyScan?.marketConsensus?.away?.avgNoVigProbability || 0)
+  })
+
+  const scanQuality = clampNum(Number(dailyScan?.dataQuality || 0), 0, 100, 0)
+  const scanAgreement = clampNum(Number(dailyScan?.modelAgreement || 0), 0, 100, 0)
+  const marketSources = Math.min(
+    Number(dailyScan?.marketConsensus?.home?.sources || 0),
+    Number(dailyScan?.marketConsensus?.draw?.sources || 0),
+    Number(dailyScan?.marketConsensus?.away?.sources || 0)
+  )
+  const marketAgreement = ['home','draw','away']
+    .map(key => Number(dailyScan?.marketConsensus?.[key]?.agreement || 0))
+    .filter(value => value > 0)
+  const avgMarketAgreement = marketAgreement.length ? marketAgreement.reduce((a,b)=>a+b,0)/marketAgreement.length : 0
+
+  let fullWeight = 0.62
+  let scanWeight = scanOne ? clampNum(0.14 + scanQuality * 0.0007 + scanAgreement * 0.0007, 0.14, 0.26, 0.18) : 0
+  let marketWeight = marketOne && marketSources >= 2 ? clampNum(0.08 + avgMarketAgreement * 0.0010, 0.08, 0.18, 0.12) : 0
+  if (!scanOne && !marketOne) fullWeight = 1
+  const totalWeight = Math.max(0.001, fullWeight + scanWeight + marketWeight)
+  fullWeight /= totalWeight
+  scanWeight /= totalWeight
+  marketWeight /= totalWeight
+
+  const masterOne = normalizeTriplet({
+    home: fullOne.home * fullWeight + (scanOne?.home || 0) * scanWeight + (marketOne?.home || 0) * marketWeight,
+    draw: fullOne.draw * fullWeight + (scanOne?.draw || 0) * scanWeight + (marketOne?.draw || 0) * marketWeight,
+    away: fullOne.away * fullWeight + (scanOne?.away || 0) * scanWeight + (marketOne?.away || 0) * marketWeight
+  }) || fullOne
+
+  const fullXg = baseForecast?.xg || {}
+  const scanXg = dailyScan?.xg || {}
+  const hasScanXg = Number(scanXg?.home || 0) > 0 && Number(scanXg?.away || 0) > 0
+  const xgScanWeight = hasScanXg ? clampNum(0.18 + scanQuality * 0.0008, 0.18, 0.28, 0.22) : 0
+  const xgFullWeight = 1 - xgScanWeight
+  const masterXg = {
+    home: round2(clampNum(Number(fullXg?.home || 1.35) * xgFullWeight + Number(scanXg?.home || 0) * xgScanWeight, 0.2, 3.8, Number(fullXg?.home || 1.35))),
+    away: round2(clampNum(Number(fullXg?.away || 1.10) * xgFullWeight + Number(scanXg?.away || 0) * xgScanWeight, 0.18, 3.6, Number(fullXg?.away || 1.10)))
+  }
+
+  const fullGoals = baseForecast?.goals || {}
+  const scanGoals = dailyScan?.probabilities?.goals || {}
+  const marketGoal = key => Number(dailyScan?.marketConsensus?.[key]?.avgNoVigProbability || 0)
+  const blendBinary = (fullValue, scanValue, marketValue) => {
+    const values = []
+    if (Number(fullValue) > 0) values.push({ v:Number(fullValue), w:0.68 })
+    if (Number(scanValue) > 0) values.push({ v:Number(scanValue), w:0.22 })
+    if (Number(marketValue) > 0) values.push({ v:Number(marketValue), w:0.10 })
+    if (!values.length) return 50
+    const sum = values.reduce((a,row)=>a+row.w,0)
+    return round1(clampNum(values.reduce((a,row)=>a+row.v*row.w,0)/sum, 1, 99, 50))
+  }
+  const masterGoals = {
+    over15: blendBinary(fullGoals.over15, scanGoals.over15, marketGoal('over15')),
+    over25: blendBinary(fullGoals.over25, scanGoals.over25, marketGoal('over25')),
+    over35: blendBinary(fullGoals.over35, scanGoals.over35, marketGoal('over35')),
+    btts: blendBinary(fullGoals.btts, scanGoals.btts, marketGoal('bttsYes'))
+  }
+
+  const sourceRows = [
+    { id:'full', label:'Pełny model FM AI', oneXTwo:fullOne, weight:round1(fullWeight*100) },
+    scanOne ? { id:'scanner', label:'Daily Value Scanner', oneXTwo:scanOne, weight:round1(scanWeight*100) } : null,
+    marketOne ? { id:'market', label:'Rynek no-vig', oneXTwo:marketOne, weight:round1(marketWeight*100) } : null
+  ].filter(Boolean)
+  const outcomeSpread = ['home','draw','away'].map(key => {
+    const vals = sourceRows.map(row => Number(row.oneXTwo?.[key] || 0)).filter(v => v > 0)
+    return vals.length > 1 ? Math.max(...vals) - Math.min(...vals) : 0
+  })
+  const spreadPp = round1(Math.max(...outcomeSpread, 0))
+  const disagreement = spreadPp >= 18 ? 'HIGH' : spreadPp >= 10 ? 'MEDIUM' : 'LOW'
+  const confidence = Math.round(clampNum(92 - spreadPp * 1.65 + Math.min(6, sourceRows.length) * 1.5, 45, 96, 70))
+
+  const dataQuality = Number(baseForecast?.dataQuality || 0)
+  const masterProbabilities = {
+    home: round1(masterOne.home), draw: round1(masterOne.draw), away: round1(masterOne.away),
+    over15: masterGoals.over15, over25: masterGoals.over25, over35: masterGoals.over35, btts: masterGoals.btts
+  }
+  const masterValueRaw = buildValueEngineV2({ match, data, probabilities: masterProbabilities, dataQuality, consensus, performance })
+  let masterValue = masterValueRaw
+  if (disagreement === 'HIGH' && ['STRONG_VALUE','VALUE'].includes(String(masterValueRaw?.state || '').toUpperCase())) {
+    masterValue = {
+      ...masterValueRaw,
+      state:'NO_BET',
+      top: masterValueRaw?.top ? { ...masterValueRaw.top, decision:'NO_BET', reason:`MASTER CONSENSUS: źródła są zbyt rozbieżne (${spreadPp} pp).` } : masterValueRaw?.top,
+      masterConsensusGuard:{ status:'BLOCKED', reason:`Source disagreement ${spreadPp} pp` }
+    }
+  } else if (disagreement === 'MEDIUM' && String(masterValueRaw?.state || '').toUpperCase() === 'STRONG_VALUE') {
+    masterValue = {
+      ...masterValueRaw,
+      state:'VALUE',
+      top: masterValueRaw?.top ? { ...masterValueRaw.top, decision:'VALUE', reason:`MASTER CONSENSUS: STRONG obniżone do VALUE przez umiarkowaną rozbieżność źródeł (${spreadPp} pp).` } : masterValueRaw?.top,
+      masterConsensusGuard:{ status:'DOWNGRADED', reason:`Source disagreement ${spreadPp} pp` }
+    }
+  }
+  const masterPoisson = poissonForecast(masterXg.home, masterXg.away)
+  const fair = Object.fromEntries(Object.entries(masterProbabilities).map(([key,value]) => [key, fairOdd(value)]))
+
+  return {
+    ...baseForecast,
+    masterConsensusVersion: 'BETAI_MASTER_CONSENSUS_V353',
+    oneXTwo: { home:masterProbabilities.home, draw:masterProbabilities.draw, away:masterProbabilities.away },
+    goals: { over15:masterProbabilities.over15, over25:masterProbabilities.over25, over35:masterProbabilities.over35, btts:masterProbabilities.btts },
+    xg: masterXg,
+    fairOdds: { ...(baseForecast?.fairOdds || {}), ...fair },
+    value: masterValue,
+    topScores: masterPoisson?.topScores || baseForecast?.topScores || [],
+    masterConsensus: {
+      version:'BETAI_MASTER_CONSENSUS_V353',
+      sourceCount:sourceRows.length,
+      confidence,
+      disagreement,
+      spreadPp,
+      weights:{ full:round1(fullWeight*100), scanner:round1(scanWeight*100), market:round1(marketWeight*100) },
+      sources:sourceRows.map(row => ({ ...row, oneXTwo:{ home:round1(row.oneXTwo.home), draw:round1(row.oneXTwo.draw), away:round1(row.oneXTwo.away) } })),
+      baseOneXTwo:{ home:round1(fullOne.home), draw:round1(fullOne.draw), away:round1(fullOne.away) },
+      scannerOneXTwo:scanOne ? { home:round1(scanOne.home), draw:round1(scanOne.draw), away:round1(scanOne.away) } : null,
+      marketOneXTwo:marketOne ? { home:round1(marketOne.home), draw:round1(marketOne.draw), away:round1(marketOne.away) } : null,
+      note:'Końcowa prognoza łączy pełny model FM AI, Daily Scanner i rynek no-vig. Value jest liczone dopiero po zbudowaniu tego konsensusu.'
+    }
+  }
+}
+
 function explainForecastV145({ match = {}, data = {}, consensus = null, forecast = null, homeGF = 0, homeGA = 0, awayGF = 0, awayGA = 0, homeForm = 50, awayForm = 50 } = {}) {
   const positives = []
   const risks = []
@@ -1631,7 +1760,8 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
     return Math.round(required.filter(item => item.ready).length * 100 / Math.max(1, required.length))
   }, [checks, data])
   const eligibility = useMemo(() => data ? buildEligibility(match, data, checks) : { eligible: false, reasons: [] }, [match, data, checks])
-  const forecast = useMemo(() => data && eligibility.eligible ? buildForecast(match, data, consensus, checks, modelPerformance) : null, [match, data, consensus, checks, eligibility.eligible, modelPerformance])
+  const baseForecastV353 = useMemo(() => data && eligibility.eligible ? buildForecast(match, data, consensus, checks, modelPerformance) : null, [match, data, consensus, checks, eligibility.eligible, modelPerformance])
+  const forecast = useMemo(() => baseForecastV353 ? buildMasterConsensusV353({ match, data, baseForecast: baseForecastV353, dailyScan: match?.fmAiDailyScanV353 || null, consensus, performance: modelPerformance }) : null, [baseForecastV353, match, data, consensus, modelPerformance])
   const reliability = useMemo(() => forecast ? buildReliabilityEngine({ match, data, forecast, consensus, performance: modelPerformance }) : null, [match, data, forecast, consensus, modelPerformance])
   const modelLab = useMemo(() => forecast ? buildModelLabV200({ match, data, forecast, consensus, performance: modelPerformance, oddsHistory, challenger: forecast?.modelVariants?.challenger || null }) : null, [match, data, forecast, consensus, modelPerformance, oddsHistory])
   const ensembleValidation = modelLab?.pureEnsemble || null
@@ -1851,6 +1981,22 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
           <article><span className="sim-meta-icon-v322"><UiIconV322 name="target" size={17} /></span><div><small>NAJLEPSZE 1X2</small><b>{quickSummaryV321.best1x2.shortLabel}</b><span>{quickSummaryV321.best1x2.probability.toFixed(1)}%</span></div></article>
         </div>
 
+        {forecast?.masterConsensus ? <section className={`sim-master-consensus-v353 disagreement-${String(forecast.masterConsensus.disagreement || 'low').toLowerCase()}`}>
+          <header>
+            <div><small>FM AI • MASTER CONSENSUS V353</small><strong>Jedna końcowa prognoza z kilku źródeł</strong><p>Pełny model, Daily Scanner i rynek no-vig są ważone razem. Value nie jest już traktowane jako główna predykcja meczu.</p></div>
+            <span>{forecast.masterConsensus.disagreement === 'HIGH' ? '⚠ MODELE ROZBIEŻNE' : forecast.masterConsensus.disagreement === 'MEDIUM' ? '◐ UMIARKOWANA ZGODNOŚĆ' : '✓ MODELE ZGODNE'}</span>
+          </header>
+          <div className="sim-master-consensus-triplet-v353">
+            <article><small>1 • {safeTextV158(match?.home, 'Gospodarze')}</small><b>{Number(forecast.oneXTwo.home || 0).toFixed(1)}%</b></article>
+            <article><small>X • REMIS</small><b>{Number(forecast.oneXTwo.draw || 0).toFixed(1)}%</b></article>
+            <article><small>2 • {safeTextV158(match?.away, 'Goście')}</small><b>{Number(forecast.oneXTwo.away || 0).toFixed(1)}%</b></article>
+            <article><small>ZGODNOŚĆ ŹRÓDEŁ</small><b>{forecast.masterConsensus.confidence}/100</b><em>rozjazd {forecast.masterConsensus.spreadPp} pp</em></article>
+          </div>
+          <div className="sim-master-consensus-sources-v353">
+            {(forecast.masterConsensus.sources || []).map(source => <span key={source.id}><b>{source.label}</b><em>waga {source.weight}%</em><small>1 {source.oneXTwo.home}% • X {source.oneXTwo.draw}% • 2 {source.oneXTwo.away}%</small></span>)}
+          </div>
+        </section> : null}
+
         <div className="sim-quick-bottom-v321 sim-quick-bottom-v322">
           <div className="sim-quick-reasons-v321 sim-quick-reasons-v322">
             <header><span className="sim-icon-box-v322 subtle"><UiIconV322 name="info" size={17} /></span><div><small>NAJWAŻNIEJSZE POWODY</small><strong>Co naprawdę wpływa na ocenę tego meczu</strong></div></header>
@@ -1860,7 +2006,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
             <div className="sim-action-status-v322"><span><UiIconV322 name="layers" size={15} /></span><div><small>PROFIL SYMULACJI</small><strong>Zamrożony model Bet+AI</strong></div></div>
             <button type="button" className="primary" disabled={!eligibility.eligible} onClick={() => eligibility.eligible && onStart?.(match, preparedData)}><UiIconV322 name="play" size={18} /> {eligibility.eligible ? copy.start : copy.rejectedButton}</button>
             <button type="button" className="secondary" onClick={() => document.getElementById('sim-full-analysis-v321')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Pokaż pełną analizę <span>↓</span></button>
-            <span>V322 zmienia tylko interfejs. Prediction Engine i decyzje pozostają bez zmian.</span>
+            <span>Symulacja korzysta z tej samej prognozy MASTER CONSENSUS V353, którą widzisz w analizie.</span>
           </div>
         </div>
 
