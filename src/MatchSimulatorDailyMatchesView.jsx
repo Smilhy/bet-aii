@@ -150,7 +150,7 @@ function FmIconV355({ name, size = 18 }) {
   return <svg {...props}>{icons[name] || icons.info}</svg>
 }
 
-function buildDemoEntryV355(baseMatch) {
+function buildDemoEntryV355(baseMatch, overrides = {}) {
   const match = {
     ...baseMatch,
     id:'betai-ui-test-v355',
@@ -162,14 +162,16 @@ function buildDemoEntryV355(baseMatch) {
     venueName:'Bet+AI Test Arena',
     venueCity:'Offline',
     isBetAiLabTest:true,
-    source:'demo'
+    source:'demo',
+    ...overrides.match
   }
   const topFinal = {
     key:'over25', probability:64, rawProbability:64, bookmakerOdds:2.37, fairOdds:1.56,
     edgePp:12.8, expectedValuePct:51.7, decision:'VALUE', dailyScore:86,
     reliability:{ score:84, label:'HIGH', calibration:{ source:'test', samples:120, status:'GOOD' }, modelAgreement:78, dataQuality:90 },
     marketConsensus:{ sources:5, agreement:82, avgNoVigProbability:51.2, medianNoVigProbability:50.8, quotes:[] },
-    redFlags:[], driftStatus:'STABLE', leagueMarketTrust:{ score:82 }
+    redFlags:[], driftStatus:'STABLE', leagueMarketTrust:{ score:82 },
+    ...overrides.topFinal
   }
   const scan = {
     ok:true, league:match.league, country:match.country, dataQuality:90, modelAgreement:78, bookmakerCount:5,
@@ -177,6 +179,29 @@ function buildDemoEntryV355(baseMatch) {
     topFinal, candidates:[topFinal], isDemoV355:true
   }
   return { key:fixtureKey(match), match, scan, isDemoV355:true }
+}
+
+function buildDemoEntriesV357(baseMatch) {
+  const kickoff = getFixtureStartMs(baseMatch)
+  const plusMinutes = (mins) => Number.isFinite(kickoff) ? new Date(kickoff + mins*60*1000).toISOString() : baseMatch.commence_time
+  return [
+    buildDemoEntryV355(baseMatch, {
+      match:{ id:'demo-main-1', home:'Hellas Verona', away:'Benevento', league:'Serie A • MECZ TESTOWY', country:'Italy', fixture_date:plusMinutes(0), commence_time:plusMinutes(0) },
+      topFinal:{ key:'over25', probability:64, bookmakerOdds:2.37, fairOdds:1.56, decision:'VALUE', dailyScore:86 }
+    }),
+    buildDemoEntryV355(baseMatch, {
+      match:{ id:'demo-main-2', home:'Ajaccio', away:'Amiens', league:'Ligue 2 • MECZ TESTOWY', country:'France', fixture_date:plusMinutes(15), commence_time:plusMinutes(15) },
+      topFinal:{ key:'btts', probability:61, bookmakerOdds:1.82, fairOdds:1.64, decision:'VALUE', dailyScore:82 }
+    }),
+    buildDemoEntryV355(baseMatch, {
+      match:{ id:'demo-main-3', home:'AZ Alkmaar', away:'Willem II', league:'Eredivisie • MECZ TESTOWY', country:'Netherlands', fixture_date:plusMinutes(30), commence_time:plusMinutes(30) },
+      topFinal:{ key:'homeWin', probability:59, bookmakerOdds:1.65, fairOdds:1.71, decision:'VALUE', dailyScore:79 }
+    }),
+    buildDemoEntryV355(baseMatch, {
+      match:{ id:'demo-main-4', home:'Girona', away:'Alavés', league:'La Liga • MECZ TESTOWY', country:'Spain', fixture_date:plusMinutes(60), commence_time:plusMinutes(60) },
+      topFinal:{ key:'under25', probability:56, bookmakerOdds:1.91, fairOdds:1.84, decision:'CAUTION', dailyScore:68, reliability:{ score:76, label:'MEDIUM', calibration:{ source:'test', samples:120, status:'OK' }, modelAgreement:71, dataQuality:88 } }
+    })
+  ]
 }
 
 function getFixtureStartMs(row = {}) {
@@ -1174,9 +1199,10 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   }, [scannerResults, scannerPerformance, availableMatches])
 
   const demoEntryV355 = useMemo(() => buildDemoEntryV355(labTestMatch), [labTestMatch])
+  const demoEntriesV357 = useMemo(() => buildDemoEntriesV357(labTestMatch), [labTestMatch])
   const demoModeV355 = !loading && !qualifying && !scannerActive && (availableMatches.length === 0 || (Number(scannerProgress.total || 0) > 0 && Number(scannerProgress.done || 0) >= Number(scannerProgress.total || 0) && scannerEntries.length === 0))
-  const displayEntriesV355 = useMemo(() => scannerEntries.length ? scannerEntries : (demoModeV355 ? [demoEntryV355] : []), [scannerEntries, demoModeV355, demoEntryV355])
-  const displayMatchesV355 = useMemo(() => availableMatches.length ? availableMatches : (demoModeV355 ? [demoEntryV355.match] : []), [availableMatches, demoModeV355, demoEntryV355])
+  const displayEntriesV355 = useMemo(() => scannerEntries.length ? scannerEntries : (demoModeV355 ? demoEntriesV357 : []), [scannerEntries, demoModeV355, demoEntriesV357])
+  const displayMatchesV355 = useMemo(() => availableMatches.length ? availableMatches : (demoModeV355 ? demoEntriesV357.map(entry => entry.match) : []), [availableMatches, demoModeV355, demoEntriesV357])
   const filteredDisplayMatchesV355 = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return displayMatchesV355
@@ -1192,7 +1218,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     const caution = rows.filter(row => String(row.item?.decision || '').toUpperCase() === 'SMALL_EDGE').length
     const noBet = rows.filter(row => ['NO_BET', 'NO_ODDS'].includes(String(row.item?.decision || '').toUpperCase())).length
     const top = focusCardsV347.find(row => row.id === 'balance')?.entry || focusCardsV347[0]?.entry || displayEntriesV355[0] || null
-    return { good, caution, noBet, top, total: demoModeV355 ? 1 : (scannerProgress.total || displayEntriesV355.length) }
+    return { good, caution, noBet, top, total: demoModeV355 ? displayEntriesV355.length : (scannerProgress.total || displayEntriesV355.length) }
   }, [displayEntriesV355, focusCardsV347, scannerProgress.total, demoModeV355])
 
   const fmAnalysisV351 = useMemo(() => {
@@ -1287,7 +1313,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         {!loading && !error && qualifying && !availableMatches.length && <div className="sim-day-loading-v99"><i/><strong>Sprawdzam realne statystyki meczów…</strong><span>{qualificationProgress.done}/{qualificationProgress.total} sprawdzonych</span></div>}
 
         {!loading && !error ? <>
-          {demoModeV355 ? <div className="sim-v355-demo-note"><span>TEST</span><b>Dzisiaj nie ma już kolejnych meczów przed rozpoczęciem.</b><p>Pokazuję 1 mecz testowy offline, żebyś mógł sprawdzić cały wygląd FM AI i wejść do symulacji. Nie jest to prawdziwy typ bukmacherski.</p></div> : null}
+          {demoModeV355 ? <div className="sim-v355-demo-note"><span>TEST</span><b>Dzisiaj nie ma już kolejnych meczów przed rozpoczęciem.</b><p>Pokazuję 4 mecze testowe offline, żebyś mógł sprawdzić pełny układ FM AI. Nie są to prawdziwe typy bukmacherskie.</p></div> : null}
 
           <section className="sim-v355-command">
             <div className="sim-v355-hero-row">
@@ -1354,12 +1380,12 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
             <div className="sim-v355-picks-grid">{displayEntriesV355.slice(0,4).map((entry,index) => {
               const item=entry.scan.topFinal; const meta=getScannerMarketMetaV330(item,entry.match,lang); const verdict=simpleVerdictV350(item.decision,lang); const confidence=confidenceUiV350(item,entry.scan,lang); const risk=riskUiV350(item,entry.scan,lang)
               return <article key={`v355-pick-${entry.key || index}`} className={`sim-v355-pick tone-${verdict.tone}`}><header><span>{entry.match.country === 'Italy' ? '🇮🇹' : '⚽'} {String(entry.match.league || '').replace(' • MECZ TESTOWY','')}</span><b>{formatKickoffTime(getFixtureStartMs(entry.match), clientTimeZone)}</b></header><div className="sim-v355-pick-teams"><strong>{entry.match.home}</strong><i>VS</i><strong>{entry.match.away}</strong></div><div className="sim-v355-pick-line"><b>{meta.title}</b><span>@ {Number(item.bookmakerOdds||0).toFixed(2)}</span><em>Szansa AI <strong>{item.probability||'—'}%</strong></em></div><div className={`sim-v355-pick-verdict tone-${verdict.tone}`}><FmIconV355 name="check" size={15}/>{verdict.label}</div><footer><span>Pewność <b>{confidence.score10.toFixed(1)}/10</b></span><i className="sim-v355-mini-meter"><b style={{width:`${confidence.score10*10}%`}}/></i><span>Ryzyko <b>{risk.label}</b></span></footer><div className="sim-v355-pick-actions"><button type="button" onClick={() => openWhyAiV347(entry)}>Dlaczego AI?</button><button type="button" onClick={() => handleSelect(entry.match)}>Pełna analiza →</button></div></article>
-            })}{demoModeV355 ? [0,1,2].map((slot) => <article key={`v356-empty-${slot}`} className="sim-v355-pick sim-v356-empty-card"><header><span>{slot === 0 ? '🇫🇷 Ligue 2' : slot === 1 ? '🇳🇱 Eredivisie' : '🇪🇸 La Liga'}</span><b>—:—</b></header><div className="sim-v355-pick-teams"><strong>Oczekuje</strong><i>VS</i><strong>na mecz</strong></div><div className="sim-v355-pick-line"><b>Brak kolejnej analizy</b><span>—</span><em>Nowe mecze pojawią się automatycznie.</em></div><div className="sim-v355-pick-verdict tone-warn">OCZEKUJE</div><footer><span>Pewność <b>—</b></span><i className="sim-v355-mini-meter"><b style={{width:'0%'}}/></i><span>Ryzyko <b>—</b></span></footer></article>) : null}</div>
+            })}{null}</div>
           </section>
 
           <div className="sim-v356-footer"><div><span><FmIconV355 name="info" size={16}/> AI Analiza Statystyk</span><span><FmIconV355 name="check" size={16}/> Value na rynku</span><span><FmIconV355 name="warn" size={16}/> Kontrola ryzyka</span><span><FmIconV355 name="shield" size={16}/> Tylko najlepsze okazje</span></div><blockquote>„Dane nie kłamią. My je tylko czytamy lepiej.”<small>— Bet+AI</small></blockquote></div>
 
-          {showAllMatchesV356 ? <section className="sim-v355-all-matches"><div className="sim-v355-section-title"><div><strong>Mecze do symulacji</strong><p>{demoModeV355 ? 'Jeden mecz testowy offline na dziś.' : 'Pełna lista znalezionych meczów — zachowany oryginalny wygląd kart.'}</p></div><span>{filteredDisplayMatchesV355.length}</span></div>
+          {showAllMatchesV356 ? <section className="sim-v355-all-matches"><div className="sim-v355-section-title"><div><strong>Mecze do symulacji</strong><p>{demoModeV355 ? 'Pokazowe mecze offline do sprawdzenia layoutu FM AI.' : 'Pełna lista znalezionych meczów — zachowany oryginalny wygląd kart.'}</p></div><span>{filteredDisplayMatchesV355.length}</span></div>
             {filteredDisplayMatchesV355.map((match) => {
               const odds = getReal1X2(match)
               const key = fixtureKey(match)
@@ -1367,7 +1393,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
               const isNearest = key === nearestKey
               const leagueUi = getLeagueUiMetaV328(match, lang)
               const venueLabel = [match.venueName, match.venueCity].filter(Boolean).join('  |  ')
-              const demoItem = demoModeV355 && key === demoEntryV355.key ? demoEntryV355.scan.topFinal : null
+              const demoEntryForMatch = demoModeV355 ? demoEntriesV357.find(entry => entry.key === key) : null
+              const demoItem = demoEntryForMatch ? demoEntryForMatch.scan.topFinal : null
               const cardBestMarket = demoItem ? { source:'value', meta:getScannerMarketMetaV330(demoItem, match, lang), probability:Number(demoItem.probability), bookmakerOdds:Number(demoItem.bookmakerOdds), fairOdds:Number(demoItem.fairOdds), decision:demoItem.decision, reliability:Number(demoItem.reliability?.score||0) } : getCardBestMarketV332(scannerResults[key], match, scannerPerformance)
               return <article key={key} className={`sim-pro-match-card-v328 ${isNearest?'nearest-v328':''} ${selectedId===key?'selected-v328':''} ${match.isBetAiLabTest?'sim-v355-test-card':''}`}>
                 <div className="sim-pro-league-v328"><div className="sim-pro-league-logo-v328">{match.leagueLogo?<img src={match.leagueLogo} alt={`${match.league||''} logo`}/>:<span>{match.isBetAiLabTest?'TEST':getLeagueAcronymV328(match.league)}</span>}</div><div className="sim-pro-league-copy-v328"><div className="sim-pro-league-title-v328"><strong>{match.league}</strong><span>• {leagueUi.country}</span></div><small>{match.isBetAiLabTest?'Scenariusz offline do sprawdzenia FM AI':leagueUi.description}</small><div className="sim-pro-league-subline-v328">{match.leagueFlag?<img src={match.leagueFlag} alt=""/>:<span>{match.isBetAiLabTest?'🧪':leagueUi.flag}</span>}{match.round?<em>{match.round}</em>:null}</div>{isNearest?<div className="sim-pro-nearest-v328"><b>⚡ {copy.nearest}</b><span>{formatKickoffCountdown(startMs,nowMs,copy)}</span></div>:null}</div></div>
