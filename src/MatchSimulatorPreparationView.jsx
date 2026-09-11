@@ -5,6 +5,7 @@ import LivePreMatchV280 from './LivePreMatchV280'
 import ProductionPlatformV300 from './ProductionPlatformV300'
 import { applyContextOverlayV220 } from './matchIntelligenceV260'
 import { buildChallengerRawV180, chooseActiveModelV173, buildModelLabV200, adaptiveCalibrateTripletV172, adaptiveCalibrateBinaryV172, applyDataScienceTripletV200, applyDataScienceBinaryV200, applyEnsembleStackingV197, buildReliabilityGuardV190, applyReliabilityDecisionV190 } from './predictionLabV200'
+import { classifyValueCandidateV346 } from './valuePolicyV346'
 
 const COPY = {
   pl: {
@@ -453,60 +454,11 @@ function explainForecastV145({ match = {}, data = {}, consensus = null, forecast
   }
 }
 
-function baseEdgeThreshold(key = '') {
-  if (['home', 'draw', 'away'].includes(key)) return 6
-  if (['bttsYes', 'bttsNo', 'btts'].includes(key)) return 5.5
-  return 5
-}
-
 function classifyValueCandidate(candidate = {}, context = {}) {
-  const quality = Number(context.dataQuality || 0)
-  const calibration = candidate.calibration || {}
-  let threshold = baseEdgeThreshold(candidate.key)
-  if (quality < 75) threshold += 4
-  else if (quality < 85) threshold += 2.5
-  else if (quality < 92) threshold += 1
-  if (calibration.status === 'OK') threshold += 0.75
-  threshold += Number(calibration.leaguePenalty || 0)
-  if (Number(context.consensusSources || 0) >= 2 && Number(context.consensusAgreement || 0) < 60) threshold += 1
-  if (Number(context.modelAgreement || 65) < 60) threshold += 1.5
-  if (Number(context.modelAgreement || 65) < 50) threshold += 2
-  threshold = round1(threshold)
-
-  const calibrationScore = calibration.status === 'GOOD' ? 92 : calibration.status === 'OK' ? 76 : calibration.status === 'POOR' ? 28 : 45
-  const consensusScore = Number(context.consensusSources || 0) > 0 ? Number(context.consensusAgreement || 0) : 55
-  const reliabilityScore = Math.round(clampNum(quality * 0.45 + calibrationScore * 0.30 + Number(context.modelAgreement || 65) * 0.15 + consensusScore * 0.10, 0, 100))
-  const reliabilityLabel = calibration.status === 'PENDING' ? 'PENDING' : calibration.status === 'POOR' || reliabilityScore < 65 ? 'LOW' : reliabilityScore >= 82 ? 'HIGH' : 'MEDIUM'
-
-  let decision = 'NO_BET'
-  let reason = ''
-  if (!candidate.vigAdjusted) {
-    reason = 'Brak pełnego rynku do wiarygodnego usunięcia marży bukmachera'
-  } else if (quality < 75) {
-    reason = 'Za niska jakość danych'
-  } else if (calibration.status === 'PENDING') {
-    reason = 'Za mała próbka backtestu — brak rekomendacji'
-  } else if (calibration.status === 'POOR') {
-    reason = 'Model jest słabo skalibrowany dla tego rynku'
-  } else if (Number(context.modelAgreement || 65) < 45) {
-    reason = 'Modele zbyt mocno się nie zgadzają — brak rekomendacji'
-  } else if (Number(context.consensusSources || 0) >= 2 && Number(context.consensusAgreement || 0) < 45) {
-    reason = 'Zewnętrzne źródła są zbyt rozbieżne — brak rekomendacji'
-  } else if (reliabilityScore < 62) {
-    reason = 'Łączna wiarygodność modelu jest za niska'
-  } else if (candidate.edgePp >= threshold + 5 && candidate.expectedValuePct >= 8 && quality >= 88 && reliabilityScore >= 78) {
-    decision = 'STRONG_VALUE'
-    reason = 'Duża przewaga po usunięciu marży i dobra jakość modelu'
-  } else if (candidate.edgePp >= threshold && candidate.expectedValuePct >= 3) {
-    decision = 'VALUE'
-    reason = 'Przewaga przekracza wymagany próg'
-  } else if (candidate.edgePp > 0 && candidate.expectedValuePct > 0) {
-    decision = 'SMALL_EDGE'
-    reason = 'Dodatnia przewaga, ale poniżej bezpiecznego progu'
-  } else {
-    reason = 'Brak dodatniej przewagi nad ceną rynkową'
-  }
-  return { ...candidate, threshold, decision, reason, reliabilityScore, reliabilityLabel }
+  const marketScore = Number(context.consensusSources || 0) > 0
+    ? Number(context.consensusAgreement || 0)
+    : 55
+  return classifyValueCandidateV346(candidate, { ...context, marketScore })
 }
 
 function buildValueEngineV2({ match = {}, data = {}, probabilities = {}, dataQuality = 0, consensus = null, performance = null } = {}) {
@@ -1644,7 +1596,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
       return () => { cancelled = true }
     }
     setModelPerformanceLoading(true)
-    fetch('/.netlify/functions/get-match-prediction-performance?limit=5000', { cache: 'no-store' })
+    fetch('/.netlify/functions/get-match-prediction-performance?limit=5000&source=snapshots&model_version=BETAI_FORECAST_V260&pre_match_only=1', { cache: 'no-store' })
       .then(response => response.json().catch(() => ({})).then(payload => ({ response, payload })))
       .then(({ response, payload }) => {
         if (cancelled || !mountedRef.current) return

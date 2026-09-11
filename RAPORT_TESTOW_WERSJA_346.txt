@@ -1,0 +1,21 @@
+RAPORT TESTOW — WERSJA 346 FM AI VALUE CALIBRATION GUARD
+
+PASS — TEST_WERSJA_346_FM_AI_VALUE_GUARD.mjs
+- 29 prób => NO_BET
+- 36 prób => VALUE, nie STRONG
+- 99 prób => VALUE, nie STRONG
+- 120 prób + model agreement 55% => VALUE, nie STRONG
+- 120 prób + model agreement 86% => STRONG_VALUE
+- brak poprawnego no-vig => NO_BET
+
+PASS — node --check:
+- netlify/functions/get-match-prediction-performance.js
+- netlify/functions/get-match-value-scan.js
+- netlify/functions/settle-match-prediction-snapshots.js
+
+PASS — TypeScript parser / JSX syntax:
+- src/MatchSimulatorDailyMatchesView.jsx
+- src/MatchSimulatorPreparationView.jsx
+- src/valuePolicyV346.js
+
+Pełny `npm run build` nie został uruchomiony w środowisku roboczym, ponieważ paczka źródłowa nie zawiera node_modules, a instalacja z rejestru nie była dostępna. Składnia zmienionych plików została niezależnie zweryfikowana jak wyżej.

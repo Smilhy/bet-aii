@@ -443,24 +443,131 @@ async function fetchShadowBets(supabase, limit = 5000) {
   return Array.isArray(data) ? data : []
 }
 
-async function fetchSettled(supabase, limit = 5000) {
+function isFrozenPreMatchV346(row = {}, payload = null, checkUpdatedAt = false) {
+  const kickoffMs = Date.parse(row?.fixture_date || '')
+  if (!Number.isFinite(kickoffMs)) return false
+  const source = payload || row?.forecast || {}
+  const generatedMs = Date.parse(source?.generatedAt || row?.generated_at || '')
+  if (!Number.isFinite(generatedMs) || generatedMs >= kickoffMs) return false
+  const updatedMs = Date.parse(row?.updated_at || '')
+  if (checkUpdatedAt && Number.isFinite(updatedMs) && updatedMs >= kickoffMs && !source?.settlementV346) return false
+  return true
+}
+
+async function fetchSettled(supabase, limit = 5000, options = {}) {
   const rows = []
   const pageSize = 1000
+  const modelVersion = String(options?.modelVersion || '').trim()
+  const preMatchOnly = Boolean(options?.preMatchOnly)
   for (let from = 0; from < limit; from += pageSize) {
     const to = Math.min(from + pageSize - 1, limit - 1)
-    const { data, error } = await supabase
+    let query = supabase
       .from(TABLE)
-      .select('fixture_id,fixture_date,home_team,away_team,league,country,model_version,data_quality,source_count,consensus_agreement,forecast,settlement,actual_home_goals,actual_away_goals,settled_at')
+      .select('fixture_id,fixture_date,home_team,away_team,league,country,model_version,data_quality,source_count,consensus_agreement,forecast,settlement,actual_home_goals,actual_away_goals,settled_at,updated_at')
       .not('actual_home_goals', 'is', null)
       .not('actual_away_goals', 'is', null)
       .order('settled_at', { ascending: false })
       .range(from, to)
+    if (modelVersion) query = query.eq('model_version', modelVersion)
+    const { data, error } = await query
     if (error) throw error
     const page = Array.isArray(data) ? data : []
-    rows.push(...page)
+    rows.push(...page.filter(row => !preMatchOnly || isFrozenPreMatchV346(row)))
     if (page.length < pageSize) break
   }
-  return rows
+  return rows.slice(0, limit)
+}
+
+function scannerForecastV346(payload = {}) {
+  const oneXTwo = payload?.probabilities?.oneXTwo || {}
+  const goals = payload?.probabilities?.goals || {}
+  const top = payload?.top || null
+  return {
+    version: String(payload?.version || 'BETAI_VALUE_SCANNER_V1'),
+    generatedAt: payload?.generatedAt || null,
+    oneXTwo,
+    goals,
+    raw: { oneXTwo, goals },
+    value: {
+      detected: Boolean(top),
+      top,
+      top3: Array.isArray(payload?.candidates) ? payload.candidates.slice(0, 3) : []
+    }
+  }
+}
+
+async function fetchValueScannerSettledV346(supabase, limit = 5000, options = {}) {
+  const modelVersion = String(options?.modelVersion || 'BETAI_VALUE_SCANNER_V1').trim()
+  const preMatchOnly = options?.preMatchOnly !== false
+  const snapshots = []
+  const pageSize = 1000
+  for (let from = 0; from < limit; from += pageSize) {
+    const to = Math.min(from + pageSize - 1, limit - 1)
+    const { data, error } = await supabase
+      .from('match_value_scan_snapshots')
+      .select('fixture_id,fixture_date,home_team,away_team,league,country,payload,created_at,updated_at')
+      .lte('fixture_date', new Date().toISOString())
+      .order('fixture_date', { ascending: false })
+      .range(from, to)
+    if (error) {
+      if (/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) return []
+      throw error
+    }
+    const page = Array.isArray(data) ? data : []
+    snapshots.push(...page)
+    if (page.length < pageSize) break
+  }
+
+  const eligible = snapshots.filter(row => {
+    const payload = row?.payload || {}
+    if (modelVersion && String(payload?.version || '') !== modelVersion) return false
+    if (preMatchOnly && !isFrozenPreMatchV346(row, payload, true)) return false
+    return true
+  })
+  if (!eligible.length) return []
+
+  const settledByFixture = new Map()
+  const ids = [...new Set(eligible.map(row => String(row.fixture_id || '')).filter(Boolean))]
+  for (let i = 0; i < ids.length; i += 200) {
+    const chunk = ids.slice(i, i + 200)
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('fixture_id,actual_home_goals,actual_away_goals,settled_at,settlement')
+      .in('fixture_id', chunk)
+      .not('actual_home_goals', 'is', null)
+      .not('actual_away_goals', 'is', null)
+    if (!error) for (const row of (data || [])) settledByFixture.set(String(row.fixture_id), row)
+  }
+
+  const rows = []
+  for (const row of eligible) {
+    const payload = row?.payload || {}
+    const scannerSettlement = payload?.settlementV346 || null
+    const fallbackSettlement = settledByFixture.get(String(row.fixture_id)) || null
+    const scannerScore = scannerSettlement?.status === 'settled' ? scannerSettlement?.score : null
+    const homeGoals = Number(scannerScore?.home ?? fallbackSettlement?.actual_home_goals)
+    const awayGoals = Number(scannerScore?.away ?? fallbackSettlement?.actual_away_goals)
+    if (!Number.isFinite(homeGoals) || !Number.isFinite(awayGoals)) continue
+    rows.push({
+      fixture_id: String(row.fixture_id),
+      fixture_date: row.fixture_date || null,
+      home_team: row.home_team || payload?.home || '',
+      away_team: row.away_team || payload?.away || '',
+      league: row.league || payload?.league || '',
+      country: row.country || payload?.country || '',
+      model_version: String(payload?.version || modelVersion || 'BETAI_VALUE_SCANNER_V1'),
+      data_quality: n(payload?.dataQuality, 0),
+      source_count: payload?.sourceFlags?.apiPrediction ? 2 : 1,
+      consensus_agreement: n(payload?.modelAgreement, 0),
+      forecast: scannerForecastV346(payload),
+      settlement: scannerSettlement || fallbackSettlement?.settlement || null,
+      actual_home_goals: homeGoals,
+      actual_away_goals: awayGoals,
+      settled_at: scannerSettlement?.settledAt || fallbackSettlement?.settled_at || row.fixture_date || null,
+      updated_at: row.updated_at || null
+    })
+  }
+  return rows.slice(0, limit)
 }
 
 
@@ -1596,7 +1703,12 @@ exports.handler = async function handler(event = {}) {
   try {
     const requested = Number(event.queryStringParameters?.limit || 5000)
     const limit = Math.max(100, Math.min(20000, Number.isFinite(requested) ? requested : 5000))
-    const rows = await fetchSettled(supabase, limit)
+    const source = String(event.queryStringParameters?.source || 'snapshots').trim().toLowerCase()
+    const modelVersion = String(event.queryStringParameters?.model_version || event.queryStringParameters?.modelVersion || '').trim()
+    const preMatchOnly = String(event.queryStringParameters?.pre_match_only || event.queryStringParameters?.preMatchOnly || '') === '1'
+    const rows = source === 'value_scanner'
+      ? await fetchValueScannerSettledV346(supabase, limit, { modelVersion: modelVersion || 'BETAI_VALUE_SCANNER_V1', preMatchOnly: true })
+      : await fetchSettled(supabase, limit, { modelVersion, preMatchOnly })
     const now = Date.now()
     const last30 = rows.filter(row => {
       const t = Date.parse(row.settled_at || row.fixture_date || '')
@@ -1609,6 +1721,29 @@ exports.handler = async function handler(event = {}) {
     const walkForward = walkForwardBacktest(rows)
     const drift = buildDriftDetector(rows)
     const leagueTrust = buildLeagueTrust(rows)
+    if (source === 'value_scanner') {
+      return json(200, {
+        ok: true,
+        available: true,
+        generatedAt: new Date().toISOString(),
+        scope: {
+          source: 'match_value_scan_snapshots',
+          modelVersion: modelVersion || 'BETAI_VALUE_SCANNER_V1',
+          preMatchOnly: true,
+          policy: 'BETAI_VALUE_POLICY_V346'
+        },
+        all,
+        last30: last30Stats,
+        leagues,
+        versions,
+        walkForward,
+        drift,
+        leagueTrust,
+        note: rows.length < 100
+          ? `Value Scanner: ${rows.length}/100 rozliczonych, zamrożonych pre-match próbek tej samej wersji modelu. STRONG VALUE pozostaje zablokowane do 100 prób rynku.`
+          : 'Value Scanner używa wyłącznie rozliczonych, zamrożonych pre-match próbek tej samej wersji modelu.'
+      })
+    }
     let shadowRows = []
     let paperPortfolio = aggregateShadowPortfolio([])
     try {
@@ -1645,6 +1780,12 @@ exports.handler = async function handler(event = {}) {
       ok: true,
       available: true,
       generatedAt: new Date().toISOString(),
+      scope: {
+        source: 'match_prediction_snapshots',
+        modelVersion: modelVersion || 'ALL',
+        preMatchOnly,
+        policy: 'BETAI_VALUE_POLICY_V346'
+      },
       all,
       last30: last30Stats,
       leagues,
@@ -1672,4 +1813,4 @@ exports.handler = async function handler(event = {}) {
   }
 }
 
-exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio, buildErrorAnalysis, buildPortfolioRisk, buildControlCenter, buildChampionChallengerV160, buildStatisticalConfidenceV161, buildAutoGateV162, buildTeamStrengthV164, buildSelfLearningV174, buildGovernanceV173, buildAdaptiveCalibration, buildMarketWeightProfile, persistSelfLearningProfilesV174, buildDataScienceV200, evaluateBinaryCalibrationV198, evaluateOneXTwoTemperatureV198, fitPlattV193, fitIsotonicV192, bootstrapConfidenceV199, leagueBayesianPriorsV194 }
+exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio, buildErrorAnalysis, buildPortfolioRisk, buildControlCenter, buildChampionChallengerV160, buildStatisticalConfidenceV161, buildAutoGateV162, buildTeamStrengthV164, buildSelfLearningV174, buildGovernanceV173, buildAdaptiveCalibration, buildMarketWeightProfile, persistSelfLearningProfilesV174, buildDataScienceV200, evaluateBinaryCalibrationV198, evaluateOneXTwoTemperatureV198, fitPlattV193, fitIsotonicV192, bootstrapConfidenceV199, leagueBayesianPriorsV194, isFrozenPreMatchV346, scannerForecastV346 }

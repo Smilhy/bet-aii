@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { classifyValueCandidateV346 } from './valuePolicyV346'
 
 // V329: offline test V158 is kept in code but hidden from production UI.
 // Set to true only when the diagnostic scenario is needed again.
@@ -517,12 +518,6 @@ function scannerCalibration(performance = null, league = '', candidate = null) {
   }
 }
 
-function scannerBaseThreshold(key = '') {
-  if (['home', 'draw', 'away'].includes(key)) return 6
-  if (['bttsYes', 'bttsNo'].includes(key)) return 5.5
-  return 5
-}
-
 function enrichScannerCandidate(scan = {}, candidate = null, performance = null) {
   if (!candidate) return { decision: 'NO_ODDS', reliability: { score: 0, label: 'BRAK KURSÓW', calibration: { status: 'PENDING', samples: 0 } } }
   const calibration = scannerCalibration(performance, scan?.league || '', candidate)
@@ -534,48 +529,40 @@ function enrichScannerCandidate(scan = {}, candidate = null, performance = null)
   const probability = Math.round((rawProbability >= 50 ? calibratedConfidence : 100 - calibratedConfidence) * 10) / 10
   const noVig = Number(candidate?.noVigImplied || 0)
   const bookmakerOdds = Number(candidate?.bookmakerOdds || 0)
-  candidate = {
+  const calibratedCandidate = {
     ...candidate,
     rawProbability: Math.round(rawProbability * 10) / 10,
     probability,
     fairOdds: probability > 0 ? Math.round((100 / probability) * 100) / 100 : 0,
     edgePp: noVig > 0 ? Math.round((probability - noVig) * 10) / 10 : Number(candidate?.edgePp || 0),
     expectedValuePct: bookmakerOdds > 1 ? Math.round(((probability / 100 * bookmakerOdds - 1) * 100) * 10) / 10 : Number(candidate?.expectedValuePct || 0),
-    calibrated: canCalibrate
+    calibrated: canCalibrate,
+    calibration,
+    vigAdjusted: true
   }
   const dataQuality = Number(scan?.dataQuality || 0)
   const agreement = Number(scan?.modelAgreement || 0)
   const marketScore = Number(scan?.bookmakerCount || 0) >= 3 ? 92 : Number(scan?.bookmakerCount || 0) >= 1 ? 78 : 35
-  const reliabilityScore = Math.round(Math.max(0, Math.min(100, dataQuality * 0.40 + agreement * 0.20 + calibration.score * 0.25 + marketScore * 0.15)))
-  let reliabilityLabel = reliabilityScore >= 82 ? 'HIGH' : reliabilityScore >= 68 ? 'MEDIUM' : 'LOW'
-  if (calibration.status === 'PENDING') reliabilityLabel = 'PENDING'
-  if (calibration.status === 'POOR') reliabilityLabel = 'LOW'
+  const classified = classifyValueCandidateV346(calibratedCandidate, {
+    dataQuality,
+    modelAgreement: agreement,
+    marketScore
+  })
 
-  let threshold = scannerBaseThreshold(candidate.key)
-  if (dataQuality < 85) threshold += 2
-  if (reliabilityScore < 82) threshold += 1.5
-  if (reliabilityScore < 68) threshold += 2
-  threshold = Math.round(threshold * 10) / 10
-
-  let decision = 'NO_BET'
-  let reason = 'Brak przewagi ponad wymagany próg.'
-  if (calibration.status === 'PENDING') reason = `Kalibracja: ${calibration.samples}/30 prób.`
-  else if (calibration.status === 'POOR') reason = 'Historyczna kalibracja tego rynku jest słaba.'
-  else if (reliabilityScore < 65) reason = 'Za niska wiarygodność modelu dla tego meczu.'
-  else if (Number(candidate.edgePp || 0) >= threshold + 4 && Number(candidate.expectedValuePct || 0) >= 8 && reliabilityScore >= 80) {
-    decision = 'STRONG_VALUE'; reason = 'Duża przewaga cenowa i wysoka wiarygodność.'
-  } else if (Number(candidate.edgePp || 0) >= threshold && Number(candidate.expectedValuePct || 0) >= 3) {
-    decision = 'VALUE'; reason = 'Przewaga przekracza próg po kontroli kalibracji.'
-  } else if (Number(candidate.edgePp || 0) > 0 && Number(candidate.expectedValuePct || 0) > 0) {
-    decision = 'SMALL_EDGE'; reason = 'Dodatni edge, ale poniżej bezpiecznego progu.'
-  }
   return {
-    ...candidate,
-    threshold,
-    decision,
-    reason,
-    reliability: { score: reliabilityScore, label: reliabilityLabel, calibration, modelAgreement: agreement, dataQuality },
-    dailyScore: Math.round(Math.max(0, Math.min(100, reliabilityScore * .55 + Math.max(0, Number(candidate.edgePp || 0)) * 2.2 + Math.max(0, Number(candidate.expectedValuePct || 0)) * .35)))
+    ...classified,
+    reliability: {
+      score: classified.reliabilityScore,
+      label: classified.reliabilityLabel,
+      calibration,
+      modelAgreement: agreement,
+      dataQuality
+    },
+    dailyScore: Math.round(Math.max(0, Math.min(100,
+      classified.reliabilityScore * .55 +
+      Math.max(0, Number(classified.edgePp || 0)) * 2.2 +
+      Math.max(0, Number(classified.expectedValuePct || 0)) * .35
+    )))
   }
 }
 
@@ -810,7 +797,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
   useEffect(() => {
     let cancelled = false
-    fetch('/.netlify/functions/get-match-prediction-performance?limit=5000', { cache: 'no-store' })
+    fetch('/.netlify/functions/get-match-prediction-performance?limit=5000&source=value_scanner&model_version=BETAI_VALUE_SCANNER_V1&pre_match_only=1', { cache: 'no-store' })
       .then(response => response.json().catch(() => ({})).then(payload => ({ response, payload })))
       .then(({ response, payload }) => {
         if (!cancelled && response.ok && payload?.ok && payload?.available) setScannerPerformance(payload)
@@ -932,7 +919,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                     <span><small>RELIABILITY</small><b>{rel.score || 0}/100</b></span>
                     <span><small>DAILY SCORE</small><b>{item.dailyScore || 0}/100</b></span>
                   </div>
-                  <footer><span className={`rel-${String(rel.label || 'pending').toLowerCase()}`}>{rel.label || 'PENDING'}</span><small>{rel.calibration?.samples || 0} prób • model agreement {scan.modelAgreement || 0}%</small></footer>
+                  <footer><span className={`rel-${String(rel.label || 'pending').toLowerCase()}`}>{rel.label || 'PENDING'}</span><small>{String(rel.calibration?.source || 'global').toUpperCase()} • {rel.calibration?.samples || 0} prób • model agreement {scan.modelAgreement || 0}%</small></footer>
                 </button>
               })}
             </div> : <div className="sim-value-scanner-empty-v139"><i />Szukam przewag cenowych i sprawdzam kalibrację…</div>}

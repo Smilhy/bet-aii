@@ -159,6 +159,90 @@ function regularTimeScore(fixture) {
 }
 
 
+function scannerSnapshotIsPreMatchV346(row = {}) {
+  const kickoffMs = Date.parse(row?.fixture_date || '')
+  const generatedMs = Date.parse(row?.payload?.generatedAt || '')
+  const updatedMs = Date.parse(row?.updated_at || '')
+  if (!Number.isFinite(kickoffMs) || !Number.isFinite(generatedMs)) return false
+  if (generatedMs >= kickoffMs) return false
+  if (Number.isFinite(updatedMs) && updatedMs >= kickoffMs) return false
+  return String(row?.payload?.version || '') === 'BETAI_VALUE_SCANNER_V1'
+}
+
+async function settleValueScannerSnapshotsV346(supabase, cutoff, maxApiCalls = 20) {
+  const out = { checked: 0, settled: 0, void: 0, fromSnapshot: 0, fromApi: 0, errors: 0 }
+  try {
+    const { data, error } = await supabase
+      .from('match_value_scan_snapshots')
+      .select('fixture_id,fixture_date,payload,updated_at')
+      .lte('fixture_date', cutoff)
+      .order('fixture_date', { ascending: true })
+      .limit(160)
+    if (error) {
+      if (/relation .* does not exist|could not find the table|schema cache/i.test(String(error.message || ''))) return out
+      throw error
+    }
+    const rows = (Array.isArray(data) ? data : [])
+      .filter(scannerSnapshotIsPreMatchV346)
+      .filter(row => !row?.payload?.settlementV346)
+      .slice(0, 80)
+    out.checked = rows.length
+    if (!rows.length) return out
+
+    const ids = [...new Set(rows.map(row => String(row.fixture_id || '')).filter(Boolean))]
+    const settledMap = new Map()
+    for (let i = 0; i < ids.length; i += 100) {
+      const { data: settledRows } = await supabase
+        .from(TABLE)
+        .select('fixture_id,actual_home_goals,actual_away_goals,settlement_status,fixture_status,settled_at')
+        .in('fixture_id', ids.slice(i, i + 100))
+        .not('settled_at', 'is', null)
+      for (const item of (settledRows || [])) settledMap.set(String(item.fixture_id), item)
+    }
+
+    let apiCalls = 0
+    for (const row of rows) {
+      try {
+        let settlement = null
+        const existing = settledMap.get(String(row.fixture_id)) || null
+        if (existing) {
+          if (String(existing.settlement_status || '') === 'void') {
+            settlement = { status: 'void', fixtureStatus: existing.fixture_status || null, settledAt: existing.settled_at || new Date().toISOString(), source: 'match_prediction_snapshots' }
+          } else {
+            const home = Number(existing.actual_home_goals), away = Number(existing.actual_away_goals)
+            if (Number.isFinite(home) && Number.isFinite(away)) settlement = { status: 'settled', fixtureStatus: existing.fixture_status || null, score: { home, away }, settledAt: existing.settled_at || new Date().toISOString(), source: 'match_prediction_snapshots' }
+          }
+          if (settlement) out.fromSnapshot += 1
+        }
+        if (!settlement && apiCalls < maxApiCalls) {
+          apiCalls += 1
+          const fixture = await apiFixture(row.fixture_id)
+          if (!fixture) continue
+          const state = fixtureClass(fixture)
+          const fixtureStatus = String(fixture?.fixture?.status?.short || '')
+          if (state === 'void') settlement = { status: 'void', fixtureStatus, settledAt: new Date().toISOString(), source: 'API-Football' }
+          else if (state === 'finished') {
+            const score = regularTimeScore(fixture)
+            if (score) settlement = { status: 'settled', fixtureStatus, score, settledAt: new Date().toISOString(), source: 'API-Football' }
+          }
+          if (settlement) out.fromApi += 1
+        }
+        if (!settlement) continue
+        const nextPayload = { ...(row.payload || {}), settlementV346: settlement, frozenPreMatchV346: true }
+        const { error: updateError } = await supabase.from('match_value_scan_snapshots').update({ payload: nextPayload }).eq('fixture_id', String(row.fixture_id))
+        if (updateError) throw updateError
+        if (settlement.status === 'settled') out.settled += 1
+        if (settlement.status === 'void') out.void += 1
+      } catch (_) { out.errors += 1 }
+    }
+    return out
+  } catch (_) {
+    out.errors += 1
+    return out
+  }
+}
+
+
 function shadowOutcomeV151(marketKey = '', score = null) {
   if (!score) return null
   const key = String(marketKey || '')
@@ -360,8 +444,11 @@ exports.handler = async function handler(event = {}) {
     }
   })
 
+  const scannerApiBudgetV346 = Math.max(0, Math.min(20, 100 - rows.length))
+  const valueScannerV346 = await settleValueScannerSnapshotsV346(supabase, cutoff, scannerApiBudgetV346)
+
   const opsStatusV211 = errors.length ? (settled || voided ? 'partial' : 'error') : 'ok'
-  try { await logRun(supabase, 'settlement', opsStartedV211, opsStatusV211, { checked: rows.length, settled, void: voided, stillPending: pending, errors: errors.length }, errors[0]?.error || null) } catch (_) {}
+  try { await logRun(supabase, 'settlement', opsStartedV211, opsStatusV211, { checked: rows.length, settled, void: voided, stillPending: pending, errors: errors.length, valueScannerV346 }, errors[0]?.error || null) } catch (_) {}
   return json(200, {
     ok: true,
     checked: rows.length,
@@ -369,8 +456,9 @@ exports.handler = async function handler(event = {}) {
     void: voided,
     stillPending: pending,
     errors: errors.slice(0, 12),
+    valueScannerV346,
     operationsV211: { status: opsStatusV211 }
   })
 }
 
-exports._test = { fixtureClass, regularTimeScore, shadowOutcomeV151 }
+exports._test = { fixtureClass, regularTimeScore, shadowOutcomeV151, scannerSnapshotIsPreMatchV346 }

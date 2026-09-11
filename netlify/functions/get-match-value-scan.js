@@ -39,6 +39,13 @@ function round(value, digits = 1) {
 }
 function pct(value) { return clamp(value, 0, 100) }
 
+function isPreMatchPayloadV346(payload = {}) {
+  const kickoffMs = Date.parse(payload?.fixtureDate || '')
+  const generatedMs = Date.parse(payload?.generatedAt || '')
+  if (!Number.isFinite(kickoffMs) || !Number.isFinite(generatedMs)) return false
+  return generatedMs < kickoffMs && Date.now() < kickoffMs
+}
+
 
 async function apiGet(path, query = {}, options = {}) {
   // WERSJA 140: Value Scanner ma osobny, niski budżet. Gdy go wykorzysta,
@@ -63,7 +70,7 @@ async function readSnapshot(fixtureId) {
 }
 
 async function writeSnapshot(payload) {
-  if (!supabase || !payload?.fixtureId) return false
+  if (!supabase || !payload?.fixtureId || !isPreMatchPayloadV346(payload)) return false
   try {
     const row = {
       fixture_id: String(payload.fixtureId),
@@ -363,6 +370,7 @@ function buildScan({ fixtureId, fixtureDate, home, away, league, country, recent
   return {
     ok: true,
     version: 'BETAI_VALUE_SCANNER_V1',
+    freezePolicyVersion: 'BETAI_SCANNER_FREEZE_V346',
     fixtureId: String(fixtureId), fixtureDate: fixtureDate || null,
     home, away, league, country,
     xg: { home: round(homeXg, 2), away: round(awayXg, 2) },
@@ -389,6 +397,11 @@ exports.handler = async function handler(event = {}) {
   if (!fixtureId || !homeTeamId || !awayTeamId) return json(400, { ok: false, error: 'Brak fixture/team ids' })
 
   const cached = await readSnapshot(fixtureId)
+  const requestedKickoffMsV346 = Date.parse(clean(qs.fixture_date || qs.date) || cached?.fixture_date || '')
+  if (Number.isFinite(requestedKickoffMsV346) && Date.now() >= requestedKickoffMsV346) {
+    if (cached?.payload) return json(200, { ...cached.payload, cached: true, frozen: true, cacheSource: 'supabase', freezePolicy: 'V346_PREMATCH_ONLY' })
+    return json(409, { ok: false, frozen: true, error: 'Value Scanner nie tworzy ani nie nadpisuje snapshotu po kickoffie.' })
+  }
   if (cached?.payload && cachedFresh(cached)) return json(200, { ...cached.payload, cached: true, cacheSource: 'supabase' })
 
   try {
@@ -429,4 +442,4 @@ exports.handler = async function handler(event = {}) {
   }
 }
 
-exports._test = { deriveStats, poissonForecast, valueCandidates, buildScan, bestDisplay1X2 }
+exports._test = { deriveStats, poissonForecast, valueCandidates, buildScan, bestDisplay1X2, isPreMatchPayloadV346 }
