@@ -460,63 +460,6 @@ function getCardBestMarketV332(rawScan, match, performance) {
   }
 }
 
-
-function normalizeTripletV353(row = {}) {
-  const home = Math.max(0, Number(row?.home || 0))
-  const draw = Math.max(0, Number(row?.draw || 0))
-  const away = Math.max(0, Number(row?.away || 0))
-  const sum = home + draw + away
-  if (!(sum > 0)) return null
-  return { home: home * 100 / sum, draw: draw * 100 / sum, away: away * 100 / sum }
-}
-
-function getMasterQuickV353(rawScan, match, performance) {
-  if (!rawScan) return null
-  const model = normalizeTripletV353(rawScan?.probabilities?.oneXTwo)
-  if (!model) return null
-  const marketRaw = {
-    home: Number(rawScan?.marketConsensus?.home?.avgNoVigProbability || 0),
-    draw: Number(rawScan?.marketConsensus?.draw?.avgNoVigProbability || 0),
-    away: Number(rawScan?.marketConsensus?.away?.avgNoVigProbability || 0)
-  }
-  const market = normalizeTripletV353(marketRaw)
-  const marketSources = Math.min(
-    Number(rawScan?.marketConsensus?.home?.sources || 0),
-    Number(rawScan?.marketConsensus?.draw?.sources || 0),
-    Number(rawScan?.marketConsensus?.away?.sources || 0)
-  )
-  const marketWeight = market && marketSources >= 2 ? 0.18 : 0
-  const modelWeight = 1 - marketWeight
-  const master = normalizeTripletV353({
-    home: model.home * modelWeight + (market?.home || 0) * marketWeight,
-    draw: model.draw * modelWeight + (market?.draw || 0) * marketWeight,
-    away: model.away * modelWeight + (market?.away || 0) * marketWeight
-  }) || model
-  const keys = ['home','draw','away']
-  const bestKey = [...keys].sort((a,b) => master[b] - master[a])[0]
-  const label = bestKey === 'home' ? `Wygra ${match?.home || 'gospodarz'}` : bestKey === 'away' ? `Wygra ${match?.away || 'gość'}` : 'Remis'
-  const odds1x2 = rawScan?.displayOdds1X2 || {}
-  const bestOdds = Number(odds1x2?.[bestKey] || 0)
-  const enriched = enrichScannerResult(rawScan, performance)
-  const value = enriched?.topFinal || null
-  const spread = Math.max(...keys.map(k => Math.abs(Number(model[k] || 0) - Number(market?.[k] || model[k] || 0))))
-  const agreement = market ? Math.max(0, Math.min(100, 100 - spread * 2.2)) : Number(rawScan?.modelAgreement || 0)
-  return {
-    version: 'MASTER_QUICK_V353',
-    oneXTwo: { home: Math.round(master.home * 10)/10, draw: Math.round(master.draw * 10)/10, away: Math.round(master.away * 10)/10 },
-    bestKey,
-    label,
-    probability: Math.round(master[bestKey] * 10) / 10,
-    fairOdds: master[bestKey] > 0 ? Math.round((100/master[bestKey])*100)/100 : 0,
-    bookmakerOdds: bestOdds,
-    agreement: Math.round(agreement),
-    sources: marketWeight > 0 ? 3 : 2,
-    value,
-    valueLabel: value?.key ? getScannerMarketMetaV330(value, match).title : '',
-    valueDecision: String(value?.decision || 'NO_BET')
-  }
-}
-
 function scannerMarketKey(key = '') {
   if (['home', 'draw', 'away'].includes(key)) return 'oneXTwo'
   if (['over15', 'under15'].includes(key)) return 'over15'
@@ -1255,9 +1198,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     // Natychmiast zatrzymujemy skan dnia, żeby requesty listy nie konkurowały
     // z pełną analizą wybranego meczu o limit API-Football.
     scanAbortRef.current?.abort()
-    const key = fixtureKey(match)
-    const dailyScan = scannerResults[key] ? enrichScannerResult(scannerResults[key], scannerPerformance) : null
-    onSelectMatch?.(dailyScan ? { ...match, fmAiDailyScanV353: dailyScan } : match)
+    onSelectMatch?.(match)
   }
 
   return (
@@ -1517,7 +1458,6 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
             const leagueUi = getLeagueUiMetaV328(match, lang)
             const venueLabel = [match.venueName, match.venueCity].filter(Boolean).join('  |  ')
             const cardBestMarket = getCardBestMarketV332(scannerResults[key], match, scannerPerformance)
-            const masterQuickV353 = getMasterQuickV353(scannerResults[key], match, scannerPerformance)
             return (
               <article key={key} className={`sim-pro-match-card-v328 ${isNearest ? 'nearest-v328' : ''} ${selectedId === key ? 'selected-v328' : ''}`}>
                 <div className="sim-pro-league-v328">
@@ -1571,22 +1511,23 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                 </div>
 
                 <div className="sim-pro-market-v328 sim-pro-market-v332">
-                  {masterQuickV353 ? (
-                    <div className="sim-card-best-market-v332 sim-master-quick-v353 has-real-odds-v332">
+                  {cardBestMarket ? (
+                    <div className={`sim-card-best-market-v332 ${cardBestMarket.source === 'value' ? 'has-real-odds-v332' : 'fair-only-v332'}`}>
                       <div className="sim-card-market-head-v332">
-                        <small>MASTER CONSENSUS AI</small>
-                        <em>{masterQuickV353.agreement >= 70 ? 'ZGODNE' : masterQuickV353.agreement >= 55 ? 'UMIARKOWANE' : 'ROZBIEŻNE'}</em>
+                        <small>{cardBestMarket.source === 'value' ? 'NAJLEPSZY RYNEK AI' : 'NAJMOCNIEJSZY KIERUNEK AI'}</small>
+                        <em>{cardBestMarket.source === 'value' ? scannerDecisionLabel(cardBestMarket.decision) : 'MODEL'}</em>
                       </div>
                       <div className="sim-card-market-main-v332">
-                        <span>🤖</span>
-                        <b>{masterQuickV353.label}</b>
+                        <span>{cardBestMarket.meta.badge}</span>
+                        <b>{cardBestMarket.meta.title}</b>
                       </div>
-                      <div className="sim-card-market-stats-v332 sim-master-triplet-v353">
-                        <span><small>1</small><b>{masterQuickV353.oneXTwo.home}%</b></span>
-                        <span><small>X</small><b>{masterQuickV353.oneXTwo.draw}%</b></span>
-                        <span><small>2</small><b>{masterQuickV353.oneXTwo.away}%</b></span>
+                      <div className="sim-card-market-stats-v332">
+                        <span><small>AI</small><b>{cardBestMarket.probability ? `${cardBestMarket.probability}%` : '—'}</b></span>
+                        {cardBestMarket.bookmakerOdds > 1
+                          ? <span className="market-price-v332"><small>KURS</small><b>@{cardBestMarket.bookmakerOdds.toFixed(2)}</b></span>
+                          : <span className="market-fair-v332"><small>FAIR AI</small><b>{cardBestMarket.fairOdds ? cardBestMarket.fairOdds.toFixed(2) : '—'}</b></span>}
                       </div>
-                      <p><b>VALUE:</b> {masterQuickV353.valueLabel || 'brak sygnału'} • {scannerDecisionLabel(masterQuickV353.valueDecision)}{masterQuickV353.value?.bookmakerOdds > 1 ? ` @${Number(masterQuickV353.value.bookmakerOdds).toFixed(2)}` : ''}</p>
+                      <p>{cardBestMarket.bookmakerOdds > 1 ? `Realny kurs • FAIR ${cardBestMarket.fairOdds ? cardBestMarket.fairOdds.toFixed(2) : '—'}` : 'Brak kursu rynkowego • FAIR modelu'}</p>
                     </div>
                   ) : odds ? (
                     <div className="sim-pro-odds-wrap-v331" title={copy.odds}>
