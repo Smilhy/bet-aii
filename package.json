@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-351-fm-ai-loading-progress",
-  "version": "351.0.0",
+  "name": "betai-wersja-350-fm-ai-simple-verdict-luxury",
+  "version": "350.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
