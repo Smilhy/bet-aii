@@ -1389,7 +1389,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
             <div className="sim-v358-heading-row">
               <div>
                 <div className="sim-v358-eyebrow"><span>✦</span><b>FM AI</b><em>PREDYKCJE SPORTOWE NOWEJ GENERACJI</em></div>
-                <h1>Jeden mecz. <span>Wszystkie dane.</span> Jasny werdykt.</h1>
+                <h1><span className="sim-v359-h1-main">Jeden mecz.</span> <span className="sim-v359-h1-data">Wszystkie dane.</span> <span className="sim-v359-h1-verdict">Jasny werdykt.</span></h1>
                 <p>Analizujemy statystyki, formę, kursy i value, aby pokazać tylko najlepsze okazje.</p>
               </div>
               <div className="sim-v358-refresh-wrap">
