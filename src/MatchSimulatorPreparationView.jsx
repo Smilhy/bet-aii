@@ -5,7 +5,7 @@ import LivePreMatchV280 from './LivePreMatchV280'
 import ProductionPlatformV300 from './ProductionPlatformV300'
 import { applyContextOverlayV220 } from './matchIntelligenceV260'
 import { buildChallengerRawV180, chooseActiveModelV173, buildModelLabV200, adaptiveCalibrateTripletV172, adaptiveCalibrateBinaryV172, applyDataScienceTripletV200, applyDataScienceBinaryV200, applyEnsembleStackingV197, buildReliabilityGuardV190, applyReliabilityDecisionV190 } from './predictionLabV200'
-import { classifyValueCandidateV346 } from './valuePolicyV346'
+import { classifyValueCandidateV347 } from './valuePolicyV347'
 
 const COPY = {
   pl: {
@@ -455,10 +455,12 @@ function explainForecastV145({ match = {}, data = {}, consensus = null, forecast
 }
 
 function classifyValueCandidate(candidate = {}, context = {}) {
-  const marketScore = Number(context.consensusSources || 0) > 0
-    ? Number(context.consensusAgreement || 0)
-    : 55
-  return classifyValueCandidateV346(candidate, { ...context, marketScore })
+  const marketScore = Number.isFinite(Number(context.marketScore))
+    ? Number(context.marketScore)
+    : Number(context.consensusSources || 0) > 0
+      ? Number(context.consensusAgreement || 0)
+      : 55
+  return classifyValueCandidateV347(candidate, { ...context, marketScore })
 }
 
 function buildValueEngineV2({ match = {}, data = {}, probabilities = {}, dataQuality = 0, consensus = null, performance = null } = {}) {
@@ -478,7 +480,9 @@ function buildValueEngineV2({ match = {}, data = {}, probabilities = {}, dataQua
     dataQuality,
     consensusSources: Number(consensus?.consensus?.sourceCount || 0),
     consensusAgreement: Number(consensus?.consensus?.agreement || 0),
-    modelAgreement
+    modelAgreement,
+    // Market Score opisuje jakość realnej ceny, a nie wynik samego modelu.
+    marketScore: books.length >= 4 ? 90 : books.length >= 3 ? 84 : books.length >= 2 ? 76 : books.length >= 1 ? 70 : 35
   }
 
   const add = (book, key, odd, denominator, marketGroup) => {
@@ -503,7 +507,13 @@ function buildValueEngineV2({ match = {}, data = {}, probabilities = {}, dataQua
       vigAdjusted: true,
       calibration: resolveCalibration(performance, league, key, probability)
     }
-    candidates.push(classifyValueCandidate(candidate, context))
+    const trust = findLeagueTrustV150(performance, league, key)
+    const drift = findDriftV149(performance, key)
+    candidates.push(classifyValueCandidate(candidate, {
+      ...context,
+      leagueTrustScore: Number(trust?.score || 0),
+      marketDriftStatus: drift?.status || 'PENDING'
+    }))
   }
 
   for (const book of books) {
@@ -547,7 +557,13 @@ function buildValueEngineV2({ match = {}, data = {}, probabilities = {}, dataQua
         edgePp: round1(probability - raw), expectedValuePct: round1((probability / 100 * price - 1) * 100), vigAdjusted: false,
         calibration: resolveCalibration(performance, league, key, probability)
       }
-      candidates.push(classifyValueCandidate(candidate, context))
+      const trust = findLeagueTrustV150(performance, league, key)
+    const drift = findDriftV149(performance, key)
+    candidates.push(classifyValueCandidate(candidate, {
+      ...context,
+      leagueTrustScore: Number(trust?.score || 0),
+      marketDriftStatus: drift?.status || 'PENDING'
+    }))
     })
   }
 
@@ -1977,6 +1993,11 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
             </div>
           </div>
 
+          {forecast.value?.top ? <div className={`sim-prep-redflag-v347 ${forecast.value.top.hardBlocked ? 'blocked' : forecast.value.top.redFlagCount ? 'warning' : 'clear'}`}>
+            <div><small>RED FLAG GUARD V347</small><strong>{forecast.value.top.hardBlocked ? 'NO BET — BLOKADA JAKOŚCIOWA' : forecast.value.top.redFlagCount ? 'VALUE Z OSTRZEŻENIAMI' : 'CLEAR — BRAK CZERWONYCH FLAG'}</strong></div>
+            <div className="sim-prep-redflag-list-v347">{forecast.value.top.redFlags?.length ? forecast.value.top.redFlags.slice(0, 4).map(flag => <span key={flag.code} className={String(flag.level || '').toLowerCase()}>⚠ {flag.text}</span>) : <span>✓ Kalibracja, model agreement, drift i League / Market Trust nie uruchomiły blokady.</span>}</div>
+          </div> : null}
+
           {oddsHistory?.markets?.length ? <div className="sim-prep-clv-v146">
             <div className="sim-prep-clv-head-v146">
               <div><small>ODDS HISTORY • CLOSING LINE VALUE</small><strong>Ruch rynku zapisany w Supabase</strong></div>
@@ -2029,7 +2050,7 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
           </div> : null}
 
           <div className="sim-prep-factors-v136">{forecast.factors.slice(0, 5).map(factor => <span key={factor}>{factor}</span>)}</div>
-          <p className="sim-prep-forecast-note-v136">Prawdopodobieństwa są estymacją modelu, nie gwarancją wyniku. Value V2 porównuje model z ceną rynku po usunięciu marży i blokuje rekomendację przy zbyt małej próbce kalibracyjnej.</p>
+          <p className="sim-prep-forecast-note-v136">Prawdopodobieństwa są estymacją modelu, nie gwarancją wyniku. Value V347 porównuje model z ceną rynku po usunięciu marży oraz stosuje Red Flag Guard: kalibrację, model agreement, drift i League / Market Trust.</p>
         </section> : null}
 
         {reliability ? <section className={`sim-prep-reliability-v139 rel-${String(reliability.label || 'pending').toLowerCase()}`}>

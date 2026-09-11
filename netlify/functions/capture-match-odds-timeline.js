@@ -49,12 +49,39 @@ exports.handler = async function handler(event = {}) {
     const now = Date.now()
     const from = new Date(now + 4 * 60 * 1000).toISOString()
     const to = new Date(now + 26 * 60 * 60 * 1000).toISOString()
-    const { data, error } = await supabase.from('match_prediction_snapshots')
-      .select('fixture_id,fixture_date,home_team,away_team,league,forecast,settled_at')
-      .is('settled_at', null).gte('fixture_date', from).lte('fixture_date', to)
-      .order('fixture_date', { ascending: true }).limit(120)
-    if (error) throw error
-    const candidates = (Array.isArray(data) ? data : []).map(row => ({ row, window: dueWindow(row.fixture_date, now) })).filter(x => x.window)
+    const [mainQ, scannerQ] = await Promise.all([
+      supabase.from('match_prediction_snapshots')
+        .select('fixture_id,fixture_date,home_team,away_team,league,forecast,settled_at')
+        .is('settled_at', null).gte('fixture_date', from).lte('fixture_date', to)
+        .order('fixture_date', { ascending: true }).limit(120),
+      supabase.from('match_value_scan_snapshots')
+        .select('fixture_id,fixture_date,home_team,away_team,league,payload,updated_at')
+        .gte('fixture_date', from).lte('fixture_date', to)
+        .order('fixture_date', { ascending: true }).limit(120)
+    ])
+    if (mainQ.error) throw mainQ.error
+    const scannerRows = scannerQ.error ? [] : (Array.isArray(scannerQ.data) ? scannerQ.data : []).map(item => ({
+      fixture_id: item.fixture_id,
+      fixture_date: item.fixture_date,
+      home_team: item.home_team,
+      away_team: item.away_team,
+      league: item.league,
+      forecast: {
+        oneXTwo: item?.payload?.probabilities?.oneXTwo || {},
+        goals: item?.payload?.probabilities?.goals || {},
+        value: { top: item?.payload?.top || null }
+      },
+      settled_at: item?.payload?.settlementV346?.settledAt || null,
+      scanner_v347: true
+    })).filter(item => !item.settled_at)
+    const merged = new Map()
+    for (const row of [...(Array.isArray(mainQ.data) ? mainQ.data : []), ...scannerRows]) {
+      const key = String(row?.fixture_id || '')
+      if (!key) continue
+      if (!merged.has(key) || !merged.get(key)?.forecast?.oneXTwo) merged.set(key, row)
+    }
+    const data = [...merged.values()].sort((a, b) => Date.parse(a.fixture_date || '') - Date.parse(b.fixture_date || '')).slice(0, 120)
+    const candidates = data.map(row => ({ row, window: dueWindow(row.fixture_date, now) })).filter(x => x.window)
     if (!candidates.length) {
       await logRun(supabase, 'odds_snapshot', started, 'skipped', { scanned: Array.isArray(data) ? data.length : 0, due: 0, windows: WINDOWS.map(w => w.key) })
       return json(200, { ok: true, scanned: Array.isArray(data) ? data.length : 0, due: 0, capturedFixtures: 0, quotes: 0 })

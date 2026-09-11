@@ -329,6 +329,90 @@ function valueCandidates(probabilities, books) {
   return [...byKey.values()].sort((a, b) => b.edgePp - a.edgePp || b.expectedValuePct - a.expectedValuePct)
 }
 
+
+function medianV347(values = []) {
+  const rows = values.filter(Number.isFinite).sort((a, b) => a - b)
+  if (!rows.length) return 0
+  const mid = Math.floor(rows.length / 2)
+  return rows.length % 2 ? rows[mid] : (rows[mid - 1] + rows[mid]) / 2
+}
+
+function stddevV347(values = []) {
+  const rows = values.filter(Number.isFinite)
+  if (rows.length < 2) return 0
+  const avg = rows.reduce((a, b) => a + b, 0) / rows.length
+  return Math.sqrt(rows.reduce((sum, x) => sum + ((x - avg) ** 2), 0) / rows.length)
+}
+
+function buildMarketConsensusV347(books = []) {
+  const map = new Map()
+  const push = (book, key, odd, denominator) => {
+    const price = oddsValue(odd)
+    if (!(price > 1) || !(denominator > 0)) return
+    const noVig = (1 / price) / denominator * 100
+    if (!map.has(key)) map.set(key, [])
+    map.get(key).push({ bookmaker: clean(book?.bookmaker, 'Bookmaker'), odds: round(price, 2), noVig: round(noVig, 2) })
+  }
+  for (const book of Array.isArray(books) ? books : []) {
+    const h = num(book.home), d = num(book.draw), a = num(book.away)
+    if (h > 1 && d > 1 && a > 1) {
+      const denom = 1 / h + 1 / d + 1 / a
+      push(book, 'home', h, denom); push(book, 'draw', d, denom); push(book, 'away', a, denom)
+    }
+    for (const line of ['15', '25', '35']) {
+      const o = num(book[`over${line}`]), u = num(book[`under${line}`])
+      if (o > 1 && u > 1) {
+        const denom = 1 / o + 1 / u
+        push(book, `over${line}`, o, denom); push(book, `under${line}`, u, denom)
+      }
+    }
+    const yes = num(book.bttsYes), no = num(book.bttsNo)
+    if (yes > 1 && no > 1) {
+      const denom = 1 / yes + 1 / no
+      push(book, 'bttsYes', yes, denom); push(book, 'bttsNo', no, denom)
+    }
+  }
+  const out = {}
+  for (const [key, quotes] of map.entries()) {
+    const probs = quotes.map(x => Number(x.noVig)).filter(Number.isFinite)
+    const odds = quotes.map(x => Number(x.odds)).filter(Number.isFinite)
+    const average = probs.length ? probs.reduce((a, b) => a + b, 0) / probs.length : 0
+    const spread = probs.length ? Math.max(...probs) - Math.min(...probs) : 0
+    const sd = stddevV347(probs)
+    const agreement = clamp(100 - sd * 7 - spread * 1.6, 25, 99)
+    out[key] = {
+      sources: quotes.length,
+      agreement: round(agreement, 0),
+      avgNoVigProbability: round(average, 1),
+      medianNoVigProbability: round(medianV347(probs), 1),
+      probabilityRangePp: round(spread, 1),
+      avgOdds: round(odds.length ? odds.reduce((a, b) => a + b, 0) / odds.length : 0, 2),
+      minOdds: round(odds.length ? Math.min(...odds) : 0, 2),
+      maxOdds: round(odds.length ? Math.max(...odds) : 0, 2),
+      quotes: quotes.slice(0, 8)
+    }
+  }
+  return out
+}
+
+async function writeScannerOddsHistoryV347(payload = {}) {
+  if (!supabase || !payload?.fixtureId || !payload?.fixtureDate) return false
+  const capturedAt = payload.generatedAt || new Date().toISOString()
+  const rows = (Array.isArray(payload?.candidates) ? payload.candidates : []).slice(0, 10).map(item => ({
+    fixture_id: String(payload.fixtureId), fixture_date: payload.fixtureDate || null,
+    market_key: String(item?.key || ''), bookmaker: clean(item?.bookmaker, 'Bookmaker'), odds: num(item?.bookmakerOdds),
+    model_probability: num(item?.probability), fair_odds: num(item?.fairOdds), edge_pp: num(item?.edgePp),
+    expected_value_pct: num(item?.expectedValuePct), captured_at: capturedAt, is_closing: false,
+    capture_window: 'SCANNER', capture_source: 'value-scanner-v347'
+  })).filter(row => row.market_key && row.odds > 1)
+  if (!rows.length) return false
+  try {
+    const { error } = await supabase.from('match_odds_history').insert(rows)
+    if (error) throw error
+    return true
+  } catch (_) { return false }
+}
+
 function buildScan({ fixtureId, fixtureDate, home, away, league, country, recentHome, recentAway, prediction, oddsBooks }) {
   const homeStats = deriveStats(recentHome)
   const awayStats = deriveStats(recentAway)
@@ -366,11 +450,12 @@ function buildScan({ fixtureId, fixtureDate, home, away, league, country, recent
   if (oddsBooks.length) dataQuality += 3
   dataQuality = Math.round(clamp(dataQuality, 0, 100))
 
-  const candidates = valueCandidates(probabilities, oddsBooks)
+  const marketConsensus = buildMarketConsensusV347(oddsBooks)
+  const candidates = valueCandidates(probabilities, oddsBooks).map(item => ({ ...item, marketConsensus: marketConsensus?.[item.key] || null }))
   return {
     ok: true,
     version: 'BETAI_VALUE_SCANNER_V1',
-    freezePolicyVersion: 'BETAI_SCANNER_FREEZE_V346',
+    freezePolicyVersion: 'BETAI_SCANNER_FREEZE_V347',
     fixtureId: String(fixtureId), fixtureDate: fixtureDate || null,
     home, away, league, country,
     xg: { home: round(homeXg, 2), away: round(awayXg, 2) },
@@ -378,6 +463,13 @@ function buildScan({ fixtureId, fixtureDate, home, away, league, country, recent
     topScores: poisson.topScores,
     dataQuality,
     modelAgreement,
+    signals: {
+      homeFormScore: round(homeStats.formScore, 0), awayFormScore: round(awayStats.formScore, 0),
+      homeGoalsForAvg: round(homeStats.goalsForAvg, 2), homeGoalsAgainstAvg: round(homeStats.goalsAgainstAvg, 2),
+      awayGoalsForAvg: round(awayStats.goalsForAvg, 2), awayGoalsAgainstAvg: round(awayStats.goalsAgainstAvg, 2),
+      homeSampleSize: homeStats.sampleSize, awaySampleSize: awayStats.sampleSize, apiPredictionAvailable: Boolean(prediction?.available)
+    },
+    marketConsensus,
     sourceFlags: { recent: true, apiPrediction: Boolean(prediction?.available), realOdds: oddsBooks.length > 0 },
     bookmakerCount: oddsBooks.length,
     displayOdds1X2: bestDisplay1X2(oddsBooks),
@@ -428,6 +520,7 @@ exports.handler = async function handler(event = {}) {
     })
     if (!payload) return json(422, { ok: false, error: 'Za mało danych formy do skanera.' })
     await writeSnapshot(payload)
+    await writeScannerOddsHistoryV347(payload)
     return json(200, {
       ...payload,
       cached: Boolean([homeR, awayR, predictionR, oddsR].filter(item => item?.fromCache).length),
@@ -442,4 +535,4 @@ exports.handler = async function handler(event = {}) {
   }
 }
 
-exports._test = { deriveStats, poissonForecast, valueCandidates, buildScan, bestDisplay1X2, isPreMatchPayloadV346 }
+exports._test = { deriveStats, poissonForecast, valueCandidates, buildScan, bestDisplay1X2, isPreMatchPayloadV346, buildMarketConsensusV347 }

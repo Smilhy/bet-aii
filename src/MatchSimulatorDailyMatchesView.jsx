@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { classifyValueCandidateV346 } from './valuePolicyV346'
+import { classifyValueCandidateV347 } from './valuePolicyV347'
 
 // V329: offline test V158 is kept in code but hidden from production UI.
 // Set to true only when the diagnostic scenario is needed again.
@@ -542,15 +542,41 @@ function enrichScannerCandidate(scan = {}, candidate = null, performance = null)
   }
   const dataQuality = Number(scan?.dataQuality || 0)
   const agreement = Number(scan?.modelAgreement || 0)
-  const marketScore = Number(scan?.bookmakerCount || 0) >= 3 ? 92 : Number(scan?.bookmakerCount || 0) >= 1 ? 78 : 35
-  const classified = classifyValueCandidateV346(calibratedCandidate, {
+  const marketConsensus = candidate?.marketConsensus || scan?.marketConsensus?.[candidate?.key] || null
+  const consensusSources = Number(marketConsensus?.sources || 0)
+  const consensusAgreement = Number(marketConsensus?.agreement || 0)
+  const perfKey = scannerMarketKey(candidate?.key || '')
+  const driftRow = Array.isArray(performance?.drift?.markets) ? performance.drift.markets.find(row => row?.key === perfKey) : null
+  const leagueTrust = Array.isArray(performance?.leagueTrust)
+    ? performance.leagueTrust.find(row => scannerNormalizeName(row?.name) === scannerNormalizeName(scan?.league || '')) || null
+    : null
+  const leagueMarketTrust = Array.isArray(leagueTrust?.markets) ? leagueTrust.markets.find(row => row?.key === perfKey) || null : null
+  const marketScore = consensusSources >= 2
+    ? consensusAgreement
+    : Number(scan?.bookmakerCount || 0) >= 3 ? 82 : Number(scan?.bookmakerCount || 0) >= 1 ? 70 : 35
+  const classified = classifyValueCandidateV347(calibratedCandidate, {
     dataQuality,
     modelAgreement: agreement,
-    marketScore
+    marketScore,
+    consensusSources,
+    consensusAgreement,
+    marketDriftStatus: driftRow?.status || 'PENDING',
+    leagueTrustScore: leagueMarketTrust?.score ?? null
   })
+  const warningPenalty = (classified.redFlags || []).reduce((sum, flag) => sum + (flag.level === 'BLOCK' ? 16 : 4), 0)
+  const balanceScore = Math.round(Math.max(0, Math.min(100,
+    classified.reliabilityScore * .46 +
+    Math.min(22, Math.max(0, Number(classified.edgePp || 0))) * 1.15 +
+    Math.min(30, Math.max(0, Number(classified.expectedValuePct || 0))) * .35 +
+    (consensusSources >= 2 ? consensusAgreement : marketScore) * .10 +
+    Number(leagueMarketTrust?.score || 65) * .08 - warningPenalty
+  )))
 
   return {
     ...classified,
+    marketConsensus,
+    driftStatus: driftRow?.status || 'PENDING',
+    leagueMarketTrust: leagueMarketTrust || null,
     reliability: {
       score: classified.reliabilityScore,
       label: classified.reliabilityLabel,
@@ -558,11 +584,7 @@ function enrichScannerCandidate(scan = {}, candidate = null, performance = null)
       modelAgreement: agreement,
       dataQuality
     },
-    dailyScore: Math.round(Math.max(0, Math.min(100,
-      classified.reliabilityScore * .55 +
-      Math.max(0, Number(classified.edgePp || 0)) * 2.2 +
-      Math.max(0, Number(classified.expectedValuePct || 0)) * .35
-    )))
+    dailyScore: balanceScore
   }
 }
 
@@ -575,6 +597,52 @@ function enrichScannerResult(scan = {}, performance = null) {
 
 function scannerDecisionLabel(value = '') {
   return ({ STRONG_VALUE: 'STRONG VALUE', VALUE: 'VALUE', SMALL_EDGE: 'SMALL EDGE', NO_BET: 'NO BET', NO_ODDS: 'BRAK KURSÓW' })[String(value || '').toUpperCase()] || value
+}
+
+function healthLabelV347(value = '') {
+  return ({ GOOD: 'GOOD', WARNING: 'WARNING', BAD: 'BAD', COLLECTING: 'COLLECTING' })[String(value || '').toUpperCase()] || 'COLLECTING'
+}
+
+function buildWhyAiV347(scan = {}, item = {}, match = {}) {
+  const signals = scan?.signals || {}
+  const positives = []
+  const risks = []
+  const market = item?.marketConsensus || null
+  const formDiff = Number(signals.homeFormScore || 0) - Number(signals.awayFormScore || 0)
+  if (Math.abs(formDiff) >= 12) positives.push(`${formDiff > 0 ? match?.home : match?.away} ma wyraźnie lepszy trend formy (${Math.round(Math.max(Number(signals.homeFormScore || 0), Number(signals.awayFormScore || 0)))}/100 vs ${Math.round(Math.min(Number(signals.homeFormScore || 0), Number(signals.awayFormScore || 0)))}/100).`)
+  if (Number(signals.homeGoalsForAvg || 0) >= 1.6) positives.push(`${match?.home} zdobywa średnio ${Number(signals.homeGoalsForAvg).toFixed(2)} gola w próbce skanera.`)
+  if (Number(signals.awayGoalsForAvg || 0) >= 1.6) positives.push(`${match?.away} zdobywa średnio ${Number(signals.awayGoalsForAvg).toFixed(2)} gola w próbce skanera.`)
+  if (Number(signals.homeGoalsAgainstAvg || 0) >= 1.45) positives.push(`${match?.home} traci średnio ${Number(signals.homeGoalsAgainstAvg).toFixed(2)} gola — profil meczu rośnie.`)
+  if (Number(signals.awayGoalsAgainstAvg || 0) >= 1.45) positives.push(`${match?.away} traci średnio ${Number(signals.awayGoalsAgainstAvg).toFixed(2)} gola — profil meczu rośnie.`)
+  if (Number(scan?.modelAgreement || 0) >= 70) positives.push(`Model agreement ${Math.round(Number(scan.modelAgreement))}% — źródła modelowe są zgodne.`)
+  if (Number(market?.sources || 0) >= 2 && Number(market?.agreement || 0) >= 70) positives.push(`Market consensus: ${market.sources} bukmacherów, zgodność ${Math.round(Number(market.agreement))}%.`)
+  if (Number(item?.edgePp || 0) > 0) positives.push(`Cena daje +${Number(item.edgePp).toFixed(1)} pp edge po usunięciu marży; EV ${Number(item.expectedValuePct || 0) >= 0 ? '+' : ''}${Number(item.expectedValuePct || 0).toFixed(1)}%.`)
+  for (const flag of (item?.redFlags || [])) risks.push(flag.text)
+  if (!risks.length && Number(scan?.modelAgreement || 0) < 65) risks.push(`Model agreement ${Math.round(Number(scan?.modelAgreement || 0))}% — poniżej progu STRONG.`)
+  if (!risks.length) risks.push('Brak istotnych czerwonych flag w danych dostępnych dla Daily Scanner.')
+  if (!positives.length) positives.push('Przewaga wynika z połączenia modelu prawdopodobieństwa, ceny no-vig i kalibracji historycznej.')
+  return { positives: positives.slice(0, 6), risks: risks.slice(0, 6) }
+}
+
+function pickFocusCardsV347(entries = []) {
+  const eligible = entries.filter(row => ['STRONG_VALUE', 'VALUE', 'SMALL_EDGE'].includes(row?.scan?.topFinal?.decision))
+  if (!eligible.length) return []
+  const byValue = [...eligible].sort((a, b) => Number(b.scan.topFinal.expectedValuePct || 0) - Number(a.scan.topFinal.expectedValuePct || 0))[0]
+  const byQuality = [...eligible].sort((a, b) => Number(b.scan.topFinal.reliability?.score || 0) - Number(a.scan.topFinal.reliability?.score || 0))[0]
+  const byBalance = [...eligible].sort((a, b) => Number(b.scan.topFinal.dailyScore || 0) - Number(a.scan.topFinal.dailyScore || 0))[0]
+  const rows = [
+    { id:'value', label:'BEST VALUE', note:'Najwyższe EV', entry:byValue },
+    { id:'quality', label:'BEST QUALITY', note:'Najwyższa wiarygodność', entry:byQuality },
+    { id:'balance', label:'BEST BALANCE', note:'Edge + jakość + rynek', entry:byBalance }
+  ]
+  return rows.filter(row => row.entry)
+}
+
+function compactPerformanceRowsV347(performance = null) {
+  const breakdown = performance?.breakdownV347 || {}
+  const leagues = (breakdown?.leagues || []).filter(x => Number(x.bets || 0) >= 3).slice(0, 5)
+  const markets = (breakdown?.markets || []).filter(x => Number(x.bets || 0) >= 3).slice(0, 5)
+  return { leagues, markets }
 }
 
 export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMatch }) {
@@ -591,6 +659,9 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   const [scannerProgress, setScannerProgress] = useState({ done: 0, total: 0 })
   const [scannerActive, setScannerActive] = useState(false)
   const [scannerPerformance, setScannerPerformance] = useState(null)
+  const [intelModal, setIntelModal] = useState(null)
+  const [replayV347, setReplayV347] = useState(null)
+  const [replayLoadingV347, setReplayLoadingV347] = useState(false)
   const [nowMs, setNowMs] = useState(() => Date.now())
   const scanAbortRef = useRef(null)
   const clientTimeZone = useMemo(() => getBrowserTimeZone(), [])
@@ -831,6 +902,43 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       })
   }, [scannerResults, scannerPerformance, availableMatches])
 
+  const focusCardsV347 = useMemo(() => pickFocusCardsV347(scannerEntries), [scannerEntries])
+  const modelHealthV347 = scannerPerformance?.modelHealthV347 || null
+  const performanceRowsV347 = useMemo(() => compactPerformanceRowsV347(scannerPerformance), [scannerPerformance])
+
+  const openWhyAiV347 = async (entry) => {
+    if (!entry?.match || !entry?.scan?.topFinal) return
+    setIntelModal(entry)
+    setReplayV347(null)
+    const fixtureId = String(entry.match?.apiFixtureId || entry.match?.id || '').trim()
+    if (!fixtureId) return
+    setReplayLoadingV347(true)
+    try {
+      const response = await fetch(`/.netlify/functions/get-match-replay?fixture=${encodeURIComponent(fixtureId)}`, { cache: 'no-store' })
+      const payload = await response.json().catch(() => ({}))
+      if (response.ok && payload?.ok) setReplayV347(payload)
+    } catch (_) {
+    } finally {
+      setReplayLoadingV347(false)
+    }
+  }
+
+  const intelWhyV347 = useMemo(() => intelModal ? buildWhyAiV347(intelModal.scan, intelModal.scan?.topFinal, intelModal.match) : null, [intelModal])
+  const intelTimelineV347 = useMemo(() => {
+    if (!intelModal) return []
+    const selectedKey = String(intelModal.scan?.topFinal?.key || '')
+    const rows = Array.isArray(replayV347?.odds) ? replayV347.odds.filter(row => !selectedKey || String(row?.marketKey || '') === selectedKey) : []
+    const first = replayV347?.scanner ? [{
+      type:'scanner', capturedAt:replayV347.scanner.capturedAt, window:'SIGNAL', bookmaker:replayV347.scanner.bookmaker || intelModal.scan?.topFinal?.bookmaker || '',
+      odds:Number(replayV347.scanner.bookmakerOdds || intelModal.scan?.topFinal?.bookmakerOdds || 0), modelProbability:Number(replayV347.scanner.probability || intelModal.scan?.topFinal?.probability || 0),
+      fairOdds:Number(replayV347.scanner.fairOdds || intelModal.scan?.topFinal?.fairOdds || 0), edgePp:Number(replayV347.scanner.edgePp || intelModal.scan?.topFinal?.edgePp || 0)
+    }] : []
+    return [...first, ...rows].sort((a, b) => Date.parse(a.capturedAt || '') - Date.parse(b.capturedAt || '')).slice(-12)
+  }, [intelModal, replayV347])
+  const intelClvV347 = intelModal?.scan?.topFinal?.key
+    ? (replayV347?.scanner?.clvByMarket?.[intelModal.scan.topFinal.key] || replayV347?.scanner?.clv || null)
+    : (replayV347?.scanner?.clv || null)
+
   const nearestKey = availableMatches.length ? fixtureKey(availableMatches[0]) : ''
 
   const handleSelect = (match) => {
@@ -885,42 +993,78 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           {!loading && !error && qualifying && !filteredMatches.length && <div className="sim-day-loading-v99"><i /><strong>Sprawdzam realne statystyki meczów…</strong><span>{qualificationProgress.done}/{qualificationProgress.total} sprawdzonych</span></div>}
           {!loading && !error && !qualifying && !filteredMatches.length && <div className="sim-day-empty-v98">{copy.empty}</div>}
 
-          {!loading && !error && (scannerActive || scannerEntries.length > 0) ? <section className="sim-value-scanner-v139">
+          {!loading && !error && scannerPerformance ? <section className={`sim-intel-center-v347 health-${String(modelHealthV347?.status || 'collecting').toLowerCase()}`}>
+            <div className="sim-intel-head-v347">
+              <div><small>FM AI • MODEL INTELLIGENCE CENTER V347</small><strong>MODEL HEALTH + CLV + PERFORMANCE</strong><p>Kontrola jakości modelu na rozliczonych, zamrożonych prognozach pre-match. Wyniki nie są gwarancją przyszłego zysku.</p></div>
+              <span>{healthLabelV347(modelHealthV347?.status)}</span>
+            </div>
+            <div className="sim-intel-kpis-v347">
+              <article><small>PRÓBKA</small><b>{modelHealthV347?.samples ?? scannerPerformance?.all?.matches ?? 0}</b><em>settled pre-match</em></article>
+              <article><small>HIT RATE</small><b>{Number(modelHealthV347?.hitRate ?? scannerPerformance?.all?.valueHitRate ?? 0).toFixed(1)}%</b><em>śledzone top picks</em></article>
+              <article><small>ROI</small><b className={Number(modelHealthV347?.roi ?? scannerPerformance?.all?.valueRoi ?? 0) >= 0 ? 'positive' : 'negative'}>{Number(modelHealthV347?.roi ?? scannerPerformance?.all?.valueRoi ?? 0) > 0 ? '+' : ''}{Number(modelHealthV347?.roi ?? scannerPerformance?.all?.valueRoi ?? 0).toFixed(1)}%</b><em>1 unit / pick</em></article>
+              <article><small>BRIER</small><b>{Number(modelHealthV347?.brier ?? scannerPerformance?.all?.avgBrier ?? 0).toFixed(3)}</b><em>niżej = lepiej</em></article>
+              <article><small>CAL. ERROR</small><b>{Number(modelHealthV347?.calibrationError ?? scannerPerformance?.all?.calibrationError ?? 0).toFixed(1)} pp</b><em>średnia luka</em></article>
+              <article><small>CLV</small><b className={Number(modelHealthV347?.avgClv ?? scannerPerformance?.all?.avgClv ?? 0) >= 0 ? 'positive' : 'negative'}>{Number(modelHealthV347?.avgClv ?? scannerPerformance?.all?.avgClv ?? 0) > 0 ? '+' : ''}{Number(modelHealthV347?.avgClv ?? scannerPerformance?.all?.avgClv ?? 0).toFixed(1)}%</b><em>{modelHealthV347?.clvSamples ?? scannerPerformance?.all?.clvSamples ?? 0} closing samples</em></article>
+            </div>
+            <div className="sim-intel-windows-v347">
+              {[['30', scannerPerformance?.recent30], ['100', scannerPerformance?.recent100], ['500', scannerPerformance?.recent500]].map(([label, row]) => <span key={label}><small>LAST {label}</small><b>{row?.matches || 0} prób</b><em>ROI {Number(row?.valueRoi || 0) > 0 ? '+' : ''}{Number(row?.valueRoi || 0).toFixed(1)}% • Brier {Number(row?.avgBrier || 0).toFixed(3)}</em></span>)}
+            </div>
+            <div className="sim-intel-bottom-v347">
+              <div className="sim-intel-alerts-v347"><strong>MODEL STATUS</strong>{(modelHealthV347?.reasons || [scannerPerformance?.note || 'Zbieranie historii modelu.']).slice(0, 3).map((text, i) => <span key={`${text}-${i}`}>• {text}</span>)}</div>
+              <div className="sim-intel-breakdown-v347"><strong>PERFORMANCE BREAKDOWN</strong><div>{performanceRowsV347.markets.map(row => <span key={`m-${row.name}`}><b>{row.name}</b><em>{row.bets} • ROI {row.roi > 0 ? '+' : ''}{row.roi}%</em></span>)}{performanceRowsV347.leagues.slice(0, 3).map(row => <span key={`l-${row.name}`}><b>{row.name}</b><em>{row.bets} • ROI {row.roi > 0 ? '+' : ''}{row.roi}%</em></span>)}</div></div>
+            </div>
+            <details className="sim-intel-details-v347">
+              <summary>PEŁNY PERFORMANCE BREAKDOWN — kurs / confidence / edge</summary>
+              <div className="sim-intel-detail-grid-v347">
+                {[['KURS', scannerPerformance?.breakdownV347?.oddsBands], ['CONFIDENCE', scannerPerformance?.breakdownV347?.confidenceBands], ['EDGE', scannerPerformance?.breakdownV347?.edgeBands]].map(([title, rows]) => <section key={title}><strong>{title}</strong>{(rows || []).map(row => <span key={`${title}-${row.name}`}><b>{row.name}</b><em>{row.bets} prób • HR {row.hitRate}% • ROI {row.roi > 0 ? '+' : ''}{row.roi}%</em></span>)}</section>)}
+              </div>
+            </details>
+          </section> : null}
+
+          {!loading && !error && (scannerActive || scannerEntries.length > 0) ? <section className="sim-value-scanner-v139 sim-value-scanner-v347">
             <div className="sim-value-scanner-head-v139">
-              <div><small>BET+AI • DAILY SHORTLIST • TOP LEAGUES</small><strong>TOP 5 ANALIZ DNIA</strong><p>Value Scanner wybiera maksymalnie 5 najmocniejszych kandydatów z topowych lig + Ekstraklasy. RAW jest korygowane historyczną kalibracją; pełna analiza pozostaje końcową weryfikacją.</p></div>
+              <div><small>BET+AI • TOP PICKS 2.0 • RED FLAG GUARD</small><strong>TOP 5 ANALIZ DNIA</strong><p>Ranking uwzględnia teraz EV, Reliability, kalibrację, Market Consensus, drift i League / Market Trust. STRONG VALUE może zostać automatycznie zablokowane przez czerwone flagi.</p></div>
               <div className="sim-value-scanner-progress-v139"><b>{scannerProgress.done}/{scannerProgress.total}</b><span>{scannerActive ? 'SKANOWANIE LIVE' : 'SKAN GOTOWY'}</span></div>
             </div>
+            {focusCardsV347.length ? <div className="sim-focus-grid-v347">
+              {focusCardsV347.map(({ id, label, note, entry }) => {
+                const item = entry.scan.topFinal
+                const meta = getScannerMarketMetaV330(item, entry.match, lang)
+                return <button type="button" key={id} className={`sim-focus-card-v347 focus-${id}`} onClick={() => openWhyAiV347(entry)}><small>{label}</small><strong>{entry.match.home} <i>vs</i> {entry.match.away}</strong><b>{meta.badge} @ {Number(item.bookmakerOdds || 0).toFixed(2)}</b><span>{note} • EV {Number(item.expectedValuePct || 0) > 0 ? '+' : ''}{Number(item.expectedValuePct || 0).toFixed(1)}% • {item.dailyScore || 0}/100</span></button>
+              })}
+            </div> : null}
             {scannerEntries.length ? <div className="sim-value-scanner-grid-v139">
-              {scannerEntries.slice(0, 5).map(({ key, match: scanMatch, scan }, index) => {
+              {scannerEntries.slice(0, 5).map((entry, index) => {
+                const { key, match: scanMatch, scan } = entry
                 const item = scan.topFinal
                 const rel = item.reliability || {}
                 const marketMeta = getScannerMarketMetaV330(item, scanMatch, lang)
-                return <button type="button" key={`scan-${key}`} className={`sim-value-scanner-card-v139 sim-value-scanner-card-v330 ${String(item.decision || '').toLowerCase()}`} onClick={() => handleSelect(scanMatch)}>
+                const consensus = item.marketConsensus || {}
+                const flags = item.redFlags || []
+                return <article key={`scan-${key}`} className={`sim-value-scanner-card-v139 sim-value-scanner-card-v330 sim-value-card-v347 ${String(item.decision || '').toLowerCase()}`}>
                   <header><span>#{index + 1} • {scanMatch.league}</span><em>{scannerDecisionLabel(item.decision)}</em></header>
                   <strong>{scanMatch.home} <i>vs</i> {scanMatch.away}</strong>
                   <div className="sim-value-scanner-pick-v139 sim-value-scanner-pick-v330">
                     <div className="sim-value-market-main-v330">
                       <small>{marketMeta.category}</small>
-                      <div className="sim-value-market-row-v330">
-                        <span className="sim-value-market-badge-v330">{marketMeta.badge}</span>
-                        <b>{marketMeta.title}</b>
-                      </div>
+                      <div className="sim-value-market-row-v330"><span className="sim-value-market-badge-v330">{marketMeta.badge}</span><b>{marketMeta.title}</b></div>
                       <em>{marketMeta.detail}</em>
                     </div>
-                    <div className="sim-value-market-odds-v330">
-                      <small>KURS</small>
-                      <span>{item.bookmakerOdds ? `@ ${Number(item.bookmakerOdds).toFixed(2)}` : 'bez kursu'}</span>
-                    </div>
+                    <div className="sim-value-market-odds-v330"><small>KURS</small><span>{item.bookmakerOdds ? `@ ${Number(item.bookmakerOdds).toFixed(2)}` : 'bez kursu'}</span></div>
                   </div>
-                  <div className="sim-value-scanner-metrics-v139 sim-value-scanner-metrics-v330">
+                  <div className="sim-value-scanner-metrics-v139 sim-value-scanner-metrics-v330 sim-value-metrics-v347">
                     <span><small>BET+AI CAL.</small><b>{item.probability ? `${item.probability}%` : '—'}</b>{item.calibrated ? <em>RAW {item.rawProbability}%</em> : null}</span>
                     <span><small>FAIR</small><b>{item.fairOdds ? Number(item.fairOdds).toFixed(2) : '—'}</b></span>
                     <span><small>EDGE</small><b>{Number.isFinite(Number(item.edgePp)) ? `${Number(item.edgePp) > 0 ? '+' : ''}${item.edgePp} pp` : '—'}</b></span>
+                    <span><small>EV</small><b>{Number(item.expectedValuePct || 0) > 0 ? '+' : ''}{Number(item.expectedValuePct || 0).toFixed(1)}%</b></span>
                     <span><small>RELIABILITY</small><b>{rel.score || 0}/100</b></span>
-                    <span><small>DAILY SCORE</small><b>{item.dailyScore || 0}/100</b></span>
+                    <span><small>BALANCE</small><b>{item.dailyScore || 0}/100</b></span>
                   </div>
+                  <div className="sim-market-consensus-v347"><span><small>MARKET CONSENSUS</small><b>{Number(consensus.sources || 0) >= 2 ? `${Math.round(Number(consensus.agreement || 0))}%` : 'COLLECTING'}</b></span><span><small>BUK.</small><b>{consensus.sources || scan.bookmakerCount || 0}</b></span><span><small>AVG NO-VIG</small><b>{Number(consensus.avgNoVigProbability || 0) > 0 ? `${Number(consensus.avgNoVigProbability).toFixed(1)}%` : '—'}</b></span></div>
+                  {flags.length ? <div className="sim-redflags-v347">{flags.slice(0, 2).map(flag => <span key={flag.code} className={String(flag.level || '').toLowerCase()}>⚠ {flag.text}</span>)}</div> : <div className="sim-redflags-v347 clear"><span>✓ RED FLAG GUARD: CLEAR</span></div>}
                   <footer><span className={`rel-${String(rel.label || 'pending').toLowerCase()}`}>{rel.label || 'PENDING'}</span><small>{String(rel.calibration?.source || 'global').toUpperCase()} • {rel.calibration?.samples || 0} prób • model agreement {scan.modelAgreement || 0}%</small></footer>
-                </button>
+                  <div className="sim-value-actions-v347"><button type="button" onClick={() => openWhyAiV347(entry)}>WHY AI?</button><button type="button" onClick={() => handleSelect(scanMatch)}>PEŁNA ANALIZA →</button></div>
+                </article>
               })}
             </div> : <div className="sim-value-scanner-empty-v139"><i />Szukam przewag cenowych i sprawdzam kalibrację…</div>}
           </section> : null}
@@ -1034,6 +1178,42 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           })}
         </div>
       </div>
+
+      {intelModal ? <div className="sim-intel-modal-backdrop-v347" role="presentation" onMouseDown={() => setIntelModal(null)}>
+        <section className="sim-intel-modal-v347" role="dialog" aria-modal="true" aria-label="Why AI and prediction timeline" onMouseDown={(event) => event.stopPropagation()}>
+          <header className="sim-intel-modal-head-v347">
+            <div><small>FM AI • WHY AI? • PREDICTION TIMELINE</small><strong>{intelModal.match.home} <i>vs</i> {intelModal.match.away}</strong><span>{intelModal.match.league} • {scannerDecisionLabel(intelModal.scan?.topFinal?.decision)}</span></div>
+            <button type="button" onClick={() => setIntelModal(null)} aria-label="Zamknij">×</button>
+          </header>
+          <div className="sim-intel-modal-summary-v347">
+            <article><small>TYP</small><b>{getScannerMarketMetaV330(intelModal.scan?.topFinal, intelModal.match, lang).title}</b><em>@ {Number(intelModal.scan?.topFinal?.bookmakerOdds || 0).toFixed(2)}</em></article>
+            <article><small>AI CAL.</small><b>{Number(intelModal.scan?.topFinal?.probability || 0).toFixed(1)}%</b><em>fair {Number(intelModal.scan?.topFinal?.fairOdds || 0).toFixed(2)}</em></article>
+            <article><small>EDGE / EV</small><b>+{Number(intelModal.scan?.topFinal?.edgePp || 0).toFixed(1)} pp</b><em>EV {Number(intelModal.scan?.topFinal?.expectedValuePct || 0) > 0 ? '+' : ''}{Number(intelModal.scan?.topFinal?.expectedValuePct || 0).toFixed(1)}%</em></article>
+            <article><small>RELIABILITY</small><b>{intelModal.scan?.topFinal?.reliability?.score || 0}/100</b><em>{intelModal.scan?.topFinal?.reliability?.label || 'PENDING'}</em></article>
+          </div>
+          <div className="sim-intel-modal-columns-v347">
+            <section className="why-positive"><h4>WHY AI — CO WSPIERA TYP</h4>{(intelWhyV347?.positives || []).map((text, index) => <p key={`pos-${index}`}><i>+</i>{text}</p>)}</section>
+            <section className="why-risk"><h4>RED FLAGS / RYZYKA</h4>{(intelWhyV347?.risks || []).map((text, index) => <p key={`risk-${index}`}><i>!</i>{text}</p>)}</section>
+          </div>
+          <div className="sim-intel-consensus-modal-v347">
+            <div><small>MARKET CONSENSUS</small><b>{Number(intelModal.scan?.topFinal?.marketConsensus?.sources || 0) >= 2 ? `${Math.round(Number(intelModal.scan?.topFinal?.marketConsensus?.agreement || 0))}%` : 'COLLECTING'}</b><span>{intelModal.scan?.topFinal?.marketConsensus?.sources || 0} bukmacherów</span></div>
+            <div><small>AVG NO-VIG</small><b>{Number(intelModal.scan?.topFinal?.marketConsensus?.avgNoVigProbability || 0) > 0 ? `${Number(intelModal.scan?.topFinal?.marketConsensus?.avgNoVigProbability).toFixed(1)}%` : '—'}</b><span>median {Number(intelModal.scan?.topFinal?.marketConsensus?.medianNoVigProbability || 0) > 0 ? `${Number(intelModal.scan?.topFinal?.marketConsensus?.medianNoVigProbability).toFixed(1)}%` : '—'}</span></div>
+            <div><small>DRIFT</small><b>{intelModal.scan?.topFinal?.driftStatus || 'PENDING'}</b><span>League Trust {Math.round(Number(intelModal.scan?.topFinal?.leagueMarketTrust?.score || 0))}/100</span></div>
+          </div>
+          {intelModal.scan?.topFinal?.marketConsensus?.quotes?.length ? <div className="sim-intel-market-quotes-v347">
+            {intelModal.scan.topFinal.marketConsensus.quotes.slice(0, 6).map((quote, index) => <span key={`${quote.bookmaker}-${index}`}><b>{quote.bookmaker}</b><em>@ {Number(quote.odds || 0).toFixed(2)}</em><small>no-vig {Number(quote.noVig || 0).toFixed(1)}%</small></span>)}
+          </div> : null}
+          <section className="sim-intel-timeline-v347">
+            <div className="sim-intel-section-head-v347"><div><small>AI PREDICTION TIMELINE</small><strong>Sygnał → T24H → T6H → T1H → T15M</strong></div><span>{replayLoadingV347 ? 'ŁADOWANIE…' : `${intelTimelineV347.length} snapshotów`}</span></div>
+            {replayLoadingV347 ? <div className="sim-intel-timeline-empty-v347">Ładuję historię modelu i kursu…</div> : intelTimelineV347.length ? <div className="sim-intel-timeline-list-v347">{intelTimelineV347.map((row, index) => <article key={`${row.capturedAt}-${row.bookmaker}-${index}`}><span>{row.window || row.type || 'SNAPSHOT'}</span><b>{Number(row.odds || 0) > 1 ? `@ ${Number(row.odds).toFixed(2)}` : '—'}</b><em>AI {Number(row.modelProbability || 0) > 0 ? `${Number(row.modelProbability).toFixed(1)}%` : '—'} • edge {Number(row.edgePp || 0) > 0 ? '+' : ''}{Number(row.edgePp || 0).toFixed(1)} pp</em><small>{row.bookmaker || 'market'} • {row.capturedAt ? new Date(row.capturedAt).toLocaleString() : '—'}</small></article>)}</div> : <div className="sim-intel-timeline-empty-v347">Snapshoty będą zbierane automatycznie w oknach T24H / T6H / T1H / T15M przed kickoffem.</div>}
+          </section>
+          <section className={`sim-intel-clv-v347 ${Number(intelClvV347?.clvPct || 0) >= 0 ? 'positive' : 'negative'}`}>
+            <div><small>CLV TRACKER</small><strong>{intelClvV347 ? `CLV ${Number(intelClvV347.clvPct) > 0 ? '+' : ''}${Number(intelClvV347.clvPct).toFixed(1)}%` : 'OCZEKUJE NA CLOSING LINE'}</strong></div>
+            {intelClvV347 ? <p>OPEN <b>{Number(intelClvV347.openOdds || 0).toFixed(2)}</b> → CLOSE <b>{Number(intelClvV347.closingOdds || 0).toFixed(2)}</b> • {intelClvV347.snapshots || 0} snapshotów • {intelClvV347.bookmaker || 'bookmaker'}</p> : <p>FM AI zapisuje kurs sygnału i porówna go z kursem blisko rozpoczęcia meczu. Dodatni CLV oznacza, że cena wejścia była lepsza od closing line.</p>}
+          </section>
+          <footer className="sim-intel-modal-footer-v347"><button type="button" onClick={() => { const m = intelModal.match; setIntelModal(null); handleSelect(m) }}>OTWÓRZ PEŁNĄ ANALIZĘ →</button><small>Value i CLV są narzędziami oceny modelu, nie gwarancją wygranej.</small></footer>
+        </section>
+      </div> : null}
     </section>
   )
 }
