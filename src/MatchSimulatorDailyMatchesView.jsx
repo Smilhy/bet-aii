@@ -701,27 +701,118 @@ function shortReasonV350(scan = {}, item = {}, match = {}, lang = 'pl') {
   return lang === 'en' ? 'The verdict combines market price, calibration and model reliability.' : 'Werdykt łączy kurs rynkowy, kalibrację i wiarygodność modelu.'
 }
 
+
+// V352 — persistent daily cache for FM AI.
+// After one completed scan, the user immediately sees the saved daily result after refresh/reopen.
+// Cache is browser-local, scoped to the local date + timezone, and can always be refreshed manually.
+const FM_AI_CACHE_SCHEMA_V352 = 1
+const FM_AI_CACHE_PREFIX_V352 = 'betai:fm-ai:daily-cache:v1:'
+
+function fmAiCacheKeyV352(dateKey = '', timeZone = '') {
+  return `${FM_AI_CACHE_PREFIX_V352}${String(dateKey || '')}:${encodeURIComponent(String(timeZone || 'local'))}`
+}
+
+function pruneOldFmAiCacheV352(activeKey = '') {
+  try {
+    const keys = []
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const key = window.localStorage.key(i)
+      if (key && key.startsWith(FM_AI_CACHE_PREFIX_V352) && key !== activeKey) keys.push(key)
+    }
+    keys.slice(0, Math.max(0, keys.length - 2)).forEach(key => window.localStorage.removeItem(key))
+  } catch (_) {}
+}
+
+function readFmAiCacheV352(dateKey = '', timeZone = '') {
+  if (typeof window === 'undefined' || !window.localStorage) return null
+  try {
+    const key = fmAiCacheKeyV352(dateKey, timeZone)
+    const raw = window.localStorage.getItem(key)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || parsed.schema !== FM_AI_CACHE_SCHEMA_V352 || parsed.dateKey !== dateKey || parsed.timeZone !== timeZone) return null
+    if (!Array.isArray(parsed.matches) || !parsed.matches.length) return null
+    if (!parsed.scannerResults || typeof parsed.scannerResults !== 'object') parsed.scannerResults = {}
+    return parsed
+  } catch (_) {
+    return null
+  }
+}
+
+function writeFmAiCacheV352(dateKey = '', timeZone = '', snapshot = {}) {
+  if (typeof window === 'undefined' || !window.localStorage || !Array.isArray(snapshot?.matches) || !snapshot.matches.length) return false
+  const key = fmAiCacheKeyV352(dateKey, timeZone)
+  const payload = {
+    schema: FM_AI_CACHE_SCHEMA_V352,
+    dateKey,
+    timeZone,
+    savedAt: Date.now(),
+    matches: snapshot.matches,
+    scannerResults: snapshot.scannerResults || {},
+    scannerProgress: snapshot.scannerProgress || { done: 0, total: 0 },
+    scannerPerformance: snapshot.scannerPerformance || null,
+    sourceMessage: snapshot.sourceMessage || '',
+    complete: Boolean(snapshot.complete)
+  }
+  try {
+    pruneOldFmAiCacheV352(key)
+    window.localStorage.setItem(key, JSON.stringify(payload))
+    return true
+  } catch (_) {
+    try {
+      // Retry once after removing older FM AI snapshots if the browser quota is tight.
+      for (let i = window.localStorage.length - 1; i >= 0; i -= 1) {
+        const oldKey = window.localStorage.key(i)
+        if (oldKey && oldKey.startsWith(FM_AI_CACHE_PREFIX_V352) && oldKey !== key) window.localStorage.removeItem(oldKey)
+      }
+      window.localStorage.setItem(key, JSON.stringify(payload))
+      return true
+    } catch (_) {
+      return false
+    }
+  }
+}
+
+function formatCacheTimeV352(savedAt = 0, lang = 'pl') {
+  if (!Number(savedAt)) return lang === 'en' ? 'saved earlier' : 'zapisano wcześniej'
+  try {
+    return new Date(savedAt).toLocaleTimeString(lang === 'en' ? 'en-GB' : 'pl-PL', { hour: '2-digit', minute: '2-digit' })
+  } catch (_) {
+    return ''
+  }
+}
+
 export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMatch }) {
   const copy = COPY[lang] || COPY.pl
+  const clientTimeZone = useMemo(() => getBrowserTimeZone(), [])
+  const initialNowV352 = useMemo(() => Date.now(), [])
+  const initialTodayKeyV352 = useMemo(() => getDateKeyInTimeZone(initialNowV352, clientTimeZone), [initialNowV352, clientTimeZone])
+  const bootstrapCacheV352 = useMemo(() => readFmAiCacheV352(initialTodayKeyV352, clientTimeZone), [initialTodayKeyV352, clientTimeZone])
+  const bootstrapScanCountV352 = Object.keys(bootstrapCacheV352?.scannerResults || {}).length
+
   const [query, setQuery] = useState('')
-  const [matches, setMatches] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [matches, setMatches] = useState(() => bootstrapCacheV352?.matches || [])
+  const [loading, setLoading] = useState(() => !bootstrapCacheV352)
   const [qualifying, setQualifying] = useState(false)
   const [error, setError] = useState('')
-  const [sourceMessage, setSourceMessage] = useState('')
-  const [qualificationProgress, setQualificationProgress] = useState({ done: 0, total: 0 })
+  const [sourceMessage, setSourceMessage] = useState(() => bootstrapCacheV352 ? `⚡ WCZYTANO ZAPIS FM AI • ${formatCacheTimeV352(bootstrapCacheV352.savedAt, lang)} • bez ponownego pełnego skanu` : '')
+  const [qualificationProgress, setQualificationProgress] = useState(() => bootstrapCacheV352 ? { done: bootstrapCacheV352.matches.length, total: bootstrapCacheV352.matches.length } : { done: 0, total: 0 })
   const [selectedId, setSelectedId] = useState('')
-  const [scannerResults, setScannerResults] = useState({})
-  const [scannerProgress, setScannerProgress] = useState({ done: 0, total: 0 })
+  const [scannerResults, setScannerResults] = useState(() => bootstrapCacheV352?.scannerResults || {})
+  const [scannerProgress, setScannerProgress] = useState(() => bootstrapCacheV352?.scannerProgress || { done: bootstrapScanCountV352, total: bootstrapScanCountV352 })
   const [scannerActive, setScannerActive] = useState(false)
-  const [scannerPerformance, setScannerPerformance] = useState(null)
+  const [scannerPerformance, setScannerPerformance] = useState(() => bootstrapCacheV352?.scannerPerformance || null)
   const [intelModal, setIntelModal] = useState(null)
   const [replayV347, setReplayV347] = useState(null)
   const [replayLoadingV347, setReplayLoadingV347] = useState(false)
-  const [nowMs, setNowMs] = useState(() => Date.now())
+  const [nowMs, setNowMs] = useState(() => initialNowV352)
   const [showAdvancedV349, setShowAdvancedV349] = useState(false)
+  const [cacheMetaV352, setCacheMetaV352] = useState(() => bootstrapCacheV352
+    ? { restored: true, savedAt: Number(bootstrapCacheV352.savedAt || 0), writing: false, complete: Boolean(bootstrapCacheV352.complete) }
+    : { restored: false, savedAt: 0, writing: false, complete: false })
+  const cacheRestoreGuardV352 = useRef(Boolean(bootstrapCacheV352))
+  const cacheWriteTimerV352 = useRef(null)
   const scanAbortRef = useRef(null)
-  const clientTimeZone = useMemo(() => getBrowserTimeZone(), [])
   const todayKey = useMemo(() => getDateKeyInTimeZone(nowMs, clientTimeZone), [nowMs, clientTimeZone])
   const labTestMatch = useMemo(() => createBetAiLabTestMatchV152(nowMs), [todayKey])
 
@@ -766,12 +857,12 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     return payload
   }
 
-  const scanQualifiedMatches = async (rows = [], signal) => {
+  const scanQualifiedMatches = async (rows = [], signal, { preserveExisting = false } = {}) => {
     // VALUE Scanner jest najdroższą częścią skanu dnia. Skanujemy maksymalnie
     // 24 najbliższe zakwalifikowane mecze z topowych lig. Reszta nadal może
     // zostać ręcznie otwarta i zasymulowana.
     const scanRows = rows.slice(0, MAX_VALUE_SCANNER_MATCHES_V140)
-    setScannerResults({})
+    if (!preserveExisting) setScannerResults({})
     setScannerProgress({ done: 0, total: scanRows.length })
     if (!scanRows.length) { setScannerActive(false); return }
     setScannerActive(true)
@@ -807,12 +898,14 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     if (!signal?.aborted) setScannerActive(false)
   }
 
-  const loadMatches = async (signal) => {
-    setLoading(true)
+  const loadMatches = async (signal, { preserveExisting = false } = {}) => {
+    if (!preserveExisting) setLoading(true)
     setError('')
-    setScannerResults({})
-    setScannerProgress({ done: 0, total: 0 })
-    setScannerActive(false)
+    if (!preserveExisting) {
+      setScannerResults({})
+      setScannerProgress({ done: 0, total: 0 })
+      setScannerActive(false)
+    }
     try {
       const requestNowMs = Date.now()
       let payload = null
@@ -844,8 +937,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       // V327: pokaż wszystkie prawdziwe mecze z 17 zatwierdzonych rozgrywek OD RAZU.
       // Pre-check jakości działa w tle i służy Value Scannerowi / readiness, ale nie może
       // ucinać późniejszych spotkań tylko dlatego, że Budget Guard zatrzymał kolejne requesty.
-      setMatches(realRows)
-      setLoading(false)
+      if (realRows.length || !preserveExisting) setMatches(realRows)
+      if (!preserveExisting) setLoading(false)
       setQualifying(true)
       setQualificationProgress({ done: 0, total: realRows.length })
       setSourceMessage(realRows.length ? `17 WYBRANYCH LIG • znaleziono ${realRows.length} meczów • sprawdzam jakość 0/${realRows.length}…` : 'Brak kolejnych meczów z topowych lig na dzisiaj.')
@@ -890,16 +983,20 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         setSourceMessage(`${realRows.length} meczów • TYLKO 17 WYBRANYCH ROZGRYWEK • ${approved.length} gotowych po pre-checku • cache ${cacheHits}`)
       }
       setQualifying(false)
-      if (approved.length && !signal?.aborted) await scanQualifiedMatches([...approved], signal)
+      if (approved.length && !signal?.aborted) await scanQualifiedMatches([...approved], signal, { preserveExisting })
     } catch (err) {
       if (err?.name === 'AbortError' || signal?.aborted) return
-      setMatches([])
-      setQualificationProgress({ done: 0, total: 0 })
+      if (!preserveExisting) {
+        setMatches([])
+        setQualificationProgress({ done: 0, total: 0 })
+        setError(err?.message || copy.error)
+        setSourceMessage('')
+      } else {
+        setSourceMessage(prev => prev || 'Zapisana analiza jest dostępna. Nie udało się odświeżyć danych w tle.')
+      }
       setQualifying(false)
-      setError(err?.message || copy.error)
-      setSourceMessage('')
     } finally {
-      if (!signal?.aborted) setLoading(false)
+      if (!signal?.aborted && !preserveExisting) setLoading(false)
     }
   }
 
@@ -907,14 +1004,49 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     scanAbortRef.current?.abort()
     const controller = new AbortController()
     scanAbortRef.current = controller
+    setCacheMetaV352(prev => ({ ...prev, restored: false }))
     loadMatches(controller.signal)
+  }
+
+  const refreshAnalysisV352 = () => {
+    scanAbortRef.current?.abort()
+    const controller = new AbortController()
+    scanAbortRef.current = controller
+    setCacheMetaV352(prev => ({ ...prev, restored: false }))
+    loadMatches(controller.signal, { preserveExisting: true })
   }
 
   useEffect(() => {
     const controller = new AbortController()
     scanAbortRef.current?.abort()
     scanAbortRef.current = controller
-    loadMatches(controller.signal)
+
+    const cached = readFmAiCacheV352(todayKey, clientTimeZone)
+    if (cached) {
+      cacheRestoreGuardV352.current = true
+      setMatches(cached.matches || [])
+      setScannerResults(cached.scannerResults || {})
+      setScannerProgress(cached.scannerProgress || { done: Object.keys(cached.scannerResults || {}).length, total: Object.keys(cached.scannerResults || {}).length })
+      if (cached.scannerPerformance) setScannerPerformance(cached.scannerPerformance)
+      setLoading(false)
+      setQualifying(false)
+      setScannerActive(false)
+      setError('')
+      setQualificationProgress({ done: (cached.matches || []).length, total: (cached.matches || []).length })
+      setSourceMessage(`⚡ WCZYTANO ZAPIS FM AI • ${formatCacheTimeV352(cached.savedAt, lang)} • bez ponownego pełnego skanu`)
+      setCacheMetaV352({ restored: true, savedAt: Number(cached.savedAt || 0), writing: false, complete: Boolean(cached.complete) })
+
+      // If the previous tab was closed during scanning, keep the partial result visible
+      // and resume the missing work without blanking the screen.
+      if (!cached.complete) {
+        window.setTimeout(() => {
+          if (!controller.signal.aborted) loadMatches(controller.signal, { preserveExisting: true })
+        }, 350)
+      }
+    } else {
+      setCacheMetaV352({ restored: false, savedAt: 0, writing: false, complete: false })
+      loadMatches(controller.signal)
+    }
     return () => controller.abort()
   }, [todayKey, clientTimeZone])
 
@@ -933,6 +1065,34 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       .catch(() => {})
     return () => { cancelled = true }
   }, [])
+
+  useEffect(() => {
+    if (!matches.length) return undefined
+    if (cacheRestoreGuardV352.current) {
+      cacheRestoreGuardV352.current = false
+      return undefined
+    }
+    if (cacheWriteTimerV352.current) window.clearTimeout(cacheWriteTimerV352.current)
+    cacheWriteTimerV352.current = window.setTimeout(() => {
+      const scanTotal = Number(scannerProgress.total || 0)
+      const scanDone = Number(scannerProgress.done || 0)
+      const complete = !loading && !qualifying && !scannerActive && (scanTotal === 0 || scanDone >= scanTotal)
+      setCacheMetaV352(prev => ({ ...prev, writing: true }))
+      const saved = writeFmAiCacheV352(todayKey, clientTimeZone, {
+        matches,
+        scannerResults,
+        scannerProgress,
+        scannerPerformance,
+        sourceMessage,
+        complete
+      })
+      const savedAt = Date.now()
+      setCacheMetaV352(prev => ({ ...prev, writing: false, savedAt: saved ? savedAt : prev.savedAt, complete }))
+    }, 220)
+    return () => {
+      if (cacheWriteTimerV352.current) window.clearTimeout(cacheWriteTimerV352.current)
+    }
+  }, [matches, scannerResults, scannerProgress.done, scannerProgress.total, scannerPerformance, sourceMessage, loading, qualifying, scannerActive, todayKey, clientTimeZone])
 
   const availableMatches = useMemo(() => matches
     .filter(match => isPreMatchFixture(match, nowMs))
@@ -970,6 +1130,29 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     const top = focusCardsV347.find(row => row.id === 'balance')?.entry || focusCardsV347[0]?.entry || scannerEntries[0] || null
     return { good, caution, noBet, top, total: scannerProgress.total || scannerEntries.length }
   }, [scannerEntries, focusCardsV347, scannerProgress.total])
+
+  const fmAnalysisV351 = useMemo(() => {
+    const matchTotal = Math.max(0, Number(qualificationProgress.total || availableMatches.length || 0))
+    const qualifiedDone = Math.min(matchTotal || Number(qualificationProgress.done || 0), Number(qualificationProgress.done || 0))
+    const scanTotal = Math.max(0, Number(scannerProgress.total || 0))
+    const scanDone = Math.min(scanTotal || Number(scannerProgress.done || 0), Number(scannerProgress.done || 0))
+
+    if (loading) {
+      return { active: true, stage: 1, title: 'Pobieram mecze dnia', subtitle: 'Łączę listę spotkań z API-Football…', done: 0, total: 0, pct: 8 }
+    }
+    if (qualifying) {
+      const pct = matchTotal > 0 ? Math.max(12, Math.min(58, Math.round((qualifiedDone / matchTotal) * 46) + 12)) : 28
+      return { active: true, stage: 2, title: 'Sprawdzam statystyki drużyn', subtitle: 'Forma, gole, jakość danych i gotowość meczu do analizy.', done: qualifiedDone, total: matchTotal, pct }
+    }
+    if (scannerActive) {
+      const pct = scanTotal > 0 ? Math.max(60, Math.min(96, Math.round((scanDone / scanTotal) * 36) + 60)) : 72
+      return { active: true, stage: 3, title: 'AI liczy kursy, value i ryzyko', subtitle: 'Porównuję model z rynkiem, kalibracją i Red Flag Guard.', done: scanDone, total: scanTotal, pct }
+    }
+    if (availableMatches.length > 0 && scannerEntries.length === 0) {
+      return { active: true, stage: 3, title: 'Przygotowuję ranking typów', subtitle: 'Pierwsze wyniki pojawią się automatycznie za chwilę.', done: 0, total: scanTotal || availableMatches.length, pct: 64 }
+    }
+    return { active: false, stage: 4, title: 'Analiza gotowa', subtitle: 'FM AI zakończył skan dostępnych meczów.', done: scanDone || scannerEntries.length, total: scanTotal || scannerEntries.length, pct: 100 }
+  }, [loading, qualifying, scannerActive, qualificationProgress.done, qualificationProgress.total, scannerProgress.done, scannerProgress.total, availableMatches.length, scannerEntries.length])
 
   const openWhyAiV347 = async (entry) => {
     if (!entry?.match || !entry?.scan?.topFinal) return
@@ -1061,7 +1244,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           {!loading && !error ? <section className="sim-luxury-command-v349">
             <div className="sim-luxury-command-top-v349">
               <div className="sim-luxury-brand-v349">
-                <small>BET+AI • FM AI • SIMPLE VERDICT LUXURY V350</small>
+                <small>BET+AI • FM AI • PERSISTENT DAILY CACHE V352</small>
                 <strong>Jedno spojrzenie. Od razu wiesz co grać, czego unikać i dlaczego.</strong>
                 <p>Typ, kurs, szansa AI, werdykt, pewność i ryzyko są podane po ludzku. Cała matematyka nadal działa pod spodem.</p>
               </div>
@@ -1099,7 +1282,11 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                       <button type="button" onClick={() => handleSelect(luxurySummaryV349.top.match)}>📊 PEŁNA ANALIZA →</button>
                     </div>
                   </>
-                })() : <div className="sim-luxury-wait-v349">Skanuję rynek i wybieram najlepszy typ dnia…</div>}
+                })() : <div className="sim-luxury-wait-v349 sim-luxury-wait-v351">
+                  <div className="sim-ai-loader-orb-v351"><i /><i /><i /><span>AI</span></div>
+                  <div className="sim-ai-loader-copy-v351"><strong>{fmAnalysisV351.title}</strong><p>{fmAnalysisV351.subtitle}</p><small>{fmAnalysisV351.total > 0 ? `${fmAnalysisV351.done}/${fmAnalysisV351.total} • ` : ''}Wyniki pojawią się automatycznie — nie musisz odświeżać strony.</small></div>
+                  <div className="sim-ai-loader-mini-progress-v351"><span style={{ width: `${fmAnalysisV351.pct}%` }} /></div>
+                </div>}
               </article>
               <div className="sim-luxury-kpis-v349">
                 <article><small>SPRAWDZONE</small><b>{luxurySummaryV349.total || availableMatches.length || 0}</b><span>meczów</span></article>
@@ -1113,6 +1300,43 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
               </article>
             </div>
             <div className="sim-luxury-legend-v349"><span className="good">● DOBRY TYP <small>warto rozważyć</small></span><span className="warn">● OSTROŻNIE <small>mniejsza przewaga</small></span><span className="bad">● NO BET <small>odpuść</small></span><span>ℹ Pełna logika EV / EDGE / CLV / calibration nadal działa</span></div>
+            <div className={`sim-fm-cache-bar-v352 ${cacheMetaV352.restored ? 'restored' : 'live'}`}>
+              <div className="sim-fm-cache-copy-v352">
+                <span className="sim-fm-cache-icon-v352">{cacheMetaV352.restored ? '⚡' : '💾'}</span>
+                <div>
+                  <small>FM AI • PAMIĘĆ DNIA</small>
+                  <strong>{cacheMetaV352.restored ? 'Wczytano zapisaną analizę natychmiast' : cacheMetaV352.complete ? 'Dzisiejsza analiza jest zapisana' : 'Zapisuję analizę automatycznie'}</strong>
+                  <p>{cacheMetaV352.restored ? `Zapis z ${formatCacheTimeV352(cacheMetaV352.savedAt, lang)}. Odświeżenie lub ponowne otwarcie strony nie uruchamia pełnego skanu od zera.` : 'Po zakończeniu skanu wynik zostaje w tej przeglądarce do końca dnia. Rozpoczęte mecze znikają automatycznie.'}</p>
+                </div>
+              </div>
+              <button type="button" onClick={refreshAnalysisV352} disabled={qualifying || scannerActive || loading}>
+                <span>{qualifying || scannerActive || loading ? '⏳' : '↻'}</span>
+                <b>{qualifying || scannerActive || loading ? 'AKTUALIZUJĘ' : 'ODŚWIEŻ ANALIZĘ'}</b>
+              </button>
+            </div>
+          </section> : null}
+
+          {!error && fmAnalysisV351.active ? <section className="sim-fm-analysis-loader-v351" aria-live="polite" aria-label="Postęp analizy FM AI">
+            <div className="sim-fm-analysis-loader-main-v351">
+              <div className="sim-fm-analysis-spinner-v351"><span /><span /><span /><b>AI</b></div>
+              <div className="sim-fm-analysis-text-v351">
+                <small>FM AI • ANALIZA W TOKU</small>
+                <strong>{fmAnalysisV351.title}</strong>
+                <p>{fmAnalysisV351.subtitle}</p>
+              </div>
+              <div className="sim-fm-analysis-count-v351">
+                <b>{fmAnalysisV351.total > 0 ? `${fmAnalysisV351.done}/${fmAnalysisV351.total}` : '•••'}</b>
+                <span>{fmAnalysisV351.stage === 2 ? 'STATYSTYKI' : fmAnalysisV351.stage === 3 ? 'VALUE SCAN' : 'ŁADOWANIE'}</span>
+              </div>
+            </div>
+            <div className="sim-fm-analysis-progress-v351"><span style={{ width: `${fmAnalysisV351.pct}%` }} /></div>
+            <div className="sim-fm-analysis-steps-v351">
+              <span className={fmAnalysisV351.stage > 1 ? 'done' : fmAnalysisV351.stage === 1 ? 'active' : ''}><i>1</i><b>Mecze</b><small>lista dnia</small></span>
+              <span className={fmAnalysisV351.stage > 2 ? 'done' : fmAnalysisV351.stage === 2 ? 'active' : ''}><i>2</i><b>Statystyki</b><small>forma + dane</small></span>
+              <span className={fmAnalysisV351.stage > 3 ? 'done' : fmAnalysisV351.stage === 3 ? 'active' : ''}><i>3</i><b>Value AI</b><small>kurs + ryzyko</small></span>
+              <span className={fmAnalysisV351.stage >= 4 ? 'done' : ''}><i>4</i><b>Ranking</b><small>top typy</small></span>
+            </div>
+            <footer><span className="sim-loader-live-dot-v351" /> FM AI pracuje w tle. W zależności od liczby meczów i API pierwsze pełne statystyki mogą pojawić się po kilkunastu–kilkudziesięciu sekundach.</footer>
           </section> : null}
 
           {!loading && !error && scannerPerformance && showAdvancedV349 ? <section className={`sim-intel-center-v347 health-${String(modelHealthV347?.status || 'collecting').toLowerCase()}`}>
