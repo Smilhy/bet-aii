@@ -85535,3 +85535,312 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
   .sim-simple-meter-row-v350 { grid-template-columns: 1fr; }
   .sim-ai-verdict-bar-v350 > div:first-child { grid-column: auto; }
 }
+
+/* =====================================================================
+   FM AI V351 — ANALYSIS LOADING EXPERIENCE
+   Status only. Original match cards remain untouched.
+   ===================================================================== */
+.sim-fm-analysis-loader-v351 {
+  margin: 0 0 18px;
+  padding: 18px 20px 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(66, 225, 255, 0.26);
+  background:
+    radial-gradient(circle at 10% 20%, rgba(40, 211, 255, 0.09), transparent 32%),
+    linear-gradient(135deg, rgba(7, 23, 37, 0.98), rgba(5, 15, 27, 0.98));
+  box-shadow: 0 18px 50px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.035);
+  overflow: hidden;
+  position: relative;
+}
+
+.sim-fm-analysis-loader-v351::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 0%, rgba(93, 224, 255, .035) 44%, rgba(93, 224, 255, .12) 50%, rgba(93, 224, 255, .035) 56%, transparent 100%);
+  transform: translateX(-130%);
+  animation: simV351Sweep 2.4s linear infinite;
+}
+
+.sim-fm-analysis-loader-main-v351 {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.sim-fm-analysis-spinner-v351,
+.sim-ai-loader-orb-v351 {
+  width: 58px;
+  height: 58px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.sim-fm-analysis-spinner-v351 > span,
+.sim-ai-loader-orb-v351 > i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.sim-fm-analysis-spinner-v351 > span:nth-child(1),
+.sim-ai-loader-orb-v351 > i:nth-child(1) {
+  border-top-color: #38dcff;
+  border-right-color: rgba(56, 220, 255, .28);
+  animation: simV351Spin 1.15s linear infinite;
+}
+
+.sim-fm-analysis-spinner-v351 > span:nth-child(2),
+.sim-ai-loader-orb-v351 > i:nth-child(2) {
+  inset: 7px;
+  border-bottom-color: #7899ff;
+  border-left-color: rgba(120, 153, 255, .25);
+  animation: simV351SpinReverse 1.55s linear infinite;
+}
+
+.sim-fm-analysis-spinner-v351 > span:nth-child(3),
+.sim-ai-loader-orb-v351 > i:nth-child(3) {
+  inset: 15px;
+  border-top-color: #6fffc3;
+  animation: simV351Spin .9s linear infinite;
+}
+
+.sim-fm-analysis-spinner-v351 > b,
+.sim-ai-loader-orb-v351 > span {
+  color: #eefdff;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-shadow: 0 0 14px rgba(76, 222, 255, .65);
+}
+
+.sim-fm-analysis-text-v351 small {
+  display: block;
+  margin-bottom: 4px;
+  color: #55dafd;
+  font-weight: 800;
+  letter-spacing: .11em;
+  font-size: 10px;
+}
+
+.sim-fm-analysis-text-v351 strong {
+  display: block;
+  color: #f7fcff;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.sim-fm-analysis-text-v351 p {
+  margin: 5px 0 0;
+  color: rgba(206, 225, 242, .78);
+  font-size: 13px;
+}
+
+.sim-fm-analysis-count-v351 {
+  min-width: 112px;
+  text-align: right;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.07);
+}
+
+.sim-fm-analysis-count-v351 b {
+  display: block;
+  color: #fff;
+  font-size: 22px;
+}
+
+.sim-fm-analysis-count-v351 span {
+  display: block;
+  margin-top: 3px;
+  color: #7edfff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .09em;
+}
+
+.sim-fm-analysis-progress-v351,
+.sim-ai-loader-mini-progress-v351 {
+  height: 7px;
+  margin-top: 15px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255,255,255,.06);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.035);
+  position: relative;
+  z-index: 1;
+}
+
+.sim-fm-analysis-progress-v351 > span,
+.sim-ai-loader-mini-progress-v351 > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2cd9ff, #6d9dff 58%, #66ffc5);
+  box-shadow: 0 0 18px rgba(48, 216, 255, .45);
+  transition: width .5s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.sim-fm-analysis-progress-v351 > span::after,
+.sim-ai-loader-mini-progress-v351 > span::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+  transform: translateX(-100%);
+  animation: simV351Bar 1.35s linear infinite;
+}
+
+.sim-fm-analysis-steps-v351 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.sim-fm-analysis-steps-v351 > span {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  grid-template-areas: 'icon title' 'icon sub';
+  column-gap: 9px;
+  align-items: center;
+  padding: 9px 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.055);
+  opacity: .58;
+}
+
+.sim-fm-analysis-steps-v351 > span i {
+  grid-area: icon;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 900;
+  color: #9cb2c7;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.sim-fm-analysis-steps-v351 > span b {
+  grid-area: title;
+  color: #eaf5ff;
+  font-size: 11px;
+}
+
+.sim-fm-analysis-steps-v351 > span small {
+  grid-area: sub;
+  color: rgba(183, 205, 225, .68);
+  font-size: 9px;
+}
+
+.sim-fm-analysis-steps-v351 > span.active {
+  opacity: 1;
+  border-color: rgba(57, 220, 255, .33);
+  background: rgba(35, 192, 236, .07);
+}
+
+.sim-fm-analysis-steps-v351 > span.active i {
+  color: #001119;
+  background: #48ddff;
+  border-color: transparent;
+  animation: simV351Pulse 1.2s ease-in-out infinite;
+}
+
+.sim-fm-analysis-steps-v351 > span.done {
+  opacity: .95;
+}
+
+.sim-fm-analysis-steps-v351 > span.done i {
+  color: #062019;
+  background: #6ef0bc;
+}
+
+.sim-fm-analysis-steps-v351 > span.done i::before {
+  content: '✓';
+  font-size: 12px;
+}
+
+.sim-fm-analysis-steps-v351 > span.done i {
+  font-size: 0;
+}
+
+.sim-fm-analysis-loader-v351 footer {
+  margin-top: 12px;
+  color: rgba(183, 204, 223, .72);
+  font-size: 11px;
+  position: relative;
+  z-index: 1;
+}
+
+.sim-loader-live-dot-v351 {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #6affc5;
+  box-shadow: 0 0 10px rgba(106,255,197,.7);
+  animation: simV351Pulse 1.25s ease-in-out infinite;
+}
+
+.sim-luxury-wait-v351 {
+  display: grid !important;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: 'orb copy' 'progress progress';
+  gap: 12px 15px;
+  align-items: center;
+  min-height: 138px;
+  padding: 16px !important;
+  border-radius: 18px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.055);
+}
+
+.sim-luxury-wait-v351 .sim-ai-loader-orb-v351 { grid-area: orb; }
+.sim-luxury-wait-v351 .sim-ai-loader-copy-v351 { grid-area: copy; }
+.sim-luxury-wait-v351 .sim-ai-loader-mini-progress-v351 { grid-area: progress; margin-top: 0; }
+
+.sim-ai-loader-copy-v351 strong {
+  display: block;
+  color: #f7fcff;
+  font-size: 18px;
+}
+
+.sim-ai-loader-copy-v351 p {
+  margin: 4px 0 5px;
+  color: rgba(202, 222, 240, .78);
+  font-size: 12px;
+}
+
+.sim-ai-loader-copy-v351 small {
+  color: #69dfff;
+  font-size: 10px;
+}
+
+@keyframes simV351Spin { to { transform: rotate(360deg); } }
+@keyframes simV351SpinReverse { to { transform: rotate(-360deg); } }
+@keyframes simV351Sweep { to { transform: translateX(130%); } }
+@keyframes simV351Bar { to { transform: translateX(100%); } }
+@keyframes simV351Pulse { 0%,100% { opacity: .55; transform: scale(.94); } 50% { opacity: 1; transform: scale(1.06); } }
+
+@media (max-width: 860px) {
+  .sim-fm-analysis-loader-main-v351 { grid-template-columns: auto 1fr; }
+  .sim-fm-analysis-count-v351 { grid-column: 1 / -1; text-align: left; min-width: 0; }
+  .sim-fm-analysis-steps-v351 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

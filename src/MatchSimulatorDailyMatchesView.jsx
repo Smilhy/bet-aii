@@ -971,6 +971,29 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     return { good, caution, noBet, top, total: scannerProgress.total || scannerEntries.length }
   }, [scannerEntries, focusCardsV347, scannerProgress.total])
 
+  const fmAnalysisV351 = useMemo(() => {
+    const matchTotal = Math.max(0, Number(qualificationProgress.total || availableMatches.length || 0))
+    const qualifiedDone = Math.min(matchTotal || Number(qualificationProgress.done || 0), Number(qualificationProgress.done || 0))
+    const scanTotal = Math.max(0, Number(scannerProgress.total || 0))
+    const scanDone = Math.min(scanTotal || Number(scannerProgress.done || 0), Number(scannerProgress.done || 0))
+
+    if (loading) {
+      return { active: true, stage: 1, title: 'Pobieram mecze dnia', subtitle: 'Łączę listę spotkań z API-Football…', done: 0, total: 0, pct: 8 }
+    }
+    if (qualifying) {
+      const pct = matchTotal > 0 ? Math.max(12, Math.min(58, Math.round((qualifiedDone / matchTotal) * 46) + 12)) : 28
+      return { active: true, stage: 2, title: 'Sprawdzam statystyki drużyn', subtitle: 'Forma, gole, jakość danych i gotowość meczu do analizy.', done: qualifiedDone, total: matchTotal, pct }
+    }
+    if (scannerActive) {
+      const pct = scanTotal > 0 ? Math.max(60, Math.min(96, Math.round((scanDone / scanTotal) * 36) + 60)) : 72
+      return { active: true, stage: 3, title: 'AI liczy kursy, value i ryzyko', subtitle: 'Porównuję model z rynkiem, kalibracją i Red Flag Guard.', done: scanDone, total: scanTotal, pct }
+    }
+    if (availableMatches.length > 0 && scannerEntries.length === 0) {
+      return { active: true, stage: 3, title: 'Przygotowuję ranking typów', subtitle: 'Pierwsze wyniki pojawią się automatycznie za chwilę.', done: 0, total: scanTotal || availableMatches.length, pct: 64 }
+    }
+    return { active: false, stage: 4, title: 'Analiza gotowa', subtitle: 'FM AI zakończył skan dostępnych meczów.', done: scanDone || scannerEntries.length, total: scanTotal || scannerEntries.length, pct: 100 }
+  }, [loading, qualifying, scannerActive, qualificationProgress.done, qualificationProgress.total, scannerProgress.done, scannerProgress.total, availableMatches.length, scannerEntries.length])
+
   const openWhyAiV347 = async (entry) => {
     if (!entry?.match || !entry?.scan?.topFinal) return
     setIntelModal(entry)
@@ -1061,7 +1084,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           {!loading && !error ? <section className="sim-luxury-command-v349">
             <div className="sim-luxury-command-top-v349">
               <div className="sim-luxury-brand-v349">
-                <small>BET+AI • FM AI • SIMPLE VERDICT LUXURY V350</small>
+                <small>BET+AI • FM AI • SIMPLE VERDICT LUXURY V351</small>
                 <strong>Jedno spojrzenie. Od razu wiesz co grać, czego unikać i dlaczego.</strong>
                 <p>Typ, kurs, szansa AI, werdykt, pewność i ryzyko są podane po ludzku. Cała matematyka nadal działa pod spodem.</p>
               </div>
@@ -1099,7 +1122,11 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                       <button type="button" onClick={() => handleSelect(luxurySummaryV349.top.match)}>📊 PEŁNA ANALIZA →</button>
                     </div>
                   </>
-                })() : <div className="sim-luxury-wait-v349">Skanuję rynek i wybieram najlepszy typ dnia…</div>}
+                })() : <div className="sim-luxury-wait-v349 sim-luxury-wait-v351">
+                  <div className="sim-ai-loader-orb-v351"><i /><i /><i /><span>AI</span></div>
+                  <div className="sim-ai-loader-copy-v351"><strong>{fmAnalysisV351.title}</strong><p>{fmAnalysisV351.subtitle}</p><small>{fmAnalysisV351.total > 0 ? `${fmAnalysisV351.done}/${fmAnalysisV351.total} • ` : ''}Wyniki pojawią się automatycznie — nie musisz odświeżać strony.</small></div>
+                  <div className="sim-ai-loader-mini-progress-v351"><span style={{ width: `${fmAnalysisV351.pct}%` }} /></div>
+                </div>}
               </article>
               <div className="sim-luxury-kpis-v349">
                 <article><small>SPRAWDZONE</small><b>{luxurySummaryV349.total || availableMatches.length || 0}</b><span>meczów</span></article>
@@ -1113,6 +1140,29 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
               </article>
             </div>
             <div className="sim-luxury-legend-v349"><span className="good">● DOBRY TYP <small>warto rozważyć</small></span><span className="warn">● OSTROŻNIE <small>mniejsza przewaga</small></span><span className="bad">● NO BET <small>odpuść</small></span><span>ℹ Pełna logika EV / EDGE / CLV / calibration nadal działa</span></div>
+          </section> : null}
+
+          {!error && fmAnalysisV351.active ? <section className="sim-fm-analysis-loader-v351" aria-live="polite" aria-label="Postęp analizy FM AI">
+            <div className="sim-fm-analysis-loader-main-v351">
+              <div className="sim-fm-analysis-spinner-v351"><span /><span /><span /><b>AI</b></div>
+              <div className="sim-fm-analysis-text-v351">
+                <small>FM AI • ANALIZA W TOKU</small>
+                <strong>{fmAnalysisV351.title}</strong>
+                <p>{fmAnalysisV351.subtitle}</p>
+              </div>
+              <div className="sim-fm-analysis-count-v351">
+                <b>{fmAnalysisV351.total > 0 ? `${fmAnalysisV351.done}/${fmAnalysisV351.total}` : '•••'}</b>
+                <span>{fmAnalysisV351.stage === 2 ? 'STATYSTYKI' : fmAnalysisV351.stage === 3 ? 'VALUE SCAN' : 'ŁADOWANIE'}</span>
+              </div>
+            </div>
+            <div className="sim-fm-analysis-progress-v351"><span style={{ width: `${fmAnalysisV351.pct}%` }} /></div>
+            <div className="sim-fm-analysis-steps-v351">
+              <span className={fmAnalysisV351.stage > 1 ? 'done' : fmAnalysisV351.stage === 1 ? 'active' : ''}><i>1</i><b>Mecze</b><small>lista dnia</small></span>
+              <span className={fmAnalysisV351.stage > 2 ? 'done' : fmAnalysisV351.stage === 2 ? 'active' : ''}><i>2</i><b>Statystyki</b><small>forma + dane</small></span>
+              <span className={fmAnalysisV351.stage > 3 ? 'done' : fmAnalysisV351.stage === 3 ? 'active' : ''}><i>3</i><b>Value AI</b><small>kurs + ryzyko</small></span>
+              <span className={fmAnalysisV351.stage >= 4 ? 'done' : ''}><i>4</i><b>Ranking</b><small>top typy</small></span>
+            </div>
+            <footer><span className="sim-loader-live-dot-v351" /> FM AI pracuje w tle. W zależności od liczby meczów i API pierwsze pełne statystyki mogą pojawić się po kilkunastu–kilkudziesięciu sekundach.</footer>
           </section> : null}
 
           {!loading && !error && scannerPerformance && showAdvancedV349 ? <section className={`sim-intel-center-v347 health-${String(modelHealthV347?.status || 'collecting').toLowerCase()}`}>
