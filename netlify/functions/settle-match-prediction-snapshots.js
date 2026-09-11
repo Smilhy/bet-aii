@@ -228,28 +228,7 @@ async function settleValueScannerSnapshotsV346(supabase, cutoff, maxApiCalls = 2
           if (settlement) out.fromApi += 1
         }
         if (!settlement) continue
-        if (settlement.status === 'settled') {
-          try {
-            await markClosingOdds(supabase, row.fixture_id, row.fixture_date)
-            const candidates = Array.isArray(row?.payload?.candidates) ? row.payload.candidates.slice(0, 10) : []
-            const topCandidate = row?.payload?.top || candidates[0] || null
-            const clv = await getClvSummary(supabase, row.fixture_id, row.fixture_date, { value: { top: topCandidate } })
-            const clvByMarketV347 = {}
-            const unique = new Map()
-            for (const candidate of candidates) {
-              const key = String(candidate?.key || '')
-              if (key && !unique.has(key)) unique.set(key, candidate)
-            }
-            for (const [key, candidate] of unique.entries()) {
-              try {
-                const candidateClv = await getClvSummary(supabase, row.fixture_id, row.fixture_date, { value: { top: candidate } })
-                if (candidateClv) clvByMarketV347[key] = candidateClv
-              } catch (_) {}
-            }
-            if (clv || Object.keys(clvByMarketV347).length) settlement = { ...settlement, ...(clv ? { clv } : {}), clvByMarketV347 }
-          } catch (_) {}
-        }
-        const nextPayload = { ...(row.payload || {}), settlementV346: settlement, frozenPreMatchV346: true, settlementPolicyVersion: 'V347_CLV' }
+        const nextPayload = { ...(row.payload || {}), settlementV346: settlement, frozenPreMatchV346: true }
         const { error: updateError } = await supabase.from('match_value_scan_snapshots').update({ payload: nextPayload }).eq('fixture_id', String(row.fixture_id))
         if (updateError) throw updateError
         if (settlement.status === 'settled') out.settled += 1

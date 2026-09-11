@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { classifyValueCandidateV347 } from './valuePolicyV347'
+import { classifyValueCandidateV346 } from './valuePolicyV346'
 
 // V329: offline test V158 is kept in code but hidden from production UI.
 // Set to true only when the diagnostic scenario is needed again.
@@ -542,41 +542,15 @@ function enrichScannerCandidate(scan = {}, candidate = null, performance = null)
   }
   const dataQuality = Number(scan?.dataQuality || 0)
   const agreement = Number(scan?.modelAgreement || 0)
-  const marketConsensus = candidate?.marketConsensus || scan?.marketConsensus?.[candidate?.key] || null
-  const consensusSources = Number(marketConsensus?.sources || 0)
-  const consensusAgreement = Number(marketConsensus?.agreement || 0)
-  const perfKey = scannerMarketKey(candidate?.key || '')
-  const driftRow = Array.isArray(performance?.drift?.markets) ? performance.drift.markets.find(row => row?.key === perfKey) : null
-  const leagueTrust = Array.isArray(performance?.leagueTrust)
-    ? performance.leagueTrust.find(row => scannerNormalizeName(row?.name) === scannerNormalizeName(scan?.league || '')) || null
-    : null
-  const leagueMarketTrust = Array.isArray(leagueTrust?.markets) ? leagueTrust.markets.find(row => row?.key === perfKey) || null : null
-  const marketScore = consensusSources >= 2
-    ? consensusAgreement
-    : Number(scan?.bookmakerCount || 0) >= 3 ? 82 : Number(scan?.bookmakerCount || 0) >= 1 ? 70 : 35
-  const classified = classifyValueCandidateV347(calibratedCandidate, {
+  const marketScore = Number(scan?.bookmakerCount || 0) >= 3 ? 92 : Number(scan?.bookmakerCount || 0) >= 1 ? 78 : 35
+  const classified = classifyValueCandidateV346(calibratedCandidate, {
     dataQuality,
     modelAgreement: agreement,
-    marketScore,
-    consensusSources,
-    consensusAgreement,
-    marketDriftStatus: driftRow?.status || 'PENDING',
-    leagueTrustScore: leagueMarketTrust?.score ?? null
+    marketScore
   })
-  const warningPenalty = (classified.redFlags || []).reduce((sum, flag) => sum + (flag.level === 'BLOCK' ? 16 : 4), 0)
-  const balanceScore = Math.round(Math.max(0, Math.min(100,
-    classified.reliabilityScore * .46 +
-    Math.min(22, Math.max(0, Number(classified.edgePp || 0))) * 1.15 +
-    Math.min(30, Math.max(0, Number(classified.expectedValuePct || 0))) * .35 +
-    (consensusSources >= 2 ? consensusAgreement : marketScore) * .10 +
-    Number(leagueMarketTrust?.score || 65) * .08 - warningPenalty
-  )))
 
   return {
     ...classified,
-    marketConsensus,
-    driftStatus: driftRow?.status || 'PENDING',
-    leagueMarketTrust: leagueMarketTrust || null,
     reliability: {
       score: classified.reliabilityScore,
       label: classified.reliabilityLabel,
@@ -584,7 +558,11 @@ function enrichScannerCandidate(scan = {}, candidate = null, performance = null)
       modelAgreement: agreement,
       dataQuality
     },
-    dailyScore: balanceScore
+    dailyScore: Math.round(Math.max(0, Math.min(100,
+      classified.reliabilityScore * .55 +
+      Math.max(0, Number(classified.edgePp || 0)) * 2.2 +
+      Math.max(0, Number(classified.expectedValuePct || 0)) * .35
+    )))
   }
 }
 
@@ -599,220 +577,23 @@ function scannerDecisionLabel(value = '') {
   return ({ STRONG_VALUE: 'STRONG VALUE', VALUE: 'VALUE', SMALL_EDGE: 'SMALL EDGE', NO_BET: 'NO BET', NO_ODDS: 'BRAK KURSÓW' })[String(value || '').toUpperCase()] || value
 }
 
-function healthLabelV347(value = '') {
-  return ({ GOOD: 'GOOD', WARNING: 'WARNING', BAD: 'BAD', COLLECTING: 'COLLECTING' })[String(value || '').toUpperCase()] || 'COLLECTING'
-}
-
-function buildWhyAiV347(scan = {}, item = {}, match = {}) {
-  const signals = scan?.signals || {}
-  const positives = []
-  const risks = []
-  const market = item?.marketConsensus || null
-  const formDiff = Number(signals.homeFormScore || 0) - Number(signals.awayFormScore || 0)
-  if (Math.abs(formDiff) >= 12) positives.push(`${formDiff > 0 ? match?.home : match?.away} ma wyraźnie lepszy trend formy (${Math.round(Math.max(Number(signals.homeFormScore || 0), Number(signals.awayFormScore || 0)))}/100 vs ${Math.round(Math.min(Number(signals.homeFormScore || 0), Number(signals.awayFormScore || 0)))}/100).`)
-  if (Number(signals.homeGoalsForAvg || 0) >= 1.6) positives.push(`${match?.home} zdobywa średnio ${Number(signals.homeGoalsForAvg).toFixed(2)} gola w próbce skanera.`)
-  if (Number(signals.awayGoalsForAvg || 0) >= 1.6) positives.push(`${match?.away} zdobywa średnio ${Number(signals.awayGoalsForAvg).toFixed(2)} gola w próbce skanera.`)
-  if (Number(signals.homeGoalsAgainstAvg || 0) >= 1.45) positives.push(`${match?.home} traci średnio ${Number(signals.homeGoalsAgainstAvg).toFixed(2)} gola — profil meczu rośnie.`)
-  if (Number(signals.awayGoalsAgainstAvg || 0) >= 1.45) positives.push(`${match?.away} traci średnio ${Number(signals.awayGoalsAgainstAvg).toFixed(2)} gola — profil meczu rośnie.`)
-  if (Number(scan?.modelAgreement || 0) >= 70) positives.push(`Model agreement ${Math.round(Number(scan.modelAgreement))}% — źródła modelowe są zgodne.`)
-  if (Number(market?.sources || 0) >= 2 && Number(market?.agreement || 0) >= 70) positives.push(`Market consensus: ${market.sources} bukmacherów, zgodność ${Math.round(Number(market.agreement))}%.`)
-  if (Number(item?.edgePp || 0) > 0) positives.push(`Cena daje +${Number(item.edgePp).toFixed(1)} pp edge po usunięciu marży; EV ${Number(item.expectedValuePct || 0) >= 0 ? '+' : ''}${Number(item.expectedValuePct || 0).toFixed(1)}%.`)
-  for (const flag of (item?.redFlags || [])) risks.push(flag.text)
-  if (!risks.length && Number(scan?.modelAgreement || 0) < 65) risks.push(`Model agreement ${Math.round(Number(scan?.modelAgreement || 0))}% — poniżej progu STRONG.`)
-  if (!risks.length) risks.push('Brak istotnych czerwonych flag w danych dostępnych dla Daily Scanner.')
-  if (!positives.length) positives.push('Przewaga wynika z połączenia modelu prawdopodobieństwa, ceny no-vig i kalibracji historycznej.')
-  return { positives: positives.slice(0, 6), risks: risks.slice(0, 6) }
-}
-
-function pickFocusCardsV347(entries = []) {
-  const eligible = entries.filter(row => ['STRONG_VALUE', 'VALUE', 'SMALL_EDGE'].includes(row?.scan?.topFinal?.decision))
-  if (!eligible.length) return []
-  const byValue = [...eligible].sort((a, b) => Number(b.scan.topFinal.expectedValuePct || 0) - Number(a.scan.topFinal.expectedValuePct || 0))[0]
-  const byQuality = [...eligible].sort((a, b) => Number(b.scan.topFinal.reliability?.score || 0) - Number(a.scan.topFinal.reliability?.score || 0))[0]
-  const byBalance = [...eligible].sort((a, b) => Number(b.scan.topFinal.dailyScore || 0) - Number(a.scan.topFinal.dailyScore || 0))[0]
-  const rows = [
-    { id:'value', label:'BEST VALUE', note:'Najwyższe EV', entry:byValue },
-    { id:'quality', label:'BEST QUALITY', note:'Najwyższa wiarygodność', entry:byQuality },
-    { id:'balance', label:'BEST BALANCE', note:'Edge + jakość + rynek', entry:byBalance }
-  ]
-  return rows.filter(row => row.entry)
-}
-
-function compactPerformanceRowsV347(performance = null) {
-  const breakdown = performance?.breakdownV347 || {}
-  const leagues = (breakdown?.leagues || []).filter(x => Number(x.bets || 0) >= 3).slice(0, 5)
-  const markets = (breakdown?.markets || []).filter(x => Number(x.bets || 0) >= 3).slice(0, 5)
-  return { leagues, markets }
-}
-
-function simpleVerdictV350(decision = '', lang = 'pl') {
-  const key = String(decision || '').toUpperCase()
-  const pl = {
-    STRONG_VALUE: { icon: '✅', label: 'DOBRY TYP', sub: 'Warto rozważyć zakład', tone: 'good' },
-    VALUE: { icon: '✅', label: 'DOBRY TYP', sub: 'Warto rozważyć zakład', tone: 'good' },
-    SMALL_EDGE: { icon: '⚠️', label: 'OSTROŻNIE', sub: 'Przewaga jest mała', tone: 'warn' },
-    NO_BET: { icon: '⛔', label: 'NO BET', sub: 'Lepiej odpuścić', tone: 'bad' },
-    NO_ODDS: { icon: '⏳', label: 'OCZEKUJE', sub: 'Czekam na pełne dane rynku', tone: 'muted' }
-  }
-  const en = {
-    STRONG_VALUE: { icon: '✅', label: 'GOOD PICK', sub: 'Worth considering', tone: 'good' },
-    VALUE: { icon: '✅', label: 'GOOD PICK', sub: 'Worth considering', tone: 'good' },
-    SMALL_EDGE: { icon: '⚠️', label: 'CAUTION', sub: 'Only a small edge', tone: 'warn' },
-    NO_BET: { icon: '⛔', label: 'NO BET', sub: 'Better to skip', tone: 'bad' },
-    NO_ODDS: { icon: '⏳', label: 'WAITING', sub: 'Waiting for market data', tone: 'muted' }
-  }
-  const dict = lang === 'en' ? en : pl
-  return dict[key] || dict.NO_ODDS
-}
-
-function confidenceUiV350(item = {}, scan = {}, lang = 'pl') {
-  const reliability = Math.max(0, Math.min(100, Number(item?.reliability?.score || 0)))
-  const balance = Math.max(0, Math.min(100, Number(item?.dailyScore || 0)))
-  const agreement = Math.max(0, Math.min(100, Number(scan?.modelAgreement || item?.reliability?.modelAgreement || 0)))
-  const composite = reliability || balance || agreement
-    ? Math.max(0, Math.min(100, reliability * 0.55 + balance * 0.25 + agreement * 0.20))
-    : 0
-  const score10 = Math.round(composite) / 10
-  if (composite >= 82) return { icon: '🔥', label: 'High confidence', short: 'HIGH', score10, tone: 'high' }
-  if (composite >= 68) return { icon: '🙂', label: 'Moderate confidence', short: 'MEDIUM', score10, tone: 'medium' }
-  return { icon: '😬', label: 'Low confidence', short: 'LOW', score10, tone: 'low' }
-}
-
-function riskUiV350(item = {}, scan = {}, lang = 'pl') {
-  const flags = Array.isArray(item?.redFlags) ? item.redFlags : []
-  const agreement = Number(scan?.modelAgreement || item?.reliability?.modelAgreement || 0)
-  const hasBlock = flags.some(flag => String(flag?.level || '').toUpperCase() === 'BLOCK')
-  if (hasBlock || flags.length >= 3 || agreement > 0 && agreement < 55) return { icon: '🔴', label: lang === 'en' ? 'High' : 'Wysokie', tone: 'high' }
-  if (flags.length || agreement > 0 && agreement < 65) return { icon: '🟡', label: lang === 'en' ? 'Moderate' : 'Umiarkowane', tone: 'medium' }
-  return { icon: '🟢', label: lang === 'en' ? 'Low' : 'Niskie', tone: 'low' }
-}
-
-function shortReasonV350(scan = {}, item = {}, match = {}, lang = 'pl') {
-  const flags = Array.isArray(item?.redFlags) ? item.redFlags : []
-  const samples = Number(item?.reliability?.calibration?.samples || 0)
-  const agreement = Number(scan?.modelAgreement || 0)
-  const edge = Number(item?.edgePp || 0)
-  const decision = String(item?.decision || '').toUpperCase()
-  if (decision === 'NO_BET' && flags.length) return flags[0]?.text || (lang === 'en' ? 'The model detected a red flag.' : 'Model wykrył czerwoną flagę.')
-  if (samples > 0 && samples < 30) return lang === 'en' ? 'Too little historical data for a strong verdict.' : 'Za mało danych historycznych na mocny werdykt.'
-  if (agreement >= 70 && edge >= 8) return lang === 'en' ? 'The model sees a clear price edge and strong model agreement.' : 'Model widzi przewagę nad rynkiem i wysoką zgodność modeli.'
-  if (edge >= 8) return lang === 'en' ? 'The model sees a clear price edge versus the market.' : 'Model widzi wyraźną przewagę nad rynkiem.'
-  if (agreement >= 70) return lang === 'en' ? 'The models agree, but the price edge is limited.' : 'Modele są zgodne, ale przewaga kursowa jest ograniczona.'
-  return lang === 'en' ? 'The verdict combines market price, calibration and model reliability.' : 'Werdykt łączy kurs rynkowy, kalibrację i wiarygodność modelu.'
-}
-
-
-// V352 — persistent daily cache for FM AI.
-// After one completed scan, the user immediately sees the saved daily result after refresh/reopen.
-// Cache is browser-local, scoped to the local date + timezone, and can always be refreshed manually.
-const FM_AI_CACHE_SCHEMA_V352 = 1
-const FM_AI_CACHE_PREFIX_V352 = 'betai:fm-ai:daily-cache:v1:'
-
-function fmAiCacheKeyV352(dateKey = '', timeZone = '') {
-  return `${FM_AI_CACHE_PREFIX_V352}${String(dateKey || '')}:${encodeURIComponent(String(timeZone || 'local'))}`
-}
-
-function pruneOldFmAiCacheV352(activeKey = '') {
-  try {
-    const keys = []
-    for (let i = 0; i < window.localStorage.length; i += 1) {
-      const key = window.localStorage.key(i)
-      if (key && key.startsWith(FM_AI_CACHE_PREFIX_V352) && key !== activeKey) keys.push(key)
-    }
-    keys.slice(0, Math.max(0, keys.length - 2)).forEach(key => window.localStorage.removeItem(key))
-  } catch (_) {}
-}
-
-function readFmAiCacheV352(dateKey = '', timeZone = '') {
-  if (typeof window === 'undefined' || !window.localStorage) return null
-  try {
-    const key = fmAiCacheKeyV352(dateKey, timeZone)
-    const raw = window.localStorage.getItem(key)
-    if (!raw) return null
-    const parsed = JSON.parse(raw)
-    if (!parsed || parsed.schema !== FM_AI_CACHE_SCHEMA_V352 || parsed.dateKey !== dateKey || parsed.timeZone !== timeZone) return null
-    if (!Array.isArray(parsed.matches) || !parsed.matches.length) return null
-    if (!parsed.scannerResults || typeof parsed.scannerResults !== 'object') parsed.scannerResults = {}
-    return parsed
-  } catch (_) {
-    return null
-  }
-}
-
-function writeFmAiCacheV352(dateKey = '', timeZone = '', snapshot = {}) {
-  if (typeof window === 'undefined' || !window.localStorage || !Array.isArray(snapshot?.matches) || !snapshot.matches.length) return false
-  const key = fmAiCacheKeyV352(dateKey, timeZone)
-  const payload = {
-    schema: FM_AI_CACHE_SCHEMA_V352,
-    dateKey,
-    timeZone,
-    savedAt: Date.now(),
-    matches: snapshot.matches,
-    scannerResults: snapshot.scannerResults || {},
-    scannerProgress: snapshot.scannerProgress || { done: 0, total: 0 },
-    scannerPerformance: snapshot.scannerPerformance || null,
-    sourceMessage: snapshot.sourceMessage || '',
-    complete: Boolean(snapshot.complete)
-  }
-  try {
-    pruneOldFmAiCacheV352(key)
-    window.localStorage.setItem(key, JSON.stringify(payload))
-    return true
-  } catch (_) {
-    try {
-      // Retry once after removing older FM AI snapshots if the browser quota is tight.
-      for (let i = window.localStorage.length - 1; i >= 0; i -= 1) {
-        const oldKey = window.localStorage.key(i)
-        if (oldKey && oldKey.startsWith(FM_AI_CACHE_PREFIX_V352) && oldKey !== key) window.localStorage.removeItem(oldKey)
-      }
-      window.localStorage.setItem(key, JSON.stringify(payload))
-      return true
-    } catch (_) {
-      return false
-    }
-  }
-}
-
-function formatCacheTimeV352(savedAt = 0, lang = 'pl') {
-  if (!Number(savedAt)) return lang === 'en' ? 'saved earlier' : 'zapisano wcześniej'
-  try {
-    return new Date(savedAt).toLocaleTimeString(lang === 'en' ? 'en-GB' : 'pl-PL', { hour: '2-digit', minute: '2-digit' })
-  } catch (_) {
-    return ''
-  }
-}
-
 export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMatch }) {
   const copy = COPY[lang] || COPY.pl
-  const clientTimeZone = useMemo(() => getBrowserTimeZone(), [])
-  const initialNowV352 = useMemo(() => Date.now(), [])
-  const initialTodayKeyV352 = useMemo(() => getDateKeyInTimeZone(initialNowV352, clientTimeZone), [initialNowV352, clientTimeZone])
-  const bootstrapCacheV352 = useMemo(() => readFmAiCacheV352(initialTodayKeyV352, clientTimeZone), [initialTodayKeyV352, clientTimeZone])
-  const bootstrapScanCountV352 = Object.keys(bootstrapCacheV352?.scannerResults || {}).length
-
   const [query, setQuery] = useState('')
-  const [matches, setMatches] = useState(() => bootstrapCacheV352?.matches || [])
-  const [loading, setLoading] = useState(() => !bootstrapCacheV352)
+  const [matches, setMatches] = useState([])
+  const [loading, setLoading] = useState(true)
   const [qualifying, setQualifying] = useState(false)
   const [error, setError] = useState('')
-  const [sourceMessage, setSourceMessage] = useState(() => bootstrapCacheV352 ? `⚡ WCZYTANO ZAPIS FM AI • ${formatCacheTimeV352(bootstrapCacheV352.savedAt, lang)} • bez ponownego pełnego skanu` : '')
-  const [qualificationProgress, setQualificationProgress] = useState(() => bootstrapCacheV352 ? { done: bootstrapCacheV352.matches.length, total: bootstrapCacheV352.matches.length } : { done: 0, total: 0 })
+  const [sourceMessage, setSourceMessage] = useState('')
+  const [qualificationProgress, setQualificationProgress] = useState({ done: 0, total: 0 })
   const [selectedId, setSelectedId] = useState('')
-  const [scannerResults, setScannerResults] = useState(() => bootstrapCacheV352?.scannerResults || {})
-  const [scannerProgress, setScannerProgress] = useState(() => bootstrapCacheV352?.scannerProgress || { done: bootstrapScanCountV352, total: bootstrapScanCountV352 })
+  const [scannerResults, setScannerResults] = useState({})
+  const [scannerProgress, setScannerProgress] = useState({ done: 0, total: 0 })
   const [scannerActive, setScannerActive] = useState(false)
-  const [scannerPerformance, setScannerPerformance] = useState(() => bootstrapCacheV352?.scannerPerformance || null)
-  const [intelModal, setIntelModal] = useState(null)
-  const [replayV347, setReplayV347] = useState(null)
-  const [replayLoadingV347, setReplayLoadingV347] = useState(false)
-  const [nowMs, setNowMs] = useState(() => initialNowV352)
-  const [showAdvancedV349, setShowAdvancedV349] = useState(false)
-  const [cacheMetaV352, setCacheMetaV352] = useState(() => bootstrapCacheV352
-    ? { restored: true, savedAt: Number(bootstrapCacheV352.savedAt || 0), writing: false, complete: Boolean(bootstrapCacheV352.complete) }
-    : { restored: false, savedAt: 0, writing: false, complete: false })
-  const cacheRestoreGuardV352 = useRef(Boolean(bootstrapCacheV352))
-  const cacheWriteTimerV352 = useRef(null)
+  const [scannerPerformance, setScannerPerformance] = useState(null)
+  const [nowMs, setNowMs] = useState(() => Date.now())
   const scanAbortRef = useRef(null)
+  const clientTimeZone = useMemo(() => getBrowserTimeZone(), [])
   const todayKey = useMemo(() => getDateKeyInTimeZone(nowMs, clientTimeZone), [nowMs, clientTimeZone])
   const labTestMatch = useMemo(() => createBetAiLabTestMatchV152(nowMs), [todayKey])
 
@@ -857,12 +638,12 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     return payload
   }
 
-  const scanQualifiedMatches = async (rows = [], signal, { preserveExisting = false } = {}) => {
+  const scanQualifiedMatches = async (rows = [], signal) => {
     // VALUE Scanner jest najdroższą częścią skanu dnia. Skanujemy maksymalnie
     // 24 najbliższe zakwalifikowane mecze z topowych lig. Reszta nadal może
     // zostać ręcznie otwarta i zasymulowana.
     const scanRows = rows.slice(0, MAX_VALUE_SCANNER_MATCHES_V140)
-    if (!preserveExisting) setScannerResults({})
+    setScannerResults({})
     setScannerProgress({ done: 0, total: scanRows.length })
     if (!scanRows.length) { setScannerActive(false); return }
     setScannerActive(true)
@@ -898,14 +679,12 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     if (!signal?.aborted) setScannerActive(false)
   }
 
-  const loadMatches = async (signal, { preserveExisting = false } = {}) => {
-    if (!preserveExisting) setLoading(true)
+  const loadMatches = async (signal) => {
+    setLoading(true)
     setError('')
-    if (!preserveExisting) {
-      setScannerResults({})
-      setScannerProgress({ done: 0, total: 0 })
-      setScannerActive(false)
-    }
+    setScannerResults({})
+    setScannerProgress({ done: 0, total: 0 })
+    setScannerActive(false)
     try {
       const requestNowMs = Date.now()
       let payload = null
@@ -937,8 +716,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       // V327: pokaż wszystkie prawdziwe mecze z 17 zatwierdzonych rozgrywek OD RAZU.
       // Pre-check jakości działa w tle i służy Value Scannerowi / readiness, ale nie może
       // ucinać późniejszych spotkań tylko dlatego, że Budget Guard zatrzymał kolejne requesty.
-      if (realRows.length || !preserveExisting) setMatches(realRows)
-      if (!preserveExisting) setLoading(false)
+      setMatches(realRows)
+      setLoading(false)
       setQualifying(true)
       setQualificationProgress({ done: 0, total: realRows.length })
       setSourceMessage(realRows.length ? `17 WYBRANYCH LIG • znaleziono ${realRows.length} meczów • sprawdzam jakość 0/${realRows.length}…` : 'Brak kolejnych meczów z topowych lig na dzisiaj.')
@@ -983,20 +762,16 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         setSourceMessage(`${realRows.length} meczów • TYLKO 17 WYBRANYCH ROZGRYWEK • ${approved.length} gotowych po pre-checku • cache ${cacheHits}`)
       }
       setQualifying(false)
-      if (approved.length && !signal?.aborted) await scanQualifiedMatches([...approved], signal, { preserveExisting })
+      if (approved.length && !signal?.aborted) await scanQualifiedMatches([...approved], signal)
     } catch (err) {
       if (err?.name === 'AbortError' || signal?.aborted) return
-      if (!preserveExisting) {
-        setMatches([])
-        setQualificationProgress({ done: 0, total: 0 })
-        setError(err?.message || copy.error)
-        setSourceMessage('')
-      } else {
-        setSourceMessage(prev => prev || 'Zapisana analiza jest dostępna. Nie udało się odświeżyć danych w tle.')
-      }
+      setMatches([])
+      setQualificationProgress({ done: 0, total: 0 })
       setQualifying(false)
+      setError(err?.message || copy.error)
+      setSourceMessage('')
     } finally {
-      if (!signal?.aborted && !preserveExisting) setLoading(false)
+      if (!signal?.aborted) setLoading(false)
     }
   }
 
@@ -1004,49 +779,14 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     scanAbortRef.current?.abort()
     const controller = new AbortController()
     scanAbortRef.current = controller
-    setCacheMetaV352(prev => ({ ...prev, restored: false }))
     loadMatches(controller.signal)
-  }
-
-  const refreshAnalysisV352 = () => {
-    scanAbortRef.current?.abort()
-    const controller = new AbortController()
-    scanAbortRef.current = controller
-    setCacheMetaV352(prev => ({ ...prev, restored: false }))
-    loadMatches(controller.signal, { preserveExisting: true })
   }
 
   useEffect(() => {
     const controller = new AbortController()
     scanAbortRef.current?.abort()
     scanAbortRef.current = controller
-
-    const cached = readFmAiCacheV352(todayKey, clientTimeZone)
-    if (cached) {
-      cacheRestoreGuardV352.current = true
-      setMatches(cached.matches || [])
-      setScannerResults(cached.scannerResults || {})
-      setScannerProgress(cached.scannerProgress || { done: Object.keys(cached.scannerResults || {}).length, total: Object.keys(cached.scannerResults || {}).length })
-      if (cached.scannerPerformance) setScannerPerformance(cached.scannerPerformance)
-      setLoading(false)
-      setQualifying(false)
-      setScannerActive(false)
-      setError('')
-      setQualificationProgress({ done: (cached.matches || []).length, total: (cached.matches || []).length })
-      setSourceMessage(`⚡ WCZYTANO ZAPIS FM AI • ${formatCacheTimeV352(cached.savedAt, lang)} • bez ponownego pełnego skanu`)
-      setCacheMetaV352({ restored: true, savedAt: Number(cached.savedAt || 0), writing: false, complete: Boolean(cached.complete) })
-
-      // If the previous tab was closed during scanning, keep the partial result visible
-      // and resume the missing work without blanking the screen.
-      if (!cached.complete) {
-        window.setTimeout(() => {
-          if (!controller.signal.aborted) loadMatches(controller.signal, { preserveExisting: true })
-        }, 350)
-      }
-    } else {
-      setCacheMetaV352({ restored: false, savedAt: 0, writing: false, complete: false })
-      loadMatches(controller.signal)
-    }
+    loadMatches(controller.signal)
     return () => controller.abort()
   }, [todayKey, clientTimeZone])
 
@@ -1065,34 +805,6 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       .catch(() => {})
     return () => { cancelled = true }
   }, [])
-
-  useEffect(() => {
-    if (!matches.length) return undefined
-    if (cacheRestoreGuardV352.current) {
-      cacheRestoreGuardV352.current = false
-      return undefined
-    }
-    if (cacheWriteTimerV352.current) window.clearTimeout(cacheWriteTimerV352.current)
-    cacheWriteTimerV352.current = window.setTimeout(() => {
-      const scanTotal = Number(scannerProgress.total || 0)
-      const scanDone = Number(scannerProgress.done || 0)
-      const complete = !loading && !qualifying && !scannerActive && (scanTotal === 0 || scanDone >= scanTotal)
-      setCacheMetaV352(prev => ({ ...prev, writing: true }))
-      const saved = writeFmAiCacheV352(todayKey, clientTimeZone, {
-        matches,
-        scannerResults,
-        scannerProgress,
-        scannerPerformance,
-        sourceMessage,
-        complete
-      })
-      const savedAt = Date.now()
-      setCacheMetaV352(prev => ({ ...prev, writing: false, savedAt: saved ? savedAt : prev.savedAt, complete }))
-    }, 220)
-    return () => {
-      if (cacheWriteTimerV352.current) window.clearTimeout(cacheWriteTimerV352.current)
-    }
-  }, [matches, scannerResults, scannerProgress.done, scannerProgress.total, scannerPerformance, sourceMessage, loading, qualifying, scannerActive, todayKey, clientTimeZone])
 
   const availableMatches = useMemo(() => matches
     .filter(match => isPreMatchFixture(match, nowMs))
@@ -1118,74 +830,6 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         return bd - ad || Number(b.scan.topFinal.dailyScore || 0) - Number(a.scan.topFinal.dailyScore || 0) || Number(b.scan.topFinal.edgePp || 0) - Number(a.scan.topFinal.edgePp || 0) || Number(b.scan.topFinal.reliability?.score || 0) - Number(a.scan.topFinal.reliability?.score || 0)
       })
   }, [scannerResults, scannerPerformance, availableMatches])
-
-  const focusCardsV347 = useMemo(() => pickFocusCardsV347(scannerEntries), [scannerEntries])
-  const modelHealthV347 = scannerPerformance?.modelHealthV347 || null
-  const performanceRowsV347 = useMemo(() => compactPerformanceRowsV347(scannerPerformance), [scannerPerformance])
-  const luxurySummaryV349 = useMemo(() => {
-    const rows = scannerEntries.map(entry => ({ entry, item: entry?.scan?.topFinal || {} }))
-    const good = rows.filter(row => ['STRONG_VALUE', 'VALUE'].includes(String(row.item?.decision || '').toUpperCase())).length
-    const caution = rows.filter(row => String(row.item?.decision || '').toUpperCase() === 'SMALL_EDGE').length
-    const noBet = rows.filter(row => ['NO_BET', 'NO_ODDS'].includes(String(row.item?.decision || '').toUpperCase())).length
-    const top = focusCardsV347.find(row => row.id === 'balance')?.entry || focusCardsV347[0]?.entry || scannerEntries[0] || null
-    return { good, caution, noBet, top, total: scannerProgress.total || scannerEntries.length }
-  }, [scannerEntries, focusCardsV347, scannerProgress.total])
-
-  const fmAnalysisV351 = useMemo(() => {
-    const matchTotal = Math.max(0, Number(qualificationProgress.total || availableMatches.length || 0))
-    const qualifiedDone = Math.min(matchTotal || Number(qualificationProgress.done || 0), Number(qualificationProgress.done || 0))
-    const scanTotal = Math.max(0, Number(scannerProgress.total || 0))
-    const scanDone = Math.min(scanTotal || Number(scannerProgress.done || 0), Number(scannerProgress.done || 0))
-
-    if (loading) {
-      return { active: true, stage: 1, title: 'Pobieram mecze dnia', subtitle: 'Łączę listę spotkań z API-Football…', done: 0, total: 0, pct: 8 }
-    }
-    if (qualifying) {
-      const pct = matchTotal > 0 ? Math.max(12, Math.min(58, Math.round((qualifiedDone / matchTotal) * 46) + 12)) : 28
-      return { active: true, stage: 2, title: 'Sprawdzam statystyki drużyn', subtitle: 'Forma, gole, jakość danych i gotowość meczu do analizy.', done: qualifiedDone, total: matchTotal, pct }
-    }
-    if (scannerActive) {
-      const pct = scanTotal > 0 ? Math.max(60, Math.min(96, Math.round((scanDone / scanTotal) * 36) + 60)) : 72
-      return { active: true, stage: 3, title: 'AI liczy kursy, value i ryzyko', subtitle: 'Porównuję model z rynkiem, kalibracją i Red Flag Guard.', done: scanDone, total: scanTotal, pct }
-    }
-    if (availableMatches.length > 0 && scannerEntries.length === 0) {
-      return { active: true, stage: 3, title: 'Przygotowuję ranking typów', subtitle: 'Pierwsze wyniki pojawią się automatycznie za chwilę.', done: 0, total: scanTotal || availableMatches.length, pct: 64 }
-    }
-    return { active: false, stage: 4, title: 'Analiza gotowa', subtitle: 'FM AI zakończył skan dostępnych meczów.', done: scanDone || scannerEntries.length, total: scanTotal || scannerEntries.length, pct: 100 }
-  }, [loading, qualifying, scannerActive, qualificationProgress.done, qualificationProgress.total, scannerProgress.done, scannerProgress.total, availableMatches.length, scannerEntries.length])
-
-  const openWhyAiV347 = async (entry) => {
-    if (!entry?.match || !entry?.scan?.topFinal) return
-    setIntelModal(entry)
-    setReplayV347(null)
-    const fixtureId = String(entry.match?.apiFixtureId || entry.match?.id || '').trim()
-    if (!fixtureId) return
-    setReplayLoadingV347(true)
-    try {
-      const response = await fetch(`/.netlify/functions/get-match-replay?fixture=${encodeURIComponent(fixtureId)}`, { cache: 'no-store' })
-      const payload = await response.json().catch(() => ({}))
-      if (response.ok && payload?.ok) setReplayV347(payload)
-    } catch (_) {
-    } finally {
-      setReplayLoadingV347(false)
-    }
-  }
-
-  const intelWhyV347 = useMemo(() => intelModal ? buildWhyAiV347(intelModal.scan, intelModal.scan?.topFinal, intelModal.match) : null, [intelModal])
-  const intelTimelineV347 = useMemo(() => {
-    if (!intelModal) return []
-    const selectedKey = String(intelModal.scan?.topFinal?.key || '')
-    const rows = Array.isArray(replayV347?.odds) ? replayV347.odds.filter(row => !selectedKey || String(row?.marketKey || '') === selectedKey) : []
-    const first = replayV347?.scanner ? [{
-      type:'scanner', capturedAt:replayV347.scanner.capturedAt, window:'SIGNAL', bookmaker:replayV347.scanner.bookmaker || intelModal.scan?.topFinal?.bookmaker || '',
-      odds:Number(replayV347.scanner.bookmakerOdds || intelModal.scan?.topFinal?.bookmakerOdds || 0), modelProbability:Number(replayV347.scanner.probability || intelModal.scan?.topFinal?.probability || 0),
-      fairOdds:Number(replayV347.scanner.fairOdds || intelModal.scan?.topFinal?.fairOdds || 0), edgePp:Number(replayV347.scanner.edgePp || intelModal.scan?.topFinal?.edgePp || 0)
-    }] : []
-    return [...first, ...rows].sort((a, b) => Date.parse(a.capturedAt || '') - Date.parse(b.capturedAt || '')).slice(-12)
-  }, [intelModal, replayV347])
-  const intelClvV347 = intelModal?.scan?.topFinal?.key
-    ? (replayV347?.scanner?.clvByMarket?.[intelModal.scan.topFinal.key] || replayV347?.scanner?.clv || null)
-    : (replayV347?.scanner?.clv || null)
 
   const nearestKey = availableMatches.length ? fixtureKey(availableMatches[0]) : ''
 
@@ -1241,211 +885,42 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           {!loading && !error && qualifying && !filteredMatches.length && <div className="sim-day-loading-v99"><i /><strong>Sprawdzam realne statystyki meczów…</strong><span>{qualificationProgress.done}/{qualificationProgress.total} sprawdzonych</span></div>}
           {!loading && !error && !qualifying && !filteredMatches.length && <div className="sim-day-empty-v98">{copy.empty}</div>}
 
-          {!loading && !error ? <section className="sim-luxury-command-v349">
-            <div className="sim-luxury-command-top-v349">
-              <div className="sim-luxury-brand-v349">
-                <small>BET+AI • FM AI • PERSISTENT DAILY CACHE V352</small>
-                <strong>Jedno spojrzenie. Od razu wiesz co grać, czego unikać i dlaczego.</strong>
-                <p>Typ, kurs, szansa AI, werdykt, pewność i ryzyko są podane po ludzku. Cała matematyka nadal działa pod spodem.</p>
-              </div>
-              <button type="button" className={`sim-luxury-pro-toggle-v349 ${showAdvancedV349 ? 'active' : ''}`} onClick={() => setShowAdvancedV349(value => !value)}>
-                <span>{showAdvancedV349 ? 'UKRYJ' : 'POKAŻ'}</span>
-                <b>ANALITYKĘ PRO</b>
-              </button>
-            </div>
-            <div className="sim-luxury-grid-v349">
-              <article className="sim-luxury-top-pick-v349 sim-simple-top-pick-v350">
-                <div className="sim-luxury-card-kicker-v349"><span>🏆</span> TOP TYP DNIA</div>
-                {luxurySummaryV349.top?.scan?.topFinal ? (() => {
-                  const item = luxurySummaryV349.top.scan.topFinal
-                  const meta = getScannerMarketMetaV330(item, luxurySummaryV349.top.match, lang)
-                  const verdict = simpleVerdictV350(item.decision, lang)
-                  const confidence = confidenceUiV350(item, luxurySummaryV349.top.scan, lang)
-                  const risk = riskUiV350(item, luxurySummaryV349.top.scan, lang)
-                  const reason = shortReasonV350(luxurySummaryV349.top.scan, item, luxurySummaryV349.top.match, lang)
-                  return <>
-                    <strong>{luxurySummaryV349.top.match.home} <i>vs</i> {luxurySummaryV349.top.match.away}</strong>
-                    <div className="sim-simple-pick-lines-v350">
-                      <div><span className="sim-simple-icon-v350">🎯</span><small>TYP</small><b>{meta.title}</b></div>
-                      <div><span className="sim-simple-icon-v350">💷</span><small>KURS</small><b>@ {Number(item.bookmakerOdds || 0).toFixed(2)}</b></div>
-                      <div><span className="sim-simple-icon-v350">🤖</span><small>SZANSA AI</small><b>{item.probability || '—'}%</b></div>
-                      <div className={`verdict-${verdict.tone}`}><span className="sim-simple-icon-v350">{verdict.icon}</span><small>OCENA</small><b>{verdict.label}</b></div>
-                    </div>
-                    <div className="sim-simple-reason-v350"><span>💡</span><div><small>DLACZEGO?</small><b>{reason}</b></div></div>
-                    <div className={`sim-ai-verdict-bar-v350 tone-${verdict.tone}`}>
-                      <div><small>FM AI VERDICT</small><strong>{verdict.icon} {verdict.sub}</strong></div>
-                      <div className={`sim-confidence-v350 tone-${confidence.tone}`}><span>{confidence.icon}</span><div><small>PEWNOŚĆ</small><b>{confidence.score10.toFixed(1)}/10</b><em>{confidence.label}</em></div></div>
-                      <div className={`sim-risk-v350 tone-${risk.tone}`}><span>{risk.icon}</span><div><small>RYZYKO</small><b>{risk.label}</b></div></div>
-                    </div>
-                    <div className="sim-luxury-top-pick-actions-v349">
-                      <button type="button" onClick={() => openWhyAiV347(luxurySummaryV349.top)}>❓ DLACZEGO AI?</button>
-                      <button type="button" onClick={() => handleSelect(luxurySummaryV349.top.match)}>📊 PEŁNA ANALIZA →</button>
-                    </div>
-                  </>
-                })() : <div className="sim-luxury-wait-v349 sim-luxury-wait-v351">
-                  <div className="sim-ai-loader-orb-v351"><i /><i /><i /><span>AI</span></div>
-                  <div className="sim-ai-loader-copy-v351"><strong>{fmAnalysisV351.title}</strong><p>{fmAnalysisV351.subtitle}</p><small>{fmAnalysisV351.total > 0 ? `${fmAnalysisV351.done}/${fmAnalysisV351.total} • ` : ''}Wyniki pojawią się automatycznie — nie musisz odświeżać strony.</small></div>
-                  <div className="sim-ai-loader-mini-progress-v351"><span style={{ width: `${fmAnalysisV351.pct}%` }} /></div>
-                </div>}
-              </article>
-              <div className="sim-luxury-kpis-v349">
-                <article><small>SPRAWDZONE</small><b>{luxurySummaryV349.total || availableMatches.length || 0}</b><span>meczów</span></article>
-                <article className="good"><small>DOBRE TYPY</small><b>{luxurySummaryV349.good}</b><span>value / strong value</span></article>
-                <article className="warn"><small>OSTROŻNIE</small><b>{luxurySummaryV349.caution}</b><span>mała przewaga</span></article>
-                <article className="bad"><small>NO BET</small><b>{luxurySummaryV349.noBet}</b><span>lepiej odpuścić</span></article>
-              </div>
-              <article className={`sim-luxury-health-v349 health-${String(modelHealthV347?.status || 'collecting').toLowerCase()}`}>
-                <div className="sim-luxury-health-orb-v349"><span>{healthLabelV347(modelHealthV347?.status)}</span></div>
-                <div><small>KONDYCJA MODELU</small><strong>{healthLabelV347(modelHealthV347?.status)}</strong><p>{(modelHealthV347?.reasons || [scannerPerformance?.note || 'Zbieranie historii modelu.'])[0]}</p></div>
-              </article>
-            </div>
-            <div className="sim-luxury-legend-v349"><span className="good">● DOBRY TYP <small>warto rozważyć</small></span><span className="warn">● OSTROŻNIE <small>mniejsza przewaga</small></span><span className="bad">● NO BET <small>odpuść</small></span><span>ℹ Pełna logika EV / EDGE / CLV / calibration nadal działa</span></div>
-            <div className={`sim-fm-cache-bar-v352 ${cacheMetaV352.restored ? 'restored' : 'live'}`}>
-              <div className="sim-fm-cache-copy-v352">
-                <span className="sim-fm-cache-icon-v352">{cacheMetaV352.restored ? '⚡' : '💾'}</span>
-                <div>
-                  <small>FM AI • PAMIĘĆ DNIA</small>
-                  <strong>{cacheMetaV352.restored ? 'Wczytano zapisaną analizę natychmiast' : cacheMetaV352.complete ? 'Dzisiejsza analiza jest zapisana' : 'Zapisuję analizę automatycznie'}</strong>
-                  <p>{cacheMetaV352.restored ? `Zapis z ${formatCacheTimeV352(cacheMetaV352.savedAt, lang)}. Odświeżenie lub ponowne otwarcie strony nie uruchamia pełnego skanu od zera.` : 'Po zakończeniu skanu wynik zostaje w tej przeglądarce do końca dnia. Rozpoczęte mecze znikają automatycznie.'}</p>
-                </div>
-              </div>
-              <button type="button" onClick={refreshAnalysisV352} disabled={qualifying || scannerActive || loading}>
-                <span>{qualifying || scannerActive || loading ? '⏳' : '↻'}</span>
-                <b>{qualifying || scannerActive || loading ? 'AKTUALIZUJĘ' : 'ODŚWIEŻ ANALIZĘ'}</b>
-              </button>
-            </div>
-          </section> : null}
-
-          {!error && fmAnalysisV351.active ? <section className="sim-fm-analysis-loader-v351" aria-live="polite" aria-label="Postęp analizy FM AI">
-            <div className="sim-fm-analysis-loader-main-v351">
-              <div className="sim-fm-analysis-spinner-v351"><span /><span /><span /><b>AI</b></div>
-              <div className="sim-fm-analysis-text-v351">
-                <small>FM AI • ANALIZA W TOKU</small>
-                <strong>{fmAnalysisV351.title}</strong>
-                <p>{fmAnalysisV351.subtitle}</p>
-              </div>
-              <div className="sim-fm-analysis-count-v351">
-                <b>{fmAnalysisV351.total > 0 ? `${fmAnalysisV351.done}/${fmAnalysisV351.total}` : '•••'}</b>
-                <span>{fmAnalysisV351.stage === 2 ? 'STATYSTYKI' : fmAnalysisV351.stage === 3 ? 'VALUE SCAN' : 'ŁADOWANIE'}</span>
-              </div>
-            </div>
-            <div className="sim-fm-analysis-progress-v351"><span style={{ width: `${fmAnalysisV351.pct}%` }} /></div>
-            <div className="sim-fm-analysis-steps-v351">
-              <span className={fmAnalysisV351.stage > 1 ? 'done' : fmAnalysisV351.stage === 1 ? 'active' : ''}><i>1</i><b>Mecze</b><small>lista dnia</small></span>
-              <span className={fmAnalysisV351.stage > 2 ? 'done' : fmAnalysisV351.stage === 2 ? 'active' : ''}><i>2</i><b>Statystyki</b><small>forma + dane</small></span>
-              <span className={fmAnalysisV351.stage > 3 ? 'done' : fmAnalysisV351.stage === 3 ? 'active' : ''}><i>3</i><b>Value AI</b><small>kurs + ryzyko</small></span>
-              <span className={fmAnalysisV351.stage >= 4 ? 'done' : ''}><i>4</i><b>Ranking</b><small>top typy</small></span>
-            </div>
-            <footer><span className="sim-loader-live-dot-v351" /> FM AI pracuje w tle. W zależności od liczby meczów i API pierwsze pełne statystyki mogą pojawić się po kilkunastu–kilkudziesięciu sekundach.</footer>
-          </section> : null}
-
-          {!loading && !error && scannerPerformance && showAdvancedV349 ? <section className={`sim-intel-center-v347 health-${String(modelHealthV347?.status || 'collecting').toLowerCase()}`}>
-            <div className="sim-intel-head-v347">
-              <div><small>FM AI • MODEL INTELLIGENCE CENTER V347</small><strong>MODEL HEALTH + CLV + PERFORMANCE</strong><p>Kontrola jakości modelu na rozliczonych, zamrożonych prognozach pre-match. Wyniki nie są gwarancją przyszłego zysku.</p></div>
-              <span>{healthLabelV347(modelHealthV347?.status)}</span>
-            </div>
-            <div className="sim-intel-kpis-v347">
-              <article><small>PRÓBKA</small><b>{modelHealthV347?.samples ?? scannerPerformance?.all?.matches ?? 0}</b><em>settled pre-match</em></article>
-              <article><small>HIT RATE</small><b>{Number(modelHealthV347?.hitRate ?? scannerPerformance?.all?.valueHitRate ?? 0).toFixed(1)}%</b><em>śledzone top picks</em></article>
-              <article><small>ROI</small><b className={Number(modelHealthV347?.roi ?? scannerPerformance?.all?.valueRoi ?? 0) >= 0 ? 'positive' : 'negative'}>{Number(modelHealthV347?.roi ?? scannerPerformance?.all?.valueRoi ?? 0) > 0 ? '+' : ''}{Number(modelHealthV347?.roi ?? scannerPerformance?.all?.valueRoi ?? 0).toFixed(1)}%</b><em>1 unit / pick</em></article>
-              <article><small>BRIER</small><b>{Number(modelHealthV347?.brier ?? scannerPerformance?.all?.avgBrier ?? 0).toFixed(3)}</b><em>niżej = lepiej</em></article>
-              <article><small>CAL. ERROR</small><b>{Number(modelHealthV347?.calibrationError ?? scannerPerformance?.all?.calibrationError ?? 0).toFixed(1)} pp</b><em>średnia luka</em></article>
-              <article><small>CLV</small><b className={Number(modelHealthV347?.avgClv ?? scannerPerformance?.all?.avgClv ?? 0) >= 0 ? 'positive' : 'negative'}>{Number(modelHealthV347?.avgClv ?? scannerPerformance?.all?.avgClv ?? 0) > 0 ? '+' : ''}{Number(modelHealthV347?.avgClv ?? scannerPerformance?.all?.avgClv ?? 0).toFixed(1)}%</b><em>{modelHealthV347?.clvSamples ?? scannerPerformance?.all?.clvSamples ?? 0} closing samples</em></article>
-            </div>
-            <div className="sim-intel-windows-v347">
-              {[['30', scannerPerformance?.recent30], ['100', scannerPerformance?.recent100], ['500', scannerPerformance?.recent500]].map(([label, row]) => <span key={label}><small>LAST {label}</small><b>{row?.matches || 0} prób</b><em>ROI {Number(row?.valueRoi || 0) > 0 ? '+' : ''}{Number(row?.valueRoi || 0).toFixed(1)}% • Brier {Number(row?.avgBrier || 0).toFixed(3)}</em></span>)}
-            </div>
-            <div className="sim-intel-bottom-v347">
-              <div className="sim-intel-alerts-v347"><strong>MODEL STATUS</strong>{(modelHealthV347?.reasons || [scannerPerformance?.note || 'Zbieranie historii modelu.']).slice(0, 3).map((text, i) => <span key={`${text}-${i}`}>• {text}</span>)}</div>
-              <div className="sim-intel-breakdown-v347"><strong>PERFORMANCE BREAKDOWN</strong><div>{performanceRowsV347.markets.map(row => <span key={`m-${row.name}`}><b>{row.name}</b><em>{row.bets} • ROI {row.roi > 0 ? '+' : ''}{row.roi}%</em></span>)}{performanceRowsV347.leagues.slice(0, 3).map(row => <span key={`l-${row.name}`}><b>{row.name}</b><em>{row.bets} • ROI {row.roi > 0 ? '+' : ''}{row.roi}%</em></span>)}</div></div>
-            </div>
-            <details className="sim-intel-details-v347">
-              <summary>PEŁNY PERFORMANCE BREAKDOWN — kurs / confidence / edge</summary>
-              <div className="sim-intel-detail-grid-v347">
-                {[['KURS', scannerPerformance?.breakdownV347?.oddsBands], ['CONFIDENCE', scannerPerformance?.breakdownV347?.confidenceBands], ['EDGE', scannerPerformance?.breakdownV347?.edgeBands]].map(([title, rows]) => <section key={title}><strong>{title}</strong>{(rows || []).map(row => <span key={`${title}-${row.name}`}><b>{row.name}</b><em>{row.bets} prób • HR {row.hitRate}% • ROI {row.roi > 0 ? '+' : ''}{row.roi}%</em></span>)}</section>)}
-              </div>
-            </details>
-          </section> : null}
-
-          {!loading && !error && (scannerActive || scannerEntries.length > 0) ? <section className="sim-luxury-picks-v349">
-            <div className="sim-luxury-picks-head-v349">
-              <div><small>FM AI • TOP PICKS</small><strong>Najlepsze okazje dnia</strong><p>Krótko i czytelnie. Szczegóły techniczne są w analityce PRO.</p></div>
-              <div className="sim-value-scanner-progress-v139"><b>{scannerProgress.done}/{scannerProgress.total}</b><span>{scannerActive ? 'SKANOWANIE LIVE' : 'SKAN GOTOWY'}</span></div>
-            </div>
-            {scannerEntries.length ? <div className="sim-luxury-picks-grid-v349">{scannerEntries.slice(0,5).map((entry,index) => {
-              const item = entry.scan.topFinal
-              const meta = getScannerMarketMetaV330(item, entry.match, lang)
-              const status = String(item.decision || '').toUpperCase()
-              const tone = ['STRONG_VALUE','VALUE'].includes(status) ? 'good' : status === 'SMALL_EDGE' ? 'warn' : 'bad'
-              const why = buildWhyAiV347(entry.scan, item, entry.match)
-              const verdict = simpleVerdictV350(item.decision, lang)
-              const confidence = confidenceUiV350(item, entry.scan, lang)
-              const risk = riskUiV350(item, entry.scan, lang)
-              const reason = shortReasonV350(entry.scan, item, entry.match, lang)
-              return <article key={`lux-pick-${entry.key || index}`} className={`sim-luxury-pick-v349 sim-simple-pick-v350 ${tone}`}>
-                <header><span>#{index+1} • {entry.match.league}</span><em>{verdict.icon} {verdict.label}</em></header>
-                <strong>{entry.match.home} <i>vs</i> {entry.match.away}</strong>
-                <div className="sim-simple-pick-lines-v350 compact-v350">
-                  <div><span className="sim-simple-icon-v350">🎯</span><small>TYP</small><b>{meta.title}</b></div>
-                  <div><span className="sim-simple-icon-v350">💷</span><small>KURS</small><b>@ {Number(item.bookmakerOdds || 0).toFixed(2)}</b></div>
-                  <div><span className="sim-simple-icon-v350">🤖</span><small>SZANSA AI</small><b>{item.probability || '—'}%</b></div>
-                  <div className={`verdict-${verdict.tone}`}><span className="sim-simple-icon-v350">{verdict.icon}</span><small>OCENA</small><b>{verdict.label}</b></div>
-                </div>
-                <div className="sim-simple-reason-v350 compact-v350"><span>💡</span><div><small>DLACZEGO?</small><b>{reason}</b></div></div>
-                <div className="sim-simple-meter-row-v350">
-                  <div className={`sim-confidence-v350 tone-${confidence.tone}`}><span>{confidence.icon}</span><div><small>PEWNOŚĆ</small><b>{confidence.score10.toFixed(1)}/10</b><em>{confidence.label}</em></div></div>
-                  <div className={`sim-risk-v350 tone-${risk.tone}`}><span>{risk.icon}</span><div><small>RYZYKO</small><b>{risk.label}</b></div></div>
-                </div>
-                <div className={`sim-mini-verdict-v350 tone-${verdict.tone}`}><small>FM AI VERDICT</small><b>{verdict.icon} {verdict.sub}</b></div>
-                <footer><button type="button" onClick={() => openWhyAiV347(entry)}>❓ DLACZEGO AI?</button><button type="button" onClick={() => handleSelect(entry.match)}>📊 PEŁNA ANALIZA →</button></footer>
-              </article>
-            })}</div> : <div className="sim-value-scanner-empty-v139"><i />Szukam najmocniejszych okazji…</div>}
-          </section> : null}
-
-          {!loading && !error && showAdvancedV349 && (scannerActive || scannerEntries.length > 0) ? <section className="sim-value-scanner-v139 sim-value-scanner-v347">
+          {!loading && !error && (scannerActive || scannerEntries.length > 0) ? <section className="sim-value-scanner-v139">
             <div className="sim-value-scanner-head-v139">
-              <div><small>BET+AI • TOP PICKS 2.0 • RED FLAG GUARD</small><strong>TOP 5 ANALIZ DNIA</strong><p>Ranking uwzględnia teraz EV, Reliability, kalibrację, Market Consensus, drift i League / Market Trust. STRONG VALUE może zostać automatycznie zablokowane przez czerwone flagi.</p></div>
+              <div><small>BET+AI • DAILY SHORTLIST • TOP LEAGUES</small><strong>TOP 5 ANALIZ DNIA</strong><p>Value Scanner wybiera maksymalnie 5 najmocniejszych kandydatów z topowych lig + Ekstraklasy. RAW jest korygowane historyczną kalibracją; pełna analiza pozostaje końcową weryfikacją.</p></div>
               <div className="sim-value-scanner-progress-v139"><b>{scannerProgress.done}/{scannerProgress.total}</b><span>{scannerActive ? 'SKANOWANIE LIVE' : 'SKAN GOTOWY'}</span></div>
             </div>
-            {focusCardsV347.length ? <div className="sim-focus-grid-v347">
-              {focusCardsV347.map(({ id, label, note, entry }) => {
-                const item = entry.scan.topFinal
-                const meta = getScannerMarketMetaV330(item, entry.match, lang)
-                return <button type="button" key={id} className={`sim-focus-card-v347 focus-${id}`} onClick={() => openWhyAiV347(entry)}><small>{label}</small><strong>{entry.match.home} <i>vs</i> {entry.match.away}</strong><b>{meta.badge} @ {Number(item.bookmakerOdds || 0).toFixed(2)}</b><span>{note} • EV {Number(item.expectedValuePct || 0) > 0 ? '+' : ''}{Number(item.expectedValuePct || 0).toFixed(1)}% • {item.dailyScore || 0}/100</span></button>
-              })}
-            </div> : null}
             {scannerEntries.length ? <div className="sim-value-scanner-grid-v139">
-              {scannerEntries.slice(0, 5).map((entry, index) => {
-                const { key, match: scanMatch, scan } = entry
+              {scannerEntries.slice(0, 5).map(({ key, match: scanMatch, scan }, index) => {
                 const item = scan.topFinal
                 const rel = item.reliability || {}
                 const marketMeta = getScannerMarketMetaV330(item, scanMatch, lang)
-                const consensus = item.marketConsensus || {}
-                const flags = item.redFlags || []
-                return <article key={`scan-${key}`} className={`sim-value-scanner-card-v139 sim-value-scanner-card-v330 sim-value-card-v347 ${String(item.decision || '').toLowerCase()}`}>
+                return <button type="button" key={`scan-${key}`} className={`sim-value-scanner-card-v139 sim-value-scanner-card-v330 ${String(item.decision || '').toLowerCase()}`} onClick={() => handleSelect(scanMatch)}>
                   <header><span>#{index + 1} • {scanMatch.league}</span><em>{scannerDecisionLabel(item.decision)}</em></header>
                   <strong>{scanMatch.home} <i>vs</i> {scanMatch.away}</strong>
                   <div className="sim-value-scanner-pick-v139 sim-value-scanner-pick-v330">
                     <div className="sim-value-market-main-v330">
                       <small>{marketMeta.category}</small>
-                      <div className="sim-value-market-row-v330"><span className="sim-value-market-badge-v330">{marketMeta.badge}</span><b>{marketMeta.title}</b></div>
+                      <div className="sim-value-market-row-v330">
+                        <span className="sim-value-market-badge-v330">{marketMeta.badge}</span>
+                        <b>{marketMeta.title}</b>
+                      </div>
                       <em>{marketMeta.detail}</em>
                     </div>
-                    <div className="sim-value-market-odds-v330"><small>KURS</small><span>{item.bookmakerOdds ? `@ ${Number(item.bookmakerOdds).toFixed(2)}` : 'bez kursu'}</span></div>
+                    <div className="sim-value-market-odds-v330">
+                      <small>KURS</small>
+                      <span>{item.bookmakerOdds ? `@ ${Number(item.bookmakerOdds).toFixed(2)}` : 'bez kursu'}</span>
+                    </div>
                   </div>
-                  <div className="sim-value-scanner-metrics-v139 sim-value-scanner-metrics-v330 sim-value-metrics-v347">
+                  <div className="sim-value-scanner-metrics-v139 sim-value-scanner-metrics-v330">
                     <span><small>BET+AI CAL.</small><b>{item.probability ? `${item.probability}%` : '—'}</b>{item.calibrated ? <em>RAW {item.rawProbability}%</em> : null}</span>
                     <span><small>FAIR</small><b>{item.fairOdds ? Number(item.fairOdds).toFixed(2) : '—'}</b></span>
                     <span><small>EDGE</small><b>{Number.isFinite(Number(item.edgePp)) ? `${Number(item.edgePp) > 0 ? '+' : ''}${item.edgePp} pp` : '—'}</b></span>
-                    <span><small>EV</small><b>{Number(item.expectedValuePct || 0) > 0 ? '+' : ''}{Number(item.expectedValuePct || 0).toFixed(1)}%</b></span>
                     <span><small>RELIABILITY</small><b>{rel.score || 0}/100</b></span>
-                    <span><small>BALANCE</small><b>{item.dailyScore || 0}/100</b></span>
+                    <span><small>DAILY SCORE</small><b>{item.dailyScore || 0}/100</b></span>
                   </div>
-                  <div className="sim-market-consensus-v347"><span><small>MARKET CONSENSUS</small><b>{Number(consensus.sources || 0) >= 2 ? `${Math.round(Number(consensus.agreement || 0))}%` : 'COLLECTING'}</b></span><span><small>BUK.</small><b>{consensus.sources || scan.bookmakerCount || 0}</b></span><span><small>AVG NO-VIG</small><b>{Number(consensus.avgNoVigProbability || 0) > 0 ? `${Number(consensus.avgNoVigProbability).toFixed(1)}%` : '—'}</b></span></div>
-                  {flags.length ? <div className="sim-redflags-v347">{flags.slice(0, 2).map(flag => <span key={flag.code} className={String(flag.level || '').toLowerCase()}>⚠ {flag.text}</span>)}</div> : <div className="sim-redflags-v347 clear"><span>✓ RED FLAG GUARD: CLEAR</span></div>}
                   <footer><span className={`rel-${String(rel.label || 'pending').toLowerCase()}`}>{rel.label || 'PENDING'}</span><small>{String(rel.calibration?.source || 'global').toUpperCase()} • {rel.calibration?.samples || 0} prób • model agreement {scan.modelAgreement || 0}%</small></footer>
-                  <div className="sim-value-actions-v347"><button type="button" onClick={() => openWhyAiV347(entry)}>WHY AI?</button><button type="button" onClick={() => handleSelect(scanMatch)}>PEŁNA ANALIZA →</button></div>
-                </article>
+                </button>
               })}
             </div> : <div className="sim-value-scanner-empty-v139"><i />Szukam przewag cenowych i sprawdzam kalibrację…</div>}
           </section> : null}
@@ -1559,42 +1034,6 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           })}
         </div>
       </div>
-
-      {intelModal ? <div className="sim-intel-modal-backdrop-v347" role="presentation" onMouseDown={() => setIntelModal(null)}>
-        <section className="sim-intel-modal-v347" role="dialog" aria-modal="true" aria-label="Why AI and prediction timeline" onMouseDown={(event) => event.stopPropagation()}>
-          <header className="sim-intel-modal-head-v347">
-            <div><small>FM AI • WHY AI? • PREDICTION TIMELINE</small><strong>{intelModal.match.home} <i>vs</i> {intelModal.match.away}</strong><span>{intelModal.match.league} • {scannerDecisionLabel(intelModal.scan?.topFinal?.decision)}</span></div>
-            <button type="button" onClick={() => setIntelModal(null)} aria-label="Zamknij">×</button>
-          </header>
-          <div className="sim-intel-modal-summary-v347">
-            <article><small>TYP</small><b>{getScannerMarketMetaV330(intelModal.scan?.topFinal, intelModal.match, lang).title}</b><em>@ {Number(intelModal.scan?.topFinal?.bookmakerOdds || 0).toFixed(2)}</em></article>
-            <article><small>AI CAL.</small><b>{Number(intelModal.scan?.topFinal?.probability || 0).toFixed(1)}%</b><em>fair {Number(intelModal.scan?.topFinal?.fairOdds || 0).toFixed(2)}</em></article>
-            <article><small>EDGE / EV</small><b>+{Number(intelModal.scan?.topFinal?.edgePp || 0).toFixed(1)} pp</b><em>EV {Number(intelModal.scan?.topFinal?.expectedValuePct || 0) > 0 ? '+' : ''}{Number(intelModal.scan?.topFinal?.expectedValuePct || 0).toFixed(1)}%</em></article>
-            <article><small>RELIABILITY</small><b>{intelModal.scan?.topFinal?.reliability?.score || 0}/100</b><em>{intelModal.scan?.topFinal?.reliability?.label || 'PENDING'}</em></article>
-          </div>
-          <div className="sim-intel-modal-columns-v347">
-            <section className="why-positive"><h4>WHY AI — CO WSPIERA TYP</h4>{(intelWhyV347?.positives || []).map((text, index) => <p key={`pos-${index}`}><i>+</i>{text}</p>)}</section>
-            <section className="why-risk"><h4>RED FLAGS / RYZYKA</h4>{(intelWhyV347?.risks || []).map((text, index) => <p key={`risk-${index}`}><i>!</i>{text}</p>)}</section>
-          </div>
-          <div className="sim-intel-consensus-modal-v347">
-            <div><small>MARKET CONSENSUS</small><b>{Number(intelModal.scan?.topFinal?.marketConsensus?.sources || 0) >= 2 ? `${Math.round(Number(intelModal.scan?.topFinal?.marketConsensus?.agreement || 0))}%` : 'COLLECTING'}</b><span>{intelModal.scan?.topFinal?.marketConsensus?.sources || 0} bukmacherów</span></div>
-            <div><small>AVG NO-VIG</small><b>{Number(intelModal.scan?.topFinal?.marketConsensus?.avgNoVigProbability || 0) > 0 ? `${Number(intelModal.scan?.topFinal?.marketConsensus?.avgNoVigProbability).toFixed(1)}%` : '—'}</b><span>median {Number(intelModal.scan?.topFinal?.marketConsensus?.medianNoVigProbability || 0) > 0 ? `${Number(intelModal.scan?.topFinal?.marketConsensus?.medianNoVigProbability).toFixed(1)}%` : '—'}</span></div>
-            <div><small>DRIFT</small><b>{intelModal.scan?.topFinal?.driftStatus || 'PENDING'}</b><span>League Trust {Math.round(Number(intelModal.scan?.topFinal?.leagueMarketTrust?.score || 0))}/100</span></div>
-          </div>
-          {intelModal.scan?.topFinal?.marketConsensus?.quotes?.length ? <div className="sim-intel-market-quotes-v347">
-            {intelModal.scan.topFinal.marketConsensus.quotes.slice(0, 6).map((quote, index) => <span key={`${quote.bookmaker}-${index}`}><b>{quote.bookmaker}</b><em>@ {Number(quote.odds || 0).toFixed(2)}</em><small>no-vig {Number(quote.noVig || 0).toFixed(1)}%</small></span>)}
-          </div> : null}
-          <section className="sim-intel-timeline-v347">
-            <div className="sim-intel-section-head-v347"><div><small>AI PREDICTION TIMELINE</small><strong>Sygnał → T24H → T6H → T1H → T15M</strong></div><span>{replayLoadingV347 ? 'ŁADOWANIE…' : `${intelTimelineV347.length} snapshotów`}</span></div>
-            {replayLoadingV347 ? <div className="sim-intel-timeline-empty-v347">Ładuję historię modelu i kursu…</div> : intelTimelineV347.length ? <div className="sim-intel-timeline-list-v347">{intelTimelineV347.map((row, index) => <article key={`${row.capturedAt}-${row.bookmaker}-${index}`}><span>{row.window || row.type || 'SNAPSHOT'}</span><b>{Number(row.odds || 0) > 1 ? `@ ${Number(row.odds).toFixed(2)}` : '—'}</b><em>AI {Number(row.modelProbability || 0) > 0 ? `${Number(row.modelProbability).toFixed(1)}%` : '—'} • edge {Number(row.edgePp || 0) > 0 ? '+' : ''}{Number(row.edgePp || 0).toFixed(1)} pp</em><small>{row.bookmaker || 'market'} • {row.capturedAt ? new Date(row.capturedAt).toLocaleString() : '—'}</small></article>)}</div> : <div className="sim-intel-timeline-empty-v347">Snapshoty będą zbierane automatycznie w oknach T24H / T6H / T1H / T15M przed kickoffem.</div>}
-          </section>
-          <section className={`sim-intel-clv-v347 ${Number(intelClvV347?.clvPct || 0) >= 0 ? 'positive' : 'negative'}`}>
-            <div><small>CLV TRACKER</small><strong>{intelClvV347 ? `CLV ${Number(intelClvV347.clvPct) > 0 ? '+' : ''}${Number(intelClvV347.clvPct).toFixed(1)}%` : 'OCZEKUJE NA CLOSING LINE'}</strong></div>
-            {intelClvV347 ? <p>OPEN <b>{Number(intelClvV347.openOdds || 0).toFixed(2)}</b> → CLOSE <b>{Number(intelClvV347.closingOdds || 0).toFixed(2)}</b> • {intelClvV347.snapshots || 0} snapshotów • {intelClvV347.bookmaker || 'bookmaker'}</p> : <p>FM AI zapisuje kurs sygnału i porówna go z kursem blisko rozpoczęcia meczu. Dodatni CLV oznacza, że cena wejścia była lepsza od closing line.</p>}
-          </section>
-          <footer className="sim-intel-modal-footer-v347"><button type="button" onClick={() => { const m = intelModal.match; setIntelModal(null); handleSelect(m) }}>OTWÓRZ PEŁNĄ ANALIZĘ →</button><small>Value i CLV są narzędziami oceny modelu, nie gwarancją wygranej.</small></footer>
-        </section>
-      </div> : null}
     </section>
   )
 }

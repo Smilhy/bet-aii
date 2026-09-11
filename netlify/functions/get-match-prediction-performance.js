@@ -199,110 +199,15 @@ function aggregateRows(rows) {
     oneXTwoBrier: n(oneXTwo.brier, 0),
     valueBets: values.length,
     valueWins: values.filter(item => item.won).length,
-    valueHitRate: values.length ? round(values.filter(item => item.won).length / values.length * 100, 1) : 0,
     valueProfitUnits: round(valueProfit, 2),
     valueRoi: values.length ? round(valueProfit / values.length * 100, 1) : 0,
     avgRecordedEdge: values.length ? round(mean(values.map(item => item.edge)), 1) : 0,
-    calibrationError: markets.length ? round(mean(markets.flatMap(m => (m.calibration || []).filter(x => n(x.samples) >= 5).map(x => Math.abs(n(x.calibrationGap))))), 1) : 0,
     clvSamples: clvRows.length,
     avgClv: clvRows.length ? round(mean(clvRows.map(item => Number(item.clvPct))), 1) : 0,
     positiveClvRate: clvRows.length ? round(clvRows.filter(item => Number(item.clvPct) > 0).length / clvRows.length * 100, 1) : 0,
     markets,
     rawMarkets,
     calibration: calibration(records)
-  }
-}
-
-function valuePickV347(row = {}) {
-  const base = valueRecord(row)
-  if (!base) return null
-  const top = row?.forecast?.value?.top || {}
-  return {
-    ...base,
-    league: String(row?.league || 'Unknown'),
-    probability: n(top?.probability ?? top?.calibratedProbability ?? top?.conservativeProbability, 0),
-    decision: String(top?.decision || row?.forecast?.value?.state || 'TRACKED'),
-    bookmaker: String(top?.bookmaker || '')
-  }
-}
-
-function valueGroupStatsV347(rows = []) {
-  if (!rows.length) return { bets:0, wins:0, hitRate:0, profitUnits:0, roi:0, avgOdds:0, avgEdge:0, avgProbability:0 }
-  const profit = rows.reduce((sum, item) => sum + n(item.profit), 0)
-  return {
-    bets: rows.length,
-    wins: rows.filter(item => item.won).length,
-    hitRate: round(rows.filter(item => item.won).length / rows.length * 100, 1),
-    profitUnits: round(profit, 2),
-    roi: round(profit / rows.length * 100, 1),
-    avgOdds: round(mean(rows.map(item => n(item.odds))), 2),
-    avgEdge: round(mean(rows.map(item => n(item.edge))), 1),
-    avgProbability: round(mean(rows.map(item => n(item.probability))), 1)
-  }
-}
-
-function groupedValueV347(rows = [], keyFn = () => '') {
-  const map = new Map()
-  for (const row of rows) {
-    const key = String(keyFn(row) || '').trim()
-    if (!key) continue
-    if (!map.has(key)) map.set(key, [])
-    map.get(key).push(row)
-  }
-  return [...map.entries()].map(([name, list]) => ({ name, ...valueGroupStatsV347(list) })).sort((a,b) => b.bets - a.bets || b.roi - a.roi)
-}
-
-function buildValueBreakdownV347(rows = []) {
-  const picks = rows.map(valuePickV347).filter(Boolean)
-  const oddsBand = item => item.odds < 1.6 ? '1.01–1.59' : item.odds < 2 ? '1.60–1.99' : item.odds < 2.5 ? '2.00–2.49' : item.odds < 3 ? '2.50–2.99' : '3.00+'
-  const confidenceBand = item => item.probability < 55 ? '<55%' : item.probability < 60 ? '55–59.9%' : item.probability < 65 ? '60–64.9%' : item.probability < 70 ? '65–69.9%' : '70%+'
-  const edgeBand = item => item.edge < 5 ? '<5 pp' : item.edge < 10 ? '5–9.9 pp' : item.edge < 15 ? '10–14.9 pp' : item.edge < 20 ? '15–19.9 pp' : '20+ pp'
-  return {
-    version:'BETAI_PERFORMANCE_BREAKDOWN_V347',
-    total:valueGroupStatsV347(picks),
-    markets:groupedValueV347(picks, item => marketLabels[scannerMarketKeyV347(item.key)] || item.key),
-    leagues:groupedValueV347(picks, item => item.league).slice(0, 20),
-    oddsBands:groupedValueV347(picks, oddsBand),
-    confidenceBands:groupedValueV347(picks, confidenceBand),
-    edgeBands:groupedValueV347(picks, edgeBand)
-  }
-}
-
-function scannerMarketKeyV347(key = '') {
-  if (['home','draw','away'].includes(key)) return 'oneXTwo'
-  if (['over15','under15'].includes(key)) return 'over15'
-  if (['over25','under25'].includes(key)) return 'over25'
-  if (['over35','under35'].includes(key)) return 'over35'
-  if (['btts','bttsYes','bttsNo'].includes(key)) return 'btts'
-  return key
-}
-
-function buildModelHealthV347(summary = {}, recent30 = {}, recent100 = {}, drift = {}) {
-  const samples = n(summary.matches)
-  const brier = n(summary.avgBrier)
-  const calError = n(summary.calibrationError, 10)
-  const clvSamples = n(summary.clvSamples)
-  const avgClv = n(summary.avgClv)
-  const driftRows = Array.isArray(drift?.markets) ? drift.markets : []
-  const driftCritical = driftRows.some(item => String(item?.status || '').toUpperCase() === 'DRIFT')
-  const driftWatch = driftRows.some(item => String(item?.status || '').toUpperCase() === 'WATCH')
-  let status = samples < 30 ? 'COLLECTING' : 'GOOD'
-  const reasons = []
-  if (samples < 30) reasons.push(`Za mała próbka: ${samples}/30`)
-  if (brier >= .29) { status = 'BAD'; reasons.push(`Brier ${brier.toFixed(3)} jest wysoki`) }
-  else if (brier >= .25 && status !== 'BAD') { status = 'WARNING'; reasons.push(`Brier ${brier.toFixed(3)} wymaga obserwacji`) }
-  if (calError > 10) { status = 'BAD'; reasons.push(`Calibration error ${calError.toFixed(1)} pp`) }
-  else if (calError > 7 && !['BAD'].includes(status)) { status = 'WARNING'; reasons.push(`Calibration error ${calError.toFixed(1)} pp`) }
-  if (driftCritical) { status = 'BAD'; reasons.push('Wykryto MODEL DRIFT') }
-  else if (driftWatch && status === 'GOOD') { status = 'WARNING'; reasons.push('Część rynków ma DRIFT WATCH') }
-  if (clvSamples >= 20 && avgClv < -2) { status = 'BAD'; reasons.push(`Średni CLV ${avgClv.toFixed(1)}%`) }
-  else if (clvSamples >= 20 && avgClv < 0 && status === 'GOOD') { status = 'WARNING'; reasons.push(`Średni CLV ${avgClv.toFixed(1)}%`) }
-  if (!reasons.length) reasons.push(samples >= 100 ? 'Kalibracja, Brier i drift są w akceptowalnym zakresie.' : 'Model działa stabilnie, ale większa próbka zwiększy pewność oceny.')
-  return {
-    version:'BETAI_MODEL_HEALTH_V347', status, reasons, samples,
-    roi:n(summary.valueRoi), hitRate:n(summary.valueHitRate), avgEdge:n(summary.avgRecordedEdge), brier, calibrationError:calError, avgClv, clvSamples,
-    recent30:{samples:n(recent30.matches),roi:n(recent30.valueRoi),hitRate:n(recent30.valueHitRate),brier:n(recent30.avgBrier)},
-    recent100:{samples:n(recent100.matches),roi:n(recent100.valueRoi),hitRate:n(recent100.valueHitRate),brier:n(recent100.avgBrier)}
   }
 }
 
@@ -1811,18 +1716,12 @@ exports.handler = async function handler(event = {}) {
     })
     const all = aggregateRows(rows)
     const last30Stats = aggregateRows(last30)
-    const sortedRecent = [...rows].sort((a, b) => rowTime(b) - rowTime(a))
-    const recent30 = aggregateRows(sortedRecent.slice(0, 30))
-    const recent100 = aggregateRows(sortedRecent.slice(0, 100))
-    const recent500 = aggregateRows(sortedRecent.slice(0, 500))
     const leagues = groupSummary(rows, row => row.league, 8).slice(0, 20)
     const versions = groupSummary(rows, row => row.model_version, 3).slice(0, 12)
     const walkForward = walkForwardBacktest(rows)
     const drift = buildDriftDetector(rows)
     const leagueTrust = buildLeagueTrust(rows)
     if (source === 'value_scanner') {
-      const breakdownV347 = buildValueBreakdownV347(rows)
-      const modelHealthV347 = buildModelHealthV347(all, recent30, recent100, drift)
       return json(200, {
         ok: true,
         available: true,
@@ -1831,15 +1730,10 @@ exports.handler = async function handler(event = {}) {
           source: 'match_value_scan_snapshots',
           modelVersion: modelVersion || 'BETAI_VALUE_SCANNER_V1',
           preMatchOnly: true,
-          policy: 'BETAI_VALUE_POLICY_V347'
+          policy: 'BETAI_VALUE_POLICY_V346'
         },
         all,
         last30: last30Stats,
-        recent30,
-        recent100,
-        recent500,
-        modelHealthV347,
-        breakdownV347,
         leagues,
         versions,
         walkForward,
@@ -1890,7 +1784,7 @@ exports.handler = async function handler(event = {}) {
         source: 'match_prediction_snapshots',
         modelVersion: modelVersion || 'ALL',
         preMatchOnly,
-        policy: 'BETAI_VALUE_POLICY_V347'
+        policy: 'BETAI_VALUE_POLICY_V346'
       },
       all,
       last30: last30Stats,
@@ -1919,4 +1813,4 @@ exports.handler = async function handler(event = {}) {
   }
 }
 
-exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, valueGroupStatsV347, buildValueBreakdownV347, buildModelHealthV347, scannerMarketKeyV347, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio, buildErrorAnalysis, buildPortfolioRisk, buildControlCenter, buildChampionChallengerV160, buildStatisticalConfidenceV161, buildAutoGateV162, buildTeamStrengthV164, buildSelfLearningV174, buildGovernanceV173, buildAdaptiveCalibration, buildMarketWeightProfile, persistSelfLearningProfilesV174, buildDataScienceV200, evaluateBinaryCalibrationV198, evaluateOneXTwoTemperatureV198, fitPlattV193, fitIsotonicV192, bootstrapConfidenceV199, leagueBayesianPriorsV194, isFrozenPreMatchV346, scannerForecastV346 }
+exports._test = { outcomes, predictionRecords, aggregateRows, calibration, valueRecord, walkForwardBacktest, buildDriftDetector, buildLeagueTrust, aggregateShadowPortfolio, buildErrorAnalysis, buildPortfolioRisk, buildControlCenter, buildChampionChallengerV160, buildStatisticalConfidenceV161, buildAutoGateV162, buildTeamStrengthV164, buildSelfLearningV174, buildGovernanceV173, buildAdaptiveCalibration, buildMarketWeightProfile, persistSelfLearningProfilesV174, buildDataScienceV200, evaluateBinaryCalibrationV198, evaluateOneXTwoTemperatureV198, fitPlattV193, fitIsotonicV192, bootstrapConfidenceV199, leagueBayesianPriorsV194, isFrozenPreMatchV346, scannerForecastV346 }

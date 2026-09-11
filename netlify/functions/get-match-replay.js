@@ -43,27 +43,14 @@ exports.handler = async function handler(event = {}) {
   const supabase = client()
   if (!supabase) return json(503, { ok: false, error: 'Supabase ENV niedostępne' })
   try {
-    const [freezeQ, oddsQ, snapshotQ, scannerQ, historyQ] = await Promise.all([
+    const [freezeQ, oddsQ, snapshotQ] = await Promise.all([
       supabase.from('match_prediction_freeze_ledger').select('fixture_id,fixture_date,home_team,away_team,league,country,captured_at,model_version,active_model,data_quality,freeze_hash,canonical_hash_v211,selected_for_backtest,selection_reason,forecast,integrity').eq('fixture_id', fixtureId).order('captured_at', { ascending: true }).limit(100),
       supabase.from('match_odds_timeline').select('fixture_id,fixture_date,market_key,bookmaker,odds,model_probability,fair_odds,edge_pp,snapshot_window,target_minutes_before,actual_minutes_before,is_closing_candidate,captured_at').eq('fixture_id', fixtureId).order('captured_at', { ascending: true }).limit(500),
-      supabase.from('match_prediction_snapshots').select('fixture_id,fixture_date,home_team,away_team,league,country,actual_home_goals,actual_away_goals,settlement_status,settled_at,forecast').eq('fixture_id', fixtureId).maybeSingle(),
-      supabase.from('match_value_scan_snapshots').select('fixture_id,fixture_date,home_team,away_team,league,country,payload,created_at,updated_at').eq('fixture_id', fixtureId).maybeSingle(),
-      supabase.from('match_odds_history').select('fixture_id,fixture_date,market_key,bookmaker,odds,model_probability,fair_odds,edge_pp,capture_window,captured_at,is_closing').eq('fixture_id', fixtureId).order('captured_at', { ascending: true }).limit(500)
+      supabase.from('match_prediction_snapshots').select('fixture_id,fixture_date,home_team,away_team,league,country,actual_home_goals,actual_away_goals,settlement_status,settled_at,forecast').eq('fixture_id', fixtureId).maybeSingle()
     ])
     const freezes = (freezeQ.data || []).map(compactFreeze)
-    const timelineOdds = (oddsQ.data || []).map(row => ({ type:'odds', capturedAt:row.captured_at, window:row.snapshot_window, marketKey:row.market_key, bookmaker:row.bookmaker, odds:Number(row.odds), modelProbability:Number(row.model_probability || 0), fairOdds:Number(row.fair_odds || 0), edgePp:Number(row.edge_pp || 0), minutesBeforeKickoff:Number(row.actual_minutes_before), closingCandidate:Boolean(row.is_closing_candidate), source:'timeline' }))
-    const seenOdds = new Set(timelineOdds.map(row => `${row.marketKey}|${row.bookmaker}|${row.capturedAt}`))
-    const historyOdds = (historyQ.data || []).map(row => ({ type:'odds', capturedAt:row.captured_at, window:row.capture_window || 'HISTORY', marketKey:row.market_key, bookmaker:row.bookmaker, odds:Number(row.odds), modelProbability:Number(row.model_probability || 0), fairOdds:Number(row.fair_odds || 0), edgePp:Number(row.edge_pp || 0), minutesBeforeKickoff:null, closingCandidate:Boolean(row.is_closing), source:'history' })).filter(row => !seenOdds.has(`${row.marketKey}|${row.bookmaker}|${row.capturedAt}`))
-    const odds = [...timelineOdds, ...historyOdds].sort((a,b) => Date.parse(a.capturedAt || '') - Date.parse(b.capturedAt || ''))
-    const scannerPayload = scannerQ.data?.payload || null
-    const scannerEvents = scannerPayload ? [{
-      type:'scanner', capturedAt:scannerPayload.generatedAt || scannerQ.data.updated_at || scannerQ.data.created_at, modelVersion:scannerPayload.version || 'BETAI_VALUE_SCANNER_V1',
-      dataQuality:Number(scannerPayload.dataQuality || 0), modelAgreement:Number(scannerPayload.modelAgreement || 0), oneXTwo:scannerPayload?.probabilities?.oneXTwo || null,
-      goals:scannerPayload?.probabilities?.goals || null, xg:scannerPayload?.xg || null, marketKey:scannerPayload?.top?.key || '', probability:Number(scannerPayload?.top?.probability || 0), edgePp:Number(scannerPayload?.top?.edgePp || 0),
-      bookmaker:scannerPayload?.top?.bookmaker || '', bookmakerOdds:Number(scannerPayload?.top?.bookmakerOdds || 0), fairOdds:Number(scannerPayload?.top?.fairOdds || 0),
-      settlement:scannerPayload?.settlementV346 || null, clv:scannerPayload?.settlementV346?.clv || null, clvByMarket:scannerPayload?.settlementV346?.clvByMarketV347 || {}
-    }] : []
-    const events = [...scannerEvents, ...freezes, ...odds].sort((a,b) => Date.parse(a.capturedAt || '') - Date.parse(b.capturedAt || ''))
+    const odds = (oddsQ.data || []).map(row => ({ type:'odds', capturedAt:row.captured_at, window:row.snapshot_window, marketKey:row.market_key, bookmaker:row.bookmaker, odds:Number(row.odds), modelProbability:Number(row.model_probability || 0), fairOdds:Number(row.fair_odds || 0), edgePp:Number(row.edge_pp || 0), minutesBeforeKickoff:Number(row.actual_minutes_before), closingCandidate:Boolean(row.is_closing_candidate) }))
+    const events = [...freezes, ...odds].sort((a,b) => Date.parse(a.capturedAt || '') - Date.parse(b.capturedAt || ''))
     const verified = freezes.filter(x => x.hashVerified === true).length
     const verifiable = freezes.filter(x => x.hashVerified !== null).length
     const legacy = freezes.filter(x => x.hashVerified === null).length
@@ -74,10 +61,10 @@ exports.handler = async function handler(event = {}) {
       windows[key] = { captured: rows.length > 0, markets: rows.length, at: rows[0]?.capturedAt || null, minutesBeforeKickoff: rows[0]?.minutesBeforeKickoff ?? null }
     }
     return json(200, {
-      ok: true, available: scannerEvents.length > 0 || freezes.length > 0 || odds.length > 0,
-      fixtureId, fixture: snapshotQ.data ? { fixtureDate:snapshotQ.data.fixture_date, homeTeam:snapshotQ.data.home_team, awayTeam:snapshotQ.data.away_team, league:snapshotQ.data.league, country:snapshotQ.data.country, score: snapshotQ.data.actual_home_goals == null ? null : { home:snapshotQ.data.actual_home_goals, away:snapshotQ.data.actual_away_goals }, settlementStatus:snapshotQ.data.settlement_status || null } : scannerQ.data ? { fixtureDate:scannerQ.data.fixture_date, homeTeam:scannerQ.data.home_team, awayTeam:scannerQ.data.away_team, league:scannerQ.data.league, country:scannerQ.data.country, score:scannerPayload?.settlementV346?.score || null, settlementStatus:scannerPayload?.settlementV346?.status || null } : null,
+      ok: true, available: freezes.length > 0 || odds.length > 0,
+      fixtureId, fixture: snapshotQ.data ? { fixtureDate:snapshotQ.data.fixture_date, homeTeam:snapshotQ.data.home_team, awayTeam:snapshotQ.data.away_team, league:snapshotQ.data.league, country:snapshotQ.data.country, score: snapshotQ.data.actual_home_goals == null ? null : { home:snapshotQ.data.actual_home_goals, away:snapshotQ.data.actual_away_goals }, settlementStatus:snapshotQ.data.settlement_status || null } : null,
       reproducibility: { freezeCaptures: freezes.length, verifiedHashes: verified, verifiableHashes: verifiable, legacyHashes: legacy, verificationRate: verifiable ? Math.round(verified / verifiable * 100) : null, selectedHash: selected?.freezeHash || null, selectedModelVersion: selected?.modelVersion || null },
-      windows, scanner: scannerEvents[0] || null, freezes, odds, events
+      windows, freezes, odds, events
     })
   } catch (error) {
     return json(500, { ok: false, error: error?.message || String(error) })
