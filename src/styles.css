@@ -85057,3 +85057,406 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
 @media(max-width:1050px){.sim-intel-kpis-v347{grid-template-columns:repeat(3,1fr)}.sim-value-metrics-v347{grid-template-columns:repeat(3,1fr)!important}.sim-intel-bottom-v347{grid-template-columns:1fr}.sim-intel-detail-grid-v347{grid-template-columns:1fr}.sim-intel-modal-summary-v347{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:720px){.sim-intel-head-v347{flex-direction:column}.sim-intel-kpis-v347{grid-template-columns:repeat(2,1fr)}.sim-intel-windows-v347,.sim-focus-grid-v347{grid-template-columns:1fr}.sim-value-metrics-v347{grid-template-columns:repeat(2,1fr)!important}.sim-market-consensus-v347{grid-template-columns:1fr}.sim-value-actions-v347{grid-template-columns:1fr}.sim-prep-redflag-v347{grid-template-columns:1fr}.sim-intel-modal-backdrop-v347{padding:6px}.sim-intel-modal-v347{width:100%;max-height:96vh;border-radius:14px}.sim-intel-modal-summary-v347,.sim-intel-modal-columns-v347,.sim-intel-consensus-modal-v347{grid-template-columns:1fr}.sim-intel-clv-v347,.sim-intel-modal-footer-v347{align-items:flex-start;flex-direction:column}.sim-intel-clv-v347 p,.sim-intel-modal-footer-v347 small{text-align:left}}
 .sim-intel-market-quotes-v347{display:flex;gap:6px;overflow-x:auto;padding:8px 15px 0}.sim-intel-market-quotes-v347>span{flex:0 0 auto;display:grid;grid-template-columns:auto auto;gap:2px 8px;padding:7px 9px;border:1px solid rgba(65,197,218,.10);border-radius:9px;background:rgba(7,35,50,.5)}.sim-intel-market-quotes-v347 b{color:#c9f2f5;font-size:8px}.sim-intel-market-quotes-v347 em{color:#65e1eb;font-size:8px;font-style:normal;font-weight:1000}.sim-intel-market-quotes-v347 small{grid-column:1/-1;color:#668b9b;font-size:7px}
+
+/* =====================================================================
+   FM AI V348 — CLEAN PRO UI
+   Keeps logic and data, but introduces Simple vs Pro readability layer.
+   ===================================================================== */
+.sim-clean-summary-v348,
+.sim-health-simple-v348,
+.sim-top-picks-simple-v348,
+.sim-simple-match-card-v348 {
+  border: 1px solid rgba(120, 194, 255, 0.12);
+  background: linear-gradient(180deg, rgba(7, 19, 32, 0.96), rgba(5, 14, 24, 0.95));
+  border-radius: 22px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.24);
+}
+
+.sim-clean-summary-v348 {
+  padding: 22px;
+  margin-bottom: 18px;
+}
+
+.sim-clean-summary-head-v348 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.sim-clean-summary-head-v348 small,
+.sim-health-simple-head-v348 small,
+.sim-top-picks-simple-head-v348 small,
+.sim-simple-match-head-v348 small {
+  display: block;
+  color: rgba(162, 193, 224, 0.75);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.sim-clean-summary-head-v348 strong,
+.sim-health-simple-head-v348 strong,
+.sim-top-picks-simple-head-v348 strong {
+  display: block;
+  color: #f5fbff;
+  font-size: 24px;
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+
+.sim-clean-summary-head-v348 p,
+.sim-health-simple-head-v348 p,
+.sim-top-picks-simple-head-v348 p {
+  margin: 0;
+  color: rgba(205, 224, 244, 0.82);
+  max-width: 780px;
+  line-height: 1.55;
+}
+
+.sim-clean-mode-toggle-v348 {
+  display: inline-flex;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sim-clean-mode-toggle-v348 button,
+.sim-simple-actions-v348 button,
+.sim-top-pick-simple-card-v348 footer button,
+.sim-focus-simple-card-v348,
+.sim-health-simple-details-v348 summary {
+  appearance: none;
+}
+
+.sim-clean-mode-toggle-v348 button {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 16px;
+  background: transparent;
+  color: rgba(224, 239, 255, 0.75);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sim-clean-mode-toggle-v348 button.active {
+  background: linear-gradient(135deg, #34c2ff, #6d8bff);
+  color: #06111b;
+}
+
+.sim-clean-summary-grid-v348,
+.sim-health-simple-grid-v348,
+.sim-top-picks-simple-grid-v348,
+.sim-focus-simple-grid-v348 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.sim-clean-summary-grid-v348 article,
+.sim-health-simple-grid-v348 article,
+.sim-top-pick-simple-card-v348,
+.sim-focus-simple-card-v348,
+.sim-simple-match-card-v348,
+.sim-health-simple-advanced-v348 span {
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sim-clean-summary-grid-v348 article,
+.sim-health-simple-grid-v348 article {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sim-clean-summary-grid-v348 article.good { border-color: rgba(68, 208, 142, 0.35); }
+.sim-clean-summary-grid-v348 article.warn { border-color: rgba(245, 183, 67, 0.35); }
+.sim-clean-summary-grid-v348 article.bad { border-color: rgba(255, 106, 106, 0.35); }
+
+.sim-clean-summary-grid-v348 article b,
+.sim-health-simple-grid-v348 article b {
+  font-size: 28px;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.sim-clean-summary-grid-v348 article span,
+.sim-health-simple-grid-v348 article span,
+.sim-health-simple-reasons-v348 span,
+.sim-top-pick-simple-card-v348 footer span,
+.sim-simple-why-v348 span {
+  color: rgba(208, 223, 239, 0.82);
+  line-height: 1.45;
+}
+
+.sim-clean-howto-v348,
+.sim-health-simple-reasons-v348,
+.sim-health-simple-advanced-v348,
+.sim-simple-meta-v348,
+.sim-simple-match-badges-v348,
+.sim-top-pick-kpis-v348 {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sim-clean-howto-v348 {
+  margin-top: 16px;
+}
+
+.sim-clean-howto-v348 span,
+.sim-simple-match-badges-v348 span,
+.sim-top-pick-kpis-v348 span,
+.sim-simple-meta-v348 span {
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #edf7ff;
+}
+
+.sim-health-simple-v348,
+.sim-top-picks-simple-v348 {
+  padding: 20px;
+  margin-bottom: 18px;
+}
+
+.sim-health-simple-head-v348,
+.sim-top-picks-simple-head-v348,
+.sim-top-pick-simple-card-v348 footer,
+.sim-simple-actions-v348,
+.sim-simple-match-head-v348 {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.sim-health-simple-head-v348 > span {
+  align-self: flex-start;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.sim-health-simple-details-v348 {
+  margin-top: 14px;
+}
+
+.sim-health-simple-details-v348 summary {
+  cursor: pointer;
+  color: #8fd1ff;
+  font-weight: 700;
+}
+
+.sim-health-simple-advanced-v348 {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sim-health-simple-advanced-v348 span {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sim-focus-simple-card-v348,
+.sim-top-pick-simple-card-v348,
+.sim-simple-match-card-v348 {
+  padding: 18px;
+  color: #eff8ff;
+}
+
+.sim-focus-simple-card-v348 {
+  text-align: left;
+  cursor: pointer;
+}
+
+.sim-focus-simple-card-v348 strong,
+.sim-top-pick-simple-card-v348 strong,
+.sim-simple-match-head-v348 strong {
+  color: #ffffff;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.sim-focus-simple-card-v348 b,
+.sim-top-pick-main-v348 b,
+.sim-simple-match-market-v348 b,
+.sim-simple-meta-v348 b,
+.sim-top-pick-kpis-v348 b {
+  color: #ffffff;
+}
+
+.sim-focus-simple-card-v348 span,
+.sim-top-pick-main-v348 span,
+.sim-top-pick-simple-card-v348 em,
+.sim-simple-market-wait-v348,
+.sim-simple-match-head-v348 span {
+  color: rgba(208, 223, 239, 0.82);
+}
+
+.sim-top-picks-simple-grid-v348,
+.sim-focus-simple-grid-v348 {
+  margin-top: 14px;
+}
+
+.sim-top-pick-simple-card-v348 header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.sim-top-pick-simple-card-v348 header em {
+  font-style: normal;
+  font-weight: 800;
+}
+
+.sim-top-pick-main-v348 {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 12px 0;
+}
+
+.sim-top-pick-reasons-v348 {
+  margin: 14px 0 0;
+  padding-left: 18px;
+  color: rgba(233, 242, 252, 0.88);
+  line-height: 1.55;
+}
+
+.sim-top-pick-simple-card-v348 footer {
+  align-items: center;
+  margin-top: 16px;
+}
+
+.sim-top-pick-simple-card-v348 footer div,
+.sim-simple-actions-v348 {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sim-top-pick-simple-card-v348 footer button,
+.sim-simple-actions-v348 button {
+  border: 0;
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 800;
+  color: #06111b;
+  background: linear-gradient(135deg, #7ee0ff, #7da0ff);
+}
+
+.sim-top-pick-simple-card-v348 footer button:first-child,
+.sim-simple-actions-v348 button:first-child {
+  background: rgba(255, 255, 255, 0.08);
+  color: #eff8ff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sim-simple-match-card-v348 {
+  margin-bottom: 16px;
+}
+
+.sim-simple-match-badges-v348 {
+  margin: 14px 0;
+}
+
+.sim-simple-match-badges-v348 .verdict-good,
+.sim-top-pick-simple-card-v348.tone-good header em,
+.sim-focus-simple-card-v348.tone-good small {
+  color: #73ffbd;
+}
+
+.sim-simple-match-badges-v348 .verdict-warn,
+.sim-top-pick-simple-card-v348.tone-warn header em,
+.sim-focus-simple-card-v348.tone-warn small {
+  color: #ffd36f;
+}
+
+.sim-simple-match-badges-v348 .verdict-bad,
+.sim-top-pick-simple-card-v348.tone-bad header em,
+.sim-focus-simple-card-v348.tone-bad small {
+  color: #ff8a8a;
+}
+
+.sim-simple-match-badges-v348 .verdict-muted,
+.sim-top-pick-simple-card-v348.tone-muted header em,
+.sim-focus-simple-card-v348.tone-muted small {
+  color: #8db3d9;
+}
+
+.sim-simple-match-card-v348.tone-good,
+.sim-top-pick-simple-card-v348.tone-good,
+.sim-focus-simple-card-v348.tone-good { border-color: rgba(68, 208, 142, 0.28); }
+.sim-simple-match-card-v348.tone-warn,
+.sim-top-pick-simple-card-v348.tone-warn,
+.sim-focus-simple-card-v348.tone-warn { border-color: rgba(245, 183, 67, 0.28); }
+.sim-simple-match-card-v348.tone-bad,
+.sim-top-pick-simple-card-v348.tone-bad,
+.sim-focus-simple-card-v348.tone-bad { border-color: rgba(255, 106, 106, 0.28); }
+
+.sim-simple-match-market-v348 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sim-simple-match-market-v348 > div {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sim-simple-market-wait-v348 {
+  grid-column: 1 / -1;
+}
+
+.sim-simple-why-v348 {
+  margin: 14px 0;
+  display: grid;
+  gap: 8px;
+}
+
+.sim-simple-meta-v348 {
+  margin-bottom: 14px;
+}
+
+@media (max-width: 980px) {
+  .sim-clean-summary-head-v348,
+  .sim-health-simple-head-v348,
+  .sim-top-picks-simple-head-v348,
+  .sim-top-pick-simple-card-v348 footer,
+  .sim-simple-actions-v348,
+  .sim-simple-match-head-v348 {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sim-clean-summary-grid-v348,
+  .sim-health-simple-grid-v348,
+  .sim-health-simple-advanced-v348,
+  .sim-top-picks-simple-grid-v348,
+  .sim-focus-simple-grid-v348,
+  .sim-simple-match-market-v348 {
+    grid-template-columns: 1fr;
+  }
+}

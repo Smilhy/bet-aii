@@ -645,6 +645,37 @@ function compactPerformanceRowsV347(performance = null) {
   return { leagues, markets }
 }
 
+function decisionUiV348(decision = '', lang = 'pl') {
+  const key = String(decision || '').toUpperCase()
+  const copy = lang === 'en'
+    ? {
+        STRONG_VALUE: { label: 'GOOD PICK', hint: 'Strong price edge', tone: 'good' },
+        VALUE: { label: 'GOOD PICK', hint: 'Worth considering', tone: 'good' },
+        SMALL_EDGE: { label: 'CAUTION', hint: 'Small edge only', tone: 'warn' },
+        NO_BET: { label: 'NO BET', hint: 'Better to skip', tone: 'bad' },
+        NO_ODDS: { label: 'WAITING', hint: 'Market data pending', tone: 'muted' }
+      }
+    : {
+        STRONG_VALUE: { label: 'DOBRY TYP', hint: 'Mocna okazja', tone: 'good' },
+        VALUE: { label: 'DOBRY TYP', hint: 'Warto rozważyć', tone: 'good' },
+        SMALL_EDGE: { label: 'OSTROŻNIE', hint: 'Tylko mała przewaga', tone: 'warn' },
+        NO_BET: { label: 'NIE GRAJ', hint: 'Lepiej odpuścić', tone: 'bad' },
+        NO_ODDS: { label: 'OCZEKUJE', hint: 'Brak kursów', tone: 'muted' }
+      }
+  return copy[key] || copy.NO_ODDS
+}
+
+function riskLabelV348(item = {}, scan = {}, lang = 'pl') {
+  const flags = Array.isArray(item?.redFlags) ? item.redFlags : []
+  if (flags.some(flag => String(flag?.level || '').toUpperCase() === 'BLOCK')) return lang === 'en' ? 'High risk' : 'Wysokie ryzyko'
+  if (flags.length >= 2) return lang === 'en' ? 'Elevated risk' : 'Podwyższone ryzyko'
+  const reliability = Number(item?.reliability?.score || 0)
+  const agreement = Number(scan?.modelAgreement || item?.reliability?.modelAgreement || 0)
+  if (reliability >= 82 && agreement >= 65) return lang === 'en' ? 'Low risk' : 'Niskie ryzyko'
+  if (reliability >= 70) return lang === 'en' ? 'Medium risk' : 'Średnie ryzyko'
+  return lang === 'en' ? 'Elevated risk' : 'Podwyższone ryzyko'
+}
+
 export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMatch }) {
   const copy = COPY[lang] || COPY.pl
   const [query, setQuery] = useState('')
@@ -663,6 +694,13 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   const [replayV347, setReplayV347] = useState(null)
   const [replayLoadingV347, setReplayLoadingV347] = useState(false)
   const [nowMs, setNowMs] = useState(() => Date.now())
+  const [uiMode, setUiMode] = useState(() => {
+    try {
+      return window.localStorage.getItem('betai-fm-ui-mode-v348') || 'simple'
+    } catch (_) {
+      return 'simple'
+    }
+  })
   const scanAbortRef = useRef(null)
   const clientTimeZone = useMemo(() => getBrowserTimeZone(), [])
   const todayKey = useMemo(() => getDateKeyInTimeZone(nowMs, clientTimeZone), [nowMs, clientTimeZone])
@@ -905,6 +943,28 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   const focusCardsV347 = useMemo(() => pickFocusCardsV347(scannerEntries), [scannerEntries])
   const modelHealthV347 = scannerPerformance?.modelHealthV347 || null
   const performanceRowsV347 = useMemo(() => compactPerformanceRowsV347(scannerPerformance), [scannerPerformance])
+  const scannerSummaryV348 = useMemo(() => {
+    const summary = { good: 0, caution: 0, noBet: 0 }
+    scannerEntries.forEach(entry => {
+      const decision = String(entry?.scan?.topFinal?.decision || '').toUpperCase()
+      if (decision === 'STRONG_VALUE' || decision === 'VALUE') summary.good += 1
+      else if (decision === 'SMALL_EDGE') summary.caution += 1
+      else summary.noBet += 1
+    })
+    return {
+      scanned: scannerProgress.total || scannerEntries.length,
+      good: summary.good,
+      caution: summary.caution,
+      noBet: summary.noBet,
+      topPick: focusCardsV347.find(row => row.id === 'balance')?.entry || focusCardsV347[0]?.entry || scannerEntries[0] || null
+    }
+  }, [scannerEntries, scannerProgress.total, focusCardsV347])
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('betai-fm-ui-mode-v348', uiMode)
+    } catch (_) {}
+  }, [uiMode])
 
   const openWhyAiV347 = async (entry) => {
     if (!entry?.match || !entry?.scan?.topFinal) return
@@ -954,7 +1014,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   }
 
   return (
-    <section className="sim-day-page-v98 sim-day-real-v99">
+    <section className={`sim-day-page-v98 sim-day-real-v99 sim-ui-${uiMode}-v348`}>
       <section className="sim-day-hero-v100" aria-label="Symulator AI hero">
         <img src={lang === 'en' ? '/symulator-ai-hero-banner-v100-en.png' : '/symulator-ai-hero-banner-v100.png'} alt={lang === 'en' ? 'Bet+AI Football Manager AI — real match simulation' : 'Bet+AI Football Manager AI – realna symulacja meczu'} />
       </section>
@@ -993,7 +1053,55 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           {!loading && !error && qualifying && !filteredMatches.length && <div className="sim-day-loading-v99"><i /><strong>Sprawdzam realne statystyki meczów…</strong><span>{qualificationProgress.done}/{qualificationProgress.total} sprawdzonych</span></div>}
           {!loading && !error && !qualifying && !filteredMatches.length && <div className="sim-day-empty-v98">{copy.empty}</div>}
 
-          {!loading && !error && scannerPerformance ? <section className={`sim-intel-center-v347 health-${String(modelHealthV347?.status || 'collecting').toLowerCase()}`}>
+          {!loading && !error ? <section className="sim-clean-summary-v348">
+            <div className="sim-clean-summary-head-v348">
+              <div>
+                <small>FM AI • CLEAN PRO UI V348</small>
+                <strong>{lang === 'en' ? 'Clear view for new users' : 'Czytelny widok dla nowych użytkowników'}</strong>
+                <p>{lang === 'en' ? 'Simple mode shows only the final verdict, the reason and the risk. Pro mode keeps the full analytics without removing the logic.' : 'Tryb prosty pokazuje tylko końcową ocenę, powód i ryzyko. Tryb PRO zostawia pełną analitykę bez usuwania logiki.'}</p>
+              </div>
+              <div className="sim-clean-mode-toggle-v348">
+                <button type="button" className={uiMode === 'simple' ? 'active' : ''} onClick={() => setUiMode('simple')}>{lang === 'en' ? 'Simple' : 'Prosty'}</button>
+                <button type="button" className={uiMode === 'pro' ? 'active' : ''} onClick={() => setUiMode('pro')}>PRO</button>
+              </div>
+            </div>
+            <div className="sim-clean-summary-grid-v348">
+              <article><small>{lang === 'en' ? 'Matches scanned' : 'Mecze sprawdzone'}</small><b>{scannerSummaryV348.scanned || availableMatches.length || 0}</b><span>{lang === 'en' ? 'today' : 'dzisiaj'}</span></article>
+              <article className="good"><small>{lang === 'en' ? 'Good picks' : 'Dobre typy'}</small><b>{scannerSummaryV348.good}</b><span>{lang === 'en' ? 'value or strong value' : 'value lub strong value'}</span></article>
+              <article className="warn"><small>{lang === 'en' ? 'Caution' : 'Ostrożnie'}</small><b>{scannerSummaryV348.caution}</b><span>{lang === 'en' ? 'small edge only' : 'tylko mała przewaga'}</span></article>
+              <article className="bad"><small>{lang === 'en' ? 'No bet' : 'No bet'}</small><b>{scannerSummaryV348.noBet}</b><span>{lang === 'en' ? 'skip for now' : 'na razie odpuść'}</span></article>
+              <article><small>{lang === 'en' ? 'Top pick' : 'Najlepszy typ'}</small><b>{scannerSummaryV348.topPick ? `${scannerSummaryV348.topPick.match.home} vs ${scannerSummaryV348.topPick.match.away}` : '—'}</b><span>{scannerSummaryV348.topPick?.scan?.topFinal ? getScannerMarketMetaV330(scannerSummaryV348.topPick.scan.topFinal, scannerSummaryV348.topPick.match, lang).title : (lang === 'en' ? 'collecting' : 'zbieranie')}</span></article>
+              <article><small>{lang === 'en' ? 'Model health' : 'Kondycja modelu'}</small><b>{healthLabelV347(modelHealthV347?.status)}</b><span>{lang === 'en' ? 'based on settled pre-match picks' : 'na podstawie rozliczonych prognoz pre-match'}</span></article>
+            </div>
+            <div className="sim-clean-howto-v348">
+              <span><b>1.</b> {lang === 'en' ? 'Green = worth considering' : 'Zielone = warto rozważyć'}</span>
+              <span><b>2.</b> {lang === 'en' ? 'Yellow = smaller edge / caution' : 'Żółte = mniejsza przewaga / ostrożnie'}</span>
+              <span><b>3.</b> {lang === 'en' ? 'Red = better skip' : 'Czerwone = lepiej odpuścić'}</span>
+              <span><b>4.</b> {lang === 'en' ? 'Use PRO mode for full analytics' : 'Trybu PRO użyj do pełnej analityki'}</span>
+            </div>
+          </section> : null}
+
+          {!loading && !error && uiMode === 'simple' && scannerPerformance ? <section className={`sim-health-simple-v348 health-${String(modelHealthV347?.status || 'collecting').toLowerCase()}`}>
+            <div className="sim-health-simple-head-v348">
+              <div><small>FM AI • MODEL HEALTH</small><strong>{lang === 'en' ? 'Can the model be trusted today?' : 'Czy modelowi można dziś ufać?'}</strong><p>{lang === 'en' ? 'Short, human-readable summary. Advanced KPIs are hidden below.' : 'Krótki, ludzki opis. Zaawansowane KPI są schowane niżej.'}</p></div>
+              <span>{healthLabelV347(modelHealthV347?.status)}</span>
+            </div>
+            <div className="sim-health-simple-grid-v348">
+              <article><small>ROI</small><b className={Number(modelHealthV347?.roi ?? scannerPerformance?.all?.valueRoi ?? 0) >= 0 ? 'positive' : 'negative'}>{Number(modelHealthV347?.roi ?? scannerPerformance?.all?.valueRoi ?? 0) > 0 ? '+' : ''}{Number(modelHealthV347?.roi ?? scannerPerformance?.all?.valueRoi ?? 0).toFixed(1)}%</b><span>{lang === 'en' ? '1 unit per tracked pick' : '1 jednostka na typ'}</span></article>
+              <article><small>CLV</small><b className={Number(modelHealthV347?.avgClv ?? scannerPerformance?.all?.avgClv ?? 0) >= 0 ? 'positive' : 'negative'}>{Number(modelHealthV347?.avgClv ?? scannerPerformance?.all?.avgClv ?? 0) > 0 ? '+' : ''}{Number(modelHealthV347?.avgClv ?? scannerPerformance?.all?.avgClv ?? 0).toFixed(1)}%</b><span>{lang === 'en' ? 'closing line value' : 'przewaga nad closing line'}</span></article>
+              <article><small>{lang === 'en' ? 'Sample' : 'Próbka'}</small><b>{modelHealthV347?.samples ?? scannerPerformance?.all?.matches ?? 0}</b><span>{lang === 'en' ? 'settled pre-match picks' : 'rozliczone typy pre-match'}</span></article>
+              <article><small>{lang === 'en' ? 'Hit rate' : 'Skuteczność'}</small><b>{Number(modelHealthV347?.hitRate ?? scannerPerformance?.all?.valueHitRate ?? 0).toFixed(1)}%</b><span>{lang === 'en' ? 'tracked picks' : 'śledzone typy'}</span></article>
+            </div>
+            <div className="sim-health-simple-reasons-v348">{(modelHealthV347?.reasons || [scannerPerformance?.note || (lang === 'en' ? 'Model history is still collecting.' : 'Historia modelu nadal się zbiera.')]).slice(0, 3).map((text, index) => <span key={`${text}-${index}`}>• {text}</span>)}</div>
+            <details className="sim-health-simple-details-v348">
+              <summary>{lang === 'en' ? 'Show advanced model analytics' : 'Pokaż zaawansowaną analitykę modelu'}</summary>
+              <div className="sim-health-simple-advanced-v348">
+                {[['30', scannerPerformance?.recent30], ['100', scannerPerformance?.recent100], ['500', scannerPerformance?.recent500]].map(([label, row]) => <span key={label}><small>LAST {label}</small><b>{row?.matches || 0}</b><em>ROI {Number(row?.valueRoi || 0) > 0 ? '+' : ''}{Number(row?.valueRoi || 0).toFixed(1)}% • Brier {Number(row?.avgBrier || 0).toFixed(3)}</em></span>)}
+              </div>
+            </details>
+          </section> : null}
+
+          {!loading && !error && scannerPerformance && uiMode === 'pro' ? <section className={`sim-intel-center-v347 health-${String(modelHealthV347?.status || 'collecting').toLowerCase()}`}>
             <div className="sim-intel-head-v347">
               <div><small>FM AI • MODEL INTELLIGENCE CENTER V347</small><strong>MODEL HEALTH + CLV + PERFORMANCE</strong><p>Kontrola jakości modelu na rozliczonych, zamrożonych prognozach pre-match. Wyniki nie są gwarancją przyszłego zysku.</p></div>
               <span>{healthLabelV347(modelHealthV347?.status)}</span>
@@ -1021,7 +1129,39 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
             </details>
           </section> : null}
 
-          {!loading && !error && (scannerActive || scannerEntries.length > 0) ? <section className="sim-value-scanner-v139 sim-value-scanner-v347">
+          {!loading && !error && uiMode === 'simple' && (scannerActive || scannerEntries.length > 0) ? <section className="sim-top-picks-simple-v348">
+            <div className="sim-top-picks-simple-head-v348">
+              <div><small>FM AI • TOP PICKS</small><strong>{lang === 'en' ? 'Best picks in a simple view' : 'Najlepsze typy w prostym widoku'}</strong><p>{lang === 'en' ? 'Only the final verdict, the reason and the risk are shown first.' : 'Na start pokazujemy tylko końcową ocenę, powód i ryzyko.'}</p></div>
+              <div className="sim-value-scanner-progress-v139"><b>{scannerProgress.done}/{scannerProgress.total}</b><span>{scannerActive ? (lang === 'en' ? 'LIVE SCAN' : 'SKANOWANIE LIVE') : (lang === 'en' ? 'READY' : 'GOTOWE')}</span></div>
+            </div>
+            {focusCardsV347.length ? <div className="sim-focus-simple-grid-v348">
+              {focusCardsV347.map(({ id, label, note, entry }) => {
+                const item = entry.scan.topFinal
+                const meta = getScannerMarketMetaV330(item, entry.match, lang)
+                const verdict = decisionUiV348(item.decision, lang)
+                return <button type="button" key={id} className={`sim-focus-simple-card-v348 tone-${verdict.tone}`} onClick={() => openWhyAiV347(entry)}><small>{label}</small><strong>{entry.match.home} <i>vs</i> {entry.match.away}</strong><b>{meta.title}</b><span>{note} • {verdict.label}</span></button>
+              })}
+            </div> : null}
+            {scannerEntries.length ? <div className="sim-top-picks-simple-grid-v348">
+              {scannerEntries.slice(0, 5).map((entry, index) => {
+                const item = entry.scan.topFinal
+                const marketMeta = getScannerMarketMetaV330(item, entry.match, lang)
+                const verdict = decisionUiV348(item.decision, lang)
+                const why = buildWhyAiV347(entry.scan, item, entry.match)
+                const risk = riskLabelV348(item, entry.scan, lang)
+                return <article key={`simple-scan-${entry.key || index}`} className={`sim-top-pick-simple-card-v348 tone-${verdict.tone}`}>
+                  <header><span>#{index + 1} • {entry.match.league}</span><em>{verdict.label}</em></header>
+                  <strong>{entry.match.home} <i>vs</i> {entry.match.away}</strong>
+                  <div className="sim-top-pick-main-v348"><b>{marketMeta.title}</b><span>{marketMeta.badge} • {item.bookmakerOdds ? `@ ${Number(item.bookmakerOdds).toFixed(2)}` : (lang === 'en' ? 'market pending' : 'rynek w przygotowaniu')}</span></div>
+                  <div className="sim-top-pick-kpis-v348"><span><small>AI</small><b>{item.probability ? `${item.probability}%` : '—'}</b></span><span><small>{lang === 'en' ? 'Risk' : 'Ryzyko'}</small><b>{risk}</b></span><span><small>{lang === 'en' ? 'Reliability' : 'Wiarygodność'}</small><b>{item.reliability?.score || 0}/100</b></span></div>
+                  <ul className="sim-top-pick-reasons-v348">{why.positives.slice(0, 2).map((text, reasonIndex) => <li key={`why-${reasonIndex}`}>{text}</li>)}</ul>
+                  <footer><span>{verdict.hint}</span><div><button type="button" onClick={() => openWhyAiV347(entry)}>WHY AI?</button><button type="button" onClick={() => handleSelect(entry.match)}>{lang === 'en' ? 'Full analysis' : 'Pełna analiza'}</button></div></footer>
+                </article>
+              })}
+            </div> : <div className="sim-value-scanner-empty-v139"><i />{lang === 'en' ? 'Looking for price edges…' : 'Szukam przewag cenowych…'}</div>}
+          </section> : null}
+
+          {!loading && !error && uiMode === 'pro' && (scannerActive || scannerEntries.length > 0) ? <section className="sim-value-scanner-v139 sim-value-scanner-v347">
             <div className="sim-value-scanner-head-v139">
               <div><small>BET+AI • TOP PICKS 2.0 • RED FLAG GUARD</small><strong>TOP 5 ANALIZ DNIA</strong><p>Ranking uwzględnia teraz EV, Reliability, kalibrację, Market Consensus, drift i League / Market Trust. STRONG VALUE może zostać automatycznie zablokowane przez czerwone flagi.</p></div>
               <div className="sim-value-scanner-progress-v139"><b>{scannerProgress.done}/{scannerProgress.total}</b><span>{scannerActive ? 'SKANOWANIE LIVE' : 'SKAN GOTOWY'}</span></div>
@@ -1069,7 +1209,67 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
             </div> : <div className="sim-value-scanner-empty-v139"><i />Szukam przewag cenowych i sprawdzam kalibrację…</div>}
           </section> : null}
 
-          {!loading && !error && filteredMatches.map((match) => {
+          {!loading && !error && uiMode === 'simple' && filteredMatches.map((match) => {
+            const odds = getReal1X2(match)
+            const key = fixtureKey(match)
+            const startMs = getFixtureStartMs(match)
+            const isNearest = key === nearestKey
+            const leagueUi = getLeagueUiMetaV328(match, lang)
+            const venueLabel = [match.venueName, match.venueCity].filter(Boolean).join('  |  ')
+            const enrichedScan = scannerResults[key] ? enrichScannerResult(scannerResults[key], scannerPerformance) : null
+            const item = enrichedScan?.topFinal || null
+            const marketMeta = item ? getScannerMarketMetaV330(item, match, lang) : null
+            const verdict = decisionUiV348(item?.decision, lang)
+            const risk = riskLabelV348(item || {}, enrichedScan || {}, lang)
+            const why = enrichedScan ? buildWhyAiV347(enrichedScan, item, match) : { positives: [], risks: [] }
+            return (
+              <article key={`simple-${key}`} className={`sim-simple-match-card-v348 tone-${verdict.tone} ${isNearest ? 'nearest-v348' : ''} ${selectedId === key ? 'selected-v348' : ''}`}>
+                <header className="sim-simple-match-head-v348">
+                  <div>
+                    <small>{match.league} • {leagueUi.country}</small>
+                    <strong>{match.home} <i>vs</i> {match.away}</strong>
+                  </div>
+                  <span>{formatKickoffTime(startMs, clientTimeZone)}</span>
+                </header>
+                <div className="sim-simple-match-badges-v348">
+                  <span className={`verdict-${verdict.tone}`}>{verdict.label}</span>
+                  <span>{isNearest ? `⚡ ${formatKickoffCountdown(startMs, nowMs, copy)}` : (lang === 'en' ? 'Today' : 'Dzisiaj')}</span>
+                  <span>{risk}</span>
+                </div>
+                <div className="sim-simple-match-market-v348">
+                  {item ? (
+                    <>
+                      <div><small>{lang === 'en' ? 'Pick' : 'Typ'}</small><b>{marketMeta?.title || '—'}</b></div>
+                      <div><small>AI</small><b>{item.probability ? `${item.probability}%` : '—'}</b></div>
+                      <div><small>{lang === 'en' ? 'Odds' : 'Kurs'}</small><b>{item.bookmakerOdds ? `@ ${Number(item.bookmakerOdds).toFixed(2)}` : '—'}</b></div>
+                    </>
+                  ) : odds ? (
+                    <>
+                      <div><small>1</small><b>{odds.home}</b></div>
+                      <div><small>X</small><b>{odds.draw}</b></div>
+                      <div><small>2</small><b>{odds.away}</b></div>
+                    </>
+                  ) : (
+                    <div className="sim-simple-market-wait-v348">{scannerActive && !scannerResults[key] ? (lang === 'en' ? 'The model is analysing this market…' : 'Model analizuje ten rynek…') : (lang === 'en' ? 'Market data available soon.' : 'Dane rynkowe dostępne wkrótce.')}</div>
+                  )}
+                </div>
+                <div className="sim-simple-why-v348">
+                  {(why.positives.slice(0, 2).length ? why.positives.slice(0, 2) : [lang === 'en' ? 'Open the full analysis to see the complete rationale.' : 'Otwórz pełną analizę, aby zobaczyć pełne uzasadnienie.']).map((text, index) => <span key={`simple-why-${key}-${index}`}>• {text}</span>)}
+                </div>
+                <div className="sim-simple-meta-v348">
+                  <span><small>{lang === 'en' ? 'Reliability' : 'Wiarygodność'}</small><b>{item?.reliability?.score || '—'}{item?.reliability?.score ? '/100' : ''}</b></span>
+                  <span><small>{lang === 'en' ? 'Reason' : 'Powód'}</small><b>{verdict.hint}</b></span>
+                  <span><small>{lang === 'en' ? 'Venue' : 'Miejsce'}</small><b>{venueLabel || copy.venueUnknown}</b></span>
+                </div>
+                <div className="sim-simple-actions-v348">
+                  {enrichedScan ? <button type="button" onClick={() => openWhyAiV347({ key, match, scan: enrichedScan })}>WHY AI?</button> : <button type="button" disabled>{lang === 'en' ? 'Analysis pending' : 'Analiza w toku'}</button>}
+                  <button type="button" onClick={() => handleSelect(match)} aria-label={`${copy.open} ${match.home} kontra ${match.away}`}>{copy.open} →</button>
+                </div>
+              </article>
+            )
+          })}
+
+          {!loading && !error && uiMode === 'pro' && filteredMatches.map((match) => {
             const odds = getReal1X2(match)
             const key = fixtureKey(match)
             const startMs = getFixtureStartMs(match)
