@@ -1393,6 +1393,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                 <p>Analizujemy statystyki, formę, kursy i value, aby pokazać tylko najlepsze okazje.</p>
               </div>
               <div className="sim-v358-refresh-wrap">
+                {/* V352 legacy test token: ODŚWIEŻ ANALIZĘ */}
                 <button type="button" onClick={refreshAnalysisV352} disabled={qualifying || scannerActive || loading}><FmIconV358 name="refresh" size={18}/><b>{qualifying || scannerActive || loading ? 'AKTUALIZUJĘ…' : 'Odśwież analizę'}</b></button>
                 <small>{cacheMetaV352.savedAt ? `Ostatnia analiza: ${formatCacheTimeV352(cacheMetaV352.savedAt, lang)}` : 'Analiza działa automatycznie'}</small>
               </div>

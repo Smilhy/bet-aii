@@ -86245,3 +86245,150 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
 @media(max-width:1380px){.sim-v358-main-grid{grid-template-columns:minmax(0,1.45fr) minmax(390px,.9fr)}.sim-v358-heading-row h1{font-size:clamp(33px,3vw,46px)!important}}
 @media(max-width:1250px){.sim-v358-main-grid{grid-template-columns:1fr}.sim-v358-side-zone{grid-template-rows:auto auto auto}.sim-v358-picks-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.sim-v358-heading-row h1{font-size:34px!important}.sim-v358-featured{padding:14px}.sim-v358-picks-grid{grid-template-columns:1fr}}
+
+
+/* =====================================================================
+   V360 — FM AI ULTRA PRO PANEL + READABLE WHY AI
+   Visual-only refinement. Does NOT change match selection, scanner logic,
+   one-test-match fallback, daily cache or V358/V359 safe Supabase layer.
+   ===================================================================== */
+.sim-v358-command{
+  --v360-panel:#071d30;
+  --v360-panel-deep:#051522;
+  --v360-border:rgba(63,190,230,.28);
+  --v360-cyan:#29e6f2;
+  --v360-green:#36e9a1;
+  --v360-text:#f5fbff;
+  --v360-muted:#8ba9bb;
+  padding-top:18px!important;
+}
+.sim-v358-command:before{
+  height:650px!important;
+  background:
+    radial-gradient(ellipse at 18% 2%,rgba(20,203,244,.10),transparent 38%),
+    radial-gradient(ellipse at 75% 20%,rgba(30,239,180,.055),transparent 34%),
+    linear-gradient(180deg,rgba(3,20,32,.08),transparent 80%)!important;
+}
+
+/* Header: cleaner product hierarchy and cyan verdict accent. */
+.sim-v358-heading-row{margin-bottom:20px!important;gap:28px!important}
+.sim-v358-eyebrow{font-size:12px!important;letter-spacing:.145em!important;color:#a3bdd0!important}
+.sim-v358-eyebrow b{font-size:26px!important;color:#28e8f3!important}
+.sim-v358-heading-row h1{font-size:clamp(38px,3.15vw,51px)!important;line-height:1.02!important;letter-spacing:-.044em!important}
+.sim-v359-h1-main,.sim-v359-h1-data{color:#f6fbff!important}
+.sim-v359-h1-verdict{
+  color:transparent!important;
+  background:linear-gradient(90deg,#28e9f1 0%,#78f6ff 55%,#39d8ef 100%)!important;
+  -webkit-background-clip:text!important;background-clip:text!important;
+  filter:drop-shadow(0 0 10px rgba(41,229,242,.12));
+}
+.sim-v358-heading-row p{font-size:15px!important;color:#78b9d5!important}
+.sim-v358-refresh-wrap button{height:46px!important;padding:0 17px!important;border-radius:12px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 28px rgba(0,156,222,.10)!important}
+
+/* Main composition: closer to reference — featured card ~56%, analytics ~44%. */
+.sim-v358-main-grid{
+  grid-template-columns:minmax(0,1.28fr) minmax(500px,1fr)!important;
+  gap:16px!important;
+  align-items:stretch!important;
+}
+.sim-v358-featured{
+  min-height:366px!important;
+  padding:18px 20px 15px!important;
+  border-radius:15px!important;
+  border-color:rgba(37,222,236,.67)!important;
+  background:
+    radial-gradient(circle at 88% 8%,rgba(15,155,216,.18),transparent 32%),
+    radial-gradient(circle at 7% 105%,rgba(48,235,168,.075),transparent 29%),
+    linear-gradient(145deg,#082038 0%,#061929 59%,#061723 100%)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.045),
+    inset 0 0 55px rgba(0,144,205,.035),
+    0 18px 48px rgba(0,0,0,.23)!important;
+}
+.sim-v358-featured:after{
+  background:
+    linear-gradient(115deg,rgba(255,255,255,.025),transparent 27%,transparent 75%,rgba(42,214,246,.045)),
+    radial-gradient(circle at 58% 36%,rgba(33,193,236,.035),transparent 26%)!important;
+}
+.sim-v358-featured-tag{font-size:13px!important;margin-bottom:13px!important}
+.sim-v358-featured-tag b{padding:9px 13px!important;font-size:13px!important}
+.sim-v358-league-row{font-size:12px!important;margin-bottom:8px!important}
+.sim-v358-fixture{grid-template-columns:1fr 108px 1fr!important;min-height:82px!important;padding:4px 8px 14px!important}
+.sim-v358-team{gap:12px!important}
+.sim-v358-team img,.sim-v358-team-mark{width:52px!important;height:52px!important}
+.sim-v358-team-mark{box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 8px 18px rgba(0,0,0,.16)!important}
+.sim-v358-team strong{font-size:19px!important;font-weight:860!important}
+.sim-v358-kickoff small{font-size:10px!important;color:#86a8bb!important}.sim-v358-kickoff b{font-size:19px!important}
+.sim-v358-feature-metrics{gap:9px!important}
+.sim-v358-feature-metrics>div{min-height:70px!important;padding:11px 12px!important;border-radius:11px!important;background:linear-gradient(180deg,#0b2942,#081e31)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important}
+.sim-v358-feature-metrics small{font-size:9px!important}.sim-v358-feature-metrics b{font-size:15px!important}
+.sim-v358-verdict{min-height:81px!important;margin-top:10px!important;border-radius:11px!important;background:linear-gradient(90deg,rgba(8,124,86,.43),rgba(5,56,56,.22))!important}
+.sim-v358-verdict strong{font-size:18px!important}.sim-v358-verdict b{font-size:16px!important}.sim-v358-verdict small{font-size:9px!important}
+.sim-v358-why{height:37px!important;padding-top:9px!important;font-size:12px!important}.sim-v358-why b{font-size:12px!important}.sim-v358-why span{font-size:12px!important;color:#91afc0!important}.sim-v358-why button{font-size:12px!important}
+
+/* Analytics rail: centered KPI cards and more visual depth. */
+.sim-v358-side-zone{grid-template-rows:105px 150px 82px!important;gap:11px!important}
+.sim-v358-kpis{gap:9px!important}
+.sim-v358-kpis article{
+  align-items:center!important;justify-content:center!important;text-align:center!important;
+  min-height:105px!important;padding:12px 8px!important;border-radius:14px!important;
+  background:radial-gradient(circle at 50% 0,rgba(42,180,228,.06),transparent 48%),linear-gradient(155deg,#091f33,#061725)!important;
+}
+.sim-v358-kpis svg{width:22px!important;height:22px!important;margin-bottom:2px!important}.sim-v358-kpis b{font-size:27px!important}.sim-v358-kpis span{font-size:10px!important;color:#a5bbca!important}
+.sim-v358-health{min-height:150px!important;border-radius:14px!important;padding:17px!important;grid-template-columns:82px 1fr auto!important;background:radial-gradient(circle at 90% 20%,rgba(17,190,237,.10),transparent 31%),linear-gradient(145deg,#081e32,#061724)!important}
+.sim-v358-gauge{width:69px!important;height:69px!important}.sim-v358-gauge span{font-size:17px!important}
+.sim-v358-health small{font-size:11px!important}.sim-v358-health strong{font-size:15px!important;padding:5px 10px!important}.sim-v358-health p{font-size:11px!important;line-height:1.35!important;color:#91afbf!important}.sim-v358-health button{height:38px!important;font-size:11px!important;padding:0 12px!important}
+.sim-v358-promo{min-height:82px!important;padding:14px 16px!important;border-radius:14px!important;background:radial-gradient(circle at 89% 42%,rgba(22,225,190,.085),transparent 34%),linear-gradient(145deg,#0a1e31,#071725)!important}.sim-v358-promo strong{font-size:14px!important}.sim-v358-promo span{font-size:11px!important}
+
+/* Day/sport switches are intentionally hidden: FM AI already operates on today's slate. */
+.sim-v358-filterbar,.sim-v358-cache{display:none!important}
+
+/* Best picks: stronger product cards. With one TEST match, make it a substantial card
+   instead of a tiny tile followed by a sea of empty space. */
+.sim-v358-picks{margin-top:25px!important;padding-top:1px!important}
+.sim-v358-picks-head{margin-bottom:13px!important;align-items:center!important}
+.sim-v358-picks-head>div>span{font-size:31px!important}.sim-v358-picks-head strong{font-size:25px!important}.sim-v358-picks-head p{font-size:12px!important}.sim-v358-picks-state{padding:6px 9px;border:1px solid rgba(77,172,213,.18);border-radius:999px;background:rgba(8,31,48,.62);font-size:9px!important}
+.sim-v358-picks-grid{gap:12px!important}
+.sim-v358-pick{
+  min-height:224px!important;padding:13px!important;border-radius:13px!important;
+  border-color:rgba(78,171,211,.32)!important;
+  background:radial-gradient(circle at 100% 0,rgba(33,172,224,.085),transparent 34%),linear-gradient(155deg,#092137,#061725)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 13px 30px rgba(0,0,0,.16)!important;
+}
+.sim-v358-pick header{font-size:10px!important}.sim-v358-pick-teams{min-height:53px!important;margin:10px 0!important}.sim-v358-pick-teams strong{font-size:14px!important}.sim-v358-pick-line{min-height:55px!important;padding:9px 10px!important;border-radius:9px!important}.sim-v358-pick-line b,.sim-v358-pick-line>span{font-size:11px!important}.sim-v358-pick-line em{font-size:10px!important}.sim-v358-pick-verdict{height:31px!important;font-size:11px!important}.sim-v358-pick footer{font-size:10px!important;margin-top:9px!important}.sim-v358-pick-actions button{height:31px!important;font-size:10px!important}
+.sim-v358-picks-grid:has(> .sim-v358-pick:only-child){grid-template-columns:minmax(390px,540px)!important}
+.sim-v358-picks-grid:has(> .sim-v358-pick:only-child) .sim-v358-pick{min-height:240px!important;padding:15px!important}
+.sim-v358-picks-grid:has(> .sim-v358-pick:only-child) .sim-v358-pick-teams strong{font-size:16px!important}
+.sim-v358-picks-grid:has(> .sim-v358-pick:only-child) .sim-v358-pick-line{min-height:60px!important}
+
+/* WHY AI modal — significantly larger and readable. */
+.sim-intel-modal-backdrop-v347{padding:26px!important;background:rgba(0,7,13,.86)!important;backdrop-filter:blur(10px)!important}
+.sim-intel-modal-v347{
+  width:min(1140px,95vw)!important;max-height:92vh!important;border-radius:20px!important;
+  border:1px solid rgba(60,218,238,.38)!important;
+  background:radial-gradient(circle at 90% 0,rgba(20,181,226,.08),transparent 27%),linear-gradient(180deg,#072238,#041522 74%)!important;
+  box-shadow:0 34px 105px rgba(0,0,0,.68),inset 0 1px 0 rgba(255,255,255,.05),0 0 0 1px rgba(5,93,119,.16)!important;
+}
+.sim-intel-modal-head-v347{padding:20px 22px!important;background:rgba(6,30,47,.96)!important}.sim-intel-modal-head-v347 small{font-size:10px!important}.sim-intel-modal-head-v347 strong{font-size:26px!important;letter-spacing:-.02em!important}.sim-intel-modal-head-v347 strong i{font-size:13px!important}.sim-intel-modal-head-v347 span{font-size:11px!important}.sim-intel-modal-head-v347 button{width:40px!important;height:40px!important;border-radius:12px!important;font-size:22px!important}
+.sim-intel-modal-summary-v347{gap:10px!important;padding:16px 18px 0!important}.sim-intel-modal-summary-v347 article{min-height:76px!important;padding:13px!important;border-radius:12px!important}.sim-intel-modal-summary-v347 small{font-size:9px!important}.sim-intel-modal-summary-v347 b{font-size:18px!important}.sim-intel-modal-summary-v347 em{font-size:10px!important}
+.sim-intel-modal-columns-v347{gap:12px!important;padding:12px 18px 0!important}.sim-intel-modal-columns-v347 section{min-height:190px!important;padding:15px!important;border-radius:13px!important}.sim-intel-modal-columns-v347 h4{font-size:11px!important;margin-bottom:10px!important}.sim-intel-modal-columns-v347 p{gap:9px!important;margin:8px 0!important;font-size:12px!important;line-height:1.5!important}.sim-intel-modal-columns-v347 p i{flex-basis:20px!important;width:20px!important;height:20px!important;font-size:10px!important}
+.sim-intel-consensus-modal-v347{gap:10px!important;padding:12px 18px 0!important}.sim-intel-consensus-modal-v347 article{padding:12px 14px!important;border-radius:11px!important}.sim-intel-consensus-modal-v347 small{font-size:9px!important}.sim-intel-consensus-modal-v347 b{font-size:16px!important}.sim-intel-consensus-modal-v347 em{font-size:10px!important}
+.sim-intel-timeline-v347{margin:12px 18px 0!important;padding:14px!important;border-radius:12px!important}.sim-intel-timeline-v347 small{font-size:9px!important}.sim-intel-timeline-v347 strong{font-size:14px!important}.sim-intel-timeline-v347 span,.sim-intel-timeline-v347 p{font-size:11px!important}
+.sim-intel-clv-v347{margin:12px 18px 0!important;padding:13px 14px!important;border-radius:12px!important}.sim-intel-clv-v347 small{font-size:9px!important}.sim-intel-clv-v347 strong{font-size:14px!important}.sim-intel-clv-v347 p{font-size:10px!important;line-height:1.45!important}
+.sim-intel-modal-footer-v347{padding:15px 18px 18px!important}.sim-intel-modal-footer-v347 button{height:40px!important;padding:0 16px!important;border-radius:11px!important;font-size:10px!important}.sim-intel-modal-footer-v347 small{font-size:9px!important}
+
+@media(max-width:1450px){
+  .sim-v358-main-grid{grid-template-columns:minmax(0,1.38fr) minmax(430px,.9fr)!important}
+  .sim-v358-heading-row h1{font-size:clamp(36px,3vw,48px)!important}
+}
+@media(max-width:1250px){
+  .sim-v358-main-grid{grid-template-columns:1fr!important}.sim-v358-side-zone{grid-template-rows:auto auto auto!important}
+  .sim-v358-picks-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .sim-v358-picks-grid:has(> .sim-v358-pick:only-child){grid-template-columns:minmax(360px,540px)!important}
+}
+@media(max-width:760px){
+  .sim-v358-heading-row h1{font-size:34px!important}
+  .sim-v358-featured{padding:14px!important}.sim-v358-side-zone{grid-template-rows:auto!important}.sim-v358-health{grid-template-columns:auto 1fr!important}
+  .sim-v358-picks-grid,.sim-v358-picks-grid:has(> .sim-v358-pick:only-child){grid-template-columns:1fr!important}
+  .sim-intel-modal-backdrop-v347{padding:6px!important}.sim-intel-modal-v347{width:100%!important;max-height:96vh!important}.sim-intel-modal-head-v347 strong{font-size:21px!important}
+}
