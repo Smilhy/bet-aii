@@ -968,7 +968,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     return payload
   }
 
-  const scanQualifiedMatches = async (rows = [], signal, { preserveExisting = false } = {}) => {
+  const scanQualifiedMatches = async (rows = [], signal, { preserveExisting = false, forceRefresh = false } = {}) => {
     // V361: KAŻDY widoczny dzisiejszy mecz przechodzi pełny Value Scanner.
     // Usunięto limit 24 oraz wcześniejsze filtrowanie po lekkim pre-checku.
     // Skan działa sekwencyjnie i korzysta z cache/rate-shield backendu, więc
@@ -988,7 +988,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         away_team_id: String(row.awayTeamId || ''),
         home: String(row.home || ''), away: String(row.away || ''),
         league: String(row.league || ''), country: String(row.country || ''),
-        fixture_date: String(row.commence_time || row.fixture_date || row.rawDate || '')
+        fixture_date: String(row.commence_time || row.fixture_date || row.rawDate || ''),
+        forceRefresh: forceRefresh ? '1' : '0'
       })
 
       let completed = false
@@ -1041,7 +1042,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     if (!signal?.aborted) setScannerActive(false)
   }
 
-  const loadMatches = async (signal, { preserveExisting = false } = {}) => {
+  const loadMatches = async (signal, { preserveExisting = false, forceRefresh = false, forceScannerRefresh = false } = {}) => {
     if (!preserveExisting) setLoading(true)
     setError('')
     if (!preserveExisting) {
@@ -1055,31 +1056,48 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       let realRows = []
       let usedFallback = false
 
-      // Najpierw cache listy dnia; tylko gdy go brakuje robimy jeden świeży refresh.
-      try {
-        payload = await requestDailyMatches({ forceRefresh: false, skipOdds: true, signal })
-        realRows = normalizeRealRows(payload, requestNowMs)
-      } catch (error) {
-        if (error?.name === 'AbortError') return
-      }
-
-      if (!realRows.length && !signal?.aborted) {
+      // V362: ręczne "Odśwież analizę" MUSI ominąć dzienny cache listy
+      // i pobrać świeżą listę. Automatyczny start nadal korzysta z cache.
+      if (forceRefresh) {
         try {
           payload = await requestDailyMatches({ forceRefresh: true, skipOdds: true, signal })
           realRows = normalizeRealRows(payload, requestNowMs)
         } catch (error) {
           if (error?.name === 'AbortError') return
-          await waitFor(1800, signal)
+          // Jeżeli świeże źródło chwilowo nie odpowie, nie kasujemy starego widoku.
+          if (!preserveExisting) throw error
+          usedFallback = true
+        }
+      } else {
+        // Normalny start: najpierw cache listy dnia; tylko gdy go brakuje robimy świeży refresh.
+        try {
           payload = await requestDailyMatches({ forceRefresh: false, skipOdds: true, signal })
           realRows = normalizeRealRows(payload, requestNowMs)
-          usedFallback = true
+        } catch (error) {
+          if (error?.name === 'AbortError') return
+        }
+
+        if (!realRows.length && !signal?.aborted) {
+          try {
+            payload = await requestDailyMatches({ forceRefresh: true, skipOdds: true, signal })
+            realRows = normalizeRealRows(payload, requestNowMs)
+          } catch (error) {
+            if (error?.name === 'AbortError') return
+            await waitFor(1800, signal)
+            payload = await requestDailyMatches({ forceRefresh: false, skipOdds: true, signal })
+            realRows = normalizeRealRows(payload, requestNowMs)
+            usedFallback = true
+          }
         }
       }
 
       if (signal?.aborted) return
+      // Gdy ręczny refresh nie zdoła pobrać nowej listy, zachowujemy obecną listę
+      // i ponawiamy pełny skan na niej zamiast pozornie "nic nie robić".
+      if (!realRows.length && preserveExisting && forceRefresh) {
+        realRows = matches.filter(row => isPreMatchFixture(row, requestNowMs))
+      }
       // V327: pokaż wszystkie prawdziwe mecze z 17 zatwierdzonych rozgrywek OD RAZU.
-      // Pre-check jakości działa w tle i służy Value Scannerowi / readiness, ale nie może
-      // ucinać późniejszych spotkań tylko dlatego, że Budget Guard zatrzymał kolejne requesty.
       if (realRows.length || !preserveExisting) setMatches(realRows)
       if (!preserveExisting) setLoading(false)
       // V361: nie robimy już osobnego lekkiego pre-checku, który potrafił
@@ -1091,7 +1109,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         setSourceMessage('Brak kolejnych nierozpoczętych meczów na dzisiaj.')
       } else {
         setSourceMessage(`PEŁNA ANALIZA FM AI • 0/${realRows.length} meczów • każdy mecz zostanie sprawdzony`)
-        if (!signal?.aborted) await scanQualifiedMatches([...realRows], signal, { preserveExisting })
+        if (!signal?.aborted) await scanQualifiedMatches([...realRows], signal, { preserveExisting, forceRefresh: forceScannerRefresh || forceRefresh })
         if (!signal?.aborted) setSourceMessage(`PEŁNA ANALIZA FM AI ZAKOŃCZONA • ${realRows.length}/${realRows.length} meczów sprawdzonych`)
       }
     } catch (err) {
@@ -1119,11 +1137,18 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   }
 
   const refreshAnalysisV352 = () => {
+    // V362: przycisk działa także w trakcie trwającego skanu.
+    // Anulujemy poprzedni kontroler, zerujemy flagi UI i natychmiast
+    // uruchamiamy pełny, wymuszony refresh listy + wszystkich analiz.
     scanAbortRef.current?.abort()
+    setScannerActive(false)
+    setQualifying(false)
+    setError('')
+    setSourceMessage('ODŚWIEŻAM FM AI • pobieram świeże mecze i uruchamiam pełną analizę…')
     const controller = new AbortController()
     scanAbortRef.current = controller
-    setCacheMetaV352(prev => ({ ...prev, restored: false }))
-    loadMatches(controller.signal, { preserveExisting: true })
+    setCacheMetaV352(prev => ({ ...prev, restored: false, writing: false }))
+    loadMatches(controller.signal, { preserveExisting: true, forceRefresh: true, forceScannerRefresh: true })
   }
 
   useEffect(() => {
@@ -1393,7 +1418,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
               </div>
               <div className="sim-v358-refresh-wrap">
                 {/* V352 legacy test token: ODŚWIEŻ ANALIZĘ */}
-                <button type="button" onClick={refreshAnalysisV352} disabled={qualifying || scannerActive || loading}><FmIconV358 name="refresh" size={18}/><b>{qualifying || scannerActive || loading ? 'AKTUALIZUJĘ…' : 'Odśwież analizę'}</b></button>
+                <button type="button" onClick={refreshAnalysisV352} aria-busy={qualifying || scannerActive || loading}><FmIconV358 name="refresh" size={18}/><b>{qualifying || scannerActive || loading ? 'Uruchom od nowa' : 'Odśwież analizę'}</b></button>
                 <small>{cacheMetaV352.savedAt ? `Ostatnia analiza: ${formatCacheTimeV352(cacheMetaV352.savedAt, lang)}` : 'Analiza działa automatycznie'}</small>
               </div>
             </div>

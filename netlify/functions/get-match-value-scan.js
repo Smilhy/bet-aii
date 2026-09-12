@@ -553,6 +553,7 @@ exports.handler = async function handler(event = {}) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
   if (event.httpMethod && event.httpMethod !== 'GET') return json(405, { ok: false, error: 'Method not allowed' })
   const qs = event.queryStringParameters || {}
+  const forceRefresh = String(qs.forceRefresh || '') === '1'
   const fixtureId = clean(qs.fixture || qs.fixture_id).replace(/[^0-9A-Za-z_-]/g, '').slice(0, 100)
   const homeTeamId = clean(qs.home_team_id || qs.homeTeamId).replace(/[^0-9A-Za-z_-]/g, '').slice(0, 100)
   const awayTeamId = clean(qs.away_team_id || qs.awayTeamId).replace(/[^0-9A-Za-z_-]/g, '').slice(0, 100)
@@ -564,14 +565,14 @@ exports.handler = async function handler(event = {}) {
     if (cached?.payload) return json(200, { ...cached.payload, cached: true, frozen: true, cacheSource: 'supabase', freezePolicy: 'V346_PREMATCH_ONLY' })
     return json(409, { ok: false, frozen: true, error: 'Value Scanner nie tworzy ani nie nadpisuje snapshotu po kickoffie.' })
   }
-  if (cached?.payload && cachedFresh(cached)) return json(200, { ...cached.payload, cached: true, cacheSource: 'supabase' })
+  if (!forceRefresh && cached?.payload && cachedFresh(cached)) return json(200, { ...cached.payload, cached: true, cacheSource: 'supabase' })
 
   try {
     const [homeR, awayR, predictionR, oddsR] = await Promise.all([
-      apiGet('/fixtures', { team: homeTeamId, last: 8 }, { ttlMs: 20 * 60 * 1000, attempts: 2 }),
-      apiGet('/fixtures', { team: awayTeamId, last: 8 }, { ttlMs: 20 * 60 * 1000, attempts: 2 }),
-      apiGet('/predictions', { fixture: fixtureId }, { ttlMs: 20 * 60 * 1000, attempts: 2 }),
-      apiGet('/odds', { fixture: fixtureId, page: 1 }, { ttlMs: 4 * 60 * 1000, attempts: 2 })
+      apiGet('/fixtures', { team: homeTeamId, last: 8 }, { ttlMs: 20 * 60 * 1000, attempts: 2, forceRefresh }),
+      apiGet('/fixtures', { team: awayTeamId, last: 8 }, { ttlMs: 20 * 60 * 1000, attempts: 2, forceRefresh }),
+      apiGet('/predictions', { fixture: fixtureId }, { ttlMs: 20 * 60 * 1000, attempts: 2, forceRefresh }),
+      apiGet('/odds', { fixture: fixtureId, page: 1 }, { ttlMs: 4 * 60 * 1000, attempts: 2, forceRefresh })
     ])
 
     const rateLimited = [homeR, awayR, predictionR, oddsR].some(item => item?.rateLimited || isRateLimitMessage(item?.error))
@@ -597,6 +598,7 @@ exports.handler = async function handler(event = {}) {
     return json(200, {
       ...payload,
       cached: Boolean([homeR, awayR, predictionR, oddsR].filter(item => item?.fromCache).length),
+      forceRefresh,
       rateLimitShield: {
         cachedResponses: [homeR, awayR, predictionR, oddsR].filter(item => item?.fromCache).length,
         rateLimited
