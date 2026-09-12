@@ -86879,3 +86879,131 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
   .app-shell .topbar .betai-timezone-copy-v371,.app-shell .topbar .betai-timezone-chevron-v371{display:none!important;}
   .app-shell .topbar .betai-timezone-menu-v371{position:fixed!important;top:68px!important;left:10px!important;right:10px!important;width:auto!important;max-width:none!important;}
 }
+
+
+/* ============================================================
+   V372 — TOPBAR FLAG CODE + UNIFIED CONTROL SIZING
+   - PL / GB / DE / ES / RU visible inside the language flag
+   - language + timezone controls optically match 48px bell/mail buttons
+   - no logic / API / timezone conversion changes
+   ============================================================ */
+.app-shell .topbar .betai-language-switch.compact.betai-language-dropdown{
+  width:48px!important;
+  min-width:48px!important;
+  height:48px!important;
+  min-height:48px!important;
+  padding:0!important;
+  border-radius:18px!important;
+  display:grid!important;
+  place-items:center!important;
+}
+.app-shell .topbar .betai-language-switch.compact.betai-language-dropdown .betai-language-current{
+  position:relative!important;
+  width:48px!important;
+  min-width:48px!important;
+  height:48px!important;
+  min-height:48px!important;
+  padding:0!important;
+  border-radius:18px!important;
+  display:grid!important;
+  place-items:center!important;
+  gap:0!important;
+}
+.app-shell .topbar .betai-language-switch.compact.betai-language-dropdown .betai-language-current .betai-language-flag{
+  position:relative!important;
+  width:30px!important;
+  min-width:30px!important;
+  height:30px!important;
+  min-height:30px!important;
+  border-radius:50%!important;
+  overflow:hidden!important;
+  display:grid!important;
+  place-items:center!important;
+}
+.app-shell .topbar .betai-language-switch.compact.betai-language-dropdown .betai-language-current .betai-language-chevron{
+  position:absolute!important;
+  right:4px!important;
+  bottom:4px!important;
+  width:10px!important;
+  height:10px!important;
+  display:grid!important;
+  place-items:center!important;
+  font-size:9px!important;
+  line-height:1!important;
+  transform:none!important;
+  z-index:5!important;
+}
+.app-shell .topbar .betai-language-switch.compact.betai-language-dropdown.is-open .betai-language-current .betai-language-chevron{
+  transform:rotate(180deg)!important;
+}
+.app-shell .topbar .betai-language-flag .betai-language-code-v372{
+  position:absolute!important;
+  inset:0!important;
+  z-index:4!important;
+  display:grid!important;
+  place-items:center!important;
+  color:#fff!important;
+  font-size:8px!important;
+  line-height:1!important;
+  font-weight:950!important;
+  letter-spacing:.25px!important;
+  text-shadow:0 1px 2px rgba(0,0,0,.92),0 0 4px rgba(0,0,0,.72)!important;
+  pointer-events:none!important;
+}
+.app-shell .topbar .betai-language-menu .betai-language-flag{
+  position:relative!important;
+  overflow:hidden!important;
+}
+.app-shell .topbar .betai-language-menu .betai-language-code-v372{
+  font-size:7px!important;
+}
+
+.app-shell .topbar .betai-timezone-current-v371{
+  height:48px!important;
+  min-height:48px!important;
+  border-radius:18px!important;
+  padding:0 12px!important;
+}
+.app-shell .topbar .betai-timezone-globe-v371{
+  width:30px!important;
+  height:30px!important;
+  flex:0 0 30px!important;
+  font-size:18px!important;
+  border-width:1px!important;
+}
+.app-shell .topbar .betai-timezone-copy-v371 strong{
+  font-size:11.5px!important;
+}
+.app-shell .topbar .betai-timezone-copy-v371 small{
+  font-size:10.5px!important;
+}
+
+@media (max-width:760px){
+  .app-shell .topbar .betai-language-switch.compact.betai-language-dropdown,
+  .app-shell .topbar .betai-language-switch.compact.betai-language-dropdown .betai-language-current,
+  .app-shell .topbar .betai-timezone-current-v371{
+    height:44px!important;
+    min-height:44px!important;
+  }
+  .app-shell .topbar .betai-language-switch.compact.betai-language-dropdown,
+  .app-shell .topbar .betai-language-switch.compact.betai-language-dropdown .betai-language-current{
+    width:44px!important;
+    min-width:44px!important;
+  }
+  .app-shell .topbar .betai-language-switch.compact.betai-language-dropdown .betai-language-current .betai-language-flag{
+    width:28px!important;
+    min-width:28px!important;
+    height:28px!important;
+    min-height:28px!important;
+  }
+  .app-shell .topbar .betai-timezone-current-v371{
+    width:44px!important;
+    min-width:44px!important;
+    padding:0!important;
+  }
+  .app-shell .topbar .betai-timezone-globe-v371{
+    width:28px!important;
+    height:28px!important;
+    flex-basis:28px!important;
+  }
+}

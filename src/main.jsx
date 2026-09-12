@@ -34696,6 +34696,8 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
 
 
 
+const BETAI_LANG_COUNTRY_CODE_V372 = { pl: 'PL', en: 'GB', de: 'DE', es: 'ES', ru: 'RU' }
+
 function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false, ariaLabel = 'Language switcher' }) {
   const [open, setOpen] = useState(false)
   const currentLang = BETAI_LANGUAGES.includes(lang) ? lang : 'pl'
@@ -34721,7 +34723,7 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
         aria-label={`${ariaLabel}: ${BETAI_LANG_NAMES?.[currentLang] || BETAI_LANG_LABELS[currentLang]}`}
         title={BETAI_LANG_NAMES?.[currentLang] || BETAI_LANG_LABELS[currentLang]}
       >
-        <span className={`betai-language-flag betai-flag-${currentLang}`} aria-hidden="true" />
+        <span className={`betai-language-flag betai-flag-${currentLang}`} aria-hidden="true"><span className="betai-language-code-v372">{BETAI_LANG_COUNTRY_CODE_V372[currentLang] || currentLang.toUpperCase()}</span></span>
         <span className="betai-language-chevron" aria-hidden="true">⌄</span>
       </button>
 
@@ -34738,7 +34740,7 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
               aria-label={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
               title={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
             >
-              <span className={`betai-language-flag betai-flag-${code}`} aria-hidden="true" />
+              <span className={`betai-language-flag betai-flag-${code}`} aria-hidden="true"><span className="betai-language-code-v372">{BETAI_LANG_COUNTRY_CODE_V372[code] || code.toUpperCase()}</span></span>
               <span className="betai-language-name">{BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}</span>
             </button>
           ))}
