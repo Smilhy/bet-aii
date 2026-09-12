@@ -51,3 +51,6 @@ alter table public.fm_ai_system_picks_v368 enable row level security;
 
 comment on table public.fm_ai_system_picks_v368 is
   'Frozen pre-match FM AI paper picks. 10 PLN flat stake. Service-role only. Used to measure real forward performance without cherry-picking.';
+
+-- V369 handshake: force PostgREST/Data API to reload the schema after the table is created.
+NOTIFY pgrst, 'reload schema';

@@ -1367,17 +1367,34 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     return []
   }, [filteredMatches, shouldShowUiTestV367, uiTestEntryV358])
 
-  const refreshSystemStatsV368 = async () => {
+  const refreshSystemStatsV368 = async ({ retry = true } = {}) => {
     setSystemStatsLoadingV368(true)
     try {
-      const response = await fetch('/.netlify/functions/get-fm-ai-system-stats', { cache:'no-store' })
-      const payload = await response.json().catch(() => ({}))
+      let lastPayload = null
+      const delays = retry ? [0, 900, 1800] : [0]
+      for (let attempt = 0; attempt < delays.length; attempt += 1) {
+        if (delays[attempt]) await new Promise(resolve => setTimeout(resolve, delays[attempt]))
+        const response = await fetch(`/.netlify/functions/get-fm-ai-system-stats?t=${Date.now()}`, { cache:'no-store' })
+        const payload = await response.json().catch(() => ({}))
+        lastPayload = { ...payload, httpStatus: response.status }
+        if (response.ok && payload?.available) break
+        const code = String(payload?.code || '')
+        if (!['TABLE_MISSING','SCHEMA_CACHE_WAIT'].includes(code)) break
+      }
+      setSystemStatsV368(lastPayload || { ok:false, available:false, code:'EMPTY_RESPONSE' })
+      return lastPayload
+    } catch (error) {
+      const payload = { ok:false, available:false, code:'NETWORK_ERROR', error:error?.message || 'Błąd połączenia z trackerem' }
       setSystemStatsV368(payload)
-    } catch (_) {
-      setSystemStatsV368(prev => prev || { ok:false, available:false })
+      return payload
     } finally {
       setSystemStatsLoadingV368(false)
     }
+  }
+
+  const openSystemStatsV369 = async () => {
+    setShowSystemStatsV368(true)
+    await refreshSystemStatsV368({ retry:true })
   }
 
   useEffect(() => {
@@ -1626,7 +1643,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
             <section className="sim-v368-system-strip">
               <div className="sim-v368-system-title">
                 <div><small>FM AI SYSTEM TRACKER</small><strong>10 zł flat / każdy DOBRY TYP</strong><span>Prawdziwy forward tracking • pierwszy opublikowany VALUE/STRONG VALUE jest zamrażany przed kickoffem</span></div>
-                <button type="button" onClick={() => setShowSystemStatsV368(true)}>Pełne statystyki →</button>
+                <button type="button" onClick={openSystemStatsV369}>Pełne statystyki →</button>
               </div>
               {systemStatsV368?.available ? (() => {
                 const s = systemStatsV368.all || {}
@@ -1987,7 +2004,11 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
               <section className="sim-v368-recent"><div className="sim-v368-section-head"><h3>Ostatnie typy systemu</h3><button type="button" onClick={refreshSystemStatsV368}>Odśwież</button></div><div className="sim-v368-recent-list">{(systemStatsV368.recent||[]).slice(0,20).map(row=><article key={row.id}><div><small>{new Date(row.date).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} • {row.league}</small><b>{row.home} <i>vs</i> {row.away}</b><span>{row.market} @ {Number(row.odds||0).toFixed(2)} • AI {Number(row.probability||0).toFixed(1)}%</span></div><strong className={row.status==='win'?'positive':row.status==='loss'?'negative':''}>{row.status==='pending'?'OCZEKUJE':row.status==='void'?'VOID':row.status==='win'?'WIN':'LOSS'}{row.score?` • ${row.score}`:''}<em>{row.status!=='pending'&&row.status!=='void'?formatPlnV368(row.profit||0):''}</em></strong></article>)}</div></section>
               <footer><p><b>Jak czytać?</b> Dodatni bilans i yield mówią, czy płaska stawka 10 zł faktycznie zarabia. Trafność porównujemy z break-even wynikającym z realnych kursów. Przy małej próbie wynik może być przypadkowy — sensowne wnioski zaczynają się dopiero po dziesiątkach i setkach rozliczonych typów.</p></footer>
             </>
-          })() : <div className="sim-v368-modal-empty"><strong>Tracker wymaga tabeli Supabase V368</strong><p>Uruchom jednorazowo SUPABASE_RUN_ONCE_WERSJA_368_FM_AI_SYSTEM_TRACKER.sql. Potem system automatycznie zacznie zamrażać i rozliczać realne typy.</p></div>}
+          })() : <div className="sim-v368-modal-empty">
+            <strong>{systemStatsLoadingV368 ? 'Sprawdzam połączenie trackera…' : systemStatsV368?.code === 'TABLE_MISSING' ? 'Tabela trackera nie jest jeszcze widoczna dla API' : systemStatsV368?.code === 'NETLIFY_ENV_MISSING' ? 'Brakuje konfiguracji Supabase w Netlify' : systemStatsV368?.code === 'FUNCTION_NOT_DEPLOYED' || systemStatsV368?.httpStatus === 404 ? 'Funkcja trackera nie została wdrożona' : 'Tracker chwilowo nie może odczytać danych'}</strong>
+            <p>{systemStatsLoadingV368 ? 'Łączę Netlify Functions z Supabase i odświeżam schemat…' : systemStatsV368?.code === 'TABLE_MISSING' ? 'SQL został uruchomiony? Odświeżam automatycznie, ale po utworzeniu tabeli Supabase może potrzebować chwili na odświeżenie schematu API.' : systemStatsV368?.code === 'NETLIFY_ENV_MISSING' ? 'Netlify Function nie widzi SUPABASE_URL lub SUPABASE_SERVICE_ROLE_KEY. Pozostała strona może działać z kluczem publicznym, ale tracker zapisuje dane po stronie serwera.' : systemStatsV368?.httpStatus === 404 ? 'Nowe funkcje get/record/settle FM AI V368 nie znalazły się w aktualnym deployu Netlify.' : (systemStatsV368?.error || 'Kliknij „Sprawdź ponownie”. Jeśli problem zostanie, komunikat pokaże konkretną przyczynę zamiast udawać, że brakuje tabeli.')}</p>
+            {!systemStatsLoadingV368 ? <button type="button" onClick={() => refreshSystemStatsV368({ retry:true })}>Sprawdź ponownie</button> : null}
+          </div>}
         </section>
       </div> : null}
 
