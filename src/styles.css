@@ -87007,3 +87007,37 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
     flex-basis:28px!important;
   }
 }
+
+/* V373 — real country flags in timezone picker (Windows-safe) */
+.app-shell .topbar .betai-timezone-flag-v371{
+  width:34px!important;
+  height:24px!important;
+  min-width:34px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:6px!important;
+  overflow:hidden!important;
+  background:#071b24!important;
+  border:1px solid rgba(58,224,231,.18)!important;
+  box-shadow:0 0 0 1px rgba(0,0,0,.18) inset!important;
+  font-size:0!important;
+  line-height:1!important;
+}
+.app-shell .topbar .betai-timezone-flag-img-v373{
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  object-fit:cover!important;
+}
+.app-shell .topbar .betai-timezone-flag-fallback-v373{
+  font-size:11px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:.4px!important;
+  color:#dffcff!important;
+}
+.app-shell .topbar .betai-timezone-flag-globe-v373{
+  font-size:19px!important;
+  line-height:1!important;
+}

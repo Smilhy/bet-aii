@@ -341,6 +341,17 @@ const BETAI_TIMEZONE_OPTIONS_V371 = [
   { zone: 'UTC', city: 'UTC', cityEn: 'UTC', country: 'UTC', countryEn: 'UTC', flag: '🌐', short: 'UTC', region: 'UTC' }
 ]
 
+
+function getBetaiFlagCountryCodeV373(flag = '') {
+  const chars = Array.from(String(flag || ''))
+  const code = chars
+    .map(char => char.codePointAt(0))
+    .filter(value => value >= 0x1F1E6 && value <= 0x1F1FF)
+    .map(value => String.fromCharCode(65 + (value - 0x1F1E6)))
+    .join('')
+  return code.length === 2 ? code : 'UN'
+}
+
 function isBetaiValidTimeZoneV371(zone) {
   if (!zone) return false
   try {
@@ -34839,7 +34850,22 @@ function BetaiTimeZoneSwitchV371({ timeZone, onChange, lang = 'pl' }) {
                   role="option"
                   aria-selected={active}
                 >
-                  <span className="betai-timezone-flag-v371" aria-hidden="true">{item.flag}</span>
+                  <span className="betai-timezone-flag-v371" aria-hidden="true">
+                    {item.zone === 'UTC' ? (
+                      <span className="betai-timezone-flag-globe-v373">🌐</span>
+                    ) : (
+                      <>
+                        <img
+                          className="betai-timezone-flag-img-v373"
+                          src={`https://flagcdn.com/w40/${getBetaiFlagCountryCodeV373(item.flag).toLowerCase()}.png`}
+                          alt=""
+                          loading="lazy"
+                          onError={(event) => { event.currentTarget.style.display = 'none'; event.currentTarget.nextElementSibling?.removeAttribute('hidden') }}
+                        />
+                        <span className="betai-timezone-flag-fallback-v373" hidden>{getBetaiFlagCountryCodeV373(item.flag)}</span>
+                      </>
+                    )}
+                  </span>
                   <span className="betai-timezone-name-v371"><b>{itemCity}</b><small>{itemCountry || item.zone}</small></span>
                   <span className="betai-timezone-now-v371"><b>{getBetaiZoneClockV371(item.zone, lang, now)}</b><small>{getBetaiTimeZoneOffsetV371(item.zone, now)}</small></span>
                 </button>
@@ -40188,3 +40214,4 @@ window.addEventListener('betai-tip-received', (e) => {
 
 
 // WERSJA 1061 RUNTIME FIX: przycisk Rozlicz zakończone używa istniejącego handlera onSettle.
+
