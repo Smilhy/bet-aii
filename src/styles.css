@@ -86392,3 +86392,236 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
   .sim-v358-picks-grid,.sim-v358-picks-grid:has(> .sim-v358-pick:only-child){grid-template-columns:1fr!important}
   .sim-intel-modal-backdrop-v347{padding:6px!important}.sim-intel-modal-v347{width:100%!important;max-height:96vh!important}.sim-intel-modal-head-v347 strong{font-size:21px!important}
 }
+
+/* V363 — pro spacing + crest-rich FM AI hero cards */
+.sim-v358-command{
+  margin-top: 10px;
+}
+.sim-v358-main-grid{
+  gap: 22px !important;
+  align-items: stretch !important;
+}
+.sim-v358-side-zone{
+  gap: 16px !important;
+}
+.sim-v358-kpis{
+  gap: 14px !important;
+}
+.sim-v358-kpis article,
+.sim-v358-health,
+.sim-v358-promo,
+.sim-v358-featured,
+.sim-v358-pick{
+  box-shadow: 0 18px 44px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+.sim-v358-featured{
+  padding: 20px 22px 18px !important;
+  border-radius: 16px !important;
+}
+.sim-v363-league-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:16px;
+}
+.sim-v363-league-badge{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.sim-v363-league-logo{
+  width:48px;
+  height:48px;
+  border-radius:14px;
+  border:1px solid rgba(79,196,231,.28);
+  background:linear-gradient(180deg,rgba(10,48,69,.75),rgba(5,25,39,.92));
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  box-shadow:0 10px 24px rgba(0,0,0,.18);
+  flex:0 0 48px;
+}
+.sim-v363-league-logo img{
+  width:38px;
+  height:38px;
+  object-fit:contain;
+  filter:drop-shadow(0 6px 8px rgba(0,0,0,.35));
+}
+.sim-v363-league-logo > span{
+  color:#e8fbff;
+  font-weight:900;
+  font-size:13px;
+  letter-spacing:.08em;
+}
+.sim-v363-league-copy{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+.sim-v363-league-copy small{
+  color:#7ebdd7;
+  font-size:11px;
+  line-height:1.1;
+}
+.sim-v363-league-copy b{
+  color:#f2fbff;
+  font-size:16px;
+  line-height:1.1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.sim-v363-league-bar em{
+  color:#c8dde8;
+  font-size:12px;
+  font-style:normal;
+  font-weight:800;
+  letter-spacing:.05em;
+  padding:8px 10px;
+  border-radius:999px;
+  background:rgba(11,34,51,.68);
+  border:1px solid rgba(77,183,222,.18);
+  white-space:nowrap;
+}
+.sim-v363-featured-fixture{
+  margin-bottom:16px !important;
+  padding-bottom:8px;
+}
+.sim-v363-featured-team{
+  gap:14px !important;
+}
+.sim-v363-featured-team img,
+.sim-v363-featured-team .sim-v358-team-mark{
+  width:54px !important;
+  height:54px !important;
+  flex:0 0 54px !important;
+}
+.sim-v363-featured-team strong{
+  font-size:17px !important;
+  line-height:1.15 !important;
+}
+.sim-v363-kickoff{
+  min-width:108px;
+}
+.sim-v363-kickoff b{
+  font-size:24px !important;
+}
+.sim-v358-feature-metrics{
+  gap:12px !important;
+  margin-top:6px !important;
+}
+.sim-v358-feature-metrics > div,
+.sim-v358-verdict > div{
+  border-radius:12px !important;
+}
+.sim-v358-verdict{
+  margin-top:14px !important;
+}
+.sim-v358-why{
+  margin-top:14px !important;
+  padding-top:14px !important;
+  border-top:1px solid rgba(88,180,214,.14);
+}
+.sim-v358-picks{
+  margin-top:28px !important;
+}
+.sim-v358-picks-grid{
+  gap:18px !important;
+}
+.sim-v363-pick-card{
+  padding:15px 15px 13px !important;
+  border-radius:14px !important;
+}
+.sim-v363-pick-card header{
+  align-items:center;
+  gap:12px;
+}
+.sim-v363-pick-league{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.sim-v363-pick-league-logo{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  background:linear-gradient(180deg,rgba(10,47,67,.72),rgba(5,26,39,.92));
+  border:1px solid rgba(73,181,221,.22);
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  flex:0 0 34px;
+}
+.sim-v363-pick-league-logo img{
+  width:28px;
+  height:28px;
+  object-fit:contain;
+}
+.sim-v363-pick-league-logo b{
+  color:#dff9ff;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.06em;
+}
+.sim-v363-pick-teams{
+  grid-template-columns:1fr auto 1fr !important;
+  gap:12px !important;
+  min-height:62px !important;
+  margin:12px 0 !important;
+}
+.sim-v363-pick-team{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.sim-v363-pick-team.away{
+  justify-content:flex-end;
+}
+.sim-v363-pick-team strong{
+  font-size:14px !important;
+  line-height:1.15;
+}
+.sim-v363-pick-team.away strong{
+  text-align:right;
+}
+.sim-v363-pick-team-logo{
+  width:38px;
+  height:38px;
+  border-radius:11px;
+  background:linear-gradient(180deg,rgba(12,43,63,.78),rgba(6,24,37,.95));
+  border:1px solid rgba(75,174,214,.2);
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  flex:0 0 38px;
+}
+.sim-v363-pick-team-logo img{
+  width:32px;
+  height:32px;
+  object-fit:contain;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.28));
+}
+.sim-v363-pick-team-logo > span{
+  color:#effcff;
+  font-weight:900;
+  font-size:11px;
+  letter-spacing:.05em;
+}
+.sim-v358-pick-line,
+.sim-v358-pick-verdict,
+.sim-v358-pick-actions{
+  margin-top:9px !important;
+}
+@media (max-width: 760px){
+  .sim-v358-main-grid{gap:16px !important}
+  .sim-v358-kpis{gap:10px !important}
+  .sim-v358-picks-grid{gap:12px !important}
+  .sim-v363-league-bar{flex-direction:column;align-items:flex-start}
+  .sim-v363-kickoff{min-width:0}
+  .sim-v363-featured-team strong{font-size:15px !important}
+  .sim-v363-pick-team strong{font-size:13px !important}
+}

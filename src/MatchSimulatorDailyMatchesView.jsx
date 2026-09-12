@@ -1435,12 +1435,24 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                   const risk = riskUiV350(item, entry.scan, lang)
                   const reason = shortReasonV350(entry.scan, item, entry.match, lang)
                   const flag = entry.match.country === 'Italy' ? '🇮🇹' : entry.match.country === 'France' ? '🇫🇷' : entry.match.country === 'Netherlands' ? '🇳🇱' : entry.match.country === 'Spain' ? '🇪🇸' : '⚽'
+                  const featuredLeagueUi = getLeagueUiMetaV328(entry.match, lang)
                   return <>
-                    <div className="sim-v358-league-row"><span>{flag}</span><b>{entry.match.league}</b><em>{entry.isUiTestV358 ? 'MECZ TESTOWY' : formatKickoffTime(getFixtureStartMs(entry.match), clientTimeZone)}</em></div>
-                    <div className="sim-v358-fixture">
-                      <div className="sim-v358-team">{entry.match.homeLogo ? <img src={entry.match.homeLogo} alt=""/> : <span className="sim-v358-team-mark home">{String(entry.match.home || 'H').slice(0,2).toUpperCase()}</span>}<strong>{entry.match.home}</strong></div>
-                      <div className="sim-v358-kickoff"><small>{copy.today}</small><b>{formatKickoffTime(getFixtureStartMs(entry.match), clientTimeZone)}</b></div>
-                      <div className="sim-v358-team away"><strong>{entry.match.away}</strong>{entry.match.awayLogo ? <img src={entry.match.awayLogo} alt=""/> : <span className="sim-v358-team-mark away">{String(entry.match.away || 'A').slice(0,2).toUpperCase()}</span>}</div>
+                    <div className="sim-v363-league-bar">
+                      <div className="sim-v363-league-badge">
+                        <span className="sim-v363-league-logo">
+                          {entry.match.leagueLogo ? <img src={entry.match.leagueLogo} alt={`${entry.match.league || ''} logo`} /> : <span>{getLeagueAcronymV328(entry.match.league)}</span>}
+                        </span>
+                        <div className="sim-v363-league-copy">
+                          <small>{entry.match.country || featuredLeagueUi.country || flag}</small>
+                          <b>{entry.match.league}</b>
+                        </div>
+                      </div>
+                      <em>{entry.isUiTestV358 ? 'MECZ TESTOWY' : formatKickoffTime(getFixtureStartMs(entry.match), clientTimeZone)}</em>
+                    </div>
+                    <div className="sim-v358-fixture sim-v363-featured-fixture">
+                      <div className="sim-v358-team sim-v363-featured-team">{entry.match.homeLogo ? <img src={entry.match.homeLogo} alt=""/> : <span className="sim-v358-team-mark home">{String(entry.match.home || 'H').slice(0,2).toUpperCase()}</span>}<strong>{entry.match.home}</strong></div>
+                      <div className="sim-v358-kickoff sim-v363-kickoff"><small>{copy.today}</small><b>{formatKickoffTime(getFixtureStartMs(entry.match), clientTimeZone)}</b></div>
+                      <div className="sim-v358-team away sim-v363-featured-team away"><strong>{entry.match.away}</strong>{entry.match.awayLogo ? <img src={entry.match.awayLogo} alt=""/> : <span className="sim-v358-team-mark away">{String(entry.match.away || 'A').slice(0,2).toUpperCase()}</span>}</div>
                     </div>
                     <div className="sim-v358-feature-metrics">
                       <div><FmIconV358 name="ball"/><small>TYP</small><b>{meta.title}</b></div>
@@ -1541,9 +1553,27 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
               const confidence=confidenceUiV350(item,entry.scan,lang)
               const risk=riskUiV350(item,entry.scan,lang)
               const flag = entry.match.country === 'Italy' ? '🇮🇹' : entry.match.country === 'France' ? '🇫🇷' : entry.match.country === 'Netherlands' ? '🇳🇱' : entry.match.country === 'Spain' ? '🇪🇸' : '⚽'
-              return <article key={`v358-pick-${entry.key || index}`} className={`sim-v358-pick tone-${verdict.tone}`}>
-                <header><span>{flag} {entry.match.league}</span><b>{entry.isUiTestV358 ? 'TEST' : formatKickoffTime(getFixtureStartMs(entry.match), clientTimeZone)}</b></header>
-                <div className="sim-v358-pick-teams"><strong>{entry.match.home}</strong><i>VS</i><strong>{entry.match.away}</strong></div>
+              return <article key={`v358-pick-${entry.key || index}`} className={`sim-v358-pick sim-v363-pick-card tone-${verdict.tone}`}>
+                <header>
+                  <span className="sim-v363-pick-league">
+                    <span className="sim-v363-pick-league-logo">
+                      {entry.match.leagueLogo ? <img src={entry.match.leagueLogo} alt={`${entry.match.league || ''} logo`} /> : <b>{getLeagueAcronymV328(entry.match.league)}</b>}
+                    </span>
+                    <span>{flag} {entry.match.league}</span>
+                  </span>
+                  <b>{entry.isUiTestV358 ? 'TEST' : formatKickoffTime(getFixtureStartMs(entry.match), clientTimeZone)}</b>
+                </header>
+                <div className="sim-v358-pick-teams sim-v363-pick-teams">
+                  <div className="sim-v363-pick-team">
+                    <span className="sim-v363-pick-team-logo">{entry.match.homeLogo ? <img src={entry.match.homeLogo} alt="" /> : <span>{String(entry.match.home || 'H').slice(0,2).toUpperCase()}</span>}</span>
+                    <strong>{entry.match.home}</strong>
+                  </div>
+                  <i>VS</i>
+                  <div className="sim-v363-pick-team away">
+                    <span className="sim-v363-pick-team-logo">{entry.match.awayLogo ? <img src={entry.match.awayLogo} alt="" /> : <span>{String(entry.match.away || 'A').slice(0,2).toUpperCase()}</span>}</span>
+                    <strong>{entry.match.away}</strong>
+                  </div>
+                </div>
                 <div className="sim-v358-pick-line"><b>{meta.title}</b><span>@ {Number(item.bookmakerOdds||0).toFixed(2)}</span><em>Szansa AI <strong>{item.probability||'—'}%</strong></em></div>
                 <div className={`sim-v358-pick-verdict tone-${verdict.tone}`}><FmIconV358 name={verdict.tone === 'bad' ? 'close' : verdict.tone === 'warn' ? 'warn' : 'check'} size={16}/>{verdict.label}</div>
                 <footer><span>Pewność <b>{confidence.score10.toFixed(1)}/10</b></span><i className="sim-v358-mini-meter"><b style={{width:`${confidence.score10*10}%`}}/></i><span>Ryzyko <b>{risk.label}</b></span></footer>
