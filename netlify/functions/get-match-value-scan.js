@@ -52,8 +52,8 @@ async function apiGet(path, query = {}, options = {}) {
   // pełna symulacja oraz pozostałe moduły strony nadal mają dostęp do API.
   return shieldApiGet(path, query, {
     budgetScope: 'value-scanner',
-    budgetLimit: 240,
-    totalBudgetLimit: 750,
+    budgetLimit: 720,
+    totalBudgetLimit: 1600,
     ...options
   })
 }
@@ -395,6 +395,76 @@ function buildMarketConsensusV347(books = []) {
   return out
 }
 
+
+function fallbackProbabilitiesV361(prediction = {}, oddsBooks = []) {
+  const consensus = buildMarketConsensusV347(oddsBooks)
+  const market = key => Number(consensus?.[key]?.avgNoVigProbability || 0)
+  const one = prediction?.available && prediction?.percent
+    ? {
+        home: pct(prediction.percent.home),
+        draw: pct(prediction.percent.draw),
+        away: pct(prediction.percent.away)
+      }
+    : {
+        home: market('home'),
+        draw: market('draw'),
+        away: market('away')
+      }
+  const total = one.home + one.draw + one.away
+  const oneXTwo = total > 0
+    ? { home: round(one.home / total * 100, 1), draw: round(one.draw / total * 100, 1), away: round(one.away / total * 100, 1) }
+    : { home: 0, draw: 0, away: 0 }
+  return {
+    oneXTwo,
+    goals: {
+      over15: round(market('over15'), 1),
+      over25: round(market('over25'), 1),
+      over35: round(market('over35'), 1),
+      btts: round(market('bttsYes'), 1)
+    }
+  }
+}
+
+function buildFallbackScanV361({ fixtureId, fixtureDate, home, away, league, country, recentHome, recentAway, prediction, oddsBooks }) {
+  const probabilities = fallbackProbabilitiesV361(prediction, oddsBooks)
+  const marketConsensus = buildMarketConsensusV347(oddsBooks)
+  const candidates = valueCandidates(probabilities, oddsBooks).map(item => ({ ...item, marketConsensus: marketConsensus?.[item.key] || null }))
+  const homeSampleSize = Array.isArray(recentHome) ? recentHome.length : 0
+  const awaySampleSize = Array.isArray(recentAway) ? recentAway.length : 0
+  const hasPrediction = Boolean(prediction?.available)
+  const hasMarket = oddsBooks.length > 0
+  const dataQuality = Math.round(clamp(
+    18 + Math.min(18, homeSampleSize * 2) + Math.min(18, awaySampleSize * 2) + (hasPrediction ? 18 : 0) + (hasMarket ? 10 : 0),
+    10, 62
+  ))
+  return {
+    ok: true,
+    version: 'BETAI_VALUE_SCANNER_V1_V361_LIMITED_DATA',
+    freezePolicyVersion: 'BETAI_SCANNER_FREEZE_V347',
+    analysisStatus: 'LIMITED_DATA',
+    analysisNote: 'Pełna analiza została wykonana, ale liczba ostatnich meczów była mniejsza niż standardowy próg. Wynik ma obniżoną wiarygodność i powinien być traktowany jako NO BET / ostrożnie.',
+    fixtureId: String(fixtureId), fixtureDate: fixtureDate || null,
+    home, away, league, country,
+    xg: { home: null, away: null },
+    probabilities,
+    topScores: [],
+    dataQuality,
+    modelAgreement: hasPrediction ? 58 : 35,
+    signals: {
+      homeSampleSize, awaySampleSize,
+      apiPredictionAvailable: hasPrediction,
+      limitedData: true
+    },
+    marketConsensus,
+    sourceFlags: { recent: homeSampleSize > 0 || awaySampleSize > 0, apiPrediction: hasPrediction, realOdds: hasMarket, limitedData: true },
+    bookmakerCount: oddsBooks.length,
+    displayOdds1X2: bestDisplay1X2(oddsBooks),
+    candidates: candidates.slice(0, 8),
+    top: candidates[0] || null,
+    generatedAt: new Date().toISOString()
+  }
+}
+
 async function writeScannerOddsHistoryV347(payload = {}) {
   if (!supabase || !payload?.fixtureId || !payload?.fixtureDate) return false
   const capturedAt = payload.generatedAt || new Date().toISOString()
@@ -512,13 +582,16 @@ exports.handler = async function handler(event = {}) {
     const recentAway = normalizeRecent(awayR.data || [], awayTeamId)
     const prediction = normalizePrediction(predictionR.ok ? (predictionR.data?.[0] || {}) : {})
     const oddsBooks = normalizeOdds(oddsR.ok ? (oddsR.data || []) : [])
-    const payload = buildScan({
+    const scanArgs = {
       fixtureId,
       fixtureDate: clean(qs.fixture_date || qs.date) || null,
       home: clean(qs.home), away: clean(qs.away), league: clean(qs.league), country: clean(qs.country),
       recentHome, recentAway, prediction, oddsBooks
-    })
-    if (!payload) return json(422, { ok: false, error: 'Za mało danych formy do skanera.' })
+    }
+    // V361: każdy mecz dostaje wynik analizy. Gdy próbka formy jest za mała
+    // dla standardowego modelu, nie pomijamy spotkania — budujemy jawny,
+    // niskiej wiarygodności fallback z API Prediction/rynku i flagą LIMITED_DATA.
+    const payload = buildScan(scanArgs) || buildFallbackScanV361(scanArgs)
     await writeSnapshot(payload)
     await writeScannerOddsHistoryV347(payload)
     return json(200, {
@@ -535,4 +608,4 @@ exports.handler = async function handler(event = {}) {
   }
 }
 
-exports._test = { deriveStats, poissonForecast, valueCandidates, buildScan, bestDisplay1X2, isPreMatchPayloadV346, buildMarketConsensusV347 }
+exports._test = { deriveStats, poissonForecast, valueCandidates, buildScan, buildFallbackScanV361, fallbackProbabilitiesV361, bestDisplay1X2, isPreMatchPayloadV346, buildMarketConsensusV347 }

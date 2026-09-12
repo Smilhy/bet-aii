@@ -253,7 +253,7 @@ const TOP_SIMULATOR_LEAGUES_V140 = [
 ]
 
 const MAX_TOP_SIMULATOR_MATCHES_V140 = 160
-const MAX_VALUE_SCANNER_MATCHES_V140 = 24
+const MAX_VALUE_SCANNER_MATCHES_V140 = MAX_TOP_SIMULATOR_MATCHES_V140
 
 function normalizeLeagueV140(value = '') {
   return String(value || '')
@@ -969,9 +969,10 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   }
 
   const scanQualifiedMatches = async (rows = [], signal, { preserveExisting = false } = {}) => {
-    // VALUE Scanner jest najdroższą częścią skanu dnia. Skanujemy maksymalnie
-    // 24 najbliższe zakwalifikowane mecze z topowych lig. Reszta nadal może
-    // zostać ręcznie otwarta i zasymulowana.
+    // V361: KAŻDY widoczny dzisiejszy mecz przechodzi pełny Value Scanner.
+    // Usunięto limit 24 oraz wcześniejsze filtrowanie po lekkim pre-checku.
+    // Skan działa sekwencyjnie i korzysta z cache/rate-shield backendu, więc
+    // nie robi burstu wielu ciężkich requestów naraz.
     const scanRows = rows.slice(0, MAX_VALUE_SCANNER_MATCHES_V140)
     if (!preserveExisting) setScannerResults({})
     setScannerProgress({ done: 0, total: scanRows.length })
@@ -980,6 +981,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     for (let i = 0; i < scanRows.length; i += 1) {
       if (signal?.aborted) return
       const row = scanRows[i]
+      const rowKey = fixtureKey(row)
       const params = new URLSearchParams({
         fixture: String(row.apiFixtureId || row.id || ''),
         home_team_id: String(row.homeTeamId || ''),
@@ -988,23 +990,53 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         league: String(row.league || ''), country: String(row.country || ''),
         fixture_date: String(row.commence_time || row.fixture_date || row.rawDate || '')
       })
-      try {
-        const response = await fetch(`/.netlify/functions/get-match-value-scan?${params.toString()}`, { cache: 'no-store', signal })
-        const payload = await response.json().catch(() => ({}))
-        if (response.ok && payload?.ok) {
-          const rowKey = fixtureKey(row)
-          setScannerResults(prev => ({ ...prev, [rowKey]: payload }))
-          if (payload?.displayOdds1X2 && (payload.displayOdds1X2.home || payload.displayOdds1X2.draw || payload.displayOdds1X2.away)) {
-            setMatches(prev => prev.map(match => fixtureKey(match) === rowKey
-              ? { ...match, listOdds1X2: payload.displayOdds1X2, hasRealOdds: true }
-              : match))
+
+      let completed = false
+      let lastPayload = null
+      const retryDelays = [0, 1400, 3200]
+      for (let attempt = 0; attempt < retryDelays.length && !completed; attempt += 1) {
+        if (retryDelays[attempt]) await waitFor(retryDelays[attempt], signal)
+        try {
+          const response = await fetch(`/.netlify/functions/get-match-value-scan?${params.toString()}`, { cache: 'no-store', signal })
+          const payload = await response.json().catch(() => ({}))
+          lastPayload = payload
+          if (response.ok && payload?.ok) {
+            setScannerResults(prev => ({ ...prev, [rowKey]: payload }))
+            if (payload?.displayOdds1X2 && (payload.displayOdds1X2.home || payload.displayOdds1X2.draw || payload.displayOdds1X2.away)) {
+              setMatches(prev => prev.map(match => fixtureKey(match) === rowKey
+                ? { ...match, listOdds1X2: payload.displayOdds1X2, hasRealOdds: true }
+                : match))
+            }
+            completed = true
+            break
           }
+          const shouldRetry = response.status === 429 || response.status >= 500 || payload?.rateLimited
+          if (!shouldRetry) break
+        } catch (error) {
+          if (error?.name === 'AbortError') return
+          if (attempt >= retryDelays.length - 1) lastPayload = { error: error?.message || 'Błąd analizy meczu' }
         }
-      } catch (error) {
-        if (error?.name === 'AbortError') return
       }
+
+      // Nie ukrywamy meczu, jeżeli zewnętrzne API chwilowo nie odpowiedziało.
+      // Zapisujemy jawny wynik NO_BET/NO_ODDS, aby użytkownik widział, że mecz
+      // został przetworzony, zamiast wyglądać jak pominięty.
+      if (!completed) {
+        setScannerResults(prev => ({ ...prev, [rowKey]: {
+          ok: true,
+          version: 'BETAI_VALUE_SCANNER_V1_V361_FALLBACK',
+          fixtureId: String(row.apiFixtureId || row.id || ''),
+          fixtureDate: String(row.commence_time || row.fixture_date || row.rawDate || ''),
+          home: row.home, away: row.away, league: row.league, country: row.country,
+          dataQuality: 0, modelAgreement: 0, bookmakerCount: 0, candidates: [],
+          analysisStatus: 'TEMPORARILY_UNAVAILABLE',
+          analysisNote: lastPayload?.error || lastPayload?.message || 'Pełna analiza została podjęta, ale źródło danych chwilowo nie odpowiedziało.',
+          generatedAt: new Date().toISOString()
+        } }))
+      }
+
       setScannerProgress({ done: i + 1, total: scanRows.length })
-      if (i < scanRows.length - 1) await waitFor(520, signal)
+      if (i < scanRows.length - 1) await waitFor(650, signal)
     }
     if (!signal?.aborted) setScannerActive(false)
   }
@@ -1050,51 +1082,18 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       // ucinać późniejszych spotkań tylko dlatego, że Budget Guard zatrzymał kolejne requesty.
       if (realRows.length || !preserveExisting) setMatches(realRows)
       if (!preserveExisting) setLoading(false)
-      setQualifying(true)
-      setQualificationProgress({ done: 0, total: realRows.length })
-      setSourceMessage(realRows.length ? `17 WYBRANYCH LIG • znaleziono ${realRows.length} meczów • sprawdzam jakość 0/${realRows.length}…` : 'Brak kolejnych meczów z topowych lig na dzisiaj.')
-
-      const approved = []
-      // WERSJA 138: tylko 2 mecze jednocześnie. Każdy pre-check wymaga maks. 2
-      // requestów formy, a backend dodatkowo rozstawia je globalnie w czasie.
-      const concurrency = 2
-      let rateLimitHits = 0
-      let budgetLimitHits = 0
-      let cacheHits = 0
-      for (let i = 0; i < realRows.length; i += concurrency) {
-        if (signal?.aborted) return
-        const batch = realRows.slice(i, i + concurrency)
-        const verdicts = await Promise.all(batch.map(async row => ({ row, verdict: await qualifyFixtureForSimulator(row, { signal }) })))
-        if (signal?.aborted) return
-        verdicts.forEach(item => {
-          if (item.verdict?.eligible) approved.push(item.row)
-          if (item.verdict?.cached) cacheHits += 1
-          if (item.verdict?.rateLimited) rateLimitHits += 1
-          if (item.verdict?.budgetLimited) budgetLimitHits += 1
-        })
-        approved.sort((a, b) => getFixtureStartMs(a) - getFixtureStartMs(b))
-        const done = Math.min(realRows.length, i + batch.length)
-        // V327: lista pozostaje pełnym realRows; approved jest osobną listą dla
-        // skanera jakości i nie steruje już widocznością meczów.
-        setQualificationProgress({ done, total: realRows.length })
-        setSourceMessage(`17 LIG • widoczne ${realRows.length} • sprawdzone ${done}/${realRows.length} • gotowe ${approved.length} • cache ${cacheHits}${rateLimitHits ? ` • auto-retry ${rateLimitHits}` : ''}${budgetLimitHits ? ` • budget guard ${budgetLimitHits}` : ''}${usedFallback ? ' • fallback' : ''}`)
-
-        // Krótka pauza między batchami zapobiega burstowi 300/min. Snapshot/cache
-        // powoduje, że kolejne wejścia są dużo szybsze i praktycznie nie zużywają API.
-        if (done < realRows.length) await waitFor(rateLimitHits ? 950 : 450, signal)
-      }
-      if (signal?.aborted) return
+      // V361: nie robimy już osobnego lekkiego pre-checku, który potrafił
+      // odrzucić część widocznych meczów. Każdy realny mecz z listy trafia
+      // bezpośrednio do pełnej analizy FM AI (forma + prediction + kursy + value).
+      setQualifying(false)
+      setQualificationProgress({ done: realRows.length, total: realRows.length })
       if (!realRows.length) {
         setSourceMessage('Brak kolejnych nierozpoczętych meczów na dzisiaj.')
-      } else if (!approved.length) {
-        setSourceMessage(`Sprawdzono ${realRows.length}/${realRows.length} • brak meczów spełniających próg realnych statystyk.`)
-      } else if (budgetLimitHits) {
-        setSourceMessage(`${realRows.length} meczów widocznych • ${approved.length} sprawdzonych jako gotowe • Budget Guard nie ukrywa już późniejszych spotkań • cache ${cacheHits}`)
       } else {
-        setSourceMessage(`${realRows.length} meczów • TYLKO 17 WYBRANYCH ROZGRYWEK • ${approved.length} gotowych po pre-checku • cache ${cacheHits}`)
+        setSourceMessage(`PEŁNA ANALIZA FM AI • 0/${realRows.length} meczów • każdy mecz zostanie sprawdzony`)
+        if (!signal?.aborted) await scanQualifiedMatches([...realRows], signal, { preserveExisting })
+        if (!signal?.aborted) setSourceMessage(`PEŁNA ANALIZA FM AI ZAKOŃCZONA • ${realRows.length}/${realRows.length} meczów sprawdzonych`)
       }
-      setQualifying(false)
-      if (approved.length && !signal?.aborted) await scanQualifiedMatches([...approved], signal, { preserveExisting })
     } catch (err) {
       if (err?.name === 'AbortError' || signal?.aborted) return
       if (!preserveExisting) {
@@ -1382,7 +1381,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           )}
           {loading && <div className="sim-day-loading-v99"><i /><strong>{copy.loading}</strong><span>API-Football • {formatDateLabel(todayKey)}</span></div>}
           {!loading && error && <div className="sim-day-error-v99">⚠ {error}<button type="button" onClick={startLoadMatches}>{copy.refresh}</button></div>}
-          {!loading && !error && qualifying && !filteredMatches.length && <div className="sim-day-loading-v99"><i /><strong>Sprawdzam realne statystyki meczów…</strong><span>{qualificationProgress.done}/{qualificationProgress.total} sprawdzonych</span></div>}
+          {!loading && !error && qualifying && !filteredMatches.length && <div className="sim-day-loading-v99"><i /><strong>Przygotowuję pełną analizę wszystkich meczów…</strong><span>{qualificationProgress.done}/{qualificationProgress.total} sprawdzonych</span></div>}
           {!loading && !error && !qualifying && !filteredMatches.length && <div className="sim-day-empty-v98">{copy.empty}</div>}
 
           {!loading && !error ? <section className="sim-v358-command">
