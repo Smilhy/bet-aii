@@ -6,6 +6,7 @@ import ProductionPlatformV300 from './ProductionPlatformV300'
 import { applyContextOverlayV220 } from './matchIntelligenceV260'
 import { buildChallengerRawV180, chooseActiveModelV173, buildModelLabV200, adaptiveCalibrateTripletV172, adaptiveCalibrateBinaryV172, applyDataScienceTripletV200, applyDataScienceBinaryV200, applyEnsembleStackingV197, buildReliabilityGuardV190, applyReliabilityDecisionV190 } from './predictionLabV200'
 import { classifyValueCandidateV347 } from './valuePolicyV347'
+import { canonicalFmAiMarketKeyV367, scaleXgToBttsProbabilityV367 } from './fmAiConsistencyV367'
 
 const COPY = {
   pl: {
@@ -241,6 +242,7 @@ function lambdaFromOverProbabilityV365(probabilityPct, line = 2.5) {
   }
   return (lo + hi) / 2
 }
+
 
 function lockOutcomeProbabilityV365(oneXTwo = {}, key = '', targetPct = 0) {
   if (!['home','draw','away'].includes(key) || !(Number(targetPct) > 0)) return oneXTwo
@@ -536,7 +538,7 @@ function buildMasterConsensusV353({ match = {}, data = {}, baseForecast = null, 
   const sharedSnapshotV365 = match?.fmAiSnapshotV365 || null
   const sharedTopV365 = sharedSnapshotV365?.topPick || null
   if (sharedTopV365?.key && Number(sharedTopV365?.probability || 0) > 0) {
-    const key = String(sharedTopV365.key)
+    const key = canonicalFmAiMarketKeyV367(sharedTopV365.key)
     const probability = Math.max(1, Math.min(99, Number(sharedTopV365.probability)))
     if (['home','draw','away'].includes(key)) {
       masterOne = normalizeTriplet(lockOutcomeProbabilityV365(masterOne, key, probability)) || masterOne
@@ -549,6 +551,15 @@ function buildMasterConsensusV353({ match = {}, data = {}, baseForecast = null, 
     if (key === 'under35') masterGoals.over35 = round1(100 - probability)
     if (key === 'bttsYes') masterGoals.btts = round1(probability)
     if (key === 'bttsNo') masterGoals.btts = round1(100 - probability)
+
+    // BTTS is a two-team event, so locking only the percentage without moving xG
+    // would let Monte Carlo display a different BTTS probability. Scale both xGs
+    // proportionally until the independent-Poisson BTTS probability matches the
+    // shared FM AI snapshot as closely as the simulator caps allow.
+    if (key === 'bttsYes' || key === 'bttsNo') {
+      const targetBttsYes = key === 'bttsNo' ? 100 - probability : probability
+      masterXg = scaleXgToBttsProbabilityV367(masterXg, targetBttsYes)
+    }
 
     const lineByKey = { over15:1.5, under15:1.5, over25:2.5, under25:2.5, over35:3.5, under35:3.5 }
     if (lineByKey[key]) {

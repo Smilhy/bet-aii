@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { classifyValueCandidateV347 } from './valuePolicyV347'
+import { canonicalFmAiMarketKeyV367 } from './fmAiConsistencyV367'
 
 // V329: offline test V158 is kept in code but hidden from production UI.
 // Set to true only when the diagnostic scenario is needed again.
@@ -719,20 +720,63 @@ function buildWhyAiV347(scan = {}, item = {}, match = {}) {
   const positives = []
   const risks = []
   const market = item?.marketConsensus || null
-  const formDiff = Number(signals.homeFormScore || 0) - Number(signals.awayFormScore || 0)
-  if (Math.abs(formDiff) >= 12) positives.push(`${formDiff > 0 ? match?.home : match?.away} ma wyraźnie lepszy trend formy (${Math.round(Math.max(Number(signals.homeFormScore || 0), Number(signals.awayFormScore || 0)))}/100 vs ${Math.round(Math.min(Number(signals.homeFormScore || 0), Number(signals.awayFormScore || 0)))}/100).`)
-  if (Number(signals.homeGoalsForAvg || 0) >= 1.6) positives.push(`${match?.home} zdobywa średnio ${Number(signals.homeGoalsForAvg).toFixed(2)} gola w próbce skanera.`)
-  if (Number(signals.awayGoalsForAvg || 0) >= 1.6) positives.push(`${match?.away} zdobywa średnio ${Number(signals.awayGoalsForAvg).toFixed(2)} gola w próbce skanera.`)
-  if (Number(signals.homeGoalsAgainstAvg || 0) >= 1.45) positives.push(`${match?.home} traci średnio ${Number(signals.homeGoalsAgainstAvg).toFixed(2)} gola — profil meczu rośnie.`)
-  if (Number(signals.awayGoalsAgainstAvg || 0) >= 1.45) positives.push(`${match?.away} traci średnio ${Number(signals.awayGoalsAgainstAvg).toFixed(2)} gola — profil meczu rośnie.`)
+  const key = canonicalFmAiMarketKeyV367(item?.key || '')
+  const homeForm = Number(signals.homeFormScore || 0)
+  const awayForm = Number(signals.awayFormScore || 0)
+  const formDiff = homeForm - awayForm
+  const homeGF = Number(signals.homeGoalsForAvg || 0)
+  const awayGF = Number(signals.awayGoalsForAvg || 0)
+  const homeGA = Number(signals.homeGoalsAgainstAvg || 0)
+  const awayGA = Number(signals.awayGoalsAgainstAvg || 0)
+  const isOver = ['over15','over25','over35'].includes(key)
+  const isUnder = ['under15','under25','under35'].includes(key)
+
+  // V367: reasons must support the selected market, not merely describe the match.
+  if (key === 'home') {
+    if (formDiff >= 8) positives.push(`${match?.home} ma lepszy trend formy (${Math.round(homeForm)}/100 vs ${Math.round(awayForm)}/100).`)
+    else if (formDiff <= -8) risks.push(`${match?.away} ma lepszy trend formy (${Math.round(awayForm)}/100 vs ${Math.round(homeForm)}/100).`)
+    if (homeGF >= 1.45) positives.push(`${match?.home} zdobywa średnio ${homeGF.toFixed(2)} gola w próbce skanera.`)
+    if (homeGA >= 1.55) risks.push(`${match?.home} traci średnio ${homeGA.toFixed(2)} gola — ryzyko dla typu na gospodarzy.`)
+  } else if (key === 'away') {
+    if (formDiff <= -8) positives.push(`${match?.away} ma lepszy trend formy (${Math.round(awayForm)}/100 vs ${Math.round(homeForm)}/100).`)
+    else if (formDiff >= 8) risks.push(`${match?.home} ma lepszy trend formy (${Math.round(homeForm)}/100 vs ${Math.round(awayForm)}/100).`)
+    if (awayGF >= 1.45) positives.push(`${match?.away} zdobywa średnio ${awayGF.toFixed(2)} gola w próbce skanera.`)
+    if (awayGA >= 1.55) risks.push(`${match?.away} traci średnio ${awayGA.toFixed(2)} gola — ryzyko dla typu na gości.`)
+  } else if (key === 'draw') {
+    if (Math.abs(formDiff) <= 8) positives.push(`Forma drużyn jest zbliżona (${Math.round(homeForm)}/100 vs ${Math.round(awayForm)}/100), co wspiera scenariusz wyrównanego meczu.`)
+    else risks.push(`Różnica formy wynosi ${Math.round(Math.abs(formDiff))} pkt — to osłabia scenariusz remisu.`)
+  }
+
+  if (isOver) {
+    if (homeGF >= 1.45) positives.push(`${match?.home} zdobywa średnio ${homeGF.toFixed(2)} gola.`)
+    if (awayGF >= 1.45) positives.push(`${match?.away} zdobywa średnio ${awayGF.toFixed(2)} gola.`)
+    if (homeGA >= 1.35) positives.push(`${match?.home} traci średnio ${homeGA.toFixed(2)} gola.`)
+    if (awayGA >= 1.35) positives.push(`${match?.away} traci średnio ${awayGA.toFixed(2)} gola.`)
+    if (homeGF > 0 && awayGF > 0 && homeGF < 1.05 && awayGF < 1.05) risks.push('Obie drużyny mają niski profil strzelecki w próbce skanera.')
+  } else if (isUnder) {
+    if (homeGF > 0 && homeGF <= 1.25) positives.push(`${match?.home} zdobywa tylko ${homeGF.toFixed(2)} gola średnio — wspiera niższy total.`)
+    if (awayGF > 0 && awayGF <= 1.25) positives.push(`${match?.away} zdobywa tylko ${awayGF.toFixed(2)} gola średnio — wspiera niższy total.`)
+    if (homeGA > 0 && homeGA <= 1.20) positives.push(`${match?.home} traci tylko ${homeGA.toFixed(2)} gola średnio.`)
+    if (awayGA > 0 && awayGA <= 1.20) positives.push(`${match?.away} traci tylko ${awayGA.toFixed(2)} gola średnio.`)
+    if (homeGF >= 1.65 || awayGF >= 1.65) risks.push('Co najmniej jedna drużyna ma wysoki profil strzelecki — ryzyko dla Under.')
+    if (homeGA >= 1.55 || awayGA >= 1.55) risks.push('Co najmniej jedna defensywa regularnie dopuszcza gole — ryzyko dla Under.')
+  } else if (key === 'bttsYes') {
+    if (homeGF >= 1.20 && awayGF >= 1.20) positives.push(`Obie drużyny zdobywają średnio co najmniej 1.20 gola (${homeGF.toFixed(2)} / ${awayGF.toFixed(2)}).`)
+    if (homeGA >= 1.05 && awayGA >= 1.05) positives.push(`Obie defensywy tracą ponad 1 gola średnio (${homeGA.toFixed(2)} / ${awayGA.toFixed(2)}).`)
+    if ((homeGF > 0 && homeGF < .90) || (awayGF > 0 && awayGF < .90)) risks.push('Jedna z drużyn ma niski profil strzelecki — ryzyko dla BTTS TAK.')
+  } else if (key === 'bttsNo') {
+    if ((homeGF > 0 && homeGF < 1.0) || (awayGF > 0 && awayGF < 1.0)) positives.push('Jedna z drużyn ma niski profil strzelecki, co wspiera BTTS NIE.')
+    if ((homeGA > 0 && homeGA < 1.0) || (awayGA > 0 && awayGA < 1.0)) positives.push('Co najmniej jedna defensywa ma niski profil straconych goli.')
+    if (homeGF >= 1.55 && awayGF >= 1.55) risks.push('Obie drużyny mają wysoki profil strzelecki — ryzyko dla BTTS NIE.')
+  }
+
   if (Number(scan?.modelAgreement || 0) >= 70) positives.push(`Model agreement ${Math.round(Number(scan.modelAgreement))}% — źródła modelowe są zgodne.`)
+  else if (Number(scan?.modelAgreement || 0) > 0 && Number(scan?.modelAgreement || 0) < 55) risks.push(`Model agreement tylko ${Math.round(Number(scan.modelAgreement))}% — źródła są rozbieżne.`)
   if (Number(market?.sources || 0) >= 2 && Number(market?.agreement || 0) >= 70) positives.push(`Market consensus: ${market.sources} bukmacherów, zgodność ${Math.round(Number(market.agreement))}%.`)
   if (Number(item?.edgePp || 0) > 0) positives.push(`Cena daje +${Number(item.edgePp).toFixed(1)} pp edge po usunięciu marży; EV ${Number(item.expectedValuePct || 0) >= 0 ? '+' : ''}${Number(item.expectedValuePct || 0).toFixed(1)}%.`)
   for (const flag of (item?.redFlags || [])) risks.push(flag.text)
-  if (!risks.length && Number(scan?.modelAgreement || 0) < 65) risks.push(`Model agreement ${Math.round(Number(scan?.modelAgreement || 0))}% — poniżej progu STRONG.`)
-  if (!risks.length) risks.push('Brak istotnych czerwonych flag w danych dostępnych dla Daily Scanner.')
   if (!positives.length) positives.push('Przewaga wynika z połączenia modelu prawdopodobieństwa, ceny no-vig i kalibracji historycznej.')
-  return { positives: positives.slice(0, 6), risks: risks.slice(0, 6) }
+  return { positives: [...new Set(positives)].slice(0, 6), risks: [...new Set(risks)].slice(0, 6), clear: risks.length === 0 }
 }
 
 function pickFocusCardsV347(entries = []) {
@@ -792,9 +836,11 @@ function confidenceUiV350(item = {}, scan = {}, lang = 'pl') {
 function riskUiV350(item = {}, scan = {}, lang = 'pl') {
   const flags = Array.isArray(item?.redFlags) ? item.redFlags : []
   const agreement = Number(scan?.modelAgreement || item?.reliability?.modelAgreement || 0)
+  const decision = String(item?.decision || '').toUpperCase()
   const hasBlock = flags.some(flag => String(flag?.level || '').toUpperCase() === 'BLOCK')
-  if (hasBlock || flags.length >= 3 || agreement > 0 && agreement < 55) return { icon: '🔴', label: lang === 'en' ? 'High' : 'Wysokie', tone: 'high' }
-  if (flags.length || agreement > 0 && agreement < 65) return { icon: '🟡', label: lang === 'en' ? 'Moderate' : 'Umiarkowane', tone: 'medium' }
+  if (decision === 'NO_ODDS') return { icon: '⚪', label: lang === 'en' ? 'Unknown' : 'Nieznane', tone: 'medium' }
+  if (hasBlock || decision === 'NO_BET' || flags.length >= 3 || agreement > 0 && agreement < 55) return { icon: '🔴', label: lang === 'en' ? 'High' : 'Wysokie', tone: 'high' }
+  if (decision === 'SMALL_EDGE' || flags.length || agreement > 0 && agreement < 65) return { icon: '🟡', label: lang === 'en' ? 'Moderate' : 'Umiarkowane', tone: 'medium' }
   return { icon: '🟢', label: lang === 'en' ? 'Low' : 'Niskie', tone: 'low' }
 }
 
@@ -816,8 +862,8 @@ function shortReasonV350(scan = {}, item = {}, match = {}, lang = 'pl') {
 // V352 — persistent daily cache for FM AI.
 // After one completed scan, the user immediately sees the saved daily result after refresh/reopen.
 // Cache is browser-local, scoped to the local date + timezone, and can always be refreshed manually.
-const FM_AI_CACHE_SCHEMA_V352 = 1
-const FM_AI_CACHE_PREFIX_V352 = 'betai:fm-ai:daily-cache:v1:'
+const FM_AI_CACHE_SCHEMA_V352 = 2
+const FM_AI_CACHE_PREFIX_V352 = 'betai:fm-ai:daily-cache:v2:'
 
 function fmAiCacheKeyV352(dateKey = '', timeZone = '') {
   return `${FM_AI_CACHE_PREFIX_V352}${String(dateKey || '')}:${encodeURIComponent(String(timeZone || 'local'))}`
@@ -909,6 +955,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   const [sourceMessage, setSourceMessage] = useState(() => bootstrapCacheV352 ? `⚡ WCZYTANO ZAPIS FM AI • ${formatCacheTimeV352(bootstrapCacheV352.savedAt, lang)} • bez ponownego pełnego skanu` : '')
   const [qualificationProgress, setQualificationProgress] = useState(() => bootstrapCacheV352 ? { done: bootstrapCacheV352.matches.length, total: bootstrapCacheV352.matches.length } : { done: 0, total: 0 })
   const [selectedId, setSelectedId] = useState('')
+  const [openingMatchKeyV367, setOpeningMatchKeyV367] = useState('')
   const [scannerResults, setScannerResults] = useState(() => bootstrapCacheV352?.scannerResults || {})
   const [scannerProgress, setScannerProgress] = useState(() => bootstrapCacheV352?.scannerProgress || { done: bootstrapScanCountV352, total: bootstrapScanCountV352 })
   const [scannerActive, setScannerActive] = useState(false)
@@ -973,9 +1020,15 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     // Usunięto limit 24 oraz wcześniejsze filtrowanie po lekkim pre-checku.
     // Skan działa sekwencyjnie i korzysta z cache/rate-shield backendu, więc
     // nie robi burstu wielu ciężkich requestów naraz.
-    const scanRows = rows.slice(0, MAX_VALUE_SCANNER_MATCHES_V140)
+    const allScanRows = rows.slice(0, MAX_VALUE_SCANNER_MATCHES_V140)
+    const allKeys = new Set(allScanRows.map(row => fixtureKey(row)))
+    const reusableKeys = preserveExisting && !forceRefresh
+      ? new Set(Object.keys(scannerResults || {}).filter(key => allKeys.has(key)))
+      : new Set()
+    const scanRows = allScanRows.filter(row => !reusableKeys.has(fixtureKey(row)))
+    const baseDone = reusableKeys.size
     if (!preserveExisting) setScannerResults({})
-    setScannerProgress({ done: 0, total: scanRows.length })
+    setScannerProgress({ done: baseDone, total: allScanRows.length })
     if (!scanRows.length) { setScannerActive(false); return }
     setScannerActive(true)
     for (let i = 0; i < scanRows.length; i += 1) {
@@ -1036,7 +1089,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         } }))
       }
 
-      setScannerProgress({ done: i + 1, total: scanRows.length })
+      setScannerProgress({ done: baseDone + i + 1, total: allScanRows.length })
       if (i < scanRows.length - 1) await waitFor(650, signal)
     }
     if (!signal?.aborted) setScannerActive(false)
@@ -1097,8 +1150,13 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       if (!realRows.length && preserveExisting && forceRefresh) {
         realRows = matches.filter(row => isPreMatchFixture(row, requestNowMs))
       }
-      // V327: pokaż wszystkie prawdziwe mecze z 17 zatwierdzonych rozgrywek OD RAZU.
+      // V327/V367: show the current real fixture set immediately and prune stale
+      // scanner rows that no longer belong to the refreshed list.
       if (realRows.length || !preserveExisting) setMatches(realRows)
+      if (preserveExisting && realRows.length) {
+        const allowedKeysV367 = new Set(realRows.map(row => fixtureKey(row)))
+        setScannerResults(prev => Object.fromEntries(Object.entries(prev || {}).filter(([key]) => allowedKeysV367.has(key))))
+      }
       if (!preserveExisting) setLoading(false)
       // V361: nie robimy już osobnego lekkiego pre-checku, który potrafił
       // odrzucić część widocznych meczów. Każdy realny mecz z listy trafia
@@ -1268,17 +1326,20 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
 
   const uiTestEntryV358 = useMemo(() => buildUiTestEntryV358(labTestMatch), [labTestMatch])
+  const shouldShowUiTestV367 = !loading && !qualifying && !scannerActive && availableMatches.length === 0 && !query.trim()
   const displayScannerEntriesV358 = useMemo(() => {
     if (scannerEntries.length) return scannerEntries
-    if (!loading && !qualifying && !scannerActive) return [uiTestEntryV358]
+    if (shouldShowUiTestV367) return [uiTestEntryV358]
     return []
-  }, [scannerEntries, loading, qualifying, scannerActive, uiTestEntryV358])
+  }, [scannerEntries, shouldShowUiTestV367, uiTestEntryV358])
   const displaySummaryV358 = useMemo(() => {
     const rows = displayScannerEntriesV358.map(entry => ({ entry, item: entry?.scan?.topFinal || {} }))
     const good = rows.filter(row => ['STRONG_VALUE','VALUE'].includes(String(row.item?.decision || '').toUpperCase())).length
     const caution = rows.filter(row => String(row.item?.decision || '').toUpperCase() === 'SMALL_EDGE').length
     const noBet = rows.filter(row => ['NO_BET','NO_ODDS'].includes(String(row.item?.decision || '').toUpperCase())).length
-    const top = rows.slice().sort((a,b) => Number(b.item?.dailyScore || 0) - Number(a.item?.dailyScore || 0))[0]?.entry || null
+    // Scanner entries are already sorted by decision priority and then quality/balance.
+    // Do not let a high-scoring NO_BET outrank a valid VALUE signal.
+    const top = displayScannerEntriesV358[0] || null
     return { good, caution, noBet, top, total: scannerEntries.length ? (scannerProgress.total || scannerEntries.length) : displayScannerEntriesV358.length }
   }, [displayScannerEntriesV358, scannerEntries.length, scannerProgress.total])
 
@@ -1293,9 +1354,9 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
   const displayMatchesV358 = useMemo(() => {
     if (filteredMatches.length) return filteredMatches
-    if (!loading && !qualifying && !scannerActive) return [uiTestEntryV358.match]
+    if (shouldShowUiTestV367) return [uiTestEntryV358.match]
     return []
-  }, [filteredMatches, loading, qualifying, scannerActive, uiTestEntryV358])
+  }, [filteredMatches, shouldShowUiTestV367, uiTestEntryV358])
 
   const fmAnalysisV351 = useMemo(() => {
     const matchTotal = Math.max(0, Number(qualificationProgress.total || availableMatches.length || 0))
@@ -1355,24 +1416,17 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
   const nearestKey = availableMatches.length ? fixtureKey(availableMatches[0]) : ''
 
-  const handleSelect = (match) => {
-    if (!isPreMatchFixture(match, Date.now())) {
-      setNowMs(Date.now())
-      return
-    }
-    setSelectedId(fixtureKey(match))
-    // Natychmiast zatrzymujemy skan dnia, żeby requesty listy nie konkurowały
-    // z pełną analizą wybranego meczu o limit API-Football.
-    scanAbortRef.current?.abort()
+  const buildSharedSnapshotV367 = (match, dailyScan) => {
+    if (!dailyScan) return null
     const key = fixtureKey(match)
-    const dailyScan = scannerResults[key] ? enrichScannerResult(scannerResults[key], scannerPerformance) : null
-    const sharedSnapshotV365 = dailyScan ? {
-      version: 'BETAI_FM_AI_SHARED_SNAPSHOT_V365',
+    return {
+      version: 'BETAI_FM_AI_SHARED_SNAPSHOT_V367',
       fixtureKey: key,
       fixtureId: String(match.apiFixtureId || match.id || ''),
       capturedAt: new Date().toISOString(),
       topPick: dailyScan.topFinal ? {
-        key: dailyScan.topFinal.key,
+        key: canonicalFmAiMarketKeyV367(dailyScan.topFinal.key),
+        rawKey: dailyScan.topFinal.key,
         probability: Number(dailyScan.topFinal.probability || 0),
         bookmakerOdds: Number(dailyScan.topFinal.bookmakerOdds || 0),
         fairOdds: Number(dailyScan.topFinal.fairOdds || 0),
@@ -1386,9 +1440,71 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       modelAgreement: Number(dailyScan.modelAgreement || 0),
       bookmakerCount: Number(dailyScan.bookmakerCount || 0),
       source: 'daily-scanner'
-    } : null
-    onSelectMatch?.(dailyScan ? { ...match, fmAiDailyScanV353: dailyScan, fmAiSnapshotV365: sharedSnapshotV365 } : match)
+    }
   }
+
+  const fetchSingleMatchScanV367 = async (match) => {
+    const params = new URLSearchParams({
+      fixture: String(match.apiFixtureId || match.id || ''),
+      home_team_id: String(match.homeTeamId || ''),
+      away_team_id: String(match.awayTeamId || ''),
+      home: String(match.home || ''),
+      away: String(match.away || ''),
+      league: String(match.league || ''),
+      country: String(match.country || ''),
+      fixture_date: String(match.commence_time || match.fixture_date || match.rawDate || ''),
+      forceRefresh: '0'
+    })
+    const delays = [0, 900, 2200]
+    let lastError = null
+    for (let attempt = 0; attempt < delays.length; attempt += 1) {
+      if (delays[attempt]) await new Promise(resolve => window.setTimeout(resolve, delays[attempt]))
+      try {
+        const response = await fetch(`/.netlify/functions/get-match-value-scan?${params.toString()}`, { cache:'no-store' })
+        const payload = await response.json().catch(() => ({}))
+        if (response.ok && payload?.ok) return payload
+        lastError = new Error(payload?.error || payload?.message || `HTTP ${response.status}`)
+        if (!(response.status === 429 || response.status >= 500 || payload?.rateLimited)) break
+      } catch (error) {
+        lastError = error
+      }
+    }
+    throw lastError || new Error('Nie udało się ukończyć analizy wybranego meczu.')
+  }
+
+  const handleSelect = async (match, providedScan = null) => {
+    if (!isPreMatchFixture(match, Date.now())) {
+      setNowMs(Date.now())
+      return
+    }
+    const key = fixtureKey(match)
+    if (openingMatchKeyV367 === key) return
+    setSelectedId(key)
+    setOpeningMatchKeyV367(key)
+    // Stop the background day scan so the selected match gets the API budget first.
+    scanAbortRef.current?.abort()
+    setScannerActive(false)
+
+    try {
+      let dailyScan = providedScan || null
+      if (!dailyScan && match?.isBetAiLabTest && uiTestEntryV358?.scan) dailyScan = uiTestEntryV358.scan
+      if (!dailyScan && scannerResults[key]) dailyScan = enrichScannerResult(scannerResults[key], scannerPerformance)
+      if (!dailyScan && match?.apiFixtureId && match?.homeTeamId && match?.awayTeamId) {
+        setSourceMessage(`FM AI • kończę pełną analizę: ${match.home} vs ${match.away}…`)
+        const rawScan = await fetchSingleMatchScanV367(match)
+        setScannerResults(prev => ({ ...prev, [key]: rawScan }))
+        dailyScan = enrichScannerResult(rawScan, scannerPerformance)
+      }
+      const sharedSnapshotV367 = buildSharedSnapshotV367(match, dailyScan)
+      onSelectMatch?.(dailyScan ? { ...match, fmAiDailyScanV353: dailyScan, fmAiSnapshotV365: sharedSnapshotV367 } : match)
+    } catch (error) {
+      setSourceMessage(`Nie udało się ukończyć analizy ${match.home} vs ${match.away}: ${error?.message || 'błąd danych'}`)
+      setSelectedId('')
+    } finally {
+      setOpeningMatchKeyV367('')
+    }
+  }
+
 
   return (
     <section className="sim-day-page-v98 sim-day-real-v99">
@@ -1598,7 +1714,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                 <div className="sim-v358-pick-line"><b>{meta.title}</b><span>@ {Number(item.bookmakerOdds||0).toFixed(2)}</span><em>Szansa AI <strong>{item.probability||'—'}%</strong></em></div>
                 <div className={`sim-v358-pick-verdict tone-${verdict.tone}`}><FmIconV358 name={verdict.tone === 'bad' ? 'close' : verdict.tone === 'warn' ? 'warn' : 'check'} size={16}/>{verdict.label}</div>
                 <footer><span>Pewność <b>{confidence.score10.toFixed(1)}/10</b></span><i className="sim-v358-mini-meter"><b style={{width:`${confidence.score10*10}%`}}/></i><span>Ryzyko <b>{risk.label}</b></span></footer>
-                <div className="sim-v358-pick-actions"><button type="button" onClick={() => openWhyAiV347(entry)}>Dlaczego AI?</button><button type="button" onClick={() => handleSelect(entry.match)}>Pełna analiza →</button></div>
+                <div className="sim-v358-pick-actions"><button type="button" onClick={() => openWhyAiV347(entry)}>Dlaczego AI?</button><button type="button" disabled={openingMatchKeyV367 === fixtureKey(entry.match)} onClick={() => handleSelect(entry.match, entry.scan)}>{openingMatchKeyV367 === fixtureKey(entry.match) ? 'Otwieram…' : 'Pełna analiza →'}</button></div>
               </article>
             })}</div>
           </section> : null}
@@ -1645,7 +1761,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                   <div className="sim-market-consensus-v347"><span><small>MARKET CONSENSUS</small><b>{Number(consensus.sources || 0) >= 2 ? `${Math.round(Number(consensus.agreement || 0))}%` : 'COLLECTING'}</b></span><span><small>BUK.</small><b>{consensus.sources || scan.bookmakerCount || 0}</b></span><span><small>AVG NO-VIG</small><b>{Number(consensus.avgNoVigProbability || 0) > 0 ? `${Number(consensus.avgNoVigProbability).toFixed(1)}%` : '—'}</b></span></div>
                   {flags.length ? <div className="sim-redflags-v347">{flags.slice(0, 2).map(flag => <span key={flag.code} className={String(flag.level || '').toLowerCase()}>⚠ {flag.text}</span>)}</div> : <div className="sim-redflags-v347 clear"><span>✓ RED FLAG GUARD: CLEAR</span></div>}
                   <footer><span className={`rel-${String(rel.label || 'pending').toLowerCase()}`}>{rel.label || 'PENDING'}</span><small>{String(rel.calibration?.source || 'global').toUpperCase()} • {rel.calibration?.samples || 0} prób • model agreement {scan.modelAgreement || 0}%</small></footer>
-                  <div className="sim-value-actions-v347"><button type="button" onClick={() => openWhyAiV347(entry)}>WHY AI?</button><button type="button" onClick={() => handleSelect(scanMatch)}>PEŁNA ANALIZA →</button></div>
+                  <div className="sim-value-actions-v347"><button type="button" onClick={() => openWhyAiV347(entry)}>WHY AI?</button><button type="button" disabled={openingMatchKeyV367 === fixtureKey(scanMatch)} onClick={() => handleSelect(scanMatch, scan)}>{openingMatchKeyV367 === fixtureKey(scanMatch) ? 'OTWIERAM…' : 'PEŁNA ANALIZA →'}</button></div>
                 </article>
               })}
             </div> : <div className="sim-value-scanner-empty-v139"><i />Szukam przewag cenowych i sprawdzam kalibrację…</div>}
@@ -1753,8 +1869,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                 </div>
 
                 <div className="sim-pro-action-v328 sim-pro-action-v330">
-                  <button type="button" onClick={() => handleSelect(match)} aria-label={`${copy.open} ${match.home} kontra ${match.away}`}>
-                    <span>{copy.open}</span><small>analiza + live coach</small><b>→</b>
+                  <button type="button" disabled={openingMatchKeyV367 === key} onClick={() => handleSelect(match)} aria-label={`${copy.open} ${match.home} kontra ${match.away}`}>
+                    <span>{openingMatchKeyV367 === key ? 'Analizuję…' : copy.open}</span><small>{openingMatchKeyV367 === key ? 'kończę pełny skan meczu' : 'analiza + live coach'}</small><b>→</b>
                   </button>
                 </div>
               </article>
@@ -1770,14 +1886,14 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
             <button type="button" onClick={() => setIntelModal(null)} aria-label="Zamknij">×</button>
           </header>
           <div className="sim-intel-modal-summary-v347">
-            <article><small>TYP</small><b>{getScannerMarketMetaV330(intelModal.scan?.topFinal, intelModal.match, lang).title}</b><em>@ {Number(intelModal.scan?.topFinal?.bookmakerOdds || 0).toFixed(2)}</em></article>
-            <article><small>AI CAL.</small><b>{Number(intelModal.scan?.topFinal?.probability || 0).toFixed(1)}%</b><em>fair {Number(intelModal.scan?.topFinal?.fairOdds || 0).toFixed(2)}</em></article>
-            <article><small>EDGE / EV</small><b>+{Number(intelModal.scan?.topFinal?.edgePp || 0).toFixed(1)} pp</b><em>EV {Number(intelModal.scan?.topFinal?.expectedValuePct || 0) > 0 ? '+' : ''}{Number(intelModal.scan?.topFinal?.expectedValuePct || 0).toFixed(1)}%</em></article>
+            <article><small>TYP</small><b>{getScannerMarketMetaV330(intelModal.scan?.topFinal, intelModal.match, lang).title}</b><em>{Number(intelModal.scan?.topFinal?.bookmakerOdds || 0) > 1 ? `@ ${Number(intelModal.scan?.topFinal?.bookmakerOdds || 0).toFixed(2)}` : 'kurs —'}</em></article>
+            <article><small>AI CAL.</small><b>{Number(intelModal.scan?.topFinal?.probability || 0) > 0 ? `${Number(intelModal.scan?.topFinal?.probability || 0).toFixed(1)}%` : '—'}</b><em>{Number(intelModal.scan?.topFinal?.fairOdds || 0) > 1 ? `fair ${Number(intelModal.scan?.topFinal?.fairOdds || 0).toFixed(2)}` : 'fair —'}</em></article>
+            <article><small>EDGE / EV</small><b>{Number(intelModal.scan?.topFinal?.edgePp || 0) > 0 ? '+' : ''}{Number(intelModal.scan?.topFinal?.edgePp || 0).toFixed(1)} pp</b><em>EV {Number(intelModal.scan?.topFinal?.expectedValuePct || 0) > 0 ? '+' : ''}{Number(intelModal.scan?.topFinal?.expectedValuePct || 0).toFixed(1)}%</em></article>
             <article><small>RELIABILITY</small><b>{intelModal.scan?.topFinal?.reliability?.score || 0}/100</b><em>{intelModal.scan?.topFinal?.reliability?.label || 'PENDING'}</em></article>
           </div>
           <div className="sim-intel-modal-columns-v347">
             <section className="why-positive"><h4>WHY AI — CO WSPIERA TYP</h4>{(intelWhyV347?.positives || []).map((text, index) => <p key={`pos-${index}`}><i>+</i>{text}</p>)}</section>
-            <section className="why-risk"><h4>RED FLAGS / RYZYKA</h4>{(intelWhyV347?.risks || []).map((text, index) => <p key={`risk-${index}`}><i>!</i>{text}</p>)}</section>
+            <section className={`why-risk ${intelWhyV347?.clear ? 'is-clear' : ''}`}><h4>RED FLAGS / RYZYKA</h4>{intelWhyV347?.clear ? <p className="why-clear-v367"><i>✓</i>Brak istotnych czerwonych flag dla tego typu.</p> : (intelWhyV347?.risks || []).map((text, index) => <p key={`risk-${index}`}><i>!</i>{text}</p>)}</section>
           </div>
           <div className="sim-intel-consensus-modal-v347">
             <div><small>MARKET CONSENSUS</small><b>{Number(intelModal.scan?.topFinal?.marketConsensus?.sources || 0) >= 2 ? `${Math.round(Number(intelModal.scan?.topFinal?.marketConsensus?.agreement || 0))}%` : 'COLLECTING'}</b><span>{intelModal.scan?.topFinal?.marketConsensus?.sources || 0} bukmacherów</span></div>
@@ -1795,7 +1911,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
             <div><small>CLV TRACKER</small><strong>{intelClvV347 ? `CLV ${Number(intelClvV347.clvPct) > 0 ? '+' : ''}${Number(intelClvV347.clvPct).toFixed(1)}%` : 'OCZEKUJE NA CLOSING LINE'}</strong></div>
             {intelClvV347 ? <p>OPEN <b>{Number(intelClvV347.openOdds || 0).toFixed(2)}</b> → CLOSE <b>{Number(intelClvV347.closingOdds || 0).toFixed(2)}</b> • {intelClvV347.snapshots || 0} snapshotów • {intelClvV347.bookmaker || 'bookmaker'}</p> : <p>FM AI zapisuje kurs sygnału i porówna go z kursem blisko rozpoczęcia meczu. Dodatni CLV oznacza, że cena wejścia była lepsza od closing line.</p>}
           </section>
-          <footer className="sim-intel-modal-footer-v347"><button type="button" onClick={() => { const m = intelModal.match; setIntelModal(null); handleSelect(m) }}>OTWÓRZ PEŁNĄ ANALIZĘ →</button><small>Value i CLV są narzędziami oceny modelu, nie gwarancją wygranej.</small></footer>
+          <footer className="sim-intel-modal-footer-v347"><button type="button" onClick={() => { const m = intelModal.match; const s = intelModal.scan; setIntelModal(null); handleSelect(m, s) }}>OTWÓRZ PEŁNĄ ANALIZĘ →</button><small>Value i CLV są narzędziami oceny modelu, nie gwarancją wygranej.</small></footer>
         </section>
       </div> : null}
     </section>

@@ -1,3 +1,5 @@
+import { canonicalFmAiMarketKeyV367, scoreMatchesFmAiMarketV367, outcomeForFmAiMarketV367, fallbackScoreForConstraintV367, shouldHardGuardFmAiPickV367 } from './fmAiConsistencyV367.js'
+
 const MATCH_SECONDS = 90 * 60
 
 export const V320_ENGINE_VERSION = 'BETAI_REALISTIC_MATCH_ENGINE_V320'
@@ -240,6 +242,22 @@ function sampleConditionalScoreV320(xg, desired, random) {
   return { home: 1, away: 1 }
 }
 
+function sampleConditionalScoreWithSharedPickV367(xg, desired, random, sharedKey = '', hardGuard = false) {
+  const key = canonicalFmAiMarketKeyV367(sharedKey)
+  hardGuard = Boolean(key) && Boolean(hardGuard)
+  if (!hardGuard) return sampleConditionalScoreV320(xg, desired, random)
+
+  const forcedOutcome = outcomeForFmAiMarketV367(key) || desired
+  const maxTotal = Math.max(3, Math.min(8, Math.ceil(num(xg.home) + num(xg.away) + 3)))
+  for (let i = 0; i < 520; i += 1) {
+    const score = { home: Math.min(6, poissonSampleV320(xg.home, random)), away: Math.min(6, poissonSampleV320(xg.away, random)) }
+    if (score.home + score.away > maxTotal) continue
+    if (resultType(score) !== forcedOutcome) continue
+    if (scoreMatchesFmAiMarketV367(score, key)) return score
+  }
+  return fallbackScoreForConstraintV367(forcedOutcome, key)
+}
+
 function chooseGoalSlotsV320(totalShots, goals, random) {
   const count = Math.max(0, Math.min(Math.trunc(goals), Math.max(1, totalShots)))
   const limit = Math.max(count, Math.ceil(totalShots * .68))
@@ -307,8 +325,15 @@ export function buildRealisticMatchV320(data = {}, model = {}, simulationOrdinal
   // Low-discrepancy deterministic sequence: sequential "new scenarios" converge quickly to calibrated 1X2.
   const outcomeBase = hashStringV320(`${fixture?.id || ''}|${fixture?.home?.name || ''}|${fixture?.away?.name || ''}|V320-outcomes`) / 4294967296
   const outcomeQuantile = (outcomeBase + Math.max(0, simulationOrdinal) * 0.6180339887498949) % 1
-  const desiredOutcome = desiredOutcomeFromQuantileV320(preOne, outcomeQuantile)
-  const targetFinalScore = sampleConditionalScoreV320(targetXg, desiredOutcome, outcomeRandom)
+  const sampledOutcomeV367 = desiredOutcomeFromQuantileV320(preOne, outcomeQuantile)
+  const sharedTopV367 = data?.predictionEngine?.sharedSnapshotV365?.topPick || null
+  const sharedKeyV367 = canonicalFmAiMarketKeyV367(sharedTopV367?.key || sharedTopV367?.rawKey || '')
+  const sharedProbabilityV367 = num(sharedTopV367?.probability, 0)
+  const sharedDecisionV367 = String(sharedTopV367?.decision || '').toUpperCase()
+  const sharedHardGuardV367 = shouldHardGuardFmAiPickV367(sharedTopV367)
+  const forcedOutcomeV367 = sharedHardGuardV367 ? outcomeForFmAiMarketV367(sharedKeyV367) : ''
+  const desiredOutcome = forcedOutcomeV367 || sampledOutcomeV367
+  const targetFinalScore = sampleConditionalScoreWithSharedPickV367(targetXg, desiredOutcome, outcomeRandom, sharedKeyV367, sharedHardGuardV367)
   const goalSlots = {
     home: chooseGoalSlotsV320(targetShots.home, targetFinalScore.home, outcomeRandom),
     away: chooseGoalSlotsV320(targetShots.away, targetFinalScore.away, outcomeRandom)
@@ -570,7 +595,15 @@ export function buildRealisticMatchV320(data = {}, model = {}, simulationOrdinal
     seed,
     simulationOrdinal,
     desiredOutcome,
+    sampledOutcomeV367,
     targetFinalScore,
+    sharedConstraintV367: {
+      key: sharedKeyV367 || null,
+      probability: sharedProbabilityV367 || null,
+      decision: sharedDecisionV367 || null,
+      hardGuard: sharedHardGuardV367,
+      satisfied: !sharedHardGuardV367 || scoreMatchesFmAiMarketV367(finalScore, sharedKeyV367)
+    },
     fixtureId: String(fixture?.id || ''),
     sourcePredictionVersion: data?.predictionEngine?.version || data?.predictionEngine?.predictionEngineVersion || 'BETAI_PREMATCH_ENGINE',
     sourceActiveModel: data?.predictionEngine?.activeModel || '',

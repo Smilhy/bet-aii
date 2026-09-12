@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import RealisticMatchCanvasV320 from './RealisticMatchCanvasV320'
 import LiveAICoachV320 from './LiveAICoachV320'
 import { buildRealisticMatchV320, collectLiveStatsV320 } from './matchEngineV320'
+import { canonicalFmAiMarketKeyV367, scoreMatchesFmAiMarketV367, shouldHardGuardFmAiPickV367 } from './fmAiConsistencyV367'
 
 const MATCH_TOTAL_SECONDS = 90 * 60
 const HALF_SECONDS = 45 * 60
@@ -632,32 +633,44 @@ function buildSimulationModel(data = {}) {
 
   const scoreRows = [...scoreMap.entries()].sort((a, b) => b[1] - a[1])
   const sharedTopV365 = data?.predictionEngine?.sharedSnapshotV365?.topPick || null
-  const sharedKeyV365 = String(sharedTopV365?.key || '')
+
+  const sharedKeyV365 = canonicalFmAiMarketKeyV367(sharedTopV365?.key || sharedTopV365?.rawKey || '')
   const sharedProbabilityV365 = Number(sharedTopV365?.probability || 0)
+  const sharedDecisionV367 = String(sharedTopV365?.decision || '').toUpperCase()
+  const sharedHardGuardV367 = shouldHardGuardFmAiPickV367(sharedTopV365)
   const scoreMatchesSharedPickV365 = (scoreText = '') => {
-    const [hg, ag] = String(scoreText).split(':').map(Number)
-    const total = hg + ag
-    if (sharedKeyV365 === 'home') return hg > ag
-    if (sharedKeyV365 === 'draw') return hg === ag
-    if (sharedKeyV365 === 'away') return ag > hg
-    if (sharedKeyV365 === 'over15') return total >= 2
-    if (sharedKeyV365 === 'under15') return total <= 1
-    if (sharedKeyV365 === 'over25') return total >= 3
-    if (sharedKeyV365 === 'under25') return total <= 2
-    if (sharedKeyV365 === 'over35') return total >= 4
-    if (sharedKeyV365 === 'under35') return total <= 3
-    if (sharedKeyV365 === 'bttsYes') return hg > 0 && ag > 0
-    if (sharedKeyV365 === 'bttsNo') return hg === 0 || ag === 0
-    return true
+    const [home, away] = String(scoreText).split(':').map(Number)
+    return scoreMatchesFmAiMarketV367({ home, away }, sharedKeyV365)
   }
+
   // The animated match is an illustrative scenario, not a new forecast.
   // When the shared FM AI pick is reasonably strong, choose the most probable
   // scoreline that is consistent with that pick so the animation does not
   // visually contradict the recommendation shown moments earlier.
-  const representativeRowV365 = sharedKeyV365 && sharedProbabilityV365 >= 55
+  const representativeRowV365 = sharedHardGuardV367
     ? scoreRows.find(([score]) => scoreMatchesSharedPickV365(score))
     : null
-  const topScoreText = representativeRowV365?.[0] || scoreRows[0]?.[0] || '1:1'
+  let topScoreText = representativeRowV365?.[0] || scoreRows[0]?.[0] || '1:1'
+
+  // V366 HARD GUARD: if an old cached snapshot uses a legacy market key or
+  // the score distribution is unexpectedly sparse, the representative animation
+  // must still satisfy the shared FM AI pick whenever that pick is >=55%.
+  // This does NOT alter the Monte Carlo probabilities; it only chooses a coherent
+  // representative scoreline for the visual match animation.
+  if (sharedHardGuardV367 && !scoreMatchesSharedPickV365(topScoreText)) {
+    const prefersHome = Number(probabilities.home || 0) >= Number(probabilities.away || 0)
+    if (sharedKeyV365 === 'over15') topScoreText = prefersHome ? '2:0' : '0:2'
+    else if (sharedKeyV365 === 'under15') topScoreText = '1:0'
+    else if (sharedKeyV365 === 'over25') topScoreText = prefersHome ? '2:1' : '1:2'
+    else if (sharedKeyV365 === 'under25') topScoreText = '1:1'
+    else if (sharedKeyV365 === 'over35') topScoreText = prefersHome ? '3:1' : '1:3'
+    else if (sharedKeyV365 === 'under35') topScoreText = '1:1'
+    else if (sharedKeyV365 === 'bttsYes') topScoreText = '1:1'
+    else if (sharedKeyV365 === 'bttsNo') topScoreText = prefersHome ? '1:0' : '0:1'
+    else if (sharedKeyV365 === 'home') topScoreText = '1:0'
+    else if (sharedKeyV365 === 'draw') topScoreText = '1:1'
+    else if (sharedKeyV365 === 'away') topScoreText = '0:1'
+  }
   const [homeGoals, awayGoals] = topScoreText.split(':').map(Number)
   const confidence = Math.round(Math.max(probabilities.home, probabilities.draw, probabilities.away))
   const possessionHome = clamp(50 + (homeForm - awayForm) * 0.08 + (homeAttack - awayAttack) * 0.06 + (apiHome - apiAway) * 0.07, 37, 63)
@@ -681,10 +694,12 @@ function buildSimulationModel(data = {}) {
     },
     topScore: { home: homeGoals, away: awayGoals, text: topScoreText },
     scenarioV365: {
-      mode: representativeRowV365 ? 'REPRESENTATIVE_SHARED_PICK' : 'MOST_PROBABLE_SCORE',
+      mode: sharedHardGuardV367 ? 'REPRESENTATIVE_SHARED_PICK_V367' : 'MOST_PROBABLE_SCORE',
       sharedKey: sharedKeyV365 || null,
       sharedProbability: sharedProbabilityV365 || null,
-      note: 'Przykładowy przebieg meczu. Nie zmienia bazowej prognozy FM AI.'
+      sharedDecision: sharedDecisionV367 || null,
+      hardGuard: sharedHardGuardV367,
+      note: 'Reprezentatywny przebieg wizualny zgodny z głównym sygnałem FM AI. Monte Carlo pozostaje probabilistyczne.'
     },
     monteCarloV365: {
       samples,
@@ -1919,7 +1934,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
         <header className="fm119-scorebar">
           <div className="fm119-score-meta">
             <div><span>BET+AI SIMULATOR</span><em className={running ? 'live' : ''}>{running ? 'LIVE' : clockSec >= MATCH_TOTAL_SECONDS ? 'FT' : 'PAUZA'}</em>{data?.externalConsensus?.consensus?.available ? <em className="multi-source-v128">MULTI-SOURCE {data.externalConsensus.consensus.sourceCount}</em> : null}<em className="fm146-engine-badge">REALISTIC ENGINE V320</em>{model?.scenarioV365?.sharedKey ? <em className="fm365-consistency-badge">FM AI SNAPSHOT {Number(model.scenarioV365.sharedProbability || 0).toFixed(1)}%</em> : null}</div>
-            <small>{safeDisplayText(data.fixture?.league, 'Liga')} • {safeDisplayText(data.fixture?.round, 'Mecz')} {model?.scenarioV365?.sharedKey ? '• wizualizacja zgodna ze wspólnym snapshotem FM AI' : ''}</small>
+            <small>{safeDisplayText(data.fixture?.league, 'Liga')} • {safeDisplayText(data.fixture?.round, 'Mecz')} {model?.scenarioV365?.hardGuard ? '• reprezentatywny scenariusz zgodny z głównym typem FM AI' : model?.scenarioV365?.sharedKey ? '• snapshot FM AI przekazany bez wymuszania wyniku' : ''}</small>
           </div>
           <div className="fm119-score-team home">
             <div><strong>{safeDisplayText(data.fixture?.home?.name, 'Gospodarze')}</strong><TeamForm rows={data.recent.home} /></div>
