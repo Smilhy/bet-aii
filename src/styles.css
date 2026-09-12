@@ -86640,3 +86640,29 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
   .sim-v358-picks{margin-bottom:18px !important}
   .sim-value-scanner-v139.sim-value-scanner-v347{margin-top:18px !important}
 }
+
+/* =====================================================================
+   V365 — FINAL CONSISTENCY ENGINE
+   Shared snapshot badge + Monte Carlo visibility inside the match engine.
+   ===================================================================== */
+.fm119-score-meta em.fm365-consistency-badge{
+  background:linear-gradient(180deg,rgba(6,116,126,.28),rgba(5,64,78,.24))!important;
+  border:1px solid rgba(51,230,235,.28)!important;
+  color:#8cf7f1!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 0 16px rgba(37,222,229,.08)!important;
+}
+.fm365-mc-signal{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  align-items:center;
+  gap:9px;
+  margin-top:8px;
+  padding:8px 9px;
+  border-top:1px solid rgba(83,154,170,.11);
+  border-radius:8px;
+  background:linear-gradient(180deg,rgba(8,35,49,.68),rgba(5,24,36,.56));
+  color:#8faab8;
+  font-size:9px;
+}
+.fm365-mc-signal b{color:#5ff0e0;font-size:11px}
+.fm365-mc-signal em{font-style:normal;color:#7fc5d8;font-size:9px}

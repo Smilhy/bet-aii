@@ -216,6 +216,45 @@ function weightedTriplet(parts = []) {
 
 function round1(value) { return Math.round(Number(value || 0) * 10) / 10 }
 function round2(value) { return Math.round(Number(value || 0) * 100) / 100 }
+
+function poissonCdfV365(lambda, maxGoals) {
+  const l = Math.max(0.01, Number(lambda || 0))
+  let term = Math.exp(-l)
+  let sum = term
+  for (let k = 1; k <= Math.max(0, Number(maxGoals || 0)); k += 1) {
+    term *= l / k
+    sum += term
+  }
+  return Math.max(0, Math.min(1, sum))
+}
+
+function lambdaFromOverProbabilityV365(probabilityPct, line = 2.5) {
+  const target = Math.max(0.01, Math.min(0.99, Number(probabilityPct || 50) / 100))
+  const maxGoals = Math.floor(Number(line || 2.5))
+  let lo = 0.15
+  let hi = 7.5
+  for (let i = 0; i < 48; i += 1) {
+    const mid = (lo + hi) / 2
+    const over = 1 - poissonCdfV365(mid, maxGoals)
+    if (over < target) lo = mid
+    else hi = mid
+  }
+  return (lo + hi) / 2
+}
+
+function lockOutcomeProbabilityV365(oneXTwo = {}, key = '', targetPct = 0) {
+  if (!['home','draw','away'].includes(key) || !(Number(targetPct) > 0)) return oneXTwo
+  const target = Math.max(1, Math.min(98, Number(targetPct)))
+  const rest = ['home','draw','away'].filter(k => k !== key)
+  const restTotal = rest.reduce((sum, k) => sum + Math.max(0, Number(oneXTwo?.[k] || 0)), 0) || 1
+  const remaining = 100 - target
+  return {
+    ...oneXTwo,
+    [key]: target,
+    [rest[0]]: Number(oneXTwo?.[rest[0]] || 0) / restTotal * remaining,
+    [rest[1]]: Number(oneXTwo?.[rest[1]] || 0) / restTotal * remaining
+  }
+}
 function fairOdd(probability) { return probability > 0 ? round2(100 / probability) : 0 }
 
 function extractMarketOdds(match = {}) {
@@ -454,7 +493,7 @@ function buildMasterConsensusV353({ match = {}, data = {}, baseForecast = null, 
   scanWeight /= totalWeight
   marketWeight /= totalWeight
 
-  const masterOne = normalizeTriplet({
+  let masterOne = normalizeTriplet({
     home: fullOne.home * fullWeight + (scanOne?.home || 0) * scanWeight + (marketOne?.home || 0) * marketWeight,
     draw: fullOne.draw * fullWeight + (scanOne?.draw || 0) * scanWeight + (marketOne?.draw || 0) * marketWeight,
     away: fullOne.away * fullWeight + (scanOne?.away || 0) * scanWeight + (marketOne?.away || 0) * marketWeight
@@ -465,7 +504,7 @@ function buildMasterConsensusV353({ match = {}, data = {}, baseForecast = null, 
   const hasScanXg = Number(scanXg?.home || 0) > 0 && Number(scanXg?.away || 0) > 0
   const xgScanWeight = hasScanXg ? clampNum(0.18 + scanQuality * 0.0008, 0.18, 0.28, 0.22) : 0
   const xgFullWeight = 1 - xgScanWeight
-  const masterXg = {
+  let masterXg = {
     home: round2(clampNum(Number(fullXg?.home || 1.35) * xgFullWeight + Number(scanXg?.home || 0) * xgScanWeight, 0.2, 3.8, Number(fullXg?.home || 1.35))),
     away: round2(clampNum(Number(fullXg?.away || 1.10) * xgFullWeight + Number(scanXg?.away || 0) * xgScanWeight, 0.18, 3.6, Number(fullXg?.away || 1.10)))
   }
@@ -482,11 +521,46 @@ function buildMasterConsensusV353({ match = {}, data = {}, baseForecast = null, 
     const sum = values.reduce((a,row)=>a+row.w,0)
     return round1(clampNum(values.reduce((a,row)=>a+row.v*row.w,0)/sum, 1, 99, 50))
   }
-  const masterGoals = {
+  let masterGoals = {
     over15: blendBinary(fullGoals.over15, scanGoals.over15, marketGoal('over15')),
     over25: blendBinary(fullGoals.over25, scanGoals.over25, marketGoal('over25')),
     over35: blendBinary(fullGoals.over35, scanGoals.over35, marketGoal('over35')),
     btts: blendBinary(fullGoals.btts, scanGoals.btts, marketGoal('bttsYes'))
+  }
+
+  // V365 — FINAL CONSISTENCY ENGINE.
+  // The recommendation selected on the FM AI dashboard becomes the shared
+  // authoritative market signal for the preparation view and the match engine.
+  // Full analysis still calculates all other markets normally; only the market
+  // shown to the user as the top pick is locked to the same calibrated probability.
+  const sharedSnapshotV365 = match?.fmAiSnapshotV365 || null
+  const sharedTopV365 = sharedSnapshotV365?.topPick || null
+  if (sharedTopV365?.key && Number(sharedTopV365?.probability || 0) > 0) {
+    const key = String(sharedTopV365.key)
+    const probability = Math.max(1, Math.min(99, Number(sharedTopV365.probability)))
+    if (['home','draw','away'].includes(key)) {
+      masterOne = normalizeTriplet(lockOutcomeProbabilityV365(masterOne, key, probability)) || masterOne
+    }
+    if (key === 'over15') masterGoals.over15 = round1(probability)
+    if (key === 'under15') masterGoals.over15 = round1(100 - probability)
+    if (key === 'over25') masterGoals.over25 = round1(probability)
+    if (key === 'under25') masterGoals.over25 = round1(100 - probability)
+    if (key === 'over35') masterGoals.over35 = round1(probability)
+    if (key === 'under35') masterGoals.over35 = round1(100 - probability)
+    if (key === 'bttsYes') masterGoals.btts = round1(probability)
+    if (key === 'bttsNo') masterGoals.btts = round1(100 - probability)
+
+    const lineByKey = { over15:1.5, under15:1.5, over25:2.5, under25:2.5, over35:3.5, under35:3.5 }
+    if (lineByKey[key]) {
+      const overProbability = key.startsWith('under') ? 100 - probability : probability
+      const targetTotal = lambdaFromOverProbabilityV365(overProbability, lineByKey[key])
+      const currentTotal = Math.max(0.2, Number(masterXg.home || 0) + Number(masterXg.away || 0))
+      const ratio = Math.max(0.12, Math.min(0.88, Number(masterXg.home || 0) / currentTotal))
+      masterXg = {
+        home: round2(Math.max(0.2, targetTotal * ratio)),
+        away: round2(Math.max(0.18, targetTotal * (1 - ratio)))
+      }
+    }
   }
 
   const sourceRows = [
@@ -536,8 +610,14 @@ function buildMasterConsensusV353({ match = {}, data = {}, baseForecast = null, 
     fairOdds: { ...(baseForecast?.fairOdds || {}), ...fair },
     value: masterValue,
     topScores: masterPoisson?.topScores || baseForecast?.topScores || [],
+    sharedSnapshotV365: sharedSnapshotV365 ? {
+      ...sharedSnapshotV365,
+      applied: Boolean(sharedTopV365?.key),
+      finalTopProbability: Number(sharedTopV365?.probability || 0),
+      note: 'Dashboard, preparation and simulation use one shared top-pick signal.'
+    } : null,
     masterConsensus: {
-      version:'BETAI_MASTER_CONSENSUS_V353',
+      version:'BETAI_MASTER_CONSENSUS_V353_V365_SHARED',
       sourceCount:sourceRows.length,
       confidence,
       disagreement,

@@ -1366,7 +1366,28 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     scanAbortRef.current?.abort()
     const key = fixtureKey(match)
     const dailyScan = scannerResults[key] ? enrichScannerResult(scannerResults[key], scannerPerformance) : null
-    onSelectMatch?.(dailyScan ? { ...match, fmAiDailyScanV353: dailyScan } : match)
+    const sharedSnapshotV365 = dailyScan ? {
+      version: 'BETAI_FM_AI_SHARED_SNAPSHOT_V365',
+      fixtureKey: key,
+      fixtureId: String(match.apiFixtureId || match.id || ''),
+      capturedAt: new Date().toISOString(),
+      topPick: dailyScan.topFinal ? {
+        key: dailyScan.topFinal.key,
+        probability: Number(dailyScan.topFinal.probability || 0),
+        bookmakerOdds: Number(dailyScan.topFinal.bookmakerOdds || 0),
+        fairOdds: Number(dailyScan.topFinal.fairOdds || 0),
+        decision: dailyScan.topFinal.decision || '',
+        expectedValuePct: Number(dailyScan.topFinal.expectedValuePct || 0),
+        edgePp: Number(dailyScan.topFinal.edgePp || 0)
+      } : null,
+      probabilities: dailyScan.probabilities || null,
+      xg: dailyScan.xg || null,
+      dataQuality: Number(dailyScan.dataQuality || 0),
+      modelAgreement: Number(dailyScan.modelAgreement || 0),
+      bookmakerCount: Number(dailyScan.bookmakerCount || 0),
+      source: 'daily-scanner'
+    } : null
+    onSelectMatch?.(dailyScan ? { ...match, fmAiDailyScanV353: dailyScan, fmAiSnapshotV365: sharedSnapshotV365 } : match)
   }
 
   return (

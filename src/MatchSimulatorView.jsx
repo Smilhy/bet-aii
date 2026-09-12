@@ -591,6 +591,10 @@ function buildSimulationModel(data = {}) {
   let homeWins = 0
   let draws = 0
   let awayWins = 0
+  let over15Hits = 0
+  let over25Hits = 0
+  let over35Hits = 0
+  let bttsHits = 0
   const scoreMap = new Map()
 
   for (let i = 0; i < samples; i += 1) {
@@ -599,6 +603,11 @@ function buildSimulationModel(data = {}) {
     if (hg > ag) homeWins += 1
     else if (hg < ag) awayWins += 1
     else draws += 1
+    const totalGoals = hg + ag
+    if (totalGoals >= 2) over15Hits += 1
+    if (totalGoals >= 3) over25Hits += 1
+    if (totalGoals >= 4) over35Hits += 1
+    if (hg > 0 && ag > 0) bttsHits += 1
     const key = `${hg}:${ag}`
     scoreMap.set(key, (scoreMap.get(key) || 0) + 1)
   }
@@ -622,7 +631,33 @@ function buildSimulationModel(data = {}) {
   }
 
   const scoreRows = [...scoreMap.entries()].sort((a, b) => b[1] - a[1])
-  const topScoreText = scoreRows[0]?.[0] || '1:1'
+  const sharedTopV365 = data?.predictionEngine?.sharedSnapshotV365?.topPick || null
+  const sharedKeyV365 = String(sharedTopV365?.key || '')
+  const sharedProbabilityV365 = Number(sharedTopV365?.probability || 0)
+  const scoreMatchesSharedPickV365 = (scoreText = '') => {
+    const [hg, ag] = String(scoreText).split(':').map(Number)
+    const total = hg + ag
+    if (sharedKeyV365 === 'home') return hg > ag
+    if (sharedKeyV365 === 'draw') return hg === ag
+    if (sharedKeyV365 === 'away') return ag > hg
+    if (sharedKeyV365 === 'over15') return total >= 2
+    if (sharedKeyV365 === 'under15') return total <= 1
+    if (sharedKeyV365 === 'over25') return total >= 3
+    if (sharedKeyV365 === 'under25') return total <= 2
+    if (sharedKeyV365 === 'over35') return total >= 4
+    if (sharedKeyV365 === 'under35') return total <= 3
+    if (sharedKeyV365 === 'bttsYes') return hg > 0 && ag > 0
+    if (sharedKeyV365 === 'bttsNo') return hg === 0 || ag === 0
+    return true
+  }
+  // The animated match is an illustrative scenario, not a new forecast.
+  // When the shared FM AI pick is reasonably strong, choose the most probable
+  // scoreline that is consistent with that pick so the animation does not
+  // visually contradict the recommendation shown moments earlier.
+  const representativeRowV365 = sharedKeyV365 && sharedProbabilityV365 >= 55
+    ? scoreRows.find(([score]) => scoreMatchesSharedPickV365(score))
+    : null
+  const topScoreText = representativeRowV365?.[0] || scoreRows[0]?.[0] || '1:1'
   const [homeGoals, awayGoals] = topScoreText.split(':').map(Number)
   const confidence = Math.round(Math.max(probabilities.home, probabilities.draw, probabilities.away))
   const possessionHome = clamp(50 + (homeForm - awayForm) * 0.08 + (homeAttack - awayAttack) * 0.06 + (apiHome - apiAway) * 0.07, 37, 63)
@@ -645,6 +680,22 @@ function buildSimulationModel(data = {}) {
       impliedOver25: Math.round(poissonOver25Probability(homeXg + awayXg) * 10) / 10
     },
     topScore: { home: homeGoals, away: awayGoals, text: topScoreText },
+    scenarioV365: {
+      mode: representativeRowV365 ? 'REPRESENTATIVE_SHARED_PICK' : 'MOST_PROBABLE_SCORE',
+      sharedKey: sharedKeyV365 || null,
+      sharedProbability: sharedProbabilityV365 || null,
+      note: 'Przykładowy przebieg meczu. Nie zmienia bazowej prognozy FM AI.'
+    },
+    monteCarloV365: {
+      samples,
+      home: Math.round(homeWins * 1000 / samples) / 10,
+      draw: Math.round(draws * 1000 / samples) / 10,
+      away: Math.round(awayWins * 1000 / samples) / 10,
+      over15: Math.round(over15Hits * 1000 / samples) / 10,
+      over25: Math.round(over25Hits * 1000 / samples) / 10,
+      over35: Math.round(over35Hits * 1000 / samples) / 10,
+      btts: Math.round(bttsHits * 1000 / samples) / 10
+    },
     confidence,
     possession: { home: Math.round(possessionHome), away: Math.round(100 - possessionHome) },
     strength: {
@@ -1867,8 +1918,8 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
       {data && model ? <>
         <header className="fm119-scorebar">
           <div className="fm119-score-meta">
-            <div><span>BET+AI SIMULATOR</span><em className={running ? 'live' : ''}>{running ? 'LIVE' : clockSec >= MATCH_TOTAL_SECONDS ? 'FT' : 'PAUZA'}</em>{data?.externalConsensus?.consensus?.available ? <em className="multi-source-v128">MULTI-SOURCE {data.externalConsensus.consensus.sourceCount}</em> : null}<em className="fm146-engine-badge">REALISTIC ENGINE V320</em></div>
-            <small>{safeDisplayText(data.fixture?.league, 'Liga')} • {safeDisplayText(data.fixture?.round, 'Mecz')}</small>
+            <div><span>BET+AI SIMULATOR</span><em className={running ? 'live' : ''}>{running ? 'LIVE' : clockSec >= MATCH_TOTAL_SECONDS ? 'FT' : 'PAUZA'}</em>{data?.externalConsensus?.consensus?.available ? <em className="multi-source-v128">MULTI-SOURCE {data.externalConsensus.consensus.sourceCount}</em> : null}<em className="fm146-engine-badge">REALISTIC ENGINE V320</em>{model?.scenarioV365?.sharedKey ? <em className="fm365-consistency-badge">FM AI SNAPSHOT {Number(model.scenarioV365.sharedProbability || 0).toFixed(1)}%</em> : null}</div>
+            <small>{safeDisplayText(data.fixture?.league, 'Liga')} • {safeDisplayText(data.fixture?.round, 'Mecz')} {model?.scenarioV365?.sharedKey ? '• wizualizacja zgodna ze wspólnym snapshotem FM AI' : ''}</small>
           </div>
           <div className="fm119-score-team home">
             <div><strong>{safeDisplayText(data.fixture?.home?.name, 'Gospodarze')}</strong><TeamForm rows={data.recent.home} /></div>
@@ -1902,6 +1953,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
             <div className="fm119-xg-track"><i style={{ width: `${clamp(model.xg.home / Math.max(model.xg.home + model.xg.away, .1) * 100, 0, 100)}%` }} /><em /></div>
             <div className="fm119-xg-foot"><span>Model przedmeczowy</span><b>{model.xg.home.toFixed(2)} – {model.xg.away.toFixed(2)}</b></div>
             {model.goalsMarket?.available ? <div className="fm129-goals-signal"><span>Consensus O2.5</span><b>{model.goalsMarket.over25.toFixed(0)}%</b><em>{model.goalsMarket.sourceCount} źr.</em></div> : null}
+            {model?.monteCarloV365 ? <div className="fm365-mc-signal"><span>Monte Carlo • {model.monteCarloV365.samples.toLocaleString('pl-PL')} prób</span><b>O2.5 {model.monteCarloV365.over25.toFixed(1)}%</b><em>BTTS {model.monteCarloV365.btts.toFixed(1)}%</em></div> : null}
             <div className="fm121-card-footer">Szczegóły xG</div>
           </article>
 
