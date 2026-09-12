@@ -480,12 +480,12 @@ function getScannerMarketMetaV330(item, match, lang = 'pl') {
 }
 
 
-function getCardBestMarketV332(rawScan, match, performance) {
+function getCardBestMarketV332(rawScan, match, performance, lang = 'pl') {
   if (!rawScan) return null
   const enriched = enrichScannerResult(rawScan, performance)
   const top = enriched?.topFinal
   if (top && top.key && top.decision !== 'NO_ODDS') {
-    const meta = getScannerMarketMetaV330(top, match)
+    const meta = getScannerMarketMetaV330(top, match, lang)
     return {
       source: 'value', meta,
       probability: Number(top.probability || top.rawProbability || 0),
@@ -510,7 +510,7 @@ function getCardBestMarketV332(rawScan, match, performance) {
   candidates.sort((a, b) => b[1] - a[1])
   const [key, probability] = candidates[0]
   return {
-    source: 'model', meta: getScannerMarketMetaV330({ key }, match),
+    source: 'model', meta: getScannerMarketMetaV330({ key }, match, lang),
     probability: Math.round(probability * 10) / 10, bookmakerOdds: 0,
     fairOdds: probability > 0 ? Math.round((100 / probability) * 100) / 100 : 0,
     decision: 'MODEL_ONLY',
@@ -530,7 +530,7 @@ function normalizeTripletV353(row = {}) {
   return { home: home * 100 / sum, draw: draw * 100 / sum, away: away * 100 / sum }
 }
 
-function getMasterQuickV353(rawScan, match, performance) {
+function getMasterQuickV353(rawScan, match, performance, lang = 'pl') {
   if (!rawScan) return null
   const model = normalizeTripletV353(rawScan?.probabilities?.oneXTwo)
   if (!model) return null
@@ -554,7 +554,7 @@ function getMasterQuickV353(rawScan, match, performance) {
   }) || model
   const keys = ['home','draw','away']
   const bestKey = [...keys].sort((a,b) => master[b] - master[a])[0]
-  const label = bestKey === 'home' ? `Wygra ${match?.home || 'gospodarz'}` : bestKey === 'away' ? `Wygra ${match?.away || 'gość'}` : 'Remis'
+  const label = lang === 'en' ? (bestKey === 'home' ? `${match?.home || 'Home'} to win` : bestKey === 'away' ? `${match?.away || 'Away'} to win` : 'Draw') : (bestKey === 'home' ? `Wygra ${match?.home || 'gospodarz'}` : bestKey === 'away' ? `Wygra ${match?.away || 'gość'}` : 'Remis')
   const odds1x2 = rawScan?.displayOdds1X2 || {}
   const bestOdds = Number(odds1x2?.[bestKey] || 0)
   const enriched = enrichScannerResult(rawScan, performance)
@@ -572,7 +572,7 @@ function getMasterQuickV353(rawScan, match, performance) {
     agreement: Math.round(agreement),
     sources: marketWeight > 0 ? 3 : 2,
     value,
-    valueLabel: value?.key ? getScannerMarketMetaV330(value, match).title : '',
+    valueLabel: value?.key ? getScannerMarketMetaV330(value, match, lang).title : '',
     valueDecision: String(value?.decision || 'NO_BET')
   }
 }
@@ -784,16 +784,16 @@ function buildWhyAiV347(scan = {}, item = {}, match = {}) {
   return { positives: [...new Set(positives)].slice(0, 6), risks: [...new Set(risks)].slice(0, 6), clear: risks.length === 0 }
 }
 
-function pickFocusCardsV347(entries = []) {
+function pickFocusCardsV347(entries = [], lang = 'pl') {
   const eligible = entries.filter(row => ['STRONG_VALUE', 'VALUE', 'SMALL_EDGE'].includes(row?.scan?.topFinal?.decision))
   if (!eligible.length) return []
   const byValue = [...eligible].sort((a, b) => Number(b.scan.topFinal.expectedValuePct || 0) - Number(a.scan.topFinal.expectedValuePct || 0))[0]
   const byQuality = [...eligible].sort((a, b) => Number(b.scan.topFinal.reliability?.score || 0) - Number(a.scan.topFinal.reliability?.score || 0))[0]
   const byBalance = [...eligible].sort((a, b) => Number(b.scan.topFinal.dailyScore || 0) - Number(a.scan.topFinal.dailyScore || 0))[0]
   const rows = [
-    { id:'value', label:'BEST VALUE', note:'Najwyższe EV', entry:byValue },
-    { id:'quality', label:'BEST QUALITY', note:'Najwyższa wiarygodność', entry:byQuality },
-    { id:'balance', label:'BEST BALANCE', note:'Edge + jakość + rynek', entry:byBalance }
+    { id:'value', label:'BEST VALUE', note:lang === 'en' ? 'Highest EV' : 'Najwyższe EV', entry:byValue },
+    { id:'quality', label:'BEST QUALITY', note:lang === 'en' ? 'Highest reliability' : 'Najwyższa wiarygodność', entry:byQuality },
+    { id:'balance', label:'BEST BALANCE', note:lang === 'en' ? 'Edge + quality + market' : 'Edge + jakość + rynek', entry:byBalance }
   ]
   return rows.filter(row => row.entry)
 }
@@ -1321,7 +1321,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
       })
   }, [scannerResults, scannerPerformance, availableMatches])
 
-  const focusCardsV347 = useMemo(() => pickFocusCardsV347(scannerEntries), [scannerEntries])
+  const focusCardsV347 = useMemo(() => pickFocusCardsV347(scannerEntries, lang), [scannerEntries, lang])
   const modelHealthV347 = scannerPerformance?.modelHealthV347 || null
   const performanceRowsV347 = useMemo(() => compactPerformanceRowsV347(scannerPerformance), [scannerPerformance])
   const luxurySummaryV349 = useMemo(() => {
@@ -1478,7 +1478,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     }
   }
 
-  const intelWhyV347 = useMemo(() => intelModal ? buildWhyAiV347(intelModal.scan, intelModal.scan?.topFinal, intelModal.match) : null, [intelModal])
+  const intelWhyV347 = useMemo(() => intelModal ? buildWhyAiV347(intelModal.scan, intelModal.scan?.topFinal, intelModal.match) : null, [intelModal, lang])
   const intelTimelineV347 = useMemo(() => {
     if (!intelModal) return []
     const selectedKey = String(intelModal.scan?.topFinal?.key || '')
@@ -1876,8 +1876,8 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
             const venueLabel = [match.venueName, match.venueCity].filter(Boolean).join('  |  ')
             const cardBestMarket = match.isBetAiLabTest
               ? { source:'value', meta:getScannerMarketMetaV330(uiTestEntryV358.scan.topFinal, match, lang), probability:64, bookmakerOdds:2.37, fairOdds:1.56, decision:'VALUE', reliability:84 }
-              : getCardBestMarketV332(scannerResults[key], match, scannerPerformance)
-            const masterQuickV353 = match.isBetAiLabTest ? null : getMasterQuickV353(scannerResults[key], match, scannerPerformance)
+              : getCardBestMarketV332(scannerResults[key], match, scannerPerformance, lang)
+            const masterQuickV353 = match.isBetAiLabTest ? null : getMasterQuickV353(scannerResults[key], match, scannerPerformance, lang)
             return (
               <article key={key} className={`sim-pro-match-card-v328 ${isNearest ? 'nearest-v328' : ''} ${selectedId === key ? 'selected-v328' : ''}`}>
                 <div className="sim-pro-league-v328">
