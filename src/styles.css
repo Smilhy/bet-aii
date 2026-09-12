@@ -86683,3 +86683,199 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
 .sim-v368-stats-modal>footer{padding:0 18px 18px}.sim-v368-stats-modal>footer p{margin:0;padding:12px 14px;border-radius:10px;border:1px solid rgba(72,159,196,.15);background:rgba(7,27,42,.75);color:#829ead;font-size:10px;line-height:1.45}.sim-v368-stats-modal>footer b{color:#dffaff}.sim-v368-modal-empty{padding:34px;text-align:center}.sim-v368-modal-empty strong{display:block;font-size:18px}.sim-v368-modal-empty p{color:#839fad;font-size:11px}
 @media(max-width:1250px){.sim-v368-system-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.sim-v368-modal-kpis{grid-template-columns:repeat(3,1fr)}.sim-v368-stats-columns{grid-template-columns:1fr}}
 @media(max-width:760px){.sim-v368-system-title{align-items:flex-start;flex-direction:column}.sim-v368-system-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.sim-v368-system-kpis article.wide{grid-column:1/-1}.sim-v368-stats-backdrop{padding:8px}.sim-v368-stats-modal{width:100%;max-height:97vh}.sim-v368-modal-kpis{grid-template-columns:repeat(2,1fr);padding:10px}.sim-v368-periods{grid-template-columns:1fr 1fr;padding:0 10px 10px}.sim-v368-stats-columns{padding:0 10px 10px}.sim-v368-recent{margin:0 10px 10px}.sim-v368-recent-list{grid-template-columns:1fr}.sim-v368-stats-modal>header strong{font-size:19px}}
+
+/* ============================================================
+   V371 — GLOBAL TIME ZONE SELECTOR
+   Topbar selector beside language flag + live conversion of tip times.
+   ============================================================ */
+.app-shell .topbar .betai-timezone-switch-v371{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  flex:0 0 auto!important;
+  z-index:1200!important;
+}
+.app-shell .topbar .betai-timezone-current-v371{
+  height:46px!important;
+  min-width:108px!important;
+  width:auto!important;
+  padding:0 11px!important;
+  border-radius:15px!important;
+  border:1px solid rgba(75,217,231,.20)!important;
+  background:linear-gradient(180deg,rgba(7,31,43,.95),rgba(5,22,32,.96))!important;
+  color:#e9fbff!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.018),0 5px 18px rgba(0,0,0,.18)!important;
+  cursor:pointer!important;
+  font:inherit!important;
+}
+.app-shell .topbar .betai-timezone-current-v371:hover,
+.app-shell .topbar .betai-timezone-switch-v371.is-open .betai-timezone-current-v371{
+  border-color:rgba(42,230,231,.48)!important;
+  background:linear-gradient(180deg,rgba(9,42,54,.98),rgba(5,28,38,.98))!important;
+  box-shadow:0 0 0 1px rgba(42,230,231,.06),0 0 20px rgba(21,216,224,.12)!important;
+}
+.app-shell .topbar .betai-timezone-globe-v371{
+  width:27px!important;
+  height:27px!important;
+  border-radius:50%!important;
+  display:grid!important;
+  place-items:center!important;
+  flex:0 0 27px!important;
+  color:#30e8eb!important;
+  border:1px solid rgba(48,232,235,.34)!important;
+  background:rgba(18,159,173,.08)!important;
+  font-size:16px!important;
+  line-height:1!important;
+}
+.app-shell .topbar .betai-timezone-copy-v371{
+  min-width:42px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  gap:0!important;
+  line-height:1.05!important;
+}
+.app-shell .topbar .betai-timezone-copy-v371 strong{
+  color:#eafdff!important;
+  font-size:11px!important;
+  letter-spacing:.7px!important;
+  line-height:1.05!important;
+}
+.app-shell .topbar .betai-timezone-copy-v371 small{
+  margin-top:3px!important;
+  color:#79dbe1!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  line-height:1!important;
+}
+.app-shell .topbar .betai-timezone-chevron-v371{
+  color:#7babb5!important;
+  font-size:12px!important;
+  transition:transform .18s ease!important;
+}
+.app-shell .topbar .betai-timezone-switch-v371.is-open .betai-timezone-chevron-v371{transform:rotate(180deg)!important;}
+
+.app-shell .topbar .betai-timezone-menu-v371{
+  position:absolute!important;
+  top:calc(100% + 10px)!important;
+  left:0!important;
+  width:390px!important;
+  max-width:min(390px,calc(100vw - 28px))!important;
+  border-radius:18px!important;
+  border:1px solid rgba(50,213,226,.24)!important;
+  background:linear-gradient(180deg,rgba(5,25,36,.995),rgba(3,17,27,.995))!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.58),0 0 0 1px rgba(255,255,255,.018) inset,0 0 34px rgba(20,216,225,.07)!important;
+  padding:12px!important;
+  color:#eafcff!important;
+  z-index:99999!important;
+  overflow:visible!important;
+}
+.app-shell .topbar .betai-timezone-head-v371{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  padding:3px 3px 9px!important;
+}
+.app-shell .topbar .betai-timezone-head-v371>div{display:flex!important;flex-direction:column!important;gap:3px!important;min-width:0!important;}
+.app-shell .topbar .betai-timezone-head-v371 b{font-size:13px!important;color:#f1fdff!important;}
+.app-shell .topbar .betai-timezone-head-v371 span{font-size:10px!important;color:#7199a4!important;font-weight:650!important;}
+.app-shell .topbar .betai-timezone-auto-v371{
+  width:auto!important;
+  min-width:48px!important;
+  height:28px!important;
+  padding:0 10px!important;
+  border-radius:9px!important;
+  border:1px solid rgba(44,227,230,.28)!important;
+  background:rgba(24,192,198,.08)!important;
+  color:#49ecec!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  cursor:pointer!important;
+}
+.app-shell .topbar .betai-timezone-search-v371{
+  height:38px!important;
+  border:1px solid rgba(91,180,195,.18)!important;
+  border-radius:11px!important;
+  background:rgba(1,12,20,.66)!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:0 11px!important;
+  margin-bottom:9px!important;
+}
+.app-shell .topbar .betai-timezone-search-v371>span{color:#51cfd8!important;font-size:15px!important;}
+.app-shell .topbar .betai-timezone-search-v371 input{
+  border:0!important;
+  outline:0!important;
+  background:transparent!important;
+  color:#ecfdff!important;
+  width:100%!important;
+  min-width:0!important;
+  height:100%!important;
+  font-size:11px!important;
+  font-weight:700!important;
+  box-shadow:none!important;
+}
+.app-shell .topbar .betai-timezone-search-v371 input::placeholder{color:#577984!important;opacity:1!important;}
+.app-shell .topbar .betai-timezone-list-v371{
+  max-height:390px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  padding-right:4px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:rgba(49,216,224,.35) transparent!important;
+}
+.app-shell .topbar .betai-timezone-list-v371 button{
+  width:100%!important;
+  min-width:0!important;
+  min-height:48px!important;
+  height:auto!important;
+  border:1px solid transparent!important;
+  border-radius:11px!important;
+  background:rgba(255,255,255,.018)!important;
+  color:#e9fbff!important;
+  display:grid!important;
+  grid-template-columns:34px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:7px 9px!important;
+  text-align:left!important;
+  cursor:pointer!important;
+}
+.app-shell .topbar .betai-timezone-list-v371 button:hover{
+  background:rgba(28,177,188,.09)!important;
+  border-color:rgba(48,216,224,.20)!important;
+}
+.app-shell .topbar .betai-timezone-list-v371 button.is-active{
+  background:linear-gradient(90deg,rgba(21,205,209,.13),rgba(14,109,128,.08))!important;
+  border-color:rgba(52,231,232,.39)!important;
+  box-shadow:inset 3px 0 0 #22dce0!important;
+}
+.app-shell .topbar .betai-timezone-flag-v371{font-size:22px!important;line-height:1!important;text-align:center!important;}
+.app-shell .topbar .betai-timezone-name-v371{display:flex!important;flex-direction:column!important;gap:3px!important;min-width:0!important;}
+.app-shell .topbar .betai-timezone-name-v371 b{font-size:11.5px!important;color:#effdff!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.app-shell .topbar .betai-timezone-name-v371 small{font-size:9.5px!important;color:#6f98a4!important;font-weight:700!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.app-shell .topbar .betai-timezone-now-v371{display:flex!important;flex-direction:column!important;align-items:flex-end!important;gap:3px!important;min-width:58px!important;}
+.app-shell .topbar .betai-timezone-now-v371 b{font-size:12px!important;color:#42e6e8!important;font-variant-numeric:tabular-nums!important;}
+.app-shell .topbar .betai-timezone-now-v371 small{font-size:9px!important;color:#698d98!important;font-weight:800!important;}
+.app-shell .topbar .betai-timezone-empty-v371{padding:22px 10px!important;text-align:center!important;color:#74949d!important;font-size:11px!important;font-weight:700!important;}
+
+@media (max-width:1180px){
+  .app-shell .topbar .betai-timezone-current-v371{min-width:80px!important;padding:0 8px!important;gap:6px!important;}
+  .app-shell .topbar .betai-timezone-copy-v371 small{display:none!important;}
+  .app-shell .topbar .betai-timezone-menu-v371{left:auto!important;right:0!important;}
+}
+@media (max-width:760px){
+  .app-shell .topbar .betai-timezone-current-v371{width:44px!important;min-width:44px!important;height:40px!important;padding:0!important;}
+  .app-shell .topbar .betai-timezone-copy-v371,.app-shell .topbar .betai-timezone-chevron-v371{display:none!important;}
+  .app-shell .topbar .betai-timezone-menu-v371{position:fixed!important;top:68px!important;left:10px!important;right:10px!important;width:auto!important;max-width:none!important;}
+}

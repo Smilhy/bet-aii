@@ -280,6 +280,128 @@ function useBetaiLanguageState() {
   return lang
 }
 
+const BETAI_TIMEZONE_OPTIONS_V371 = [
+  { zone: 'Europe/Warsaw', city: 'Warszawa', cityEn: 'Warsaw', country: 'Polska', countryEn: 'Poland', flag: '🇵🇱', short: 'WAW', region: 'Europa' },
+  { zone: 'Europe/London', city: 'Londyn', cityEn: 'London', country: 'Wielka Brytania', countryEn: 'United Kingdom', flag: '🇬🇧', short: 'LON', region: 'Europa' },
+  { zone: 'Europe/Berlin', city: 'Berlin', cityEn: 'Berlin', country: 'Niemcy', countryEn: 'Germany', flag: '🇩🇪', short: 'BER', region: 'Europa' },
+  { zone: 'Europe/Paris', city: 'Paryż', cityEn: 'Paris', country: 'Francja', countryEn: 'France', flag: '🇫🇷', short: 'PAR', region: 'Europa' },
+  { zone: 'Europe/Madrid', city: 'Madryt', cityEn: 'Madrid', country: 'Hiszpania', countryEn: 'Spain', flag: '🇪🇸', short: 'MAD', region: 'Europa' },
+  { zone: 'Europe/Rome', city: 'Rzym', cityEn: 'Rome', country: 'Włochy', countryEn: 'Italy', flag: '🇮🇹', short: 'ROM', region: 'Europa' },
+  { zone: 'Europe/Amsterdam', city: 'Amsterdam', cityEn: 'Amsterdam', country: 'Holandia', countryEn: 'Netherlands', flag: '🇳🇱', short: 'AMS', region: 'Europa' },
+  { zone: 'Europe/Lisbon', city: 'Lizbona', cityEn: 'Lisbon', country: 'Portugalia', countryEn: 'Portugal', flag: '🇵🇹', short: 'LIS', region: 'Europa' },
+  { zone: 'Europe/Athens', city: 'Ateny', cityEn: 'Athens', country: 'Grecja', countryEn: 'Greece', flag: '🇬🇷', short: 'ATH', region: 'Europa' },
+  { zone: 'Europe/Kyiv', city: 'Kijów', cityEn: 'Kyiv', country: 'Ukraina', countryEn: 'Ukraine', flag: '🇺🇦', short: 'KYI', region: 'Europa' },
+  { zone: 'Europe/Bucharest', city: 'Bukareszt', cityEn: 'Bucharest', country: 'Rumunia', countryEn: 'Romania', flag: '🇷🇴', short: 'BUH', region: 'Europa' },
+  { zone: 'Europe/Prague', city: 'Praga', cityEn: 'Prague', country: 'Czechy', countryEn: 'Czechia', flag: '🇨🇿', short: 'PRG', region: 'Europa' },
+  { zone: 'Europe/Brussels', city: 'Bruksela', cityEn: 'Brussels', country: 'Belgia', countryEn: 'Belgium', flag: '🇧🇪', short: 'BRU', region: 'Europa' },
+  { zone: 'Europe/Vienna', city: 'Wiedeń', cityEn: 'Vienna', country: 'Austria', countryEn: 'Austria', flag: '🇦🇹', short: 'VIE', region: 'Europa' },
+  { zone: 'Europe/Stockholm', city: 'Sztokholm', cityEn: 'Stockholm', country: 'Szwecja', countryEn: 'Sweden', flag: '🇸🇪', short: 'STO', region: 'Europa' },
+  { zone: 'Europe/Helsinki', city: 'Helsinki', cityEn: 'Helsinki', country: 'Finlandia', countryEn: 'Finland', flag: '🇫🇮', short: 'HEL', region: 'Europa' },
+  { zone: 'Europe/Oslo', city: 'Oslo', cityEn: 'Oslo', country: 'Norwegia', countryEn: 'Norway', flag: '🇳🇴', short: 'OSL', region: 'Europa' },
+  { zone: 'Europe/Copenhagen', city: 'Kopenhaga', cityEn: 'Copenhagen', country: 'Dania', countryEn: 'Denmark', flag: '🇩🇰', short: 'CPH', region: 'Europa' },
+  { zone: 'Europe/Dublin', city: 'Dublin', cityEn: 'Dublin', country: 'Irlandia', countryEn: 'Ireland', flag: '🇮🇪', short: 'DUB', region: 'Europa' },
+  { zone: 'Europe/Istanbul', city: 'Ankara', cityEn: 'Ankara', country: 'Turcja', countryEn: 'Turkey', flag: '🇹🇷', short: 'ANK', region: 'Europa' },
+
+  { zone: 'America/New_York', city: 'Waszyngton', cityEn: 'Washington, D.C.', country: 'USA', countryEn: 'USA', flag: '🇺🇸', short: 'NYC', region: 'Ameryka' },
+  { zone: 'America/Chicago', city: 'Chicago', cityEn: 'Chicago', country: 'USA', countryEn: 'USA', flag: '🇺🇸', short: 'CHI', region: 'Ameryka' },
+  { zone: 'America/Denver', city: 'Denver', cityEn: 'Denver', country: 'USA', countryEn: 'USA', flag: '🇺🇸', short: 'DEN', region: 'Ameryka' },
+  { zone: 'America/Los_Angeles', city: 'Los Angeles', cityEn: 'Los Angeles', country: 'USA', countryEn: 'USA', flag: '🇺🇸', short: 'LAX', region: 'Ameryka' },
+  { zone: 'America/Toronto', city: 'Ottawa', cityEn: 'Ottawa', country: 'Kanada', countryEn: 'Canada', flag: '🇨🇦', short: 'TOR', region: 'Ameryka' },
+  { zone: 'America/Vancouver', city: 'Vancouver', cityEn: 'Vancouver', country: 'Kanada', countryEn: 'Canada', flag: '🇨🇦', short: 'YVR', region: 'Ameryka' },
+  { zone: 'America/Mexico_City', city: 'Meksyk', cityEn: 'Mexico City', country: 'Meksyk', countryEn: 'Mexico', flag: '🇲🇽', short: 'MEX', region: 'Ameryka' },
+  { zone: 'America/Sao_Paulo', city: 'Brasília', cityEn: 'Brasília', country: 'Brazylia', countryEn: 'Brazil', flag: '🇧🇷', short: 'SAO', region: 'Ameryka' },
+  { zone: 'America/Argentina/Buenos_Aires', city: 'Buenos Aires', cityEn: 'Buenos Aires', country: 'Argentyna', countryEn: 'Argentina', flag: '🇦🇷', short: 'BUE', region: 'Ameryka' },
+  { zone: 'America/Santiago', city: 'Santiago', cityEn: 'Santiago', country: 'Chile', countryEn: 'Chile', flag: '🇨🇱', short: 'SCL', region: 'Ameryka' },
+  { zone: 'America/Bogota', city: 'Bogotá', cityEn: 'Bogotá', country: 'Kolumbia', countryEn: 'Colombia', flag: '🇨🇴', short: 'BOG', region: 'Ameryka' },
+  { zone: 'America/Lima', city: 'Lima', cityEn: 'Lima', country: 'Peru', countryEn: 'Peru', flag: '🇵🇪', short: 'LIM', region: 'Ameryka' },
+
+  { zone: 'Asia/Tokyo', city: 'Tokio', cityEn: 'Tokyo', country: 'Japonia', countryEn: 'Japan', flag: '🇯🇵', short: 'TYO', region: 'Azja' },
+  { zone: 'Asia/Seoul', city: 'Seul', cityEn: 'Seoul', country: 'Korea Płd.', countryEn: 'South Korea', flag: '🇰🇷', short: 'SEL', region: 'Azja' },
+  { zone: 'Asia/Shanghai', city: 'Pekin', cityEn: 'Beijing', country: 'Chiny', countryEn: 'China', flag: '🇨🇳', short: 'BJS', region: 'Azja' },
+  { zone: 'Asia/Hong_Kong', city: 'Hongkong', cityEn: 'Hong Kong', country: 'Hongkong', countryEn: 'Hong Kong', flag: '🇭🇰', short: 'HKG', region: 'Azja' },
+  { zone: 'Asia/Singapore', city: 'Singapur', cityEn: 'Singapore', country: 'Singapur', countryEn: 'Singapore', flag: '🇸🇬', short: 'SIN', region: 'Azja' },
+  { zone: 'Asia/Kolkata', city: 'Nowe Delhi', cityEn: 'New Delhi', country: 'Indie', countryEn: 'India', flag: '🇮🇳', short: 'DEL', region: 'Azja' },
+  { zone: 'Asia/Dubai', city: 'Abu Zabi', cityEn: 'Abu Dhabi', country: 'ZEA', countryEn: 'UAE', flag: '🇦🇪', short: 'DXB', region: 'Azja' },
+  { zone: 'Asia/Riyadh', city: 'Rijad', cityEn: 'Riyadh', country: 'Arabia Saudyjska', countryEn: 'Saudi Arabia', flag: '🇸🇦', short: 'RUH', region: 'Azja' },
+  { zone: 'Asia/Jerusalem', city: 'Jerozolima', cityEn: 'Jerusalem', country: 'Izrael', countryEn: 'Israel', flag: '🇮🇱', short: 'JRS', region: 'Azja' },
+  { zone: 'Asia/Bangkok', city: 'Bangkok', cityEn: 'Bangkok', country: 'Tajlandia', countryEn: 'Thailand', flag: '🇹🇭', short: 'BKK', region: 'Azja' },
+  { zone: 'Asia/Jakarta', city: 'Dżakarta', cityEn: 'Jakarta', country: 'Indonezja', countryEn: 'Indonesia', flag: '🇮🇩', short: 'JKT', region: 'Azja' },
+  { zone: 'Asia/Manila', city: 'Manila', cityEn: 'Manila', country: 'Filipiny', countryEn: 'Philippines', flag: '🇵🇭', short: 'MNL', region: 'Azja' },
+  { zone: 'Asia/Kuala_Lumpur', city: 'Kuala Lumpur', cityEn: 'Kuala Lumpur', country: 'Malezja', countryEn: 'Malaysia', flag: '🇲🇾', short: 'KUL', region: 'Azja' },
+
+  { zone: 'Africa/Cairo', city: 'Kair', cityEn: 'Cairo', country: 'Egipt', countryEn: 'Egypt', flag: '🇪🇬', short: 'CAI', region: 'Afryka' },
+  { zone: 'Africa/Johannesburg', city: 'Pretoria', cityEn: 'Pretoria', country: 'RPA', countryEn: 'South Africa', flag: '🇿🇦', short: 'JNB', region: 'Afryka' },
+  { zone: 'Africa/Lagos', city: 'Abudża', cityEn: 'Abuja', country: 'Nigeria', countryEn: 'Nigeria', flag: '🇳🇬', short: 'LOS', region: 'Afryka' },
+  { zone: 'Africa/Nairobi', city: 'Nairobi', cityEn: 'Nairobi', country: 'Kenia', countryEn: 'Kenya', flag: '🇰🇪', short: 'NBO', region: 'Afryka' },
+
+  { zone: 'Australia/Sydney', city: 'Canberra', cityEn: 'Canberra', country: 'Australia', countryEn: 'Australia', flag: '🇦🇺', short: 'SYD', region: 'Oceania' },
+  { zone: 'Australia/Perth', city: 'Perth', cityEn: 'Perth', country: 'Australia', countryEn: 'Australia', flag: '🇦🇺', short: 'PER', region: 'Oceania' },
+  { zone: 'Pacific/Auckland', city: 'Wellington', cityEn: 'Wellington', country: 'Nowa Zelandia', countryEn: 'New Zealand', flag: '🇳🇿', short: 'AKL', region: 'Oceania' },
+  { zone: 'Pacific/Honolulu', city: 'Honolulu', cityEn: 'Honolulu', country: 'Hawaje', countryEn: 'Hawaii', flag: '🇺🇸', short: 'HNL', region: 'Oceania' },
+  { zone: 'UTC', city: 'UTC', cityEn: 'UTC', country: 'UTC', countryEn: 'UTC', flag: '🌐', short: 'UTC', region: 'UTC' }
+]
+
+function isBetaiValidTimeZoneV371(zone) {
+  if (!zone) return false
+  try {
+    new Intl.DateTimeFormat('en-GB', { timeZone: zone }).format(new Date())
+    return true
+  } catch (_) {
+    return false
+  }
+}
+
+function getInitialBetaiTimeZoneV371() {
+  try {
+    const saved = String(localStorage.getItem('betai_timezone') || '').trim()
+    if (isBetaiValidTimeZoneV371(saved)) return saved
+    const browserZone = String(Intl.DateTimeFormat().resolvedOptions().timeZone || '').trim()
+    if (isBetaiValidTimeZoneV371(browserZone)) return browserZone
+  } catch (_) {}
+  return 'Europe/Warsaw'
+}
+
+function useBetaiTimeZoneStateV371() {
+  const [timeZone, setTimeZone] = useState(getInitialBetaiTimeZoneV371)
+  useEffect(() => {
+    const sync = (event) => {
+      const next = String(event?.detail || getInitialBetaiTimeZoneV371()).trim()
+      if (isBetaiValidTimeZoneV371(next)) setTimeZone(next)
+    }
+    window.addEventListener('betai-timezone-changed', sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener('betai-timezone-changed', sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [])
+  return timeZone
+}
+
+function getBetaiTimeZoneOptionV371(zone) {
+  const exact = BETAI_TIMEZONE_OPTIONS_V371.find(item => item.zone === zone)
+  if (exact) return exact
+  const city = String(zone || '').split('/').pop()?.replaceAll('_', ' ') || 'Local'
+  return { zone: zone || 'UTC', city, cityEn: city, country: '', countryEn: '', flag: '🌐', short: city.slice(0, 3).toUpperCase(), region: 'Inne' }
+}
+
+function getBetaiTimeZoneOffsetV371(zone, date = new Date()) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-GB', { timeZone: zone, timeZoneName: 'shortOffset', hour: '2-digit' }).formatToParts(date)
+    return String(parts.find(part => part.type === 'timeZoneName')?.value || 'UTC').replace('GMT', 'GMT')
+  } catch (_) {
+    return 'UTC'
+  }
+}
+
+function getBetaiZoneClockV371(zone, lang = 'pl', date = new Date()) {
+  try {
+    return new Intl.DateTimeFormat(lang === 'en' ? 'en-GB' : 'pl-PL', { timeZone: zone, hour: '2-digit', minute: '2-digit', hour12: false }).format(date)
+  } catch (_) {
+    return '--:--'
+  }
+}
+
 function getLocalizedUltraBannerSrc(src, lang) {
   if (!src || lang === 'pl') return src
   const file = String(src).split('/').pop()
@@ -16440,11 +16562,11 @@ function getTipLeagueMetaV338(tip = {}) {
   return { league, country, flag, acronym, logoUrl, flagUrl, forceBranding }
 }
 
-function getTipKickoffUiV338(tip = {}, nowMs = Date.now(), lang = 'pl') {
+function getTipKickoffUiV338(tip = {}, nowMs = Date.now(), lang = 'pl', selectedTimeZone = BETAI_WARSAW_TIMEZONE_V1716) {
   const ts = getTipKickoffTimestamp(tip)
   if (!Number.isFinite(ts)) return { day: lang === 'en' ? 'Match' : 'Mecz', time: '—', date: '', countdown: '' }
   const locale = lang === 'en' ? 'en-GB' : 'pl-PL'
-  const zone = BETAI_WARSAW_TIMEZONE_V1716
+  const zone = isBetaiValidTimeZoneV371(selectedTimeZone) ? selectedTimeZone : BETAI_WARSAW_TIMEZONE_V1716
   const dateObj = new Date(ts)
   const nowObj = new Date(Number(nowMs || Date.now()))
   const ymd = (d) => {
@@ -16471,6 +16593,7 @@ function getTipKickoffUiV338(tip = {}, nowMs = Date.now(), lang = 'pl') {
 
 function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast, allTips = [], startedReadOnly = false, nowMs = Date.now() }) {
   const lang = useBetaiLanguageState()
+  const timeZoneV371 = useBetaiTimeZoneStateV371()
   const t = (value) => translateBetaiTextValue(value, lang)
   const isPremium = tip.access_type === 'premium'
   const adminSubscriptionBypassV1710 = isAdminUser(currentUser) || isSmilhytvLifetimePremium(currentUser)
@@ -16592,9 +16715,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardPick = isAkoCard ? `AKO ${akoLegsCount} zdarzenia` : (rawPredictionLabelV1711 || rawMarketLabelV1711 || 'Typ')
   const cardMarketLabelV1711 = isAkoCard ? 'AKO' : (rawMarketLabelV1711 || '')
   const cardAnalysis = cleanAkoAnalysisText(tip.analysis || tip.description || '')
-  const cardMatchLabel = formatBetaiTipCardWallTimeV1719(tip)
+  const cardMatchLabel = formatBetaiTipCardWallTimeV1719(tip, lang === 'en' ? 'Today' : 'Dzisiaj', timeZoneV371, lang)
   const dashboardLeagueMetaV338 = getTipLeagueMetaV338(tip)
-  const dashboardKickoffV338 = getTipKickoffUiV338(tip, nowMs, lang)
+  const dashboardKickoffV338 = getTipKickoffUiV338(tip, nowMs, lang, timeZoneV371)
   const dashboardVenueV338 = [tip.venue_name, tip.venue_city].filter(Boolean).join(' | ')
   const cardStatusLabel = startedReadOnly ? 'Rozpoczęty' : (tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący')
   const kickoffFlameStateV79 = cardStatusLabel === 'Oczekujący'
@@ -34625,6 +34748,109 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
   )
 }
 
+function BetaiTimeZoneSwitchV371({ timeZone, onChange, lang = 'pl' }) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [now, setNow] = useState(() => new Date())
+  const selectedZone = isBetaiValidTimeZoneV371(timeZone) ? timeZone : getInitialBetaiTimeZoneV371()
+  const current = getBetaiTimeZoneOptionV371(selectedZone)
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 30000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const filtered = useMemo(() => {
+    const q = String(query || '').trim().toLowerCase()
+    if (!q) return BETAI_TIMEZONE_OPTIONS_V371
+    return BETAI_TIMEZONE_OPTIONS_V371.filter(item => [item.city, item.cityEn, item.country, item.countryEn, item.zone, item.short, item.region].some(value => String(value || '').toLowerCase().includes(q)))
+  }, [query])
+
+  const choose = (zone) => {
+    onChange?.(zone)
+    setOpen(false)
+    setQuery('')
+  }
+
+  const cityLabel = lang === 'en' ? current.cityEn : current.city
+  const title = lang === 'en' ? 'Time zone' : 'Strefa czasowa'
+
+  return (
+    <div
+      className={`betai-timezone-switch-v371 ${open ? 'is-open' : ''}`}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setOpen(false)
+          setQuery('')
+        }
+      }}
+    >
+      <button
+        type="button"
+        className="betai-timezone-current-v371"
+        onClick={() => setOpen(prev => !prev)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`${title}: ${cityLabel}`}
+        title={`${title}: ${cityLabel} • ${getBetaiTimeZoneOffsetV371(selectedZone, now)}`}
+      >
+        <span className="betai-timezone-globe-v371" aria-hidden="true">◷</span>
+        <span className="betai-timezone-copy-v371">
+          <strong>{current.short}</strong>
+          <small>{getBetaiZoneClockV371(selectedZone, lang, now)}</small>
+        </span>
+        <span className="betai-timezone-chevron-v371" aria-hidden="true">⌄</span>
+      </button>
+
+      {open ? (
+        <div className="betai-timezone-menu-v371" role="listbox">
+          <div className="betai-timezone-head-v371">
+            <div><b>{title}</b><span>{lang === 'en' ? 'Match times will use the selected city.' : 'Godziny meczów będą liczone dla wybranego miasta.'}</span></div>
+            <button
+              type="button"
+              className="betai-timezone-auto-v371"
+              onClick={() => choose(String(Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Warsaw'))}
+            >
+              {lang === 'en' ? 'Auto' : 'Auto'}
+            </button>
+          </div>
+          <label className="betai-timezone-search-v371">
+            <span aria-hidden="true">⌕</span>
+            <input
+              value={query}
+              onChange={event => setQuery(event.target.value)}
+              placeholder={lang === 'en' ? 'Search city or country...' : 'Szukaj miasta lub kraju...'}
+              autoFocus
+            />
+          </label>
+          <div className="betai-timezone-list-v371">
+            {filtered.map(item => {
+              const itemCity = lang === 'en' ? item.cityEn : item.city
+              const itemCountry = lang === 'en' ? item.countryEn : item.country
+              const active = item.zone === selectedZone
+              return (
+                <button
+                  type="button"
+                  key={item.zone}
+                  className={active ? 'is-active' : ''}
+                  onClick={() => choose(item.zone)}
+                  role="option"
+                  aria-selected={active}
+                >
+                  <span className="betai-timezone-flag-v371" aria-hidden="true">{item.flag}</span>
+                  <span className="betai-timezone-name-v371"><b>{itemCity}</b><small>{itemCountry || item.zone}</small></span>
+                  <span className="betai-timezone-now-v371"><b>{getBetaiZoneClockV371(item.zone, lang, now)}</b><small>{getBetaiTimeZoneOffsetV371(item.zone, now)}</small></span>
+                </button>
+              )
+            })}
+            {!filtered.length ? <div className="betai-timezone-empty-v371">{lang === 'en' ? 'No matching time zone.' : 'Brak pasującej strefy.'}</div> : null}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function getFollowStorageKey(userId) {
   return `betai_following_tipsters_${String(userId || 'guest')}`
 }
@@ -34776,28 +35002,28 @@ function getTipWarsawStartLabelV1716(tip = {}) {
 }
 
 
-function formatBetaiTipCardWallTimeV1719(tip = {}, fallback = 'Dzisiaj') {
+function formatBetaiTipCardWallTimeV1719(tip = {}, fallback = 'Dzisiaj', selectedTimeZone = BETAI_WARSAW_TIMEZONE_V1716, lang = 'pl') {
   // Karta ma pokazywać czas w lokalnej strefie użytkownika.
   // Przykład: 22:00 UTC = 23:00 UK = 00:00 PL.
   const rawDirect = String(tip?.match_time || tip?.match_date || tip?.event_time || tip?.kickoff_time || tip?.commence_time || tip?.date || '').trim()
   const rawDate = String(tip?.match_date_day || tip?.fixture_date_day || tip?.event_date || '').trim().slice(0, 10)
   const rawTime = String(tip?.match_time_hhmm || tip?.kickoff_time_hhmm || tip?.start_time_hhmm || '').trim()
 
+  const targetZoneV371 = isBetaiValidTimeZoneV371(selectedTimeZone) ? selectedTimeZone : BETAI_WARSAW_TIMEZONE_V1716
+  const localeV371 = lang === 'en' ? 'en-GB' : 'pl-PL'
   const formatLocal = (dateObj) => {
     try {
-      // FIX 1781: na polskiej stronie zawsze pokazujemy czas Polski,
-      // niezależnie od strefy przeglądarki użytkownika.
-      // 23:00 UK w czerwcu = 00:00 PL następnego dnia.
-      return new Intl.DateTimeFormat('pl-PL', {
-        timeZone: BETAI_WARSAW_TIMEZONE_V1716,
+      return new Intl.DateTimeFormat(localeV371, {
+        timeZone: targetZoneV371,
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        hour12: false
       }).format(dateObj)
     } catch (_) {
-      return dateObj.toLocaleString('pl-PL', { timeZone: BETAI_WARSAW_TIMEZONE_V1716 })
+      return dateObj.toLocaleString(localeV371, { timeZone: targetZoneV371 })
     }
   }
 
@@ -34814,22 +35040,26 @@ function formatBetaiTipCardWallTimeV1719(tip = {}, fallback = 'Dzisiaj') {
     if (Number.isFinite(ts)) return formatLocal(new Date(ts))
   }
 
-  // Gdy mamy timestamp bez strefy, pokazujemy wall-time bez przeliczania.
+  // Timestamp bez strefy w bazie jest historycznie zapisywany jako czas Polski.
+  // V371: interpretujemy go jako Europe/Warsaw, a dopiero potem przeliczamy na wybraną strefę użytkownika.
   const isoLike = rawDirect.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s]+(\d{1,2}):(\d{2}))?/)
   if (isoLike) {
     const [, y, m, d, h = '00', min = '00'] = isoLike
-    return `${d}.${m}.${y}, ${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`
+    const ts = parseBetaiWarsawWallTimeV1716(y, m, d, h, min, '00')
+    if (Number.isFinite(ts)) return formatLocal(new Date(ts))
   }
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate) && /^\d{1,2}:\d{2}/.test(rawTime)) {
-    return `${rawDate.slice(8,10)}.${rawDate.slice(5,7)}.${rawDate.slice(0,4)}, ${rawTime.slice(0,5)}`
+    const ts = parseBetaiWarsawWallTimeV1716(rawDate.slice(0,4), rawDate.slice(5,7), rawDate.slice(8,10), rawTime.slice(0,2), rawTime.slice(3,5), '00')
+    if (Number.isFinite(ts)) return formatLocal(new Date(ts))
   }
 
   const polish = rawDirect.match(/(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?[^0-9]*(\d{1,2})[:.](\d{2})/)
   if (polish) {
     let year = polish[3] ? String(polish[3]) : String(new Date().getFullYear())
     if (year.length === 2) year = `20${year}`
-    return `${String(polish[1]).padStart(2,'0')}.${String(polish[2]).padStart(2,'0')}.${year}, ${String(polish[4]).padStart(2,'0')}:${polish[5]}`
+    const ts = parseBetaiWarsawWallTimeV1716(year, polish[2], polish[1], polish[4], polish[5], '00')
+    if (Number.isFinite(ts)) return formatLocal(new Date(ts))
   }
 
   try {
@@ -35468,6 +35698,7 @@ function App() {
     return match ? decodeURIComponent(match[1]) : null
   })
   const [appLang, setAppLang] = useState(getInitialBetaiLanguage)
+  const [appTimeZone, setAppTimeZone] = useState(getInitialBetaiTimeZoneV371)
   const tApp = value => translateBetaiTextValue(value, appLang)
   const [liveTipPopup, setLiveTipPopup] = useState(null)
   const [liveTipPopupVisible, setLiveTipPopupVisible] = useState(false)
@@ -35633,6 +35864,27 @@ function App() {
     try { localStorage.setItem('betai_language', nextLang) } catch (_) {}
     window.dispatchEvent(new CustomEvent('betai-language-changed', { detail: nextLang }))
   }
+
+  function changeAppTimeZoneV371(nextZone) {
+    const clean = String(nextZone || '').trim()
+    if (!isBetaiValidTimeZoneV371(clean)) return
+    setAppTimeZone(clean)
+    try { localStorage.setItem('betai_timezone', clean) } catch (_) {}
+    window.dispatchEvent(new CustomEvent('betai-timezone-changed', { detail: clean }))
+  }
+
+  useEffect(() => {
+    const syncTimeZone = (event) => {
+      const next = String(event?.detail || getInitialBetaiTimeZoneV371()).trim()
+      if (isBetaiValidTimeZoneV371(next)) setAppTimeZone(next)
+    }
+    window.addEventListener('betai-timezone-changed', syncTimeZone)
+    window.addEventListener('storage', syncTimeZone)
+    return () => {
+      window.removeEventListener('betai-timezone-changed', syncTimeZone)
+      window.removeEventListener('storage', syncTimeZone)
+    }
+  }, [])
 
   useEffect(() => {
     const syncLanguage = (event) => {
@@ -39366,7 +39618,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
+    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang} data-betai-timezone={appTimeZone}>
       <DashboardAutoTranslator lang={appLang} />
       <BetaiPresenceHeartbeatV1901 user={sessionUser} />
       <Toast toast={toast} onClose={() => setToast(null)} />
@@ -39391,6 +39643,7 @@ function App() {
           </label>
           <div className="top-actions">
             <BetaiLanguageSwitch lang={appLang} onChange={changeAppLanguage} compact />
+            <BetaiTimeZoneSwitchV371 timeZone={appTimeZone} onChange={changeAppTimeZoneV371} lang={appLang} />
             <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn topbar-clean-icon-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia Bet+AI"><span className="topbar-clean-icon topbar-clean-bell" aria-hidden="true" /><b>{notifications.filter(n => !n.is_read).length}</b></button>
             <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn topbar-clean-icon-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników"><span className="topbar-clean-icon topbar-clean-mail" aria-hidden="true" /><b>{Number(dmUnreadCount || 0)}</b></button>
             <button className="wallet-top-btn wallet-split-top-btn" onClick={() => setView('wallet')} aria-label="Portfel i coiny">
