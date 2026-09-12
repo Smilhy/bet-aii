@@ -86625,3 +86625,18 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
   .sim-v363-featured-team strong{font-size:15px !important}
   .sim-v363-pick-team strong{font-size:13px !important}
 }
+
+/* V364 — extra vertical breathing room between top picks grid and lower analysis strip */
+.sim-v358-picks{
+  margin-bottom: 24px !important;
+}
+.sim-v358-picks-grid{
+  margin-bottom: 10px !important;
+}
+.sim-value-scanner-v139.sim-value-scanner-v347{
+  margin-top: 26px !important;
+}
+@media (max-width: 760px){
+  .sim-v358-picks{margin-bottom:18px !important}
+  .sim-value-scanner-v139.sim-value-scanner-v347{margin-top:18px !important}
+}
