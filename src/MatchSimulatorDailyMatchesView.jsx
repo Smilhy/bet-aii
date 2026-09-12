@@ -102,6 +102,11 @@ function formatDateLabel(dateKey) {
   return y && m && d ? `${d}.${m}.${y}` : dateKey
 }
 
+function formatPlnV368(value = 0) {
+  const n = Number(value || 0)
+  return `${n > 0 ? '+' : ''}${n.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`
+}
+
 function fixtureKey(row = {}) {
   return String(row.apiFixtureId || row.id || `${row.home}|${row.away}|${row.commence_time}`)
 }
@@ -965,6 +970,10 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
   const [replayLoadingV347, setReplayLoadingV347] = useState(false)
   const [nowMs, setNowMs] = useState(() => initialNowV352)
   const [showAdvancedV349, setShowAdvancedV349] = useState(false)
+  const [systemStatsV368, setSystemStatsV368] = useState(null)
+  const [systemStatsLoadingV368, setSystemStatsLoadingV368] = useState(false)
+  const [showSystemStatsV368, setShowSystemStatsV368] = useState(false)
+  const systemRecordedV368 = useRef(new Set())
   const [cacheMetaV352, setCacheMetaV352] = useState(() => bootstrapCacheV352
     ? { restored: true, savedAt: Number(bootstrapCacheV352.savedAt || 0), writing: false, complete: Boolean(bootstrapCacheV352.complete) }
     : { restored: false, savedAt: 0, writing: false, complete: false })
@@ -1358,6 +1367,60 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     return []
   }, [filteredMatches, shouldShowUiTestV367, uiTestEntryV358])
 
+  const refreshSystemStatsV368 = async () => {
+    setSystemStatsLoadingV368(true)
+    try {
+      const response = await fetch('/.netlify/functions/get-fm-ai-system-stats', { cache:'no-store' })
+      const payload = await response.json().catch(() => ({}))
+      setSystemStatsV368(payload)
+    } catch (_) {
+      setSystemStatsV368(prev => prev || { ok:false, available:false })
+    } finally {
+      setSystemStatsLoadingV368(false)
+    }
+  }
+
+  useEffect(() => {
+    refreshSystemStatsV368()
+  }, [])
+
+  useEffect(() => {
+    if (!displayScannerEntriesV358.length) return
+    let cancelled = false
+    const record = async () => {
+      let changed = false
+      for (const entry of displayScannerEntriesV358) {
+        if (cancelled || entry?.isUiTestV358 || entry?.match?.isBetAiLabTest) continue
+        const item = entry?.scan?.topFinal
+        const decision = String(item?.decision || '').toUpperCase()
+        if (!['VALUE','STRONG_VALUE'].includes(decision)) continue
+        const id = fixtureKey(entry.match)
+        if (!id || systemRecordedV368.current.has(id)) continue
+        try {
+          const meta = getScannerMarketMetaV330(item, entry.match, lang)
+          const response = await fetch('/.netlify/functions/record-fm-ai-system-pick', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+              fixtureId: String(entry.match.apiFixtureId || entry.match.id || id), dayKey: todayKey,
+              marketKey: item.key, marketLabel: meta.title, decision, odds: item.bookmakerOdds,
+              aiProbability: item.probability, fairOdds: item.fairOdds, edgePp: item.edgePp,
+              expectedValuePct: item.expectedValuePct, reliabilityScore: item.reliability?.score, dailyScore: item.dailyScore
+            })
+          })
+          const payload = await response.json().catch(() => ({}))
+          if (response.ok && payload?.ok && (payload.recorded || payload.duplicate)) {
+            systemRecordedV368.current.add(id)
+            changed = true
+          }
+        } catch (_) {}
+      }
+      if (!cancelled && changed) refreshSystemStatsV368()
+    }
+    record()
+    return () => { cancelled = true }
+  }, [displayScannerEntriesV358, lang, todayKey])
+
   const fmAnalysisV351 = useMemo(() => {
     const matchTotal = Math.max(0, Number(qualificationProgress.total || availableMatches.length || 0))
     const qualifiedDone = Math.min(matchTotal || Number(qualificationProgress.done || 0), Number(qualificationProgress.done || 0))
@@ -1559,6 +1622,26 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                 <small>{cacheMetaV352.savedAt ? `Ostatnia analiza: ${formatCacheTimeV352(cacheMetaV352.savedAt, lang)}` : 'Analiza działa automatycznie'}</small>
               </div>
             </div>
+
+            <section className="sim-v368-system-strip">
+              <div className="sim-v368-system-title">
+                <div><small>FM AI SYSTEM TRACKER</small><strong>10 zł flat / każdy DOBRY TYP</strong><span>Prawdziwy forward tracking • pierwszy opublikowany VALUE/STRONG VALUE jest zamrażany przed kickoffem</span></div>
+                <button type="button" onClick={() => setShowSystemStatsV368(true)}>Pełne statystyki →</button>
+              </div>
+              {systemStatsV368?.available ? (() => {
+                const s = systemStatsV368.all || {}
+                const today = systemStatsV368.today || {}
+                return <div className="sim-v368-system-kpis">
+                  <article className={Number(s.profit || 0) >= 0 ? 'positive' : 'negative'}><small>BILANS</small><b>{formatPlnV368(s.profit || 0)}</b><span>stawka 10 zł / typ</span></article>
+                  <article className={Number(s.yieldPct || 0) >= 0 ? 'positive' : 'negative'}><small>YIELD</small><b>{Number(s.yieldPct || 0) > 0 ? '+' : ''}{Number(s.yieldPct || 0).toFixed(1)}%</b><span>{s.resolved || 0} rozliczonych</span></article>
+                  <article><small>TRAFNOŚĆ</small><b>{Number(s.hitRate || 0).toFixed(1)}%</b><span>próg rynku {Number(s.breakEvenHitRate || 0).toFixed(1)}%</span></article>
+                  <article><small>W / L</small><b>{s.wins || 0} / {s.losses || 0}</b><span>{s.pending || 0} oczekuje</span></article>
+                  <article><small>ŚR. KURS</small><b>{Number(s.avgOdds || 0).toFixed(2)}</b><span>edge trafności {Number(s.hitEdgePp || 0) > 0 ? '+' : ''}{Number(s.hitEdgePp || 0).toFixed(1)} pp</span></article>
+                  <article><small>DZISIAJ</small><b>{today.picks || 0} typów</b><span>{formatPlnV368(today.profit || 0)}</span></article>
+                  <article className="wide"><small>OCENA PRÓBY</small><b>{s.evidence || 'ZA MAŁA PRÓBA'}</b><span>{s.verdict === 'POSITIVE_SIGNAL' ? 'Dodatni sygnał rentowności' : s.verdict === 'SLIGHT_POSITIVE' ? 'Lekko dodatni wynik — potrzeba większej próby' : s.verdict === 'NEGATIVE' ? 'Na razie system jest pod kreską' : 'Zbieramy dane — nie wyciągamy wniosków za wcześnie'}</span></article>
+                </div>
+              })() : <div className="sim-v368-system-empty"><b>{systemStatsLoadingV368 ? 'Ładuję statystyki systemu…' : 'Tracker gotowy do uruchomienia'}</b><span>{systemStatsV368?.setupRequired ? 'Uruchom jednorazowo plik SUPABASE_RUN_ONCE_WERSJA_368_FM_AI_SYSTEM_TRACKER.sql.' : 'Po pierwszych rozliczonych typach pojawi się bilans, yield i skuteczność.'}</span></div>}
+            </section>
 
             <div className="sim-v358-main-grid">
               <article className="sim-v358-featured">
@@ -1878,6 +1961,35 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
           })}
         </div>
       </div>
+
+      {showSystemStatsV368 ? <div className="sim-v368-stats-backdrop" role="presentation" onMouseDown={() => setShowSystemStatsV368(false)}>
+        <section className="sim-v368-stats-modal" role="dialog" aria-modal="true" aria-label="Statystyki systemu FM AI" onMouseDown={(e) => e.stopPropagation()}>
+          <header>
+            <div><small>FM AI • SYSTEM TRACKER V368</small><strong>Czy typy naprawdę zarabiają?</strong><span>10 zł flat na każdy VALUE / STRONG VALUE • wynik zamrażany przed kickoffem • bez testowych meczów</span></div>
+            <button type="button" onClick={() => setShowSystemStatsV368(false)}>×</button>
+          </header>
+          {systemStatsV368?.available ? (() => {
+            const a=systemStatsV368.all||{}, d7=systemStatsV368.last7||{}, d30=systemStatsV368.last30||{}
+            return <>
+              <div className="sim-v368-modal-kpis">
+                <article className={Number(a.profit||0)>=0?'positive':'negative'}><small>BILANS ALL-TIME</small><b>{formatPlnV368(a.profit||0)}</b><span>{a.picks||0} typów • {a.pending||0} oczekuje</span></article>
+                <article className={Number(a.yieldPct||0)>=0?'positive':'negative'}><small>YIELD</small><b>{Number(a.yieldPct||0)>0?'+':''}{Number(a.yieldPct||0).toFixed(2)}%</b><span>flat stake 10 zł</span></article>
+                <article><small>TRAFNOŚĆ</small><b>{Number(a.hitRate||0).toFixed(1)}%</b><span>break-even {Number(a.breakEvenHitRate||0).toFixed(1)}%</span></article>
+                <article><small>W / L</small><b>{a.wins||0} / {a.losses||0}</b><span>max seria L: {a.maxLossStreak||0}</span></article>
+                <article><small>ŚR. KURS</small><b>{Number(a.avgOdds||0).toFixed(2)}</b><span>edge {Number(a.hitEdgePp||0)>0?'+':''}{Number(a.hitEdgePp||0).toFixed(1)} pp</span></article>
+                <article><small>MAX DRAWDOWN</small><b>{formatPlnV368(-(Number(a.maxDrawdown||0)))}</b><span>największe obsunięcie</span></article>
+              </div>
+              <div className="sim-v368-periods"><span><small>7 DNI</small><b>{formatPlnV368(d7.profit||0)} • Y {Number(d7.yieldPct||0).toFixed(1)}%</b></span><span><small>30 DNI</small><b>{formatPlnV368(d30.profit||0)} • Y {Number(d30.yieldPct||0).toFixed(1)}%</b></span><span><small>PRÓBA</small><b>{a.evidence||'ZA MAŁA PRÓBA'}</b></span><span><small>OCENA</small><b>{a.verdict==='POSITIVE_SIGNAL'?'DODATNI SYGNAŁ':a.verdict==='SLIGHT_POSITIVE'?'LEKKO +':a.verdict==='NEGATIVE'?'UJEMNY WYNIK':'ZBIERANIE DANYCH'}</b></span></div>
+              <div className="sim-v368-stats-columns">
+                <section><h3>Statystyki według lig</h3><div className="sim-v368-table-wrap"><table><thead><tr><th>Liga</th><th>Typy</th><th>W/L</th><th>Trafność</th><th>Śr. kurs</th><th>Bilans</th><th>Yield</th></tr></thead><tbody>{(systemStatsV368.byLeague||[]).map(row=><tr key={row.name}><td>{row.name}</td><td>{row.picks}</td><td>{row.wins}/{row.losses}</td><td>{Number(row.hitRate||0).toFixed(1)}%</td><td>{Number(row.avgOdds||0).toFixed(2)}</td><td className={Number(row.profit||0)>=0?'positive':'negative'}>{formatPlnV368(row.profit||0)}</td><td className={Number(row.yieldPct||0)>=0?'positive':'negative'}>{Number(row.yieldPct||0)>0?'+':''}{Number(row.yieldPct||0).toFixed(1)}%</td></tr>)}</tbody></table></div></section>
+                <section><h3>Statystyki według rynku</h3><div className="sim-v368-table-wrap"><table><thead><tr><th>Rynek</th><th>Typy</th><th>W/L</th><th>Trafność</th><th>Śr. kurs</th><th>Bilans</th><th>Yield</th></tr></thead><tbody>{(systemStatsV368.byMarket||[]).map(row=><tr key={row.name}><td>{row.name}</td><td>{row.picks}</td><td>{row.wins}/{row.losses}</td><td>{Number(row.hitRate||0).toFixed(1)}%</td><td>{Number(row.avgOdds||0).toFixed(2)}</td><td className={Number(row.profit||0)>=0?'positive':'negative'}>{formatPlnV368(row.profit||0)}</td><td className={Number(row.yieldPct||0)>=0?'positive':'negative'}>{Number(row.yieldPct||0)>0?'+':''}{Number(row.yieldPct||0).toFixed(1)}%</td></tr>)}</tbody></table></div></section>
+              </div>
+              <section className="sim-v368-recent"><div className="sim-v368-section-head"><h3>Ostatnie typy systemu</h3><button type="button" onClick={refreshSystemStatsV368}>Odśwież</button></div><div className="sim-v368-recent-list">{(systemStatsV368.recent||[]).slice(0,20).map(row=><article key={row.id}><div><small>{new Date(row.date).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} • {row.league}</small><b>{row.home} <i>vs</i> {row.away}</b><span>{row.market} @ {Number(row.odds||0).toFixed(2)} • AI {Number(row.probability||0).toFixed(1)}%</span></div><strong className={row.status==='win'?'positive':row.status==='loss'?'negative':''}>{row.status==='pending'?'OCZEKUJE':row.status==='void'?'VOID':row.status==='win'?'WIN':'LOSS'}{row.score?` • ${row.score}`:''}<em>{row.status!=='pending'&&row.status!=='void'?formatPlnV368(row.profit||0):''}</em></strong></article>)}</div></section>
+              <footer><p><b>Jak czytać?</b> Dodatni bilans i yield mówią, czy płaska stawka 10 zł faktycznie zarabia. Trafność porównujemy z break-even wynikającym z realnych kursów. Przy małej próbie wynik może być przypadkowy — sensowne wnioski zaczynają się dopiero po dziesiątkach i setkach rozliczonych typów.</p></footer>
+            </>
+          })() : <div className="sim-v368-modal-empty"><strong>Tracker wymaga tabeli Supabase V368</strong><p>Uruchom jednorazowo SUPABASE_RUN_ONCE_WERSJA_368_FM_AI_SYSTEM_TRACKER.sql. Potem system automatycznie zacznie zamrażać i rozliczać realne typy.</p></div>}
+        </section>
+      </div> : null}
 
       {intelModal ? <div className="sim-intel-modal-backdrop-v347" role="presentation" onMouseDown={() => setIntelModal(null)}>
         <section className="sim-intel-modal-v347" role="dialog" aria-modal="true" aria-label="Why AI and prediction timeline" onMouseDown={(event) => event.stopPropagation()}>

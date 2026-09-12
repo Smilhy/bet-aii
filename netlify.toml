@@ -168,3 +168,7 @@
 # WERSJA 299/V300 — godzinowy immutable System Health snapshot.
 [functions."match-health-snapshot-v300"]
   schedule = "5 * * * *"
+
+# V368 — settle frozen FM AI paper picks every hour.
+[functions."settle-fm-ai-system-picks"]
+  schedule = "26 * * * *"
