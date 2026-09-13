@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabaseClient'
+import { canonicalFmAiMarketKeyV367 } from './fmAiConsistencyV367.js'
 
 const n=(v,f=0)=>{const x=Number(v);return Number.isFinite(x)?x:f}
 const safe=(v,f='—')=>{const s=String(v==null?'':v).trim();return s||f}
@@ -34,16 +35,25 @@ export default function LivePreMatchV280({lang='pl',match={},data={},forecast=nu
     if(fresh.length){fresh.forEach(a=>set.add(String(a.id)));try{sessionStorage.setItem(key,JSON.stringify([...set].slice(-100)))}catch(_){}}
   },[workflow?.alerts,browserAlerts])
 
-  const state=live?.state||null, events=live?.events||[], history=live?.decisionHistory||workflow?.decisionHistory||[]
-  const before=state?.probability_delta?.before??forecast?.professionalLab?.decisionCard?.conservativeProbability??forecast?.value?.top?.probability
-  const after=state?.probability_delta?.after??before, delta=state?.probability_delta?.deltaPp??0
-  const beforeDecision=state?.decision_before||forecast?.professionalLab?.decisionCard?.decision||'WATCH',afterDecision=state?.decision_after||beforeDecision
+  const state=live?.state||null, events=live?.events||[]
+  const canonicalTopV404=forecast?.sharedSnapshotV365?.topPick||forecast?.value?.top||null
+  const canonicalKeyV404=canonicalFmAiMarketKeyV367(canonicalTopV404?.key||canonicalTopV404?.rawKey||forecast?.professionalLab?.decisionCard?.key||'')
+  const stateKeyV404=canonicalFmAiMarketKeyV367(state?.probability_delta?.marketKey||state?.probability?.marketKey||'')
+  const stateMatchesCanonicalV404=!canonicalKeyV404||!stateKeyV404||canonicalKeyV404===stateKeyV404
+  const rawHistoryV404=live?.decisionHistory||workflow?.decisionHistory||[]
+  const history=canonicalKeyV404?rawHistoryV404.filter(h=>!h?.market_key||canonicalFmAiMarketKeyV367(h.market_key)===canonicalKeyV404):rawHistoryV404
+  const canonicalProbabilityV404=n(canonicalTopV404?.probability,0)
+  const rawCanonicalDecisionV404=String(canonicalTopV404?.decision||'').toUpperCase()
+  const canonicalDecisionV404=forecast?.professionalLab?.decisionCard?.decision||(['VALUE','STRONG_VALUE'].includes(rawCanonicalDecisionV404)?'BET':rawCanonicalDecisionV404==='SMALL_EDGE'?'WATCH':'NO_BET')
+  const before=stateMatchesCanonicalV404?(state?.probability_delta?.before??forecast?.professionalLab?.decisionCard?.conservativeProbability??canonicalProbabilityV404):(forecast?.professionalLab?.decisionCard?.conservativeProbability??canonicalProbabilityV404)
+  const after=stateMatchesCanonicalV404?(state?.probability_delta?.after??before):before, delta=stateMatchesCanonicalV404?(state?.probability_delta?.deltaPp??0):0
+  const beforeDecision=stateMatchesCanonicalV404?(state?.decision_before||canonicalDecisionV404):canonicalDecisionV404,afterDecision=stateMatchesCanonicalV404?(state?.decision_after||beforeDecision):beforeDecision
   const weather=state?.weather_payload?.adjusted||{}, referee=state?.referee_payload?.adjusted||{}, travel=state?.travel_payload||{}
   const homeRest=forecast?.contextV260?.home?.schedule?.restDays,awayRest=forecast?.contextV260?.away?.schedule?.restDays
   const lineComp=state?.lineup_payload?.comparison||{}
   const currentLineups=state?.lineup_payload?.current||{}
   const centerRows=center?.rows||[]
-  const flags=Array.isArray(state?.flags)?state.flags:[]
+  const flags=[...(Array.isArray(state?.flags)?state.flags:[]),...(!stateMatchesCanonicalV404&&canonicalKeyV404?['CANONICAL_SYNC_V404']:[])]
   const watch=workflow?.watchlist||null
 
   const post=async(body)=>{if(!token)throw new Error(pl?'Zaloguj się, aby używać tej funkcji.':'Sign in to use this feature.');return getJson('/.netlify/functions/match-user-workflow-v280',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(body)})}

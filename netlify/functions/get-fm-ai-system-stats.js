@@ -74,6 +74,12 @@ function recordRowV376(r={}){
     expectedValuePct:n(r.expected_value_pct),
     reliability:n(r.reliability_score),
     dailyScore:n(r.daily_score),
+    bookmaker:String(r?.display_snapshot?.bookmaker||''),
+    noVigImplied:r?.display_snapshot?.noVigImplied==null?null:n(r.display_snapshot.noVigImplied),
+    rawImplied:r?.display_snapshot?.rawImplied==null?null:n(r.display_snapshot.rawImplied),
+    bookmakerMargin:r?.display_snapshot?.bookmakerMargin==null?null:n(r.display_snapshot.bookmakerMargin),
+    threshold:r?.display_snapshot?.threshold==null?null:n(r.display_snapshot.threshold),
+    marketGroup:String(r?.display_snapshot?.marketGroup||''),
     stake:n(r.stake_pln),
     status:r.status,
     score:r.actual_home_goals==null?null:`${r.actual_home_goals}:${r.actual_away_goals}`,
@@ -116,7 +122,14 @@ exports.handler=async()=>{
   const segmentLab=leagueMarketSegments(rows)
   const integrityV376=verifiedIntegrityV376(rows)
   const recordLogV376=rows.slice(0,250).map(recordRowV376)
-  return json(200,{ok:true,available:true,code:'READY',projectHost:host,stakePerPick:10,currency:'PLN',policy:'Pierwszy opublikowany VALUE/STRONG VALUE przed kickoffem. 10 PLN flat. Bez testowych meczów i bez późniejszego przepisywania typu.',trackingMode:'AUTO_24_7_V374',analyticsVersion:'VERIFIED_RECORD_PASSPORT_V376',today:summary(rows.filter(r=>String(r.day_key)===day)),last7:summary(rows.filter(r=>Date.parse(r.fixture_date)>=d7)),last30:summary(rows.filter(r=>Date.parse(r.fixture_date)>=d30)),all:summary(rows),byLeague:group(rows,r=>r.league),leagueDetails:leagueDetails(rows),byMarket:group(rows,r=>r.market_label||r.market_key),byDecision:group(rows,r=>r.decision),byDay,segmentLab,verifiedRecordV376:{integrity:integrityV376,records:recordLogV376},recent:rows.slice(0,50).map(recordRowV376)})
+  // V402: expose every still-upcoming frozen record independently from the
+  // short `recent` window. The board must never lose the canonical pick just
+  // because more than 50 historical rows exist.
+  const activeFrozenV402=rows
+    .filter(r=>String(r.status||'pending')==='pending'&&Date.parse(r.fixture_date||'')>now)
+    .sort((a,b)=>Date.parse(a.fixture_date||'')-Date.parse(b.fixture_date||''))
+    .map(recordRowV376)
+  return json(200,{ok:true,available:true,code:'READY',projectHost:host,stakePerPick:10,currency:'PLN',policy:'Pierwszy opublikowany VALUE/STRONG VALUE przed kickoffem. 10 PLN flat. Bez testowych meczów i bez późniejszego przepisywania typu.',trackingMode:'AUTO_24_7_V374',analyticsVersion:'VERIFIED_RECORD_PASSPORT_V376',today:summary(rows.filter(r=>String(r.day_key)===day)),last7:summary(rows.filter(r=>Date.parse(r.fixture_date)>=d7)),last30:summary(rows.filter(r=>Date.parse(r.fixture_date)>=d30)),all:summary(rows),byLeague:group(rows,r=>r.league),leagueDetails:leagueDetails(rows),byMarket:group(rows,r=>r.market_label||r.market_key),byDecision:group(rows,r=>r.decision),byDay,segmentLab,activeFrozenV402,verifiedRecordV376:{integrity:integrityV376,records:recordLogV376},recent:rows.slice(0,50).map(recordRowV376)})
 }
 
 exports._test={leagueDetails,marketDetails,leagueMarketSegments,sampleLabel,recordRowV376,verifiedIntegrityV376}

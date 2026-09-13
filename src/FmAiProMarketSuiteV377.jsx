@@ -105,11 +105,31 @@ function buildTipSignalV380(entry = {}, lang = 'pl') {
   let confidenceLabel = isEn ? 'Low confidence' : 'Niska pewność'
 
   if (d === 'STRONG_VALUE') {
-    tone = edge >= 15 || rel >= 86 ? 'elite' : 'play'
-    stars = edge >= 15 || rel >= 86 ? 5 : 4
-    actionLabel = isEn ? (tone === 'elite' ? 'STRONG PLAY' : 'PLAY') : (tone === 'elite' ? 'MOCNO GRAJ' : 'GRAJ')
+    // V398: VALUE is price advantage, not hit probability. Never show a low-probability
+    // longshot as "STRONG PLAY" only because EV/edge is large.
+    if (probability < 40) {
+      tone = 'caution'
+      stars = 2
+      actionLabel = isEn ? 'VALUE • HIGH RISK' : 'VALUE • WYSOKIE RYZYKO'
+    } else if (probability < 55) {
+      tone = 'consider'
+      stars = 3
+      actionLabel = isEn ? 'VALUE • CONSIDER' : 'VALUE • DO ROZWAŻENIA'
+    } else {
+      tone = edge >= 15 || rel >= 86 ? 'elite' : 'play'
+      stars = edge >= 15 || rel >= 86 ? 5 : 4
+      actionLabel = isEn ? (tone === 'elite' ? 'STRONG PLAY' : 'PLAY') : (tone === 'elite' ? 'MOCNO GRAJ' : 'GRAJ')
+    }
   } else if (d === 'VALUE') {
-    if (rel >= 85 && edge >= 10) {
+    if (probability < 40) {
+      tone = 'caution'
+      stars = 2
+      actionLabel = isEn ? 'VALUE • HIGH RISK' : 'VALUE • WYSOKIE RYZYKO'
+    } else if (probability < 55) {
+      tone = 'consider'
+      stars = 3
+      actionLabel = isEn ? 'VALUE • CONSIDER' : 'VALUE • DO ROZWAŻENIA'
+    } else if (rel >= 85 && edge >= 10) {
       tone = 'play'
       stars = 4
       actionLabel = isEn ? 'PLAY' : 'GRAJ'
@@ -132,12 +152,19 @@ function buildTipSignalV380(entry = {}, lang = 'pl') {
     actionLabel = isEn ? 'PASS' : 'ODPUŚĆ'
   }
 
-  const confidenceScore = clamp(Math.round(rel * 0.55 + Math.min(Math.max(edge, 0), 20) * 1.6 + Math.min(Math.max(ev, 0), 35) * 0.5 + Math.min(probability, 70) * 0.12), 0, 100)
+  // V402: confidence must not contradict the actual hit probability. Edge/EV
+  // describe PRICE VALUE, not the chance that the selection wins. A 30% longshot
+  // can be good value, but it must never display "high confidence".
+  let confidenceScore = clamp(Math.round(probability * 0.65 + rel * 0.35 + Math.min(Math.max(edge, 0), 15) * 0.20), 0, 100)
+  if (probability < 40) confidenceScore = Math.min(confidenceScore, 49)
+  else if (probability < 55) confidenceScore = Math.min(confidenceScore, 64)
 
-  if (confidenceScore >= 85) confidenceLabel = isEn ? 'Very high confidence' : 'Bardzo wysoka pewność'
-  else if (confidenceScore >= 72) confidenceLabel = isEn ? 'High confidence' : 'Wysoka pewność'
-  else if (confidenceScore >= 58) confidenceLabel = isEn ? 'Medium confidence' : 'Średnia pewność'
-  else if (confidenceScore >= 45) confidenceLabel = isEn ? 'Low / medium confidence' : 'Niższa pewność'
+  if (probability > 0 && probability < 40) confidenceLabel = isEn ? 'Low hit probability' : 'Niska szansa trafienia'
+  else if (probability > 0 && probability < 55) confidenceLabel = isEn ? 'Medium hit probability' : 'Średnia szansa trafienia'
+  else if (confidenceScore >= 82) confidenceLabel = isEn ? 'Very high confidence' : 'Bardzo wysoka pewność'
+  else if (confidenceScore >= 70) confidenceLabel = isEn ? 'High confidence' : 'Wysoka pewność'
+  else if (confidenceScore >= 56) confidenceLabel = isEn ? 'Medium confidence' : 'Średnia pewność'
+  else if (confidenceScore >= 44) confidenceLabel = isEn ? 'Low / medium confidence' : 'Niższa pewność'
 
   return { tone, stars, actionLabel, confidenceLabel, confidenceScore }
 }

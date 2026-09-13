@@ -330,7 +330,7 @@ export function buildRealisticMatchV320(data = {}, model = {}, simulationOrdinal
   const sharedKeyV367 = canonicalFmAiMarketKeyV367(sharedTopV367?.key || sharedTopV367?.rawKey || '')
   const sharedProbabilityV367 = num(sharedTopV367?.probability, 0)
   const sharedDecisionV367 = String(sharedTopV367?.decision || '').toUpperCase()
-  const sharedHardGuardV367 = shouldHardGuardFmAiPickV367(sharedTopV367)
+  const sharedHardGuardV367 = false // V399: simulation stays probabilistic; canonical pick is context, never a forced outcome
   const forcedOutcomeV367 = sharedHardGuardV367 ? outcomeForFmAiMarketV367(sharedKeyV367) : ''
   const desiredOutcome = forcedOutcomeV367 || sampledOutcomeV367
   const targetFinalScore = sampleConditionalScoreWithSharedPickV367(targetXg, desiredOutcome, outcomeRandom, sharedKeyV367, sharedHardGuardV367)

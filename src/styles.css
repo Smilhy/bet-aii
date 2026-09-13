@@ -88283,3 +88283,21 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
 @media (max-width: 820px){
   .fm392-featured-grid{padding:14px!important}
 }
+
+/* =====================================================================
+   V398 — CONSISTENCY + VALUE SEMANTICS
+   VALUE is price advantage, not hit probability. Low-probability picks are
+   explicitly labelled as high-risk instead of looking like confident picks.
+   ===================================================================== */
+.fm398-shared-signal.high-risk{
+  border-color:rgba(244,190,79,.20)!important;
+  background:linear-gradient(180deg,rgba(55,38,14,.34),rgba(17,20,24,.72))!important;
+}
+.fm398-shared-signal.high-risk b{color:#ffd36a!important}
+.fm398-shared-signal.high-risk span{color:#d9b968!important}
+.fm398-shared-signal.watch b{color:#75dfe8!important}
+.fm398-shared-signal.watch span{color:#8eb7c4!important}
+.fm398-shared-signal.normal b{color:#5ce9b2!important}
+
+.sim-v380-play-badge.tone-caution,
+.sim-v380-play-badge.tone-consider{white-space:nowrap}

@@ -3,6 +3,7 @@ import RealisticMatchCanvasV320 from './RealisticMatchCanvasV320'
 import LiveAICoachV320 from './LiveAICoachV320'
 import { buildRealisticMatchV320, collectLiveStatsV320 } from './matchEngineV320'
 import { canonicalFmAiMarketKeyV367, scoreMatchesFmAiMarketV367, shouldHardGuardFmAiPickV367 } from './fmAiConsistencyV367'
+import { canonicalUiActionV402 } from './fmAiCanonicalPipelineV400'
 
 const MATCH_TOTAL_SECONDS = 90 * 60
 const HALF_SECONDS = 45 * 60
@@ -811,7 +812,7 @@ function buildSimulationModel(data = {}) {
   const sharedKeyV365 = canonicalFmAiMarketKeyV367(sharedTopV365?.key || sharedTopV365?.rawKey || '')
   const sharedProbabilityV365 = Number(sharedTopV365?.probability || 0)
   const sharedDecisionV367 = String(sharedTopV365?.decision || '').toUpperCase()
-  const sharedHardGuardV367 = shouldHardGuardFmAiPickV367(sharedTopV365)
+  const sharedHardGuardV367 = false // V399: simulation stays probabilistic; canonical pick is context, never a forced outcome
   const scoreMatchesSharedPickV365 = (scoreText = '') => {
     const [home, away] = String(scoreText).split(':').map(Number)
     return scoreMatchesFmAiMarketV367({ home, away }, sharedKeyV365)
@@ -873,7 +874,7 @@ function buildSimulationModel(data = {}) {
       sharedProbability: sharedProbabilityV365 || null,
       sharedDecision: sharedDecisionV367 || null,
       hardGuard: sharedHardGuardV367,
-      note: 'Reprezentatywny przebieg wizualny zgodny z głównym sygnałem FM AI. Monte Carlo pozostaje probabilistyczne.'
+      note: sharedHardGuardV367 ? 'Reprezentatywny przebieg wizualny zgodny z głównym sygnałem FM AI.' : 'Scenariusz jest probabilistyczny i może trafić lub nie trafić zamrożonego sygnału FM AI.'
     },
     monteCarloV365: {
       samples,
@@ -2121,6 +2122,27 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
     return rows[0] || { label:'—', value:0 }
   }, [model, homeNameV390, awayNameV390])
   const sharedPickLabelV390 = labelMarketKeyV390(model?.scenarioV365?.sharedKey, homeNameV390, awayNameV390)
+  const sharedSignalProbabilityV398 = Number(model?.scenarioV365?.sharedProbability || 0)
+  const sharedSignalDecisionV398 = String(model?.scenarioV365?.sharedDecision || '').toUpperCase()
+  const liveDecisionV402 = canonicalUiActionV402(sharedSignalDecisionV398, sharedSignalProbabilityV398, data?.predictionEngine?.professionalLab?.decisionCard?.decision || '')
+  // V402: LIVE uses the same conservative action resolver as preparation.
+  // Market identity stays frozen; only the action level can be downgraded.
+  const sharedSignalRiskV398 = liveDecisionV402 === 'NO_BET'
+    ? 'NO BET • BLOKADA RYZYKA'
+    : liveDecisionV402 === 'WATCH'
+      ? sharedSignalProbabilityV398 > 0 && sharedSignalProbabilityV398 < 40
+        ? 'WATCH • WYSOKIE RYZYKO'
+        : 'WATCH • OBSERWUJ'
+      : sharedSignalProbabilityV398 > 0 && sharedSignalProbabilityV398 < 40
+        ? 'VALUE • WYSOKIE RYZYKO'
+        : sharedSignalProbabilityV398 > 0 && sharedSignalProbabilityV398 < 55
+          ? 'VALUE • DO ROZWAŻENIA'
+          : liveDecisionV402 === 'BET'
+            ? 'BET • SYGNAŁ GRYWALNY'
+            : 'PROFIL MODELU'
+  const sharedSignalResultV398 = clockSec >= MATCH_TOTAL_SECONDS && model?.scenarioV365?.sharedKey
+    ? (scoreMatchesFmAiMarketV367({ home:currentScore.home, away:currentScore.away }, model.scenarioV365.sharedKey) ? 'TRAFIONY W TEJ SYMULACJI' : 'NIETRAFIONY W TEJ SYMULACJI')
+    : ''
   const homeLineupReady = (data?.lineups?.home?.startXI?.length || 0) >= 11
   const awayLineupReady = (data?.lineups?.away?.startXI?.length || 0) >= 11
   const usesPredictedXI = Boolean(data?.lineups?.home?.predicted || data?.lineups?.away?.predicted)
@@ -2156,7 +2178,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
           <article><small>1X2 PRE-MATCH</small><b>{model.probabilities.home}% <i>/</i> {model.probabilities.draw}% <i>/</i> {model.probabilities.away}%</b><span>1 / X / 2</span></article>
           <article><small>xG PRE-MATCH</small><b>{model.xg.home.toFixed(2)} <i>–</i> {model.xg.away.toFixed(2)}</b><span>{homeNameV390} / {awayNameV390}</span></article>
           <article className="favorite"><small>FAWORYT MODELU</small><b>{preFavouriteV390.label}</b><span>{preFavouriteV390.value.toFixed(1)}%</span></article>
-          <article><small>FM AI SIGNAL</small><b>{sharedPickLabelV390}</b><span>{model?.scenarioV365?.sharedProbability ? `${Number(model.scenarioV365.sharedProbability).toFixed(1)}%` : 'profil modelu'}</span></article>
+          <article className={`fm398-shared-signal ${sharedSignalProbabilityV398 < 40 ? 'high-risk' : sharedSignalProbabilityV398 < 55 ? 'watch' : 'normal'}`}><small>FM AI SIGNAL</small><b>{sharedPickLabelV390}</b><span>{sharedSignalProbabilityV398 ? `${sharedSignalProbabilityV398.toFixed(1)}% • ${sharedSignalRiskV398}` : 'profil modelu'}{sharedSignalResultV398 ? ` • ${sharedSignalResultV398}` : ''}</span></article>
           <article><small>ATMOSFERA</small><b>{homeFanV390.nickname} vs {awayFanV390.nickname}</b><span>{homeFanV390.known || awayFanV390.known ? 'supporter identity rozpoznane' : 'profil stadionowy'}</span></article>
         </section>
 

@@ -1,0 +1,62 @@
+BET+AI WERSJA 403 — PONOWNY GŁĘBOKI RETEST PIPELINE
+=====================================================
+
+Podczas ponownego testu V402 znaleziono i naprawiono 4 dodatkowe luki spójności:
+
+1. SERVER VALUE POLICY PARITY
+   Server mirror nie obsługiwał PRICE_MOVE_AGAINST tak samo jak klient.
+   Efekt: klient mógł hard-blockować typ, podczas gdy server mirror tego nie robił.
+   V403 dodaje pełną zgodność tego guarda.
+
+2. SERVER-AUTHORITATIVE FREEZE
+   Endpoint record-fm-ai-system-pick wcześniej mógł przyjąć od przeglądarki:
+   - market key,
+   - decision,
+   - probability / fair odds / edge / EV / reliability.
+   V403 ponownie liczy server policy i sam wybiera canonical topFinal.
+   Browser nie może już wymusić innego rynku ani ekonomiki typu.
+
+3. FIRST-PUBLISHED ALWAYS WINS
+   Istniejący rekord trackera jest teraz sprawdzany przed ponowną analizą.
+   Aktualny drift/NO_BET nie może spowodować odrzucenia lub podmiany wcześniej
+   zamrożonego market identity.
+
+4. FAIL-CLOSED WHEN EXACT MARKET DISAPPEARS
+   Jeżeli pełna analiza nie potrafi już znaleźć dokładnie zamrożonego rynku,
+   market key pozostaje ten sam, ale action zostaje obniżone do NO_BET.
+   Stary VALUE nie jest już bezwarunkowo przenoszony dalej.
+
+Dodatkowo:
+- open handshake sprawdza istniejący frozen record także wtedy, gdy bieżący scan
+  został już obniżony do SMALL_EDGE/NO_BET;
+- auto tracker używa market/decision zwróconego przez server-authoritative recorder;
+- client/server przekazują priceMoveAgainstPp w tej samej polityce.
+
+RETESTY PO NAPRAWIE
+-------------------
+V403 CANONICAL GUARDS: PASS
+V403 SERVER RECORD AUTHORITY (mock Supabase): PASS
+V403 STRESS MATRIX:
+  - 100,000 losowych przypadków client/server policy parity: PASS
+  - 50,000 losowych przypadków canonical market/decision lock: PASS
+  - 2,816 porównań settlement client/server (11 rynków, wyniki 0:0–15:15): PASS
+V402 deep pipeline audit: 57 assertions PASS
+V402 policy parity: 1,000 cases PASS
+V402 market lock: 11 markets / 77 locks / 539 settlement comparisons PASS
+V401 regression: 27 assertions PASS
+V400 regression: 27 assertions PASS
+V390 immersive: 17 guards PASS
+V353 master consensus: PASS
+V320 realistic engine: PASS
+Bot settlement: 20 scenarios PASS
+Node syntax check src + netlify JS/MJS/CJS: 135/135 PASS
+
+WAŻNE OGRANICZENIE
+------------------
+Pełnego Vite build / prawdziwego smoke-testu Netlify + Supabase nie udało się wykonać
+w tym środowisku, ponieważ paczka nie zawiera node_modules, a instalacja zależności
+przekroczyła timeout. Testy produkcyjne z realnym Supabase/Netlify nadal są ostatnim
+krokiem przed stwierdzeniem 100% zachowania produkcyjnego.
+
+Ostrzeżenia MODULE_TYPELESS_PACKAGE_JSON podczas części testów są ostrzeżeniami Node
+związanymi z mieszanym ESM/CommonJS i nie były błędami testów.

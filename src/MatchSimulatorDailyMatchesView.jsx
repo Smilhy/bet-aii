@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { classifyValueCandidateV347 } from './valuePolicyV347'
 import { canonicalFmAiMarketKeyV367 } from './fmAiConsistencyV367'
+import { freezeCanonicalTopPickV400 } from './fmAiCanonicalPipelineV400'
+import { applyFrozenTrackerPickV402, applyFrozenTrackerForOpenV405, findFrozenTrackerPickV402, frozenTrackerRowsV402 } from './fmAiTrackerFreezeV402'
 import { FmAiOpportunityBoardV377, FmAiMarketPulseV377, FmAiPortfolioRiskV377, FmAiModelVsMarketV377 } from './FmAiProMarketSuiteV377'
 
 // V329: offline test V158 is kept in code but hidden from production UI.
@@ -740,7 +742,8 @@ function enrichScannerCandidate(scan = {}, candidate = null, performance = null)
     consensusSources,
     consensusAgreement,
     marketDriftStatus: driftRow?.status || 'PENDING',
-    leagueTrustScore: leagueMarketTrust?.score ?? null
+    leagueTrustScore: leagueMarketTrust?.score ?? null,
+    priceMoveAgainstPp: candidate?.priceMoveAgainstPp ?? scan?.priceMoveAgainstPp ?? scan?.marketMoveAgainstPp ?? null
   })
   const warningPenalty = (classified.redFlags || []).reduce((sum, flag) => sum + (flag.level === 'BLOCK' ? 16 : 4), 0)
   const balanceScore = Math.round(Math.max(0, Math.min(100,
@@ -1373,11 +1376,23 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     return availableMatches.filter(match => [match.home, match.away, match.league, match.country].join(' ').toLowerCase().includes(q))
   }, [query, availableMatches])
 
+  const frozenTrackerByFixtureV401 = useMemo(() => {
+    const rows = frozenTrackerRowsV402(systemStatsV368)
+    return new Map(rows.filter(row => row?.fixtureId).map(row => [String(row.fixtureId), row]))
+  }, [systemStatsV368])
+
   const scannerEntries = useMemo(() => {
     const allowed = new Map(availableMatches.map(match => [fixtureKey(match), match]))
     return Object.entries(scannerResults)
       .filter(([key]) => allowed.has(key))
-      .map(([key, raw]) => ({ key, match: allowed.get(key), scan: enrichScannerResult(raw, scannerPerformance) }))
+      .map(([key, raw]) => {
+        const match = allowed.get(key)
+        const liveScan = enrichScannerResult(raw, scannerPerformance)
+        const fixtureIdV401 = String(match?.apiFixtureId || match?.id || key)
+        const frozenTrackerV401 = frozenTrackerByFixtureV401.get(fixtureIdV401) || null
+        const scan = frozenTrackerV401 ? applyFrozenTrackerPickV402(liveScan, frozenTrackerV401) : liveScan
+        return { key, match, scan, trackerFrozenV401: Boolean(frozenTrackerV401) }
+      })
       .filter(item => item.scan?.topFinal)
       .sort((a, b) => {
         const priority = { STRONG_VALUE: 5, VALUE: 4, SMALL_EDGE: 3, NO_BET: 2, NO_ODDS: 1 }
@@ -1385,7 +1400,7 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         const bd = priority[b.scan.topFinal.decision] || 0
         return bd - ad || Number(b.scan.topFinal.dailyScore || 0) - Number(a.scan.topFinal.dailyScore || 0) || Number(b.scan.topFinal.edgePp || 0) - Number(a.scan.topFinal.edgePp || 0) || Number(b.scan.topFinal.reliability?.score || 0) - Number(a.scan.topFinal.reliability?.score || 0)
       })
-  }, [scannerResults, scannerPerformance, availableMatches])
+  }, [scannerResults, scannerPerformance, availableMatches, frozenTrackerByFixtureV401])
 
   const focusCardsV347 = useMemo(() => pickFocusCardsV347(scannerEntries, lang), [scannerEntries, lang])
   const modelHealthV347 = scannerPerformance?.modelHealthV347 || null
@@ -1465,6 +1480,23 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
 
   useEffect(() => {
     refreshSystemStatsV368()
+  }, [])
+
+  // V404: scheduled auto-tracker can freeze a pick after this page was opened.
+  // Refresh the canonical tracker snapshot while the tab is visible so the
+  // board itself converges to the same first-published market before a click.
+  useEffect(() => {
+    const tickV404 = () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+      refreshSystemStatsV368({ retry:false })
+    }
+    const timerV404 = window.setInterval(tickV404, 45000)
+    const onFocusV404 = () => tickV404()
+    window.addEventListener('focus', onFocusV404)
+    return () => {
+      window.clearInterval(timerV404)
+      window.removeEventListener('focus', onFocusV404)
+    }
   }, [])
 
   useEffect(() => {
@@ -1566,20 +1598,11 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     if (!dailyScan) return null
     const key = fixtureKey(match)
     return {
-      version: 'BETAI_FM_AI_SHARED_SNAPSHOT_V367',
+      version: 'BETAI_FM_AI_SHARED_SNAPSHOT_V402',
       fixtureKey: key,
       fixtureId: String(match.apiFixtureId || match.id || ''),
       capturedAt: new Date().toISOString(),
-      topPick: dailyScan.topFinal ? {
-        key: canonicalFmAiMarketKeyV367(dailyScan.topFinal.key),
-        rawKey: dailyScan.topFinal.key,
-        probability: Number(dailyScan.topFinal.probability || 0),
-        bookmakerOdds: Number(dailyScan.topFinal.bookmakerOdds || 0),
-        fairOdds: Number(dailyScan.topFinal.fairOdds || 0),
-        decision: dailyScan.topFinal.decision || '',
-        expectedValuePct: Number(dailyScan.topFinal.expectedValuePct || 0),
-        edgePp: Number(dailyScan.topFinal.edgePp || 0)
-      } : null,
+      topPick: freezeCanonicalTopPickV400(dailyScan.topFinal),
       probabilities: dailyScan.probabilities || null,
       xg: dailyScan.xg || null,
       dataQuality: Number(dailyScan.dataQuality || 0),
@@ -1618,6 +1641,77 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
     throw lastError || new Error('Nie udało się ukończyć analizy wybranego meczu.')
   }
 
+  const ensureCanonicalTrackerFreezeV402 = async (match, dailyScan) => {
+    if (match?.isBetAiLabTest) return dailyScan
+
+    const fixtureId = String(match?.apiFixtureId || match?.id || fixtureKey(match) || '').trim()
+    if (!fixtureId) {
+      const currentDecisionV404 = String(dailyScan?.topFinal?.decision || '').toUpperCase()
+      if (['VALUE','STRONG_VALUE'].includes(currentDecisionV404)) throw new Error('Brak fixture ID — nie mogę bezpiecznie zamrozić typu.')
+      return dailyScan
+    }
+
+    // First try the broad tracker snapshot because it keeps the board in sync.
+    // V404 no longer relies on it as the only recovery route, though.
+    let trackerPayload = await refreshSystemStatsV368({ retry:false })
+    let frozen = findFrozenTrackerPickV402(trackerPayload, fixtureId)
+    if (frozen) return applyFrozenTrackerForOpenV405(dailyScan, frozen)
+
+    const top = dailyScan?.topFinal || null
+    const decision = String(top?.decision || '').toUpperCase()
+    const actionableV403 = ['VALUE','STRONG_VALUE'].includes(decision)
+    const meta = top ? getScannerMarketMetaV330(top, match, lang) : { title:'' }
+
+    // V404: always ask the authoritative recorder about this fixture, even if
+    // the CURRENT scan is NO_BET or has no market. The recorder checks for an
+    // existing frozen row before validating the current request, so an older
+    // first-published pick can never be hidden by stale tracker stats or drift.
+    const response = await fetch('/.netlify/functions/record-fm-ai-system-pick', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        fixtureId,
+        dayKey:todayKey,
+        marketKey:top?.key || '',
+        marketLabel:meta.title || '',
+        decision,
+        odds:top?.bookmakerOdds,
+        aiProbability:top?.probability,
+        fairOdds:top?.fairOdds,
+        edgePp:top?.edgePp,
+        expectedValuePct:top?.expectedValuePct,
+        reliabilityScore:top?.reliability?.score,
+        dailyScore:top?.dailyScore,
+        recordedFrom:'FM_AI_OPEN_HANDSHAKE_V404'
+      })
+    })
+    const payload = await response.json().catch(() => ({}))
+
+    // Existing server canonical row wins immediately. No broad stats read-back
+    // is required, so a temporary get-stats failure cannot make UI diverge.
+    if (response.ok && payload?.ok && payload?.canonicalFrozenV404?.fixtureId) {
+      systemRecordedV368.current.add(fixtureKey(match))
+      const canonicalScanV404 = applyFrozenTrackerForOpenV405(dailyScan, payload.canonicalFrozenV404)
+      // Refresh tracker UI in the background, but never block the canonical handoff.
+      refreshSystemStatsV368({ retry:false }).catch(() => {})
+      return canonicalScanV404
+    }
+
+    // No prior canonical record + current scan is non-actionable: nothing should
+    // be frozen. This gate intentionally comes AFTER direct server recovery.
+    if (!actionableV403) return dailyScan
+
+    // Actionable signals must never proceed unless the server confirms the
+    // canonical row. This stays fail-closed.
+    if (actionableV403) {
+      throw new Error(payload?.error || 'Tracker nie potwierdził zamrożenia głównego typu.')
+    }
+
+    // For a non-actionable current scan, a failed recovery should not invent a
+    // bet. Keep it non-actionable and surface no false canonical identity.
+    return dailyScan
+  }
+
   const handleSelect = async (match, providedScan = null) => {
     if (!isPreMatchFixture(match, Date.now())) {
       setNowMs(Date.now())
@@ -1641,6 +1735,27 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
         setScannerResults(prev => ({ ...prev, [key]: rawScan }))
         dailyScan = enrichScannerResult(rawScan, scannerPerformance)
       }
+
+      // V402: actionable picks use a server-confirmed canonical handshake.
+      // The preparation screen cannot open on an unverified VALUE/STRONG VALUE.
+      // Existing tracker record wins; otherwise the current top is frozen first
+      // and read back before we build the shared snapshot.
+      if (dailyScan) dailyScan = await ensureCanonicalTrackerFreezeV402(match, dailyScan)
+
+      // V405: never silently open a different market than the user clicked.
+      // If AUTO TRACKER / server authority won the race with another canonical
+      // market, sync the board first and require a fresh click on what is now
+      // visibly the canonical pick.
+      if (dailyScan?.canonicalOpenResyncV405?.changed) {
+        const { fromKey, toKey } = dailyScan.canonicalOpenResyncV405
+        await refreshSystemStatsV368({ retry:false }).catch(() => null)
+        setSelectedId('')
+        setSourceMessage(lang === 'en'
+          ? `FM AI synced the canonical pick (${fromKey} → ${toKey}). The board was refreshed — open the match again.`
+          : `FM AI zsynchronizował główny typ (${fromKey} → ${toKey}). Tablica została odświeżona — otwórz mecz ponownie.`)
+        return
+      }
+
       const sharedSnapshotV367 = buildSharedSnapshotV367(match, dailyScan)
       onSelectMatch?.(dailyScan ? { ...match, fmAiDailyScanV353: dailyScan, fmAiSnapshotV365: sharedSnapshotV367 } : match)
     } catch (error) {

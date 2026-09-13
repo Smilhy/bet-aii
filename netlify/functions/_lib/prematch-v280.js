@@ -86,6 +86,30 @@ function probabilityForKey(f = {}, key='') {
 function normalizeDecision(v='') { const s=safe(v).toUpperCase().replace(/\s+/g,'_'); if(['STRONG_VALUE','VALUE','BET'].includes(s))return'BET'; if(['NO_BET','NO_PREDICTION','BLOCKED'].includes(s))return'NO_BET'; return 'WATCH' }
 function confidenceLevel(score=0){return score>=72?'HIGH':score>=56?'MEDIUM':'LOW'}
 
+function lockTripletV404(oneXTwo = {}, key = '', probability = 0) {
+  const p=clamp(probability,1,99,0); if(!p||!['home','draw','away'].includes(key))return normalizeTriplet(oneXTwo)
+  const others=['home','draw','away'].filter(k=>k!==key); const remain=100-p
+  const baseA=Math.max(0,num(oneXTwo?.[others[0]])),baseB=Math.max(0,num(oneXTwo?.[others[1]])); const sum=baseA+baseB
+  const a=sum>0?remain*baseA/sum:remain/2,b=remain-a
+  return normalizeTriplet({ ...oneXTwo, [key]:p, [others[0]]:a, [others[1]]:b })
+}
+function applyCanonicalTrackerBaselineV404(forecast = {}, tracker = null) {
+  const key=safe(tracker?.market_key||tracker?.key); const probability=clamp(tracker?.ai_probability??tracker?.probability,1,99,0)
+  if(!key||!probability)return forecast
+  const out={...forecast,oneXTwo:{...(forecast?.oneXTwo||{})},goals:{...(forecast?.goals||{})},value:{...(forecast?.value||{})},professionalLab:{...(forecast?.professionalLab||{})}}
+  if(['home','draw','away'].includes(key))out.oneXTwo=lockTripletV404(out.oneXTwo,key,probability)
+  if(key==='over15')out.goals.over15=probability; if(key==='under15')out.goals.over15=100-probability
+  if(key==='over25')out.goals.over25=probability; if(key==='under25')out.goals.over25=100-probability
+  if(key==='over35')out.goals.over35=probability; if(key==='under35')out.goals.over35=100-probability
+  if(key==='btts'||key==='bttsYes')out.goals.btts=probability; if(key==='bttsNo')out.goals.btts=100-probability
+  const trackerDecision=safe(tracker?.decision,'VALUE').toUpperCase()
+  out.value={...out.value,state:trackerDecision,top:{...(out?.value?.top||{}),key,probability,decision:trackerDecision,bookmakerOdds:num(tracker?.odds,out?.value?.top?.bookmakerOdds),edgePp:num(tracker?.edge_pp??tracker?.edgePp,out?.value?.top?.edgePp),expectedValuePct:num(tracker?.expected_value_pct??tracker?.expectedValuePct,out?.value?.top?.expectedValuePct),canonicalTrackerV404:true}}
+  out.professionalLab={...out.professionalLab,decisionCard:{...(out?.professionalLab?.decisionCard||{}),key,rawProbability:probability,calibratedProbability:probability,conservativeProbability:probability,decision:normalizeDecision(trackerDecision),canonicalTrackerV404:true}}
+  out.sharedSnapshotV365={...(out?.sharedSnapshotV365||{}),topPick:{...(out?.sharedSnapshotV365?.topPick||{}),key,probability,decision:trackerDecision,bookmakerOdds:num(tracker?.odds),fairOdds:num(tracker?.fair_odds??tracker?.fairOdds),edgePp:num(tracker?.edge_pp??tracker?.edgePp),expectedValuePct:num(tracker?.expected_value_pct??tracker?.expectedValuePct),canonicalTrackerV404:true}}
+  out.canonicalTrackerV404={fixtureId:safe(tracker?.fixture_id||tracker?.fixtureId),key,probability,decision:trackerDecision,publishedAt:tracker?.published_at||tracker?.publishedAt||''}
+  return out
+}
+
 function marketMove(timeline = [], marketKey = '') {
   const rows=(timeline||[]).filter(r=>!marketKey||safe(r?.market_key||r?.marketKey)===marketKey).sort((a,b)=>Date.parse(a?.captured_at||a?.capturedAt||0)-Date.parse(b?.captured_at||b?.capturedAt||0))
   if(rows.length<2)return{available:false,movePp:0,label:'NO_DATA',first:null,last:null}
@@ -196,4 +220,4 @@ function haversineKm(aLat,aLon,bLat,bLon){
   const s=Math.sin(dLat/2)**2+Math.cos(toRad(num(aLat)))*Math.cos(toRad(num(bLat)))*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(s))
 }
 
-module.exports={safe,num,clamp,round,norm,normalizeApiLineups,normalizeApiInjuries,buildPreMatchStateV280,poissonForecast,probabilityForKey,marketMove,haversineKm,compareLineup,injuryDelta,weatherAdjustment,refereeAdjustment,travelAdjustment}
+module.exports={safe,num,clamp,round,norm,normalizeApiLineups,normalizeApiInjuries,buildPreMatchStateV280,poissonForecast,probabilityForKey,marketMove,haversineKm,compareLineup,injuryDelta,weatherAdjustment,refereeAdjustment,travelAdjustment,applyCanonicalTrackerBaselineV404,lockTripletV404}

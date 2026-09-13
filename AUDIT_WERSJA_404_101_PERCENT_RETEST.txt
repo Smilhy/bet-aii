@@ -1,0 +1,72 @@
+WERSJA 404 — 101% RETEST / DEEP CANONICAL AUTHORITY AUDIT
+
+Cel audytu:
+Ponownie sprawdzić cały przepływ jednego zamrożonego typu FM AI od skanera i AUTO TRACKERA, przez tablicę, Preparation, Live Pre-Match i Operations, aż do settlementu.
+
+Dodatkowe realne problemy znalezione po V403 i naprawione w V404:
+
+1. DIRECT CANONICAL RECOVERY
+- endpoint record-fm-ai-system-pick sprawdza istniejący zamrożony rekord PRZED oceną bieżącego requestu z klienta;
+- istniejący canonical pick może zostać odzyskany nawet wtedy, gdy aktualny UI pokazuje NO_BET albo nie ma marketKey;
+- odpowiedź serwera zawiera canonicalFrozenV404, więc klient nie musi czekać na szeroki stats endpoint.
+
+2. SERVER AUTHORITY NIE UFA JUŻ ACTIONABILITY KLIENTA
+- usunięto bramkę, w której bieżący decision/request klienta mógł powstrzymać ocenę serwera;
+- serwer zawsze odczytuje zamrożony scanner snapshot i sam stosuje politykę value;
+- stale NO_BET z przeglądarki nie może ukryć istniejącego/actionable canonical picku.
+
+3. OPEN HANDSHAKE / TABLICA
+- przed otwarciem meczu klient pyta autorytatywny recorder bez względu na aktualny stan UI;
+- canonicalFrozenV404 jest stosowany natychmiast;
+- tablica synchronizuje canonical tracker co 45 sekund oraz przy focusie okna.
+
+4. LIVE PRE-MATCH CANONICAL LOCK
+- capture-live-prematch-v280 pobiera canonical tracker dla fixture;
+- baseline forecast jest nakładany na ten sam market_key/probability/decision przed zbudowaniem prematch state;
+- LivePreMatch UI odrzuca stale state/history z innym market_key i oznacza CANONICAL_SYNC_V404.
+
+5. OPERATIONS / REPLAY
+- bieżący FINAL DECISION korzysta z current canonical shared snapshot;
+- stary ledger/replay nie może nadpisać aktualnego canonical marketu;
+- historyczny inny rynek jest oznaczany jako historia, nie bieżąca decyzja.
+
+6. SETTLEMENT
+- porównano klient/server settlement dla wszystkich wspieranych rynków i szerokiej macierzy wyników;
+- symulacja pozostaje probabilistyczna i NIE jest wymuszana pod typ.
+
+WYNIKI TESTÓW PO POPRAWKACH V404:
+- V404 DIRECT CANONICAL RECOVERY: 4 grupy PASS
+- V404 PREMATCH CANONICAL LOCK: 5 grup PASS
+- V403 SERVER RECORD AUTHORITY: PASS
+- V403 CANONICAL GUARDS: PASS
+- V403 STRESS MATRIX: policy 100000, canonical 50000, settlement 2816 — PASS
+- V402 DEEP PIPELINE AUDIT: 57 assertions PASS
+- V402 VALUE POLICY PARITY: 1000 deterministic cases PASS
+- V402 MARKET LOCK MATRIX: 11 markets, 77 lock assertions, 539 client/server settlement comparisons PASS
+- V401 END TO END SIGNAL LOCK: 27 assertions PASS
+- V400 CANONICAL PIPELINE AUDIT: 27 assertions PASS
+- V390 IMMERSIVE MATCH EXPERIENCE: 17 guards PASS
+- V353 MASTER CONSENSUS: PASS
+- V320 REALISTIC MATCH ENGINE: PASS
+- V280 LIVE PREMATCH ALERTS: PASS
+- V377 FM AI PRO MARKET EDGE SUITE: PASS
+- settlement bot markets: 20 scenarios PASS
+- V368 SYSTEM TRACKER: PASS
+- V347 MODEL INTELLIGENCE: PASS
+- V352 PERSISTENT CACHE: PASS
+- V375 SEGMENT VALIDATION LAB: PASS
+- V376 VERIFIED RECORD PASSPORT: PASS
+- V200 RELIABILITY DATA SCIENCE: PASS
+- V166 PREDICTION ENGINE 2: PASS
+- V1882 ALGORITHM MODEL: PASS
+- V26 EXPERT PENDING STAKE: PASS
+- V6 DNB 90MIN: PASS
+- SYNTAX PARSE src + netlify/functions: 149 files, 0 errors
+
+ŚWIADOME / NIEBĘDĄCE BŁĘDEM OGRANICZENIA:
+- Nie dodawano package.json type=module, bo Netlify Functions używają CommonJS require i takie ustawienie mogłoby je zepsuć.
+- Pełny Vite build nie został uruchomiony lokalnie, ponieważ paczka nie zawiera node_modules, a npm install w tym środowisku nie zakończył się w limicie czasu.
+- Stare testy wymagające wymuszania wyniku symulacji pod typ są celowo nieaktualne: od V399 symulacja musi pozostać probabilistyczna.
+
+WAŻNE:
+Nie istnieje uczciwa gwarancja „101% produkcyjnie” bez wdrożenia na prawdziwy Netlify + Supabase i wykonania smoke-testu z realnymi requestami, timeoutami oraz równoległością. Po tym audycie kodowo nie znaleziono kolejnej ścieżki, którą canonical market mógłby zostać samoczynnie podmieniony w sprawdzonym pipeline.

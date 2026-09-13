@@ -7,6 +7,7 @@ import { applyContextOverlayV220 } from './matchIntelligenceV260'
 import { buildChallengerRawV180, chooseActiveModelV173, buildModelLabV200, adaptiveCalibrateTripletV172, adaptiveCalibrateBinaryV172, applyDataScienceTripletV200, applyDataScienceBinaryV200, applyEnsembleStackingV197, buildReliabilityGuardV190, applyReliabilityDecisionV190 } from './predictionLabV200'
 import { classifyValueCandidateV347 } from './valuePolicyV347'
 import { canonicalFmAiMarketKeyV367, scaleXgToBttsProbabilityV367 } from './fmAiConsistencyV367'
+import { mergeCanonicalTopV400, canonicalUiActionV402 } from './fmAiCanonicalPipelineV400'
 
 const COPY = {
   pl: {
@@ -585,6 +586,44 @@ function buildMasterConsensusV353({ match = {}, data = {}, baseForecast = null, 
   })
   const spreadPp = round1(Math.max(...outcomeSpread, 0))
   const disagreement = spreadPp >= 18 ? 'HIGH' : spreadPp >= 10 ? 'MEDIUM' : 'LOW'
+
+  // V402: when the canonical pick is a goals/BTTS market, judge source
+  // disagreement on THAT market rather than on unrelated 1X2 probabilities.
+  const selectedKeyV402 = canonicalFmAiMarketKeyV367(sharedTopV365?.key || sharedTopV365?.rawKey || '')
+  let selectedMarketSpreadPpV402 = spreadPp
+  if (selectedKeyV402 && !['home','draw','away'].includes(selectedKeyV402)) {
+    const binarySourceValuesV402 = []
+    const pushBinaryV402 = value => { const x = Number(value); if (x > 0 && x < 100) binarySourceValuesV402.push(x) }
+    const baseForV402 = key => {
+      if (key === 'over15' || key === 'under15') return Number(fullGoals?.over15 || 0)
+      if (key === 'over25' || key === 'under25') return Number(fullGoals?.over25 || 0)
+      if (key === 'over35' || key === 'under35') return Number(fullGoals?.over35 || 0)
+      if (key === 'bttsYes' || key === 'bttsNo') return Number(fullGoals?.btts || 0)
+      return 0
+    }
+    const scanForV402 = key => {
+      if (key === 'over15' || key === 'under15') return Number(scanGoals?.over15 || 0)
+      if (key === 'over25' || key === 'under25') return Number(scanGoals?.over25 || 0)
+      if (key === 'over35' || key === 'under35') return Number(scanGoals?.over35 || 0)
+      if (key === 'bttsYes' || key === 'bttsNo') return Number(scanGoals?.btts || 0)
+      return 0
+    }
+    const marketForV402 = key => {
+      if (key === 'over15' || key === 'under15') return marketGoal('over15')
+      if (key === 'over25' || key === 'under25') return marketGoal('over25')
+      if (key === 'over35' || key === 'under35') return marketGoal('over35')
+      if (key === 'bttsYes' || key === 'bttsNo') return marketGoal('bttsYes')
+      return 0
+    }
+    const toSelectedSideV402 = (value, key) => key.startsWith('under') || key === 'bttsNo' ? (value > 0 ? 100 - value : 0) : value
+    pushBinaryV402(toSelectedSideV402(baseForV402(selectedKeyV402), selectedKeyV402))
+    pushBinaryV402(toSelectedSideV402(scanForV402(selectedKeyV402), selectedKeyV402))
+    pushBinaryV402(toSelectedSideV402(marketForV402(selectedKeyV402), selectedKeyV402))
+    selectedMarketSpreadPpV402 = binarySourceValuesV402.length > 1
+      ? round1(Math.max(...binarySourceValuesV402) - Math.min(...binarySourceValuesV402))
+      : 0
+  }
+  const selectedMarketDisagreementV402 = selectedMarketSpreadPpV402 >= 18 ? 'HIGH' : selectedMarketSpreadPpV402 >= 10 ? 'MEDIUM' : 'LOW'
   const confidence = Math.round(clampNum(92 - spreadPp * 1.65 + Math.min(6, sourceRows.length) * 1.5, 45, 96, 70))
 
   const dataQuality = Number(baseForecast?.dataQuality || 0)
@@ -609,6 +648,52 @@ function buildMasterConsensusV353({ match = {}, data = {}, baseForecast = null, 
       masterConsensusGuard:{ status:'DOWNGRADED', reason:`Source disagreement ${spreadPp} pp` }
     }
   }
+
+  // V400 — CANONICAL PIPELINE AUDIT FIX.
+  // Market identity and market economics are frozen at the board click.
+  // Downstream analysis may only DOWNGRADE the action level; it may never
+  // switch to another market or silently upgrade the frozen scanner signal.
+  if (sharedTopV365?.key) {
+    const allCandidatesV400 = Array.isArray(masterValueRaw?.candidates) ? masterValueRaw.candidates : []
+    const canonicalTopV400 = mergeCanonicalTopV400({
+      sharedTop: sharedTopV365,
+      candidates: allCandidatesV400,
+      disagreement: selectedMarketDisagreementV402
+    })
+    if (canonicalTopV400) {
+      const sharedKeyV400 = canonicalTopV400.key
+      const originalTop3V400 = Array.isArray(masterValueRaw?.top3) ? masterValueRaw.top3 : []
+      const remainingTop3V400 = originalTop3V400.filter(item => canonicalFmAiMarketKeyV367(item?.key || item?.rawKey || '') !== sharedKeyV400)
+      const canonicalGuardV402 = selectedMarketDisagreementV402 === 'HIGH'
+        ? { status:'BLOCKED', reason:`Selected market disagreement ${selectedMarketSpreadPpV402} pp` }
+        : selectedMarketDisagreementV402 === 'MEDIUM' && canonicalTopV400.sourceDecision === 'STRONG_VALUE'
+          ? { status:'DOWNGRADED', reason:`Selected market disagreement ${selectedMarketSpreadPpV402} pp` }
+          : { status:'CLEAR', reason:`Selected market disagreement ${selectedMarketSpreadPpV402} pp` }
+      masterValue = {
+        ...masterValue,
+        state: canonicalTopV400.decision,
+        masterConsensusGuard: canonicalGuardV402,
+        top: {
+          ...canonicalTopV400,
+          reason: `CANONICAL FM AI SNAPSHOT: ${forecastLabel(sharedKeyV400)} pozostaje głównym rynkiem od tablicy do LIVE.`,
+          canonicalFrozenV399: true
+        },
+        top3: [canonicalTopV400, ...remainingTop3V400].slice(0, 3),
+        canonicalSignalV399: {
+          key: sharedKeyV400,
+          probability: canonicalTopV400.probability,
+          decision: canonicalTopV400.decision,
+          sourceDecision: canonicalTopV400.sourceDecision,
+          fullAnalysisDecision: canonicalTopV400.fullAnalysisDecision,
+          exactMarketMatched: canonicalTopV400.exactMarketMatchedV400,
+          selectedMarketSpreadPpV402,
+          selectedMarketDisagreementV402,
+          source: 'frozen-daily-scanner-v400',
+          fixtureId: String(sharedSnapshotV365?.fixtureId || '')
+        }
+      }
+    }
+  }
   const masterPoisson = poissonForecast(masterXg.home, masterXg.away)
   const fair = Object.fromEntries(Object.entries(masterProbabilities).map(([key,value]) => [key, fairOdd(value)]))
 
@@ -620,12 +705,14 @@ function buildMasterConsensusV353({ match = {}, data = {}, baseForecast = null, 
     xg: masterXg,
     fairOdds: { ...(baseForecast?.fairOdds || {}), ...fair },
     value: masterValue,
+    canonicalSignalV399: masterValue?.canonicalSignalV399 || null,
+    canonicalSignalV400: masterValue?.canonicalSignalV399 || null,
     topScores: masterPoisson?.topScores || baseForecast?.topScores || [],
     sharedSnapshotV365: sharedSnapshotV365 ? {
       ...sharedSnapshotV365,
       applied: Boolean(sharedTopV365?.key),
       finalTopProbability: Number(sharedTopV365?.probability || 0),
-      note: 'Dashboard, preparation and simulation use one shared top-pick signal.'
+      note: 'V400: board, preparation, professional decision layer and LIVE keep one frozen market identity; downstream may only downgrade action status.'
     } : null,
     masterConsensus: {
       version:'BETAI_MASTER_CONSENSUS_V353_V365_SHARED',
@@ -633,6 +720,8 @@ function buildMasterConsensusV353({ match = {}, data = {}, baseForecast = null, 
       confidence,
       disagreement,
       spreadPp,
+      selectedMarketSpreadPpV402,
+      selectedMarketDisagreementV402,
       weights:{ full:round1(fullWeight*100), scanner:round1(scanWeight*100), market:round1(marketWeight*100) },
       sources:sourceRows.map(row => ({ ...row, oneXTwo:{ home:round1(row.oneXTwo.home), draw:round1(row.oneXTwo.draw), away:round1(row.oneXTwo.away) } })),
       baseOneXTwo:{ home:round1(fullOne.home), draw:round1(fullOne.draw), away:round1(fullOne.away) },
@@ -818,7 +907,7 @@ function buildValueEngineV2({ match = {}, data = {}, probabilities = {}, dataQua
     detected: recommendations.length > 0,
     top,
     top3,
-    candidates: ranked.slice(0, 10),
+    candidates: ranked,
     recommendations: recommendations.slice(0, 3),
     bookmakerCount: books.length,
     marginRemoved: ranked.some(item => item.vigAdjusted),
@@ -1873,25 +1962,48 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
 
     const goalRows = [
       { key: 'over15', label: 'Powyżej 1.5', probability: Number(forecast?.goals?.over15 || 0), fairOdds: Number(forecast?.fairOdds?.over15 || 0) },
+      { key: 'under15', label: 'Poniżej 1.5', probability: 100 - Number(forecast?.goals?.over15 || 0), fairOdds: Number(forecast?.fairOdds?.under15 || fairOdd(100 - Number(forecast?.goals?.over15 || 0))) },
       { key: 'over25', label: 'Powyżej 2.5', probability: Number(forecast?.goals?.over25 || 0), fairOdds: Number(forecast?.fairOdds?.over25 || 0) },
-      { key: 'btts', label: 'BTTS • TAK', probability: Number(forecast?.goals?.btts || 0), fairOdds: Number(forecast?.fairOdds?.btts || 0) },
-      { key: 'over35', label: 'Powyżej 3.5', probability: Number(forecast?.goals?.over35 || 0), fairOdds: Number(forecast?.fairOdds?.over35 || 0) }
+      { key: 'under25', label: 'Poniżej 2.5', probability: 100 - Number(forecast?.goals?.over25 || 0), fairOdds: Number(forecast?.fairOdds?.under25 || fairOdd(100 - Number(forecast?.goals?.over25 || 0))) },
+      { key: 'bttsYes', label: 'BTTS • TAK', probability: Number(forecast?.goals?.btts || 0), fairOdds: Number(forecast?.fairOdds?.btts || 0) },
+      { key: 'bttsNo', label: 'BTTS • NIE', probability: 100 - Number(forecast?.goals?.btts || 0), fairOdds: Number(forecast?.fairOdds?.bttsNo || fairOdd(100 - Number(forecast?.goals?.btts || 0))) },
+      { key: 'over35', label: 'Powyżej 3.5', probability: Number(forecast?.goals?.over35 || 0), fairOdds: Number(forecast?.fairOdds?.over35 || 0) },
+      { key: 'under35', label: 'Poniżej 3.5', probability: 100 - Number(forecast?.goals?.over35 || 0), fairOdds: Number(forecast?.fairOdds?.under35 || fairOdd(100 - Number(forecast?.goals?.over35 || 0))) }
     ].sort((a, b) => b.probability - a.probability)
 
     const card = professionalLab?.decisionCard || null
-    const decision = String(card?.decision || (forecast?.value?.state === 'STRONG_VALUE' || forecast?.value?.state === 'VALUE' ? 'BET' : forecast?.value?.state === 'SMALL_EDGE' ? 'WATCH' : 'NO_BET')).toUpperCase()
+    const frozenPickV398 = match?.fmAiSnapshotV365?.topPick || null
+    const frozenKeyV398 = canonicalFmAiMarketKeyV367(frozenPickV398?.key || frozenPickV398?.rawKey || '')
+    const frozenDecisionV398 = String(frozenPickV398?.decision || '').toUpperCase()
+    const frozenProbabilityV398 = Number(frozenPickV398?.probability || 0)
+    const fallbackDecisionV402 = forecast?.value?.state === 'STRONG_VALUE' || forecast?.value?.state === 'VALUE' ? 'BET' : forecast?.value?.state === 'SMALL_EDGE' ? 'WATCH' : 'NO_BET'
+    const downstreamDecisionV402 = String(card?.decision || fallbackDecisionV402).toUpperCase().replace(/\s+/g, '_')
+    // V402: one shared action resolver is used by preparation and LIVE. The
+    // frozen market cannot change; downstream analysis may only downgrade it.
+    const sourceUiDecisionV402 = frozenPickV398
+      ? canonicalUiActionV402(frozenDecisionV398, frozenProbabilityV398, '')
+      : fallbackDecisionV402
+    const decision = frozenPickV398
+      ? canonicalUiActionV402(frozenDecisionV398, frozenProbabilityV398, downstreamDecisionV402)
+      : (['BET','WATCH','NO_BET'].includes(downstreamDecisionV402) ? downstreamDecisionV402 : fallbackDecisionV402)
     const decisionLabel = decision === 'BET' ? 'BET' : decision === 'WATCH' ? 'WATCH' : 'NO BET'
-    const decisionReason = card?.reason || (forecast?.value?.state === 'CALIBRATION_PENDING' ? 'Za mała próbka historyczna do rekomendacji.' : forecast?.value?.top?.reason || 'Model nie znajduje wystarczająco mocnego sygnału do rekomendacji.')
+    const uiDecisionRankV402 = { NO_BET:0, WATCH:1, BET:2 }
+    const wasDowngradedV402 = Boolean(frozenPickV398 && uiDecisionRankV402[decision] < uiDecisionRankV402[sourceUiDecisionV402])
+    const decisionReason = frozenPickV398
+      ? wasDowngradedV402
+        ? `${frozenDecisionV398 || 'FM AI'}: rynek pozostaje zamrożony, ale pełna analiza obniżyła decyzję do ${decisionLabel}. ${card?.reason || 'Aktualne guardy ryzyka nie pozwalają utrzymać wcześniejszego poziomu rekomendacji.'}`
+        : `${frozenDecisionV398 || 'FM AI'}: zamrożony sygnał z tablicy. VALUE oznacza przewagę ceny, a nie gwarancję trafienia. Szansa modelu ${frozenProbabilityV398.toFixed(1)}%.`
+      : card?.reason || (forecast?.value?.state === 'CALIBRATION_PENDING' ? 'Za mała próbka historyczna do rekomendacji.' : forecast?.value?.top?.reason || 'Model nie znajduje wystarczająco mocnego sygnału do rekomendacji.')
 
-    const candidateKey = String(card?.key || '')
+    const candidateKey = String(frozenKeyV398 || card?.key || '')
     const oneXTwoByKey = oneXTwoRows.find(item => item.key === candidateKey)
-    const goalByKey = goalRows.find(item => item.key === candidateKey || (candidateKey === 'bttsYes' && item.key === 'btts'))
+    const goalByKey = goalRows.find(item => item.key === candidateKey)
     const primary = oneXTwoByKey || goalByKey || oneXTwoRows[0]
-    const primaryLabel = card?.label || primary?.label || '—'
-    const primaryProbability = Number(card?.calibratedProbability || primary?.probability || 0)
-    const primaryFairOdds = Number(card?.modelFairOdds || primary?.fairOdds || 0)
-    const rawEdge = Number(card?.rawEdgePp ?? forecast?.value?.top?.edgePp)
-    const conservativeEdge = card?.conservativeEdgePp == null ? null : Number(card.conservativeEdgePp)
+    const primaryLabel = frozenPickV398 ? (primary?.label || forecastLabel(candidateKey)) : (card?.label || primary?.label || '—')
+    const primaryProbability = Number(frozenPickV398?.probability || card?.calibratedProbability || primary?.probability || 0)
+    const primaryFairOdds = Number(frozenPickV398?.fairOdds || card?.modelFairOdds || primary?.fairOdds || 0)
+    const rawEdge = Number(frozenPickV398?.edgePp ?? card?.rawEdgePp ?? forecast?.value?.top?.edgePp)
+    const conservativeEdge = frozenPickV398 ? null : (card?.conservativeEdgePp == null ? null : Number(card.conservativeEdgePp))
     const edge = conservativeEdge != null && Number.isFinite(conservativeEdge) ? conservativeEdge : (Number.isFinite(rawEdge) ? rawEdge : null)
 
     const homeXg = Number(forecast?.xg?.home || 0)
@@ -1948,21 +2060,33 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
       return { odds:0, bookmaker:'' }
     }
     const best = quickSummaryV321.best1x2
-    const keyMarkets = [best, ...quickSummaryV321.goalCards].slice(0, 4).map(item => {
+    const frozenKeyV398 = canonicalFmAiMarketKeyV367(match?.fmAiSnapshotV365?.topPick?.key || match?.fmAiSnapshotV365?.topPick?.rawKey || '')
+    const frozenMarketV398 = frozenKeyV398 ? {
+      key:frozenKeyV398,
+      label:quickSummaryV321.primaryLabel,
+      probability:Number(quickSummaryV321.primaryProbability || 0),
+      fairOdds:Number(quickSummaryV321.primaryFairOdds || 0)
+    } : null
+    const marketSeedV398 = [frozenMarketV398, best, ...quickSummaryV321.goalCards].filter(Boolean).filter((item,index,arr)=>arr.findIndex(row=>String(row.key)===String(item.key))===index)
+    const keyMarkets = marketSeedV398.slice(0, 4).map(item => {
       const key = item.key
       const value = valueFor(key)
       const price = oddsFor(key)
+      const frozen = frozenKeyV398 && key === frozenKeyV398 ? match?.fmAiSnapshotV365?.topPick : null
       return {
         key,
         label:item.label,
-        probability:Number(item.probability || 0),
-        odds:price.odds,
-        bookmaker:price.bookmaker,
-        edge:value?.edgePp == null ? null : Number(value.edgePp),
-        ev:value?.expectedValuePct == null ? null : Number(value.expectedValuePct)
+        probability:Number(frozen?.probability || item.probability || 0),
+        odds:Number(frozen?.bookmakerOdds || price.odds || 0),
+        bookmaker:frozen ? (frozen.bookmaker || price.bookmaker || '') : price.bookmaker,
+        edge:frozen?.edgePp == null ? (value?.edgePp == null ? null : Number(value.edgePp)) : Number(frozen.edgePp),
+        ev:frozen?.expectedValuePct == null ? (value?.expectedValuePct == null ? null : Number(value.expectedValuePct)) : Number(frozen.expectedValuePct)
       }
     })
-    const confidence = clampNum(Number(quickSummaryV321.reliability || 0), 0, 100)
+    // V402: the ring represents hit probability, not reliability. Reliability is
+    // shown separately so a 30% value longshot can never look like 80% win chance.
+    const confidence = clampNum(Number(quickSummaryV321.primaryProbability || 0), 0, 100)
+    const featuredReliabilityV402 = clampNum(Number(quickSummaryV321.reliability || 0), 0, 100)
     const decisionTone = quickSummaryV321.decision === 'BET' ? 'bet' : quickSummaryV321.decision === 'WATCH' ? 'watch' : 'nobet'
     const recommended = quickSummaryV321.decision === 'BET'
       ? (lang === 'en' ? 'Recommended' : 'Rekomendowany')
@@ -1982,8 +2106,9 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
       drawProbability:Number(forecast?.oneXTwo?.draw || 0),
       awayProbability:Number(forecast?.oneXTwo?.away || 0),
       fairOdds:Number(quickSummaryV321.primaryFairOdds || 0),
-      marketOdds:Number(professionalLab?.decisionCard?.bookmakerOdds || 0),
+      marketOdds:Number(match?.fmAiSnapshotV365?.topPick?.bookmakerOdds || professionalLab?.decisionCard?.bookmakerOdds || 0),
       edge:quickSummaryV321.edge,
+      reliability:featuredReliabilityV402,
       dataQuality:Number(quickSummaryV321.dataQuality || 0)
     }
   }, [forecast, quickSummaryV321, professionalLab, match, data, lang])
@@ -2141,11 +2266,11 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
                     <span><b>{featuredMatchV391.fairOdds > 1 ? featuredMatchV391.fairOdds.toFixed(2) : '—'}</b><small>FAIR ODDS</small></span>
                     <span><b>{featuredMatchV391.marketOdds > 1 ? featuredMatchV391.marketOdds.toFixed(2) : '—'}</b><small>{lang === 'en' ? 'MARKET ODDS' : 'MARKET ODDS'}</small></span>
                     <span className={featuredMatchV391.edge != null && featuredMatchV391.edge >= 0 ? 'positive' : ''}><b>{featuredMatchV391.edge == null ? '—' : `${featuredMatchV391.edge > 0 ? '+' : ''}${featuredMatchV391.edge.toFixed(1)} pp`}</b><small>ODDS EDGE</small></span>
-                    <span><b>{featuredMatchV391.dataQuality}/100</b><small>HIGH VALUE</small></span>
+                    <span><b>{Math.round(featuredMatchV391.reliability)}/100</b><small>RELIABILITY</small></span>
                   </div>
                 </div>
                 <div className="fm391-confidence fm392-confidence" style={{'--fm391-confidence':`${featuredMatchV391.confidence}%`}}>
-                  <div><b>{Math.round(featuredMatchV391.confidence)}%</b><small>CONFIDENCE</small></div>
+                  <div><b>{Math.round(featuredMatchV391.confidence)}%</b><small>AI CHANCE</small></div>
                 </div>
               </article>
             </div>

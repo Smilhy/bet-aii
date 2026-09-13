@@ -3,7 +3,7 @@ const crypto = require('crypto')
 const { createClient } = require('@supabase/supabase-js')
 const { apiGet } = require('./_lib/match-simulator-rate-shield')
 const { logRun } = require('./_lib/match-ops-v211')
-const { safe, num, norm, normalizeApiLineups, normalizeApiInjuries, buildPreMatchStateV280, haversineKm } = require('./_lib/prematch-v280')
+const { safe, num, norm, normalizeApiLineups, normalizeApiInjuries, buildPreMatchStateV280, haversineKm, applyCanonicalTrackerBaselineV404 } = require('./_lib/prematch-v280')
 const { WINDOWS, dueWindow, relevantEventRules } = require('./_lib/prematch-schedule-v280')
 const { shouldSkipAutoJobV300 } = require('./_lib/system-safe-mode-v300')
 function json(statusCode, body){return{statusCode,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'},body:JSON.stringify(body)}}
@@ -65,8 +65,12 @@ async function handlerCore(event={}){
     const due=(snaps||[]).map(s=>({snap:s,window:dueWindow(s.fixture_date,now)})).filter(x=>x.window)
     if(!due.length){await logRun(supabase,'prematch_scan',started,'skipped',{scanned:(snaps||[]).length,due:0});return json(200,{ok:true,scanned:(snaps||[]).length,due:0,processed:0})}
     const ids=due.map(x=>String(x.snap.fixture_id))
-    const {data:checks}=await supabase.from('match_prematch_events_v280').select('fixture_id,event_key').in('fixture_id',ids).like('event_type','CHECK_WINDOW')
+    const [{data:checks},{data:canonicalRowsV404,error:canonicalErrorV404}]=await Promise.all([
+      supabase.from('match_prematch_events_v280').select('fixture_id,event_key').in('fixture_id',ids).like('event_type','CHECK_WINDOW'),
+      supabase.from('fm_ai_system_picks_v368').select('fixture_id,market_key,decision,odds,ai_probability,fair_odds,edge_pp,expected_value_pct,published_at').in('fixture_id',ids)
+    ])
     const seen=new Set((checks||[]).map(x=>x.event_key))
+    const canonicalByFixtureV404=new Map((canonicalErrorV404?[]:(canonicalRowsV404||[])).map(row=>[String(row.fixture_id),row]))
     let processed=0,apiCalls=0,alerts=0,skipped=0,errors=[]
     for(const item of due){
       const s=item.snap,w=item.window,fixtureId=String(s.fixture_id),checkKey=`${fixtureId}|CHECK|${w.key}`
@@ -113,7 +117,10 @@ async function handlerCore(event={}){
 
         const refName=safe(fixture?.referee);let refProfile=null
         if(refName){const {data:r}=await supabase.from('match_referee_profiles_v280').select('*').eq('referee_key',norm(refName)).maybeSingle();refProfile=r||null}
-        const state=buildPreMatchStateV280({fixture,baselineForecast:s.forecast||{},baselineData:baselineDataForState,baselineLineups,latestLineups,latestInjuries,weather:weather||{available:false},refereeProfile:refProfile||{},travel,marketTimeline:oddsRows||[],priorState})
+        const canonicalTrackerV404=canonicalByFixtureV404.get(fixtureId)||null
+        const canonicalBaselineForecastV404=applyCanonicalTrackerBaselineV404(s.forecast||{},canonicalTrackerV404)
+        const state=buildPreMatchStateV280({fixture,baselineForecast:canonicalBaselineForecastV404,baselineData:baselineDataForState,baselineLineups,latestLineups,latestInjuries,weather:weather||{available:false},refereeProfile:refProfile||{},travel,marketTimeline:oddsRows||[],priorState})
+        state.canonicalTrackerV404=canonicalTrackerV404?{fixtureId,marketKey:canonicalTrackerV404.market_key,decision:canonicalTrackerV404.decision,probability:num(canonicalTrackerV404.ai_probability),publishedAt:canonicalTrackerV404.published_at||''}:null
         const status=state.reviewRequired?'REVIEW':state.officialLineups?'READY':'TRACKING'
         const nowIso=new Date().toISOString()
         const row={fixture_id:fixtureId,fixture_date:s.fixture_date||fixture.date||null,home_team:s.home_team||safe(fixture?.home?.name),away_team:s.away_team||safe(fixture?.away?.name),league:s.league||safe(fixture?.league),status,official_lineups:state.officialLineups,official_sides:state.officialSides,lineup_payload:{baseline:baselineLineups,current:latestLineups,comparison:state.lineup},injuries_payload:{baseline:baselineInjuryItems,current:latestInjuries,delta:state.injuries},weather_payload:{raw:weather||{},adjusted:state.weather},referee_payload:{profile:refProfile||{},adjusted:state.referee,name:refName},travel_payload:state.travel,market_payload:state.market,rescore:state.rescored,probability_delta:state.probability,confidence_delta:state.confidence,decision_before:state.decision.before,decision_after:state.decision.after,review_required:state.reviewRequired,flags:state.flags,last_window:w.key,last_checked_at:nowIso,updated_at:nowIso}

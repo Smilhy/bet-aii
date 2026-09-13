@@ -59,10 +59,11 @@ export default function MatchOperationsV211({ match = {}, forecast = null }) {
     return () => { dead = true }
   }, [scope, market, league, isTest])
 
-  const replayMarket = useMemo(() => {
-    const raw = String(forecast?.professionalLab?.decisionCard?.key || forecast?.value?.top?.key || 'over25')
-    return raw === 'btts' ? 'bttsYes' : raw
-  }, [forecast])
+  const canonicalTopV404 = forecast?.sharedSnapshotV365?.topPick || forecast?.value?.top || null
+  const currentMarketV404 = String(canonicalTopV404?.key || canonicalTopV404?.rawKey || forecast?.professionalLab?.decisionCard?.key || 'over25')
+  const currentDecisionV404 = String(forecast?.professionalLab?.decisionCard?.decision || canonicalTopV404?.decision || forecast?.value?.state || '—')
+  const currentEdgeV404 = num(canonicalTopV404?.edgePp ?? forecast?.value?.top?.edgePp)
+  const replayMarket = useMemo(() => currentMarketV404 === 'btts' ? 'bttsYes' : currentMarketV404, [currentMarketV404])
   const replayOdds = useMemo(() => (replay?.odds || []).filter(x => x.marketKey === replayMarket), [replay, replayMarket])
   const latestFreeze = replay?.freezes?.[replay.freezes.length - 1] || null
 
@@ -108,7 +109,7 @@ export default function MatchOperationsV211({ match = {}, forecast = null }) {
         <article><small>FREEZE CAPTURES</small><b>{replay?.reproducibility?.freezeCaptures ?? '—'}</b><span>selected hash {replay?.reproducibility?.selectedHash ? `${replay.reproducibility.selectedHash.slice(0,12)}…` : '—'}</span></article>
         <article><small>HASH VERIFICATION</small><b>{replay?.reproducibility?.verificationRate != null ? `${replay.reproducibility.verificationRate}%` : '—'}</b><span>{replay?.reproducibility?.verifiedHashes || 0} zweryfikowanych SHA-256</span></article>
         <article><small>LATEST MODEL</small><b>{latestFreeze?.activeModel ? String(latestFreeze.activeModel).toUpperCase() : '—'}</b><span>{latestFreeze?.modelVersion || 'brak freeze'}</span></article>
-        <article><small>FINAL DECISION</small><b>{latestFreeze?.decision || forecast?.professionalLab?.decisionCard?.decision || '—'}</b><span>{latestFreeze?.marketKey || forecast?.value?.top?.key || '—'} • edge {num(latestFreeze?.edgePp).toFixed(1)} pp</span></article>
+        <article><small>FINAL DECISION</small><b>{currentDecisionV404}</b><span>{currentMarketV404 || '—'} • edge {currentEdgeV404.toFixed(1)} pp{latestFreeze?.marketKey && String(latestFreeze.marketKey)!==currentMarketV404 ? ' • ledger history ≠ current canonical' : ''}</span></article>
       </div>
       <div className="sim-replay-windows-v211">
         {['T24H','T6H','T1H','T15M'].map(key => <span key={key} className={replay?.windows?.[key]?.captured ? 'captured' : ''}><small>{key}</small><b>{replay?.windows?.[key]?.captured ? '✓' : '○'}</b><em>{replay?.windows?.[key]?.captured ? `${replay.windows[key].markets} rynków • ${agoLabel(replay.windows[key].minutesBeforeKickoff)}` : 'oczekuje'}</em></span>)}

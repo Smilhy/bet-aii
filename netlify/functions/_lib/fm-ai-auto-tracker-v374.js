@@ -74,7 +74,10 @@ async function scanFixture(f,snapshot,performance){
     reliabilityScore:top.reliability?.score||top.reliabilityScore,dailyScore:top.dailyScore,recordedFrom:'FM_AI_AUTO_TRACKER_V374'
   })})
   const rp=parseResponse(record)
-  if(record?.statusCode===200&&rp?.ok)return{status:rp.recorded?'recorded':'duplicate',decision,key:top.key,odds:n(top.bookmakerOdds)}
+  if(record?.statusCode===200&&rp?.ok){
+    const canonicalRowV403 = rp?.pick || rp?.frozen || null
+    return{status:rp.recorded?'recorded':'duplicate',decision:String(canonicalRowV403?.decision||decision),key:String(canonicalRowV403?.market_key||top.key),odds:n(canonicalRowV403?.odds,top.bookmakerOdds)}
+  }
   return{status:'record_error',reason:rp?.error||`HTTP_${record?.statusCode}`}
 }
 

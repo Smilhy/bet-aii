@@ -13,7 +13,7 @@ function calibrationScore(c={}){const s=String(c?.status||'PENDING').toUpperCase
 function classify(candidate={},ctx={}){
   const quality=n(ctx.dataQuality), modelAgreement=n(ctx.modelAgreement,65), consensusSources=n(ctx.consensusSources), consensusAgreement=n(ctx.consensusAgreement)
   const marketScore=n(ctx.marketScore,consensusSources>0?consensusAgreement:55), drift=String(ctx.marketDriftStatus||'PENDING').toUpperCase()
-  const leagueTrust=ctx.leagueTrustScore==null?null:n(ctx.leagueTrustScore), calibration=candidate?.calibration||{}, samples=n(calibration?.samples)
+  const leagueTrust=ctx.leagueTrustScore==null?null:n(ctx.leagueTrustScore), priceMoveAgainstPp=ctx.priceMoveAgainstPp==null?null:n(ctx.priceMoveAgainstPp), calibration=candidate?.calibration||{}, samples=n(calibration?.samples)
   let threshold=baseEdgeThreshold(candidate?.key||'')
   if(quality<75)threshold+=4; else if(quality<85)threshold+=2.5; else if(quality<92)threshold+=1
   if(String(calibration?.status||'').toUpperCase()==='OK')threshold+=.75
@@ -40,6 +40,7 @@ function classify(candidate={},ctx={}){
   if(consensusSources>=2&&consensusAgreement<VALUE_POLICY.hardBlockConsensusAgreement)redFlags.push({level:'BLOCK',code:'MARKET_DISAGREEMENT'}); else if(consensusSources>=2&&consensusAgreement<60)redFlags.push({level:'WARN',code:'MARKET_CONSENSUS'})
   if(drift==='DRIFT')redFlags.push({level:'BLOCK',code:'MODEL_DRIFT'}); else if(drift==='WATCH')redFlags.push({level:'WARN',code:'MODEL_DRIFT_WATCH'})
   if(leagueTrust!=null&&leagueTrust<VALUE_POLICY.hardBlockLeagueTrust)redFlags.push({level:'BLOCK',code:'LOW_LEAGUE_TRUST'}); else if(leagueTrust!=null&&leagueTrust<VALUE_POLICY.minStrongLeagueTrust)redFlags.push({level:'WARN',code:'LEAGUE_TRUST'})
+  if(priceMoveAgainstPp!=null&&priceMoveAgainstPp<=-8)redFlags.push({level:'BLOCK',code:'PRICE_MOVE_AGAINST'})
   if(edge>=VALUE_POLICY.outlierEdgePp||ev>=VALUE_POLICY.outlierEvPct)redFlags.push({level:'WARN',code:'PRICE_OUTLIER'})
   const blocked=redFlags.some(f=>f.level==='BLOCK')
   let decision='NO_BET'
@@ -74,7 +75,8 @@ function enrichCandidate(scan={},candidate=null,performance=null){
   const leagueTrust=Array.isArray(performance?.leagueTrust)?performance.leagueTrust.find(x=>norm(x?.name)===norm(scan?.league||''))||null:null
   const leagueMarket=Array.isArray(leagueTrust?.markets)?leagueTrust.markets.find(x=>x?.key===perfKey)||null:null
   const marketScore=sources>=2?agreement:n(scan?.bookmakerCount)>=3?82:n(scan?.bookmakerCount)>=1?70:35
-  const out=classify(c,{dataQuality:n(scan?.dataQuality),modelAgreement:n(scan?.modelAgreement),marketScore,consensusSources:sources,consensusAgreement:agreement,marketDriftStatus:driftRow?.status||'PENDING',leagueTrustScore:leagueMarket?.score??null})
+  const priceMoveAgainstPp = candidate?.priceMoveAgainstPp ?? scan?.priceMoveAgainstPp ?? scan?.marketMoveAgainstPp ?? null
+  const out=classify(c,{dataQuality:n(scan?.dataQuality),modelAgreement:n(scan?.modelAgreement),marketScore,consensusSources:sources,consensusAgreement:agreement,marketDriftStatus:driftRow?.status||'PENDING',leagueTrustScore:leagueMarket?.score??null,priceMoveAgainstPp})
   const warningPenalty=(out.redFlags||[]).reduce((s,f)=>s+(f.level==='BLOCK'?16:4),0)
   const dailyScore=Math.round(Math.max(0,Math.min(100,out.reliabilityScore*.46+Math.min(22,Math.max(0,n(out.edgePp)))*1.15+Math.min(30,Math.max(0,n(out.expectedValuePct)))*.35+(sources>=2?agreement:marketScore)*.10+n(leagueMarket?.score,65)*.08-warningPenalty)))
   return {...out,marketConsensus:consensus,driftStatus:driftRow?.status||'PENDING',leagueMarketTrust:leagueMarket||null,reliability:{score:out.reliabilityScore,label:out.reliabilityLabel,calibration:cal,modelAgreement:n(scan?.modelAgreement),dataQuality:n(scan?.dataQuality)},dailyScore}

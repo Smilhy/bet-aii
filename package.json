@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-391-featured-match-intelligence",
-  "version": "391.0.0",
+  "name": "betai-wersja-405-no-silent-signal-switch",
+  "version": "405.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
@@ -26,7 +26,18 @@
     "test:fm-ai-v375": "node TEST_WERSJA_375_FM_AI_SEGMENT_VALIDATION_LAB.cjs",
     "test:fm-ai-v376": "node TEST_WERSJA_376_FM_AI_VERIFIED_RECORD_PASSPORT.cjs",
     "test:fm-ai-v377": "node TEST_WERSJA_377_FM_AI_PRO_MARKET_EDGE_SUITE.cjs",
-    "test:v390": "node TEST_WERSJA_390_IMMERSIVE_MATCH_EXPERIENCE.cjs"
+    "test:v390": "node TEST_WERSJA_390_IMMERSIVE_MATCH_EXPERIENCE.cjs",
+    "test:v400": "node TEST_WERSJA_400_CANONICAL_PIPELINE_AUDIT.mjs",
+    "test:v401": "node TEST_WERSJA_401_END_TO_END_SIGNAL_LOCK.mjs",
+    "test:v402": "node TEST_WERSJA_402_DEEP_PIPELINE_AUDIT.mjs",
+    "test:v402-policy": "node TEST_WERSJA_402_VALUE_POLICY_PARITY.mjs",
+    "test:v402-matrix": "node TEST_WERSJA_402_MARKET_LOCK_MATRIX.mjs",
+    "test:v403": "node TEST_WERSJA_403_CANONICAL_GUARDS.mjs",
+    "test:v403-record": "node TEST_WERSJA_403_SERVER_RECORD_AUTHORITY.cjs",
+    "test:v403-stress": "node TEST_WERSJA_403_STRESS_MATRIX.mjs",
+    "test:v404": "node TEST_WERSJA_404_DIRECT_CANONICAL_RECOVERY.cjs",
+    "test:v404-prematch": "node TEST_WERSJA_404_PREMATCH_CANONICAL_LOCK.cjs",
+    "test:v405": "node TEST_WERSJA_405_NO_SILENT_MARKET_SWITCH.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.3",

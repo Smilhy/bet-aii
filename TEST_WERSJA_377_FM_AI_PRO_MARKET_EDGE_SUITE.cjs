@@ -15,14 +15,14 @@ for (const marker of [
 ]) assert(daily.includes(marker), `Missing V377 daily marker: ${marker}`)
 
 for (const marker of [
-  'PRO OPPORTUNITY BOARD',
+  ['PRO OPPORTUNITY BOARD','PICK LABEL FIX'],
   'MARKET PULSE + PRICE SHOP',
   'PORTFOLIO CONCENTRATION',
   'MODEL vs MARKET',
   'normalizeMarketQuotesV377',
   'buildMarketPulseV377',
   'buildPortfolioRiskV377'
-]) assert(suite.includes(marker), `Missing V377 suite marker: ${marker}`)
+]) assert(Array.isArray(marker) ? marker.some(x=>suite.includes(x)) : suite.includes(marker), `Missing V377 suite marker: ${Array.isArray(marker)?marker.join(' / '):marker}`)
 
 for (const marker of [
   'sim-v377-board',
@@ -33,5 +33,5 @@ for (const marker of [
 
 // No new backend/API dependency was added by V377.
 const packageJson = JSON.parse(fs.readFileSync('package.json','utf8'))
-assert(packageJson.version.startsWith('377.'))
+assert(Number(String(packageJson.version).split('.')[0]) >= 377)
 console.log('TEST_WERSJA_377_FM_AI_PRO_MARKET_EDGE_SUITE: OK')

@@ -1,0 +1,102 @@
+BET+AI WERSJA 402 — DEEP CANONICAL PIPELINE AUDIT
+===================================================
+
+CEL
+---
+Ponowny, rozszerzony audyt spójności głównego typu FM AI od pierwszego skanu
+przez tracker, tablicę, przygotowanie, Professional Lab i LIVE aż do rozliczenia.
+
+KANONICZNY PRZEPŁYW
+-------------------
+AUTO TRACKER / UI FREEZE
+  -> SERVER FIRST-PUBLISHED RECORD (UNIQUE fixture_id)
+  -> FM AI BOARD
+  -> OPEN HANDSHAKE (server confirmation / read-back)
+  -> SHARED SNAPSHOT V402
+  -> PREPARATION
+  -> MASTER CONSENSUS (ten sam rynek)
+  -> PROFESSIONAL LAB (może tylko obniżyć decyzję)
+  -> QUICK SUMMARY / FEATURED MATCH (ta sama decyzja po downgrade)
+  -> LIVE (ten sam rynek + ten sam konserwatywny status)
+  -> TRACKER SETTLEMENT (ten sam market_key)
+
+NAPRAWY ZNALEZIONE W DRUGIM GŁĘBOKIM AUDYCIE
+---------------------------------------------
+1. ACTIVE FROZEN WINDOW
+   Poprzednio frozen pick mógł wypaść z krótkiego recent history po dużej liczbie rekordów.
+   V402 ma activeFrozenV402 oraz priorytet aktywnych rekordów.
+
+2. LEGACY NULL/ZERO FALLBACK
+   Starsze rekordy z NULL mapowanym na 0 mogły wyzerować probability/fair/edge.
+   V402 rozróżnia brak danych od realnego 0 i bezpiecznie używa exact-market fallback.
+
+3. UNIQUE INSERT RACE
+   UI i auto tracker mogą próbować zamrozić fixture niemal jednocześnie.
+   PostgreSQL 23505 jest teraz traktowany jako poprawny duplicate/read-back zamiast 500.
+
+4. CURRENT RISK REFRESH
+   Market identity i economics pozostają zamrożone, ale aktualne red flags/reliability/drift
+   mogą obniżyć decyzję. Nie pokazujemy starego CLEAR przy obecnej blokadzie.
+
+5. SELECTED-MARKET DISAGREEMENT
+   Under/Over/BTTS nie są już downgrade'owane na podstawie rozjazdu niepowiązanego rynku 1X2.
+   Guard liczy rozbieżność na dokładnie tym zamrożonym rynku.
+
+6. VALUE != HIT PROBABILITY
+   Edge/EV nie podbijają już wizualnie confidence do absurdalnie wysokiego poziomu dla longshotu.
+   Np. 30% VALUE pozostaje niską szansą trafienia mimo dodatniej ceny.
+
+7. FEATURED MATCH RING
+   Ring pokazuje AI CHANCE = probability wybranego typu, a reliability jest osobnym polem.
+
+8. QUICK SUMMARY DOWNGRADE
+   Znaleziony dodatkowy błąd: zamrożone VALUE mogło wizualnie wrócić do BET nawet gdy
+   Professional Lab obniżył je do WATCH/NO BET. V402 używa jednego canonicalUiActionV402.
+
+9. LIVE DOWNGRADE
+   LIVE używa tego samego canonicalUiActionV402, więc NO BET/WATCH z Professional Lab
+   nie wraca jako "sygnał grywalny".
+
+10. OPEN HANDSHAKE / FAIL-CLOSED
+    Ostatnia luka wyścigu została zamknięta: przed otwarciem przygotowania actionable pick
+    musi mieć potwierdzony server tracker record. Jeśli rekord nie istnieje, jest synchronicznie
+    tworzony, a następnie odczytywany z serwera. Jeśli auto tracker wygra race, jego pierwszy
+    rekord wygrywa i UI go przejmuje. Jeśli read-back się nie uda, analiza NIE otwiera się
+    na niesprawdzonym canonical picku.
+
+11. CLIENT/SERVER POLICY PARITY
+    1000 deterministycznych przypadków: decyzja, threshold, reliability i hard block klienta
+    i serwera są zgodne.
+
+12. MARKET / SETTLEMENT MATRIX
+    11 obsługiwanych rynków sprawdzonych end-to-end. 539 kombinacji wyników klient vs server
+    settlement dało identyczny wynik.
+
+TESTY
+-----
+V402 deep pipeline audit: 57 assertions PASS
+V402 value policy parity: 1000 deterministic cases PASS
+V402 market lock matrix: 11 markets / 77 lock assertions / 539 settlement comparisons PASS
+V401 regression: 27 assertions PASS
+V400 regression: 27 assertions PASS
+V390 immersive: 17 guards PASS
+V353 master consensus: PASS
+V320 realistic engine: PASS
+DNB settlement: PASS
+Full syntax parse: 149 source/server files, 0 parse errors
+
+WAŻNE
+-----
+Symulacja LIVE pozostaje probabilistyczna. Nie jest wymuszana pod zamrożony typ.
+Jeżeli canonical pick to Under 2.5, symulacja nadal może skończyć się 4:0. To nie jest
+zmiana typu; to jeden możliwy scenariusz i jest oznaczany jako trafiony/nietrafiony w tej symulacji.
+
+OGRANICZENIE AUDYTU
+-------------------
+Nie można uczciwie potwierdzić 100% zachowania produkcji bez wdrożenia na realnym Netlify,
+prawdziwego Supabase i smoke-testu sieci/race timing. Lokalnie kodowo nie znaleziono już
+kolejnej drogi, która podmieniałaby canonical market po jego zamrożeniu.
+
+Build Vite nie został uruchomiony w środowisku audytu, ponieważ paczka nie zawiera node_modules.
+Zamiast tego wykonano parser całego src + netlify/functions (149 plików, zero błędów składni)
+oraz wszystkie wyżej wymienione testy bez zależności instalowanych z sieci.

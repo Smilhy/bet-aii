@@ -1,0 +1,51 @@
+BET+AI / FM AI — WERSJA 405
+FINAL HANDOFF / NO SILENT SIGNAL SWITCH AUDIT
+
+Cel audytu:
+Ponowne sprawdzenie spójności głównego typu od tablicy FM AI do Preparation/LIVE,
+ze szczególnym naciskiem na wyścig pomiędzy widocznym wierszem tablicy a
+pierwszym typem zamrożonym przez AUTO TRACKER / server authority.
+
+NOWY REALNY EDGE CASE ZNALEZIONY W V404:
+Tablica odświeża tracker cyklicznie. W krótkim oknie pomiędzy odświeżeniami
+użytkownik mógł widzieć np. UNDER 2.5, kliknąć OTWÓRZ, a server handshake
+mógł już posiadać wcześniej zamrożony inny canonical market, np. OVER 2.5.
+Pipeline po wejściu był spójny z serwerem, ale ekran Preparation mógł przez to
+pokazać inny rynek niż ten, który użytkownik właśnie kliknął. To wyglądało jak
+cicha zmiana zdania systemu.
+
+NAPRAWA V405:
+- dodano applyFrozenTrackerForOpenV405
+- porównywany jest canonical market klikniętego sygnału z canonical market serwera
+- jeżeli market się różni, Preparation NIE otwiera się na tym kliknięciu
+- tracker jest odświeżany
+- tablica synchronizuje się z pierwszym zamrożonym sygnałem
+- użytkownik dostaje komunikat i otwiera ponownie już widoczny canonical pick
+- aliasy tego samego rynku (np. under_2_5 i under25) nie powodują fałszywego alarmu
+
+WYNIKI RETESTU:
+- V400 canonical pipeline: 27 assertions PASS
+- V401 end-to-end signal lock: 27 assertions PASS
+- V402 deep canonical audit: 57 assertions PASS
+- V402 value-policy parity: 1000 deterministic cases PASS
+- V402 market-lock matrix: 11 markets / 77 lock assertions / 539 settlement comparisons PASS
+- V403 canonical guards: PASS
+- V403 server record authority: PASS
+- V403 stress matrix: 100000 policy / 50000 canonical / 2816 settlement PASS
+- V404 direct canonical recovery: 4 groups PASS
+- V404 pre-match canonical lock: 5 groups PASS
+- V405 no silent switch: 121 market transitions + alias + handoff guard PASS
+- V390 immersive match experience: 17 guards PASS
+- V353 master consensus: PASS
+- V320 realistic match engine: PASS
+- bot settlement: 20 scenarios PASS
+- syntax parse src + netlify/functions: 149 files / 0 error files
+
+WAŻNE:
+Symulator pozostaje probabilistyczny. Zamrożenie typu oznacza stałą tożsamość
+rekomendacji, a nie wymuszenie wyniku symulacji pod typ.
+
+Granica lokalnego audytu:
+Ten audyt potwierdza spójność kodu i testów w paczce. Nie jest technicznie
+możliwe dać absolutnej gwarancji zachowania produkcji bez smoke-testu po
+wdrożeniu na rzeczywistym Netlify + Supabase (sieć, timeouty i realne równoległe requesty).

@@ -1,0 +1,30 @@
+WERSJA 399 — CANONICAL PIPELINE AUDIT + FIX
+
+AUDYT V398:
+V398 nie był jeszcze w 100% spięty. Znalezione dwa ważne miejsca:
+1. Scanner/board przekazywał frozen top pick, ale forecast.value.top/top3 mógł po pełnej analizie wskazać inny rynek. Professional Prediction Lab bierze candidate z value.top3[0], więc mógł pokazać inny rynek niż tablica.
+2. Symulator miał hard guard dla actionable pick >=55%, który mógł wymuszać wynik scenariusza zgodny z typem. To było wizualnie spójne, ale statystycznie nieuczciwe jako symulacja.
+
+NAPRAWA V399:
+- frozen daily scanner topPick staje się kanonicznym market identity od tablicy do LIVE
+- forecast.value.top = canonical frozen pick
+- forecast.value.top3[0] = canonical frozen pick
+- Professional Prediction Lab, Match Intelligence, Live Pre-Match i Operations korzystają z tego samego rynku
+- przygotowany forecast przekazuje canonicalSignalV399 oraz sharedSnapshotV365
+- Flow przekazuje ten sam preparedData do MatchSimulatorView
+- LIVE i matchEngine czytają ten sam sharedSnapshotV365.topPick
+- wynik symulacji NIE jest wymuszany przez typ; symulacja pozostaje probabilistyczna
+- po FT UI pokazuje TRAFIONY / NIETRAFIONY W TEJ SYMULACJI
+- tracker nadal rozlicza zamrożony prawdziwy pre-match pick na realnym wyniku API-Football
+
+TESTY:
+- TEST_WERSJA_399_CANONICAL_PIPELINE.cjs: 27/27 PASS
+- TEST_WERSJA_353_MASTER_CONSENSUS.cjs: PASS
+- TEST_WERSJA_320_REALISTIC_MATCH_ENGINE.mjs: PASS
+- TEST_WERSJA_390_IMMERSIVE_MATCH_EXPERIENCE.cjs: 17/17 PASS
+- node --check matchEngineV320.js: PASS
+- node --check fm-ai-system-tracker-v368.js: PASS
+
+WAŻNE:
+Jedna prognoza = jeden zamrożony rynek. Moduły mogą różnić się jedynie oceną BET/WATCH/NO BET po dodatkowych guardach jakości, ale nie mogą już podmieniać rynku Under 2.5 na Under 3.5 itd.
+Symulacja jest scenariuszem probabilistycznym i może nie trafić zamrożonego typu — to prawidłowe zachowanie.
