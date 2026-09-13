@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-377-fm-ai-pro-market-edge-suite",
-  "version": "377.0.0",
+  "name": "betai-wersja-391-featured-match-intelligence",
+  "version": "391.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
@@ -25,7 +25,8 @@
     "test:fm-ai-v353": "node TEST_WERSJA_353_MASTER_CONSENSUS.cjs",
     "test:fm-ai-v375": "node TEST_WERSJA_375_FM_AI_SEGMENT_VALIDATION_LAB.cjs",
     "test:fm-ai-v376": "node TEST_WERSJA_376_FM_AI_VERIFIED_RECORD_PASSPORT.cjs",
-    "test:fm-ai-v377": "node TEST_WERSJA_377_FM_AI_PRO_MARKET_EDGE_SUITE.cjs"
+    "test:fm-ai-v377": "node TEST_WERSJA_377_FM_AI_PRO_MARKET_EDGE_SUITE.cjs",
+    "test:v390": "node TEST_WERSJA_390_IMMERSIVE_MATCH_EXPERIENCE.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.3",

@@ -24,6 +24,180 @@ function safeDisplayText(value, fallback = '') {
   }
   return fallback
 }
+
+
+const TEAM_FAN_IDENTITIES_V390 = [
+  ['vancouver whitecaps', { nickname:'The Caps', supporter:'Southsiders / Rain City', cue:'Caps support' }],
+  ['austin fc', { nickname:'Verde', supporter:'Los Verdes / Austin Anthem', cue:'Verde support' }],
+  ['manchester united', { nickname:'Red Devils', supporter:'Stretford End', cue:'United support' }],
+  ['manchester city', { nickname:'Citizens', supporter:'Etihad support', cue:'City support' }],
+  ['liverpool', { nickname:'Reds', supporter:'The Kop', cue:'Kop support' }],
+  ['arsenal', { nickname:'Gunners', supporter:'North Bank', cue:'Arsenal support' }],
+  ['chelsea', { nickname:'Blues', supporter:'Shed End', cue:'Chelsea support' }],
+  ['tottenham', { nickname:'Spurs', supporter:'South Stand', cue:'Spurs support' }],
+  ['newcastle', { nickname:'Magpies', supporter:'Toon Army', cue:'Toon support' }],
+  ['west ham', { nickname:'Hammers', supporter:'Claret & Blue Army', cue:'Hammers support' }],
+  ['everton', { nickname:'Toffees', supporter:'Gwladys Street', cue:'Everton support' }],
+  ['aston villa', { nickname:'Villans', supporter:'Holte End', cue:'Villa support' }],
+  ['real madrid', { nickname:'Los Blancos', supporter:'Madridistas', cue:'Madrid support' }],
+  ['barcelona', { nickname:'Barça', supporter:'Culés', cue:'Barça support' }],
+  ['atletico madrid', { nickname:'Colchoneros', supporter:'Frente rojiblanco', cue:'Atleti support' }],
+  ['bayern', { nickname:'Die Roten', supporter:'Südkurve', cue:'Bayern support' }],
+  ['dortmund', { nickname:'Schwarzgelben', supporter:'Südtribüne', cue:'Yellow Wall' }],
+  ['juventus', { nickname:'Bianconeri', supporter:'Curva support', cue:'Juve support' }],
+  ['inter', { nickname:'Nerazzurri', supporter:'Curva Nord', cue:'Inter support' }],
+  ['milan', { nickname:'Rossoneri', supporter:'Curva Sud', cue:'Milan support' }],
+  ['napoli', { nickname:'Partenopei', supporter:'Curva support', cue:'Napoli support' }],
+  ['psg', { nickname:'Les Parisiens', supporter:'Collectif Ultras Paris', cue:'Paris support' }],
+  ['paris saint-germain', { nickname:'Les Parisiens', supporter:'Collectif Ultras Paris', cue:'Paris support' }],
+  ['marseille', { nickname:'Les Olympiens', supporter:'Virage support', cue:'OM support' }],
+  ['ajax', { nickname:'Godenzonen', supporter:'F-Side', cue:'Ajax support' }],
+  ['psv', { nickname:'Boeren', supporter:'Eindhoven support', cue:'PSV support' }],
+  ['feyenoord', { nickname:'De club aan de Maas', supporter:'Het Legioen', cue:'Feyenoord support' }],
+  ['legia', { nickname:'Wojskowi', supporter:'Żyleta', cue:'Legia support' }],
+  ['lech poznan', { nickname:'Kolejorz', supporter:'Kocioł', cue:'Lech support' }],
+  ['wisla krakow', { nickname:'Biała Gwiazda', supporter:'Kibice Wisły', cue:'Wisła support' }],
+]
+
+function buildSupporterProfileV390(teamName = '', side = 'home') {
+  const raw = String(teamName || '').trim()
+  const key = raw.toLowerCase()
+  const known = TEAM_FAN_IDENTITIES_V390.find(([needle]) => key.includes(needle))?.[1]
+  return {
+    nickname: known?.nickname || (side === 'home' ? 'Home support' : 'Away support'),
+    supporter: known?.supporter || (side === 'home' ? 'Trybuna gospodarzy' : 'Sektor gości'),
+    cue: known?.cue || `${raw || (side === 'home' ? 'Gospodarze' : 'Goście')} support`,
+    known: Boolean(known)
+  }
+}
+
+function buildTeamStyleProfileV390(data = {}, model = {}, side = 'home') {
+  const strength = model?.strength?.[side] || {}
+  const opponent = side === 'home' ? model?.strength?.away || {} : model?.strength?.home || {}
+  const xg = safeNum(model?.xg?.[side], 1)
+  const poss = safeNum(model?.possession?.[side], 50)
+  const tags = []
+  if (safeNum(strength.attack, 50) >= 58) tags.push('silny atak')
+  if (safeNum(strength.defence, 50) >= 58) tags.push('stabilna obrona')
+  if (safeNum(strength.form, 50) >= 62) tags.push('dobra forma')
+  if (poss >= 54) tags.push('kontrola piłki')
+  if (poss <= 46) tags.push('gra bez piłki / kontra')
+  if (xg >= 1.65) tags.push('wysoki potencjał bramkowy')
+  if (safeNum(strength.attack, 50) - safeNum(opponent.defence, 50) >= 8) tags.push('przewaga ofensywna')
+  if (!tags.length) tags.push('profil zbalansowany')
+  const style = poss >= 55 ? 'POSSESSION' : poss <= 45 ? 'TRANSITION' : xg >= 1.6 ? 'FRONT FOOT' : 'BALANCED'
+  return { style, tags: tags.slice(0, 3), attack: Math.round(safeNum(strength.attack, 50)), defence: Math.round(safeNum(strength.defence, 50)), form: Math.round(safeNum(strength.form, 50)) }
+}
+
+
+function labelMarketKeyV390(key = '', homeName = 'Gospodarze', awayName = 'Goście') {
+  const labels = {
+    home:`1 • ${homeName}`, draw:'X • Remis', away:`2 • ${awayName}`,
+    over15:'Powyżej 1.5', under15:'Poniżej 1.5', over25:'Powyżej 2.5', under25:'Poniżej 2.5',
+    over35:'Powyżej 3.5', under35:'Poniżej 3.5', bttsYes:'BTTS • TAK', bttsNo:'BTTS • NIE'
+  }
+  return labels[String(key || '')] || String(key || 'Model pre-match')
+}
+
+function eventWeightV390(event = {}) {
+  if (event.type === 'goal') return 5
+  if (event.type === 'shot') return event.onTarget ? 3 : 2
+  if (event.type === 'freeKick') return 2.1
+  if (event.type === 'corner') return 1.8
+  if (event.type === 'redCard') return 2.6
+  if (event.type === 'card') return .8
+  return .35
+}
+
+function buildLiveAlertV390({ timeline = [], clockSec = 0, homeName = 'Gospodarze', awayName = 'Goście', currentScore = { home:0, away:0 } } = {}) {
+  const windowStart = Math.max(0, clockSec - 8 * 60)
+  const recent = timeline.filter(event => event.second <= clockSec && event.second >= windowStart && (event.team === 'home' || event.team === 'away'))
+  const pressure = { home:0, away:0 }
+  recent.forEach(event => { pressure[event.team] += eventWeightV390(event) })
+  const leader = pressure.home === pressure.away ? null : pressure.home > pressure.away ? 'home' : 'away'
+  const leaderName = leader === 'home' ? homeName : leader === 'away' ? awayName : ''
+  const latest = [...recent].sort((a,b)=>b.second-a.second)[0]
+  const recentRed = [...recent].reverse().find(event => event.type === 'redCard')
+  const recentGoal = [...recent].reverse().find(event => event.type === 'goal' && clockSec - event.second <= 110)
+  const recentSetPiece = [...recent].reverse().find(event => ['corner','freeKick'].includes(event.type) && clockSec - event.second <= 120)
+  const shotBurst = recent.filter(event => event.type === 'shot' && clockSec - event.second <= 5 * 60)
+  const scoreGap = Math.abs((currentScore.home || 0) - (currentScore.away || 0))
+
+  if (recentGoal) return { tone:'goal', level:'GOAL EVENT', title:'Zmiana obrazu meczu', text:`${recentGoal.team === 'home' ? homeName : awayName} właśnie trafił. Model live przelicza momentum po wznowieniu.`, icon:'●' }
+  if (recentRed) return { tone:'critical', level:'TACTICAL ALERT', title:'Wpływ czerwonej kartki', text:`${recentRed.team === 'home' ? homeName : awayName} gra w osłabieniu. Układ pressingu i przestrzeni został zmieniony.`, icon:'!' }
+  if (shotBurst.length >= 3 && leader) return { tone:'danger', level:'HIGH DANGER', title:'Seria sytuacji', text:`${leaderName} generuje kolejne próby w krótkim oknie. Presja wyraźnie rośnie.`, icon:'▲' }
+  if (recentSetPiece) return { tone:'setpiece', level:'SET PIECE RISK', title:'Stały fragment', text:`${recentSetPiece.team === 'home' ? homeName : awayName} ma świeży sygnał zagrożenia ze stałego fragmentu.`, icon:'◆' }
+  if (leader && Math.max(pressure.home, pressure.away) >= 5.5) return { tone:'pressure', level:'MOMENTUM SWING', title:`Przewaga: ${leaderName}`, text:`Ostatnie 8 minut wskazuje na wyraźniejsze wejścia w strefę zagrożenia.`, icon:'↗' }
+  if (clockSec >= 75*60 && scoreGap <= 1) return { tone:'late', level:'LATE GOAL WINDOW', title:'Końcówka pod napięciem', text:'Różnica wyniku jest minimalna. Każde wejście w ostatnią tercję ma większe znaczenie.', icon:'◷' }
+  return { tone:'stable', level:'MATCH STATE', title:'Mecz pod kontrolą', text: latest?.label || 'Brak gwałtownego skoku zagrożenia w ostatnich minutach.', icon:'●' }
+}
+
+
+function buildGoalWindowV390(timeline = [], clockSec = 0) {
+  const start = Math.max(0, clockSec - 10 * 60)
+  const recent = timeline.filter(event => event.second <= clockSec && event.second >= start)
+  const xg = recent.filter(event => ['shot','goal'].includes(event.type)).reduce((sum,event)=>sum + safeNum(event.xg, event.onTarget ? .08 : .035), 0)
+  const shots = recent.filter(event => ['shot','goal'].includes(event.type)).length
+  const setPieces = recent.filter(event => ['corner','freeKick'].includes(event.type)).length
+  const redImpact = recent.some(event => event.type === 'redCard') ? .10 : 0
+  const lambda = clamp(xg * 1.25 + shots * .035 + setPieces * .025 + redImpact, 0, 2.3)
+  const probability = clamp((1 - Math.exp(-lambda)) * 100, 3, 92)
+  return Math.round(probability)
+}
+
+function buildBroadcastCommentaryV390({ mode = 'rich', latestEvent, alert, data, model, liveStats, currentScore, clockSec } = {}) {
+  const homeName = safeDisplayText(data?.fixture?.home?.name, 'Gospodarze')
+  const awayName = safeDisplayText(data?.fixture?.away?.name, 'Goście')
+  if (mode === 'compact') return latestEvent?.label || `${homeName} ${currentScore?.home || 0}:${currentScore?.away || 0} ${awayName}`
+  if (mode === 'ai') {
+    const possHome = liveStats?.possession?.home ?? model?.possession?.home ?? 50
+    const shotsHome = liveStats?.home?.shots || 0
+    const shotsAway = liveStats?.away?.shots || 0
+    const xgHome = safeNum(liveStats?.home?.xg, 0).toFixed(2)
+    const xgAway = safeNum(liveStats?.away?.xg, 0).toFixed(2)
+    return `${alert?.level || 'AI LIVE'} • ${alert?.text || ''} Posiadanie ${possHome}%:${100-possHome}% • strzały ${shotsHome}:${shotsAway} • xG ${xgHome}:${xgAway}.`
+  }
+  if (!latestEvent) return `Mecz rusza. ${homeName} i ${awayName} ustawiają tempo pierwszych akcji.`
+  const team = latestEvent.team === 'home' ? homeName : latestEvent.team === 'away' ? awayName : ''
+  if (latestEvent.type === 'goal') return `GOOOL! ${team} wykorzystuje moment przewagi. ${latestEvent.actor ? `${shortPlayerName(latestEvent.actor)} kończy akcję.` : ''} Teraz kluczowa będzie reakcja rywala po wznowieniu.`
+  if (latestEvent.type === 'shot') return `${team} dochodzi do strzału${latestEvent.onTarget ? ' celnego' : ''}. Presja w tej fazie meczu zaczyna rosnąć.`
+  if (latestEvent.type === 'corner') return `${team} wywalczył rzut rożny. Linia obrony rywala cofa się głębiej, a zagrożenie ze stałego fragmentu rośnie.`
+  if (latestEvent.type === 'freeKick') return `${team} ma stały fragment i chwilę na ustawienie większej liczby zawodników w strefie ataku.`
+  if (latestEvent.type === 'redCard') return `${team} musi przebudować organizację po czerwonej kartce. Przestrzeń i pressing od tej chwili będą wyglądały inaczej.`
+  return `${latestEvent.label}. ${alert?.tone === 'pressure' || alert?.tone === 'danger' ? alert.text : `Tempo pozostaje zgodne z profilem przedmeczowym: xG ${model?.xg?.home ?? 0}–${model?.xg?.away ?? 0}.`}`
+}
+
+function buildMatchStoryV390({ timeline = [], data, model, currentScore, xgLive, liveCounters, simulatedMvp } = {}) {
+  const homeName = safeDisplayText(data?.fixture?.home?.name, 'Gospodarze')
+  const awayName = safeDisplayText(data?.fixture?.away?.name, 'Goście')
+  const result = currentScore.home > currentScore.away ? homeName : currentScore.home < currentScore.away ? awayName : 'Remis'
+  const decisive = [...timeline].filter(e => ['goal','redCard'].includes(e.type)).sort((a,b) => {
+    const aw = a.type === 'redCard' ? 4 : 3 + safeNum(a.xg,0)
+    const bw = b.type === 'redCard' ? 4 : 3 + safeNum(b.xg,0)
+    return bw-aw
+  })[0]
+  const shotsLeader = liveCounters.homeShots === liveCounters.awayShots ? 'wyrównana liczba strzałów' : liveCounters.homeShots > liveCounters.awayShots ? `więcej strzałów po stronie ${homeName}` : `więcej strzałów po stronie ${awayName}`
+  const preFav = model?.probabilities?.home >= model?.probabilities?.away ? homeName : awayName
+  const preFavProb = Math.max(model?.probabilities?.home || 0, model?.probabilities?.away || 0)
+  const modelConfirmed = (result === preFav) || (result === 'Remis' && model?.probabilities?.draw >= Math.max(model?.probabilities?.home || 0, model?.probabilities?.away || 0))
+  const expectedHome = safeNum(model?.topScore?.home, 0)
+  const expectedAway = safeNum(model?.topScore?.away, 0)
+  const scoreDistance = Math.abs((currentScore.home || 0) - expectedHome) + Math.abs((currentScore.away || 0) - expectedAway)
+  const xgDistance = Math.abs(safeNum(xgLive.home) - safeNum(model?.xg?.home)) + Math.abs(safeNum(xgLive.away) - safeNum(model?.xg?.away))
+  const confirmationScore = Math.round(clamp(82 - scoreDistance * 13 - xgDistance * 9 + (modelConfirmed ? 12 : -10), 5, 98))
+  return {
+    headline: result === 'Remis' ? `Symulacja kończy się remisem ${currentScore.home}:${currentScore.away}` : `${result} wygrywa symulację ${currentScore.home}:${currentScore.away}`,
+    summary: `Przebieg dał xG ${xgLive.home.toFixed(2)}–${xgLive.away.toFixed(2)} i ${shotsLeader}. Przed meczem najwyższy kierunek 1X2 miał ${preFav} (${preFavProb.toFixed(1)}%).`,
+    turningPoint: decisive ? `${formatEventTime(decisive)} • ${decisive.label}` : 'Brak pojedynczego zdarzenia, które całkowicie odwróciło przebieg.',
+    control: xgLive.home === xgLive.away ? 'Kontrola była zbliżona.' : xgLive.home > xgLive.away ? `${homeName} wygenerował wyższe xG.` : `${awayName} wygenerował wyższe xG.`,
+    modelCheck: modelConfirmed ? 'Scenariusz potwierdził główny kierunek 1X2 modelu.' : 'Scenariusz nie potwierdził głównego kierunku 1X2 — to pojedynczy reprezentatywny przebieg, nie nowa prognoza.',
+    expectedVsSim:`${model?.topScore?.text || '—'} → ${currentScore.home}:${currentScore.away}`,
+    confirmationScore,
+    mvp: simulatedMvp ? shortPlayerName(simulatedMvp) : '—',
+    decisiveSecond: decisive?.second || 0
+  }
+}
+
 const lerp = (from, to, t) => from + (to - from) * t
 const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2
 
@@ -1492,7 +1666,7 @@ function formationBoardPositions(lineup = {}) {
   }).filter(Boolean)
 }
 
-function FormationBoard({ teamName, lineup, tone = 'home' }) {
+function FormationBoard({ teamName, lineup, tone = 'home', profile = null, fanProfile = null }) {
   const positions = useMemo(() => formationBoardPositions(lineup), [lineup])
   const ready = (lineup?.startXI?.length || 0) >= 11
   const predicted = Boolean(lineup?.predicted)
@@ -1504,7 +1678,7 @@ function FormationBoard({ teamName, lineup, tone = 'home' }) {
       <div className="fm119-formation-head">
         <div className="fm123-formation-team">
           {lineup?.logo ? <img src={lineup.logo} alt="" /> : <i className="fm123-team-mark">⚽</i>}
-          <div><strong>{safeDisplayText(teamName, 'Drużyna')}</strong><span>{ready ? `${lineup?.formation || 'XI'}${predicted ? ` • przewidywany ${lineup?.predictionConfidence || ''}%` : ' • oficjalny'}` : 'Brak składu'}</span></div>
+          <div><strong>{safeDisplayText(teamName, 'Drużyna')}</strong><span>{ready ? `${lineup?.formation || 'XI'}${predicted ? ` • przewidywany ${lineup?.predictionConfidence || ''}%` : ' • oficjalny'}` : `${profile?.style || 'TEAM PROFILE'} • dane modelu`}</span></div>
         </div>
         <em>{official ? 'LIVE XI' : predicted ? 'PRED XI' : 'API'}</em>
       </div>
@@ -1526,9 +1700,11 @@ function FormationBoard({ teamName, lineup, tone = 'home' }) {
           <div className="fm119-mini-half" />
           <div className="fm119-mini-box top" />
           <div className="fm119-mini-box bottom" />
-          <div className="fm119-no-lineup">
-            <strong>{ready ? 'Brak pozycji boiskowych w API' : 'Brak składu do symulacji'}</strong>
-            <span>{predicted ? 'XI przewidywana z ostatnich realnych składów.' : 'Bet+AI nie generuje przypadkowych nazwisk ani ustawienia.'}</span>
+          <div className="fm119-no-lineup fm390-team-profile-empty">
+            <strong>{ready ? 'Brak pozycji boiskowych w API' : 'Profil zespołu zamiast fikcyjnego XI'}</strong>
+            <span>{predicted ? 'XI przewidywana z ostatnich realnych składów.' : 'Bet+AI nie tworzy fikcyjnych nazwisk. Pokazujemy realny profil stylu z danych modelu.'}</span>
+            {!ready && profile ? <div className="fm390-team-style-tags"><b>{profile.style}</b>{profile.tags.map(tag => <em key={tag}>{tag}</em>)}</div> : null}
+            {!ready && fanProfile ? <div className="fm390-supporter-profile"><small>FAN IDENTITY</small><b>{fanProfile.nickname}</b><span>{fanProfile.supporter}</span></div> : null}
             {ready ? <div className="fm119-real-xi-list">{lineup.startXI.map((player, index) => <em key={player.id || index}>{player.number || '•'} {safeDisplayText(player.name, 'Zawodnik')}</em>)}</div> : null}
           </div>
         </div>
@@ -1656,6 +1832,9 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
   const [clockSec, setClockSec] = useState(0)
   const [running, setRunning] = useState(false)
   const [speed, setSpeed] = useState(1)
+  const [pitchMode, setPitchMode] = useState('match')
+  const [commentaryMode, setCommentaryMode] = useState('rich')
+  const [atmosphereMode, setAtmosphereMode] = useState('normal')
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [soundVolume, setSoundVolume] = useState(.62)
   const [simulationOrdinal, setSimulationOrdinal] = useState(0)
@@ -1841,9 +2020,10 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
   useEffect(() => {
     const bank = ensureRealAudioBank(realAudioBankRef)
     if (!bank) return
-    const imminent = timeline.some(event => ['goal','shot','corner','freeKick'].includes(event.type) && event.second > clockSec && event.second <= clockSec + 95)
-    setRealCrowd(bank, { enabled: soundEnabled && audioUnlocked && clockSec < MATCH_TOTAL_SECONDS, running, volume: soundVolume, danger: imminent ? 1 : 0 })
-  }, [soundEnabled, audioUnlocked, soundVolume, running, Math.floor(clockSec / 5), timeline])
+    const recentDanger = timeline.some(event => ['goal','shot','corner','freeKick'].includes(event.type) && event.second <= clockSec && event.second >= Math.max(0, clockSec - 120))
+    const atmosphereFactor = atmosphereMode === 'intense' ? 1.18 : atmosphereMode === 'calm' ? .72 : 1
+    setRealCrowd(bank, { enabled: soundEnabled && audioUnlocked && clockSec < MATCH_TOTAL_SECONDS, running, volume: clamp(soundVolume * atmosphereFactor, 0, 1), danger: recentDanger ? 1 : 0 })
+  }, [soundEnabled, audioUnlocked, soundVolume, atmosphereMode, running, Math.floor(clockSec / 5), timeline])
 
   useEffect(() => () => {
     try { audioEngineRef.current?.close?.() } catch {}
@@ -1921,6 +2101,26 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
     offsides: { home: liveStatsV320?.home?.offsides || 0, away: liveStatsV320?.away?.offsides || 0 }
   }), [displayKeyStatsBase, liveStatsV320])
   const latestEvent = visibleEvents[0]
+  const homeNameV390 = safeDisplayText(data?.fixture?.home?.name, 'Gospodarze')
+  const awayNameV390 = safeDisplayText(data?.fixture?.away?.name, 'Goście')
+  const homeFanV390 = useMemo(() => buildSupporterProfileV390(homeNameV390, 'home'), [homeNameV390])
+  const awayFanV390 = useMemo(() => buildSupporterProfileV390(awayNameV390, 'away'), [awayNameV390])
+  const homeProfileV390 = useMemo(() => buildTeamStyleProfileV390(data, model, 'home'), [data, model])
+  const awayProfileV390 = useMemo(() => buildTeamStyleProfileV390(data, model, 'away'), [data, model])
+  const liveAlertV390 = useMemo(() => buildLiveAlertV390({ timeline, clockSec, homeName:homeNameV390, awayName:awayNameV390, currentScore }), [timeline, Math.floor(clockSec / 5), homeNameV390, awayNameV390, currentScore.home, currentScore.away])
+  const broadcastCommentaryV390 = useMemo(() => buildBroadcastCommentaryV390({ mode:commentaryMode, latestEvent, alert:liveAlertV390, data, model, liveStats:liveStatsV320, currentScore, clockSec }), [commentaryMode, latestEvent, liveAlertV390, data, model, liveStatsV320, currentScore.home, currentScore.away, Math.floor(clockSec / 5)])
+  const goalWindowV390 = useMemo(() => buildGoalWindowV390(timeline, clockSec), [timeline, Math.floor(clockSec / 15)])
+  const timelineHighlightsV390 = useMemo(() => timeline.filter(event => ['goal','shot','corner','freeKick','card','redCard','substitution'].includes(event.type)).slice(0, 42), [timeline])
+  const matchStoryV390 = useMemo(() => buildMatchStoryV390({ timeline, data, model, currentScore, xgLive, liveCounters, simulatedMvp }), [timeline, data, model, currentScore.home, currentScore.away, xgLive.home, xgLive.away, liveCounters.homeShots, liveCounters.awayShots, simulatedMvp])
+  const preFavouriteV390 = useMemo(() => {
+    const rows = [
+      { key:'home', label:homeNameV390, value:safeNum(model?.probabilities?.home) },
+      { key:'draw', label:'Remis', value:safeNum(model?.probabilities?.draw) },
+      { key:'away', label:awayNameV390, value:safeNum(model?.probabilities?.away) }
+    ].sort((a,b)=>b.value-a.value)
+    return rows[0] || { label:'—', value:0 }
+  }, [model, homeNameV390, awayNameV390])
+  const sharedPickLabelV390 = labelMarketKeyV390(model?.scenarioV365?.sharedKey, homeNameV390, awayNameV390)
   const homeLineupReady = (data?.lineups?.home?.startXI?.length || 0) >= 11
   const awayLineupReady = (data?.lineups?.away?.startXI?.length || 0) >= 11
   const usesPredictedXI = Boolean(data?.lineups?.home?.predicted || data?.lineups?.away?.predicted)
@@ -1937,7 +2137,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
             <small>{safeDisplayText(data.fixture?.league, 'Liga')} • {safeDisplayText(data.fixture?.round, 'Mecz')} {model?.scenarioV365?.hardGuard ? '• reprezentatywny scenariusz zgodny z głównym typem FM AI' : model?.scenarioV365?.sharedKey ? '• snapshot FM AI przekazany bez wymuszania wyniku' : ''}</small>
           </div>
           <div className="fm119-score-team home">
-            <div><strong>{safeDisplayText(data.fixture?.home?.name, 'Gospodarze')}</strong><TeamForm rows={data.recent.home} /></div>
+            <div><strong>{homeNameV390}</strong><TeamForm rows={data.recent.home} /><span className="fm390-team-fan"><b>{homeFanV390.nickname}</b><em>{homeFanV390.supporter}</em></span></div>
             {data.fixture.home.logo ? <img src={data.fixture.home.logo} alt="" /> : null}
           </div>
           <div className="fm119-score-center">
@@ -1947,9 +2147,25 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
           </div>
           <div className="fm119-score-team away">
             {data.fixture.away.logo ? <img src={data.fixture.away.logo} alt="" /> : null}
-            <div><strong>{safeDisplayText(data.fixture?.away?.name, 'Goście')}</strong><TeamForm rows={data.recent.away} /></div>
+            <div><strong>{awayNameV390}</strong><TeamForm rows={data.recent.away} /><span className="fm390-team-fan"><b>{awayFanV390.nickname}</b><em>{awayFanV390.supporter}</em></span></div>
           </div>
         </header>
+
+        <section className="fm390-prematch-continuity">
+          <div className="fm390-continuity-label"><small>PRE-MATCH → LIVE</small><strong>Ten sam zamrożony profil Bet+AI</strong><span>Symulacja nie tworzy nowej prognozy — wizualizuje przygotowany model.</span></div>
+          <article><small>1X2 PRE-MATCH</small><b>{model.probabilities.home}% <i>/</i> {model.probabilities.draw}% <i>/</i> {model.probabilities.away}%</b><span>1 / X / 2</span></article>
+          <article><small>xG PRE-MATCH</small><b>{model.xg.home.toFixed(2)} <i>–</i> {model.xg.away.toFixed(2)}</b><span>{homeNameV390} / {awayNameV390}</span></article>
+          <article className="favorite"><small>FAWORYT MODELU</small><b>{preFavouriteV390.label}</b><span>{preFavouriteV390.value.toFixed(1)}%</span></article>
+          <article><small>FM AI SIGNAL</small><b>{sharedPickLabelV390}</b><span>{model?.scenarioV365?.sharedProbability ? `${Number(model.scenarioV365.sharedProbability).toFixed(1)}%` : 'profil modelu'}</span></article>
+          <article><small>ATMOSFERA</small><b>{homeFanV390.nickname} vs {awayFanV390.nickname}</b><span>{homeFanV390.known || awayFanV390.known ? 'supporter identity rozpoznane' : 'profil stadionowy'}</span></article>
+        </section>
+
+        <section className={`fm390-live-alert tone-${liveAlertV390.tone}`}>
+          <div className="fm390-alert-icon">{liveAlertV390.icon}</div>
+          <div><small>{liveAlertV390.level}</small><strong>{liveAlertV390.title}</strong><span>{liveAlertV390.text}</span></div>
+          <div className="fm390-alert-goal-window"><small>GOAL WINDOW • 10'</small><b>{goalWindowV390}%</b><span><i style={{ width:`${goalWindowV390}%` }} /></span></div>
+          <div className="fm390-alert-score"><small>LIVE</small><b>{currentScore.home}:{currentScore.away}</b><span>{Math.min(90, Math.floor(clockSec/60))}'</span></div>
+        </section>
 
         <section className="fm119-top-panels">
           <article className="fm119-stat-card">
@@ -1997,18 +2213,25 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
         </section>
 
         <section className="fm119-match-layout">
-          <FormationBoard teamName={safeDisplayText(data.fixture?.home?.name, 'Gospodarze')} lineup={data.lineups.home} tone="home" />
+          <FormationBoard teamName={homeNameV390} lineup={data.lineups.home} tone="home" profile={homeProfileV390} fanProfile={homeFanV390} />
 
           <main className="fm119-pitch-stage" style={pitchKitVariables(data?.lineups || {})}>
-            <div className="fm119-pitch-toolbar">
-              <div><button className="active">WIDOK MECZU</button><button disabled>ANALIZA</button><button disabled>STREFY BOISKOWE</button><button disabled>SIATKA PODAŃ</button></div>
-              <div className="fm119-controls">
-                <button className="view active">2D</button>
-                <button className="view" disabled>3D</button>
+            <div className="fm119-pitch-toolbar fm390-pitch-toolbar">
+              <div className="fm390-view-tabs">
+                <button className={pitchMode === 'match' ? 'active' : ''} onClick={() => setPitchMode('match')}>WIDOK MECZU</button>
+                <button className={pitchMode === 'analysis' ? 'active' : ''} onClick={() => setPitchMode('analysis')}>ANALIZA</button>
+                <button className={pitchMode === 'zones' ? 'active' : ''} onClick={() => setPitchMode('zones')}>STREFY BOISKOWE</button>
+                <button className={pitchMode === 'passes' ? 'active' : ''} onClick={() => setPitchMode('passes')}>SIATKA PODAŃ</button>
+              </div>
+              <div className="fm119-controls fm390-controls">
+                <button className="view active">2D LIVE</button>
                 <button onClick={() => { tickRef.current = null; setRunning(value => !value) }}>{running ? '❚❚' : '▶'}</button>
-                <select value={speed} onChange={event => { tickRef.current = null; setSpeed(Number(event.target.value)) }}>
-                  <option value={1}>x1</option><option value={2}>x2</option><option value={4}>x4</option><option value={8}>x8</option>
-                </select>
+                <div className="fm390-speed-group">{[1,2,5,10].map(value => <button key={value} className={speed === value ? 'active' : ''} onClick={() => { tickRef.current = null; setSpeed(value) }}>x{value}</button>)}</div>
+                <div className="fm390-skip-group">
+                  <button disabled={clockSec >= HALF_SECONDS} onClick={() => { setRunning(false); tickRef.current = null; setClockSec(Math.max(clockSec, HALF_SECONDS - 1)) }}>HT</button>
+                  <button disabled={clockSec >= 70*60} onClick={() => { setRunning(false); tickRef.current = null; setClockSec(Math.max(clockSec, 70*60)) }}>70'</button>
+                  <button disabled={clockSec >= MATCH_TOTAL_SECONDS} onClick={() => { setRunning(false); tickRef.current = null; setClockSec(MATCH_TOTAL_SECONDS) }}>FT</button>
+                </div>
                 <button title="Powtórz ten sam seed" onClick={() => { setRunning(false); setClockSec(0); tickRef.current = null; autoStarted.current = true }}>↺</button>
                 <button className="v320-new-sim" title="Nowy scenariusz z tego samego profilu Bet+AI" onClick={() => { setRunning(false); setClockSec(0); tickRef.current = null; autoStarted.current = true; setSimulationOrdinal(value => value + 1) }}>NOWY SCENARIUSZ</button>
               </div>
@@ -2019,8 +2242,9 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
               running={running}
               speed={speed}
               lineups={data?.lineups || {}}
-              homeName={safeDisplayText(data.fixture?.home?.name, 'Gospodarze')}
-              awayName={safeDisplayText(data.fixture?.away?.name, 'Goście')}
+              homeName={homeNameV390}
+              awayName={awayNameV390}
+              displayMode={pitchMode}
             />
             <LiveAICoachV320
               engine={engineV320}
@@ -2031,14 +2255,30 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
             <div className="fm119-pitch-legend"><span className="home">● {safeDisplayText(data.fixture?.home?.name, 'Gospodarze')}</span><span className="away">● {safeDisplayText(data.fixture?.away?.name, 'Goście')}</span></div>
           </main>
 
-          <FormationBoard teamName={safeDisplayText(data.fixture?.away?.name, 'Goście')} lineup={data.lineups.away} tone="away" />
+          <FormationBoard teamName={awayNameV390} lineup={data.lineups.away} tone="away" profile={awayProfileV390} fanProfile={awayFanV390} />
         </section>
 
-        <section className="fm119-commentary-strip">
+        <section className="fm390-event-timeline">
+          <header><div><small>INTERACTIVE MATCH TIMELINE</small><strong>Przebieg i szybki replay zdarzeń</strong></div><span>Kliknij marker, aby cofnąć symulację do akcji</span></header>
+          <div className="fm390-timeline-track">
+            <div className="fm390-timeline-progress" style={{ width:`${clamp(clockSec / MATCH_TOTAL_SECONDS * 100, 0, 100)}%` }} />
+            <i className="fm390-playhead" style={{ left:`${clamp(clockSec / MATCH_TOTAL_SECONDS * 100, 0, 100)}%` }} />
+            {[0,15,30,45,60,75,90].map(minute => <span key={minute} className="fm390-minute-tick" style={{ left:`${minute/90*100}%` }}><b>{minute === 45 ? 'HT' : `${minute}'`}</b></span>)}
+            {timelineHighlightsV390.map((event,index) => <button key={`${event.second}-${event.type}-${index}`} type="button" className={`fm390-event-dot type-${event.type} team-${event.team}`} style={{ left:`${clamp(event.second / MATCH_TOTAL_SECONDS * 100, 0, 100)}%` }} title={`${formatEventTime(event)} • ${event.label}`} onClick={() => { setRunning(false); tickRef.current = null; setClockSec(Math.max(0, event.second - 8)) }}><span>{event.type === 'goal' ? '⚽' : event.type === 'redCard' ? '■' : event.type === 'card' ? '■' : event.type === 'corner' ? '◆' : event.type === 'shot' ? '●' : event.type === 'substitution' ? '↕' : '•'}</span></button>)}
+          </div>
+          <footer><span className="goal">⚽ gol</span><span className="shot">● strzał</span><span className="setpiece">◆ stały fragment</span><span className="card">■ kartka</span><span>↕ zmiana</span></footer>
+        </section>
+
+        <section className="fm119-commentary-strip fm390-commentary-strip">
           <div className="fm119-commentary-time"><b>{clockSec >= MATCH_TOTAL_SECONDS ? '90\'' : `${Math.floor(clockSec / 60)}'`}</b><span>{running ? 'NA ŻYWO' : clockSec >= MATCH_TOTAL_SECONDS ? 'KONIEC' : 'PAUZA'}</span></div>
           <div className="fm119-commentary-text">
-            <strong>{latestEvent?.label || (homeLineupReady && awayLineupReady ? (usesPredictedXI ? 'Mecz gotowy. Skład przewidywany z ostatnich realnych XI; formacja i zawodnicy pochodzą z danych API.' : 'Mecz gotowy. Silnik wykorzystuje oficjalne składy i formacje z API.') : 'Mecz nie spełnia warunków jakości danych.')}</strong>
-            <span>{data.prediction.advice || `Model xG: ${model.xg.home} – ${model.xg.away} • H2H: ${data.h2h.summary?.homeWins || 0}-${data.h2h.summary?.draws || 0}-${data.h2h.summary?.awayWins || 0}`}</span>
+            <div className="fm390-commentary-modes">
+              <button className={commentaryMode === 'compact' ? 'active' : ''} onClick={() => setCommentaryMode('compact')}>COMPACT</button>
+              <button className={commentaryMode === 'rich' ? 'active' : ''} onClick={() => setCommentaryMode('rich')}>RICH LIVE</button>
+              <button className={commentaryMode === 'ai' ? 'active' : ''} onClick={() => setCommentaryMode('ai')}>AI INSIGHT</button>
+            </div>
+            <strong>{broadcastCommentaryV390}</strong>
+            <span>{data?.prediction?.advice || `Pre-match xG ${model.xg.home} – ${model.xg.away} • live alert: ${liveAlertV390.level} • goal window ${goalWindowV390}%`}</span>
           </div>
           <div className="fm129-sound-control">
             <button type="button" className={`${soundEnabled ? 'on' : 'off'} ${!audioUnlocked ? 'needs-unlock' : ''}`} onClick={() => {
@@ -2058,11 +2298,12 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
             }} title={!audioUnlocked ? 'Kliknij, aby aktywować prawdziwe audio stadionu' : soundEnabled ? 'Wycisz dźwięki meczu' : 'Włącz dźwięki meczu'} aria-label={!audioUnlocked ? 'Aktywuj prawdziwe audio stadionu' : soundEnabled ? 'Wycisz dźwięki meczu' : 'Włącz dźwięki meczu'}>
               <SpeakerIcon muted={!soundEnabled || !audioUnlocked} />
             </button>
-            <div className="fm129-sound-meta"><strong>{!audioUnlocked ? 'AKTYWUJ AUDIO' : 'DŹWIĘK MECZU'}</strong><span>{!audioUnlocked ? '1 klik • wymóg przeglądarki' : 'Przyśpiewki • reakcje • gwizdek • gol'}</span></div>
+            <div className="fm129-sound-meta"><strong>{!audioUnlocked ? 'AKTYWUJ AUDIO' : 'ATMOSFERA STADIONU'}</strong><span>{!audioUnlocked ? '1 klik • wymóg przeglądarki' : `${homeFanV390.cue} • ${awayFanV390.cue}`}</span></div>
+            <div className="fm390-atmosphere-modes">{['calm','normal','intense'].map(mode => <button key={mode} className={atmosphereMode === mode ? 'active' : ''} onClick={() => setAtmosphereMode(mode)}>{mode === 'calm' ? 'CALM' : mode === 'normal' ? 'NORMAL' : 'INTENSE'}</button>)}</div>
             <input aria-label="Głośność dźwięków meczu" type="range" min="0" max="1" step="0.05" value={soundVolume} onChange={event => {
               const value = Number(event.target.value)
               setSoundVolume(value)
-              if (audioUnlocked && soundEnabled) setRealCrowd(ensureRealAudioBank(realAudioBankRef), { enabled: true, running, volume: value, danger: 0 })
+              if (audioUnlocked && soundEnabled) setRealCrowd(ensureRealAudioBank(realAudioBankRef), { enabled: true, running, volume: clamp(value * (atmosphereMode === 'intense' ? 1.18 : atmosphereMode === 'calm' ? .72 : 1), 0, 1), danger: 0 })
             }} />
           </div>
         </section>
@@ -2078,7 +2319,20 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
             <article><small>ZMIANY</small><b>{liveSubs.home} – {liveSubs.away}</b></article>
             <article><small>MVP SYMULACJI</small><b>{simulatedMvp ? shortPlayerName(simulatedMvp) : '—'}</b></article>
           </div>
-          <footer>V320 generuje posiadania, ruch, podania i sytuacje z zamrożonego profilu Bet+AI. LIVE AI Coach aktualizuje prawdopodobieństwa wyłącznie z przebiegu tej symulacji; bez kursu live nie potwierdza VALUE.</footer>
+          <section className="fm390-match-story">
+            <header><div><small>AI MATCH STORY • AUTO SUMMARY</small><strong>{matchStoryV390.headline}</strong></div><span>MODEL vs SIMULATION</span></header>
+            <p>{matchStoryV390.summary}</p>
+            <div className="fm390-story-grid">
+              <article><small>KLUCZOWY MOMENT</small><b>{matchStoryV390.turningPoint}</b></article>
+              <article><small>KTO KONTROLOWAŁ MECZ</small><b>{matchStoryV390.control}</b></article>
+              <article><small>EXPECTED → SIMULATED</small><b>{matchStoryV390.expectedVsSim}</b></article>
+              <article><small>MODEL CHECK</small><b>{matchStoryV390.modelCheck}</b></article>
+              <article className="confirm"><small>ZGODNOŚĆ SCENARIUSZA</small><b>{matchStoryV390.confirmationScore}/100</b><span><i style={{ width:`${matchStoryV390.confirmationScore}%` }} /></span></article>
+              <article><small>MVP</small><b>{matchStoryV390.mvp}</b></article>
+            </div>
+            <div className="fm390-story-actions"><button disabled={!matchStoryV390.decisiveSecond} onClick={() => { if (!matchStoryV390.decisiveSecond) return; setRunning(false); tickRef.current = null; setClockSec(Math.max(0, matchStoryV390.decisiveSecond - 18)); window.setTimeout(() => setRunning(true), 120) }}>▶ REPLAY KLUCZOWEGO MOMENTU</button><button onClick={() => { setRunning(false); setClockSec(0); tickRef.current = null; autoStarted.current = true; setSimulationOrdinal(value => value + 1) }}>NOWY SCENARIUSZ</button></div>
+          </section>
+          <footer>V390 wizualizuje zamrożony profil Bet+AI. LIVE AI Coach i Match Story opisują wyłącznie przebieg tej symulacji; pojedynczy scenariusz nie jest nową prognozą ani gwarancją wyniku.</footer>
         </section> : null}
       </> : null}
     </section>

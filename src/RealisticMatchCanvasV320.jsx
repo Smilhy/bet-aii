@@ -83,6 +83,79 @@ function drawPlayer(ctx, player, side, colors, w, h, active, target) {
   ctx.restore()
 }
 
+
+function drawPassTrailsV390(ctx, engine, clockSec, w, h, colors) {
+  const visible = (engine?.segments || [])
+    .filter(seg => seg?.start && seg?.end && seg.endSec <= clockSec && seg.endSec >= Math.max(0, clockSec - 9 * 60) && ['pass','throughBall','cross'].includes(seg.type))
+    .slice(-34)
+  ctx.save()
+  visible.forEach((seg, index) => {
+    const start = pxPoint(seg.start, w, h)
+    const end = pxPoint(seg.end, w, h)
+    const alpha = .08 + (index / Math.max(1, visible.length)) * .22
+    ctx.beginPath(); ctx.moveTo(start.x, start.y); ctx.lineTo(end.x, end.y)
+    ctx.strokeStyle = seg.team === 'home' ? `rgba(36,216,220,${alpha})` : `rgba(89,124,243,${alpha})`
+    ctx.lineWidth = seg.type === 'cross' ? 2.3 : seg.type === 'throughBall' ? 2 : 1.3
+    ctx.stroke()
+    ctx.beginPath(); ctx.arc(end.x, end.y, seg.type === 'throughBall' ? 2.8 : 2, 0, Math.PI * 2)
+    ctx.fillStyle = seg.team === 'home' ? colors.home.player : colors.away.player
+    ctx.globalAlpha = Math.min(.75, alpha + .2); ctx.fill(); ctx.globalAlpha = 1
+  })
+  ctx.restore()
+}
+
+function drawZoneHeatmapV390(ctx, engine, clockSec, w, h) {
+  const cells = Array.from({ length: 9 }, () => ({ home:0, away:0 }))
+  const visible = (engine?.segments || []).filter(seg => seg.endSec <= clockSec && seg.endSec >= Math.max(0, clockSec - 15 * 60) && (seg.team === 'home' || seg.team === 'away'))
+  visible.forEach(seg => {
+    const x = clamp(seg.end?.x, 0, 99.9)
+    const y = clamp(seg.end?.y, 0, 99.9)
+    const col = Math.min(2, Math.floor(x / 33.34))
+    const row = Math.min(2, Math.floor(y / 33.34))
+    const idx = row * 3 + col
+    cells[idx][seg.team] += 1 + clamp(seg.danger, 0, 1) * 1.8
+  })
+  const max = Math.max(1, ...cells.flatMap(cell => [cell.home, cell.away]))
+  const pad = 10, pw = w - 20, ph = h - 20
+  ctx.save()
+  cells.forEach((cell, idx) => {
+    const row = Math.floor(idx / 3), col = idx % 3
+    const cx = pad + col * pw / 3, cy = pad + row * ph / 3
+    if (cell.home > 0) {
+      ctx.fillStyle = `rgba(29,217,205,${.06 + cell.home/max*.28})`
+      ctx.fillRect(cx, cy, pw/3, ph/3)
+    }
+    if (cell.away > 0) {
+      ctx.fillStyle = `rgba(76,111,239,${.05 + cell.away/max*.22})`
+      ctx.fillRect(cx, cy, pw/3, ph/3)
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth = 1; ctx.strokeRect(cx, cy, pw/3, ph/3)
+  })
+  ctx.restore()
+}
+
+function drawAnalysisOverlayV390(ctx, frame, w, h) {
+  if (!frame?.segment) return
+  const pad = 10, pw = w - 20, ph = h - 20
+  ctx.save()
+  ctx.setLineDash([6,8]); ctx.strokeStyle = 'rgba(173,236,243,.18)'; ctx.lineWidth = 1
+  for (const xPct of [33.33,66.66]) {
+    const x = pad + pw * xPct/100
+    ctx.beginPath(); ctx.moveTo(x,pad); ctx.lineTo(x,pad+ph); ctx.stroke()
+  }
+  ctx.setLineDash([])
+  const ball = pxPoint(frame.ball, w, h)
+  const danger = clamp(frame.segment.danger,0,1)
+  if (danger > .18) {
+    const radius = 20 + danger * 36
+    const grd = ctx.createRadialGradient(ball.x, ball.y, 2, ball.x, ball.y, radius)
+    grd.addColorStop(0, `rgba(255,92,124,${.20 + danger*.18})`)
+    grd.addColorStop(1, 'rgba(255,92,124,0)')
+    ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(ball.x, ball.y, radius, 0, Math.PI*2); ctx.fill()
+  }
+  ctx.restore()
+}
+
 function drawBall(ctx, ball, w, h, segment, progress) {
   const p = pxPoint(ball, w, h)
   const r = clamp(w / 220, 3, 5.2)
@@ -97,7 +170,7 @@ function drawBall(ctx, ball, w, h, segment, progress) {
   ctx.restore()
 }
 
-export default function RealisticMatchCanvasV320({ engine, clockSec = 0, running = false, speed = 1, lineups = {}, homeName = 'Gospodarze', awayName = 'Goście' }) {
+export default function RealisticMatchCanvasV320({ engine, clockSec = 0, running = false, speed = 1, lineups = {}, homeName = 'Gospodarze', awayName = 'Goście', displayMode = 'match' }) {
   const canvasRef = useRef(null)
   const targetClockRef = useRef(clockSec)
   const smoothClockRef = useRef(clockSec)
@@ -137,6 +210,9 @@ export default function RealisticMatchCanvasV320({ engine, clockSec = 0, running
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.clearRect(0, 0, w, h)
       drawPitch(ctx, w, h)
+      if (displayMode === 'zones') drawZoneHeatmapV390(ctx, engine, smoothClockRef.current, w, h)
+      if (displayMode === 'passes') drawPassTrailsV390(ctx, engine, smoothClockRef.current, w, h, colors)
+      if (displayMode === 'analysis') drawAnalysisOverlayV390(ctx, frame, w, h)
       const fromKey = frame.segment?.fromKey || ''
       const toKey = frame.segment?.toKey || ''
       frame.home.forEach(p => drawPlayer(ctx, p, 'home', colors.home, w, h, p.key === fromKey || p.key === toKey, p.key === toKey ? frame.segment?.end : null))
@@ -146,13 +222,14 @@ export default function RealisticMatchCanvasV320({ engine, clockSec = 0, running
     }
     raf = requestAnimationFrame(render)
     return () => { cancelAnimationFrame(raf); observer?.disconnect() }
-  }, [engine, colors, running, speed])
+  }, [engine, colors, running, speed, displayMode])
 
   const frame = useMemo(() => engine ? getMatchFrameV320(engine, clockSec) : null, [engine, Math.floor(clockSec)])
   return (
-    <div className="v320-pitch-shell">
+    <div className={`v320-pitch-shell v390-mode-${displayMode} v390-event-${frame?.segment?.type || 'possession'}`}>
       <canvas ref={canvasRef} className="v320-match-canvas" aria-label={`Realistyczna symulacja 2D ${homeName} kontra ${awayName}`} />
-      <div className="v320-engine-chip"><b>V320 REALISTIC 2D</b><span>seed {engine?.seed ?? '—'}</span></div>
+      <div className="v320-engine-chip"><b>V390 IMMERSIVE 2D</b><span>{displayMode.toUpperCase()} • seed {engine?.seed ?? '—'}</span></div>
+      {frame?.segment?.danger >= .68 ? <div className="v390-danger-pulse"><i/><span>HIGH DANGER</span></div> : null}
       <div className={`v320-live-action ${frame?.segment?.danger >= .7 ? 'danger' : ''}`}>
         <small>{frame?.segment?.type ? String(frame.segment.type).toUpperCase() : 'POSSESSION'}</small>
         <strong>{frame?.segment?.commentary || 'Budowanie akcji'}</strong>

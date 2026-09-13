@@ -1933,6 +1933,61 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
     }
   }, [forecast, professionalLab, reliability, match, completeness])
 
+  const featuredMatchV391 = useMemo(() => {
+    if (!forecast || !quickSummaryV321) return null
+    const rawOdds = extractMarketOdds(match)
+    const valueRows = Array.isArray(forecast?.value?.top3) ? forecast.value.top3 : []
+    const recentHome = (data?.recent?.home || []).slice(0, 5).map(row => String(row?.result || '').toUpperCase()).filter(result => ['W','D','L'].includes(result))
+    const recentAway = (data?.recent?.away || []).slice(0, 5).map(row => String(row?.result || '').toUpperCase()).filter(result => ['W','D','L'].includes(result))
+    const valueFor = key => valueRows.find(item => String(item?.key || '') === key || (key === 'btts' && String(item?.key || '') === 'bttsYes')) || null
+    const oddsFor = key => {
+      const direct = rawOdds?.[key]
+      if (Number(direct?.odds) > 1) return { odds:Number(direct.odds), bookmaker:direct.bookmaker || '' }
+      const value = valueFor(key)
+      if (Number(value?.bookmakerOdds) > 1) return { odds:Number(value.bookmakerOdds), bookmaker:value.bookmaker || '' }
+      return { odds:0, bookmaker:'' }
+    }
+    const best = quickSummaryV321.best1x2
+    const keyMarkets = [best, ...quickSummaryV321.goalCards].slice(0, 4).map(item => {
+      const key = item.key
+      const value = valueFor(key)
+      const price = oddsFor(key)
+      return {
+        key,
+        label:item.label,
+        probability:Number(item.probability || 0),
+        odds:price.odds,
+        bookmaker:price.bookmaker,
+        edge:value?.edgePp == null ? null : Number(value.edgePp),
+        ev:value?.expectedValuePct == null ? null : Number(value.expectedValuePct)
+      }
+    })
+    const confidence = clampNum(Number(quickSummaryV321.reliability || 0), 0, 100)
+    const decisionTone = quickSummaryV321.decision === 'BET' ? 'bet' : quickSummaryV321.decision === 'WATCH' ? 'watch' : 'nobet'
+    const recommended = quickSummaryV321.decision === 'BET'
+      ? (lang === 'en' ? 'Recommended' : 'Rekomendowany')
+      : quickSummaryV321.decision === 'WATCH'
+        ? (lang === 'en' ? 'Watchlist' : 'Obserwuj')
+        : (lang === 'en' ? 'No stake' : 'Bez stawki')
+    return {
+      homeForm:recentHome,
+      awayForm:recentAway,
+      keyMarkets,
+      confidence,
+      decisionTone,
+      recommended,
+      verdict:quickSummaryV321.primaryLabel,
+      verdictReason:quickSummaryV321.decisionReason,
+      homeProbability:Number(forecast?.oneXTwo?.home || 0),
+      drawProbability:Number(forecast?.oneXTwo?.draw || 0),
+      awayProbability:Number(forecast?.oneXTwo?.away || 0),
+      fairOdds:Number(quickSummaryV321.primaryFairOdds || 0),
+      marketOdds:Number(professionalLab?.decisionCard?.bookmakerOdds || 0),
+      edge:quickSummaryV321.edge,
+      dataQuality:Number(quickSummaryV321.dataQuality || 0)
+    }
+  }, [forecast, quickSummaryV321, professionalLab, match, data, lang])
+
   useEffect(() => {
     if (isBetAiLabTestV152(match)) {
       setForecastSaveState('test')
@@ -2007,6 +2062,10 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
             <small>{matchDateV322 || 'DZISIAJ'}</small>
             <b>VS</b>
             <span>{match?.time || '—'}</span>
+            <button type="button" className="sim-v390-start-hero" disabled={!eligibility.eligible || loading || !preparedData} onClick={() => eligibility.eligible && preparedData && onStart?.(match, preparedData)}>
+              <UiIconV322 name="play" size={20} />
+              <span><strong>{eligibility.eligible ? copy.start : copy.rejectedButton}</strong><small>{loading ? `Przygotowanie ${summaryProgressV322}%` : eligibility.eligible ? 'START LIVE MATCH ENGINE' : 'Brak wymaganych danych'}</small></span>
+            </button>
           </div>
           <div className="sim-prep-team-v116 away sim-team-v322">
             <strong>{safeTextV158(match?.away, '—')}</strong>
@@ -2018,6 +2077,112 @@ export default function MatchSimulatorPreparationView({ lang = 'pl', match, onBa
           <div><small>STADION</small><strong>{matchVenueNameV322 || 'Dane stadionu oczekują'}</strong>{matchVenueCityV322 ? <em>{matchVenueCityV322}</em> : null}</div>
         </div>
       </section>
+
+      {featuredMatchV391 ? <section className={`fm391-featured-match fm392-featured-match tone-${featuredMatchV391.decisionTone}`}>
+        <div className="fm392-hero-copy">
+          <small>AI POWERED BETTING INSIGHTS</small>
+          <strong>Smarter Bets. <i>Real Edges.</i></strong>
+          <p>Advanced AI models. Deeper data. A clearer winning edge.<br />Turn statistics into opportunity.</p>
+        </div>
+        <div className="fm392-scene" aria-hidden="true">
+          <span className="fm392-scene-copy fm392-scene-copy-left">MORE<br />INSIGHTS<br />BIGGER<br />OPPORTUNITIES</span>
+          <span className="fm392-scene-copy fm392-scene-copy-right">SAME<br />GAME<br />DIFFERENT<br />EDGE</span>
+          <span className="fm392-scribble">Data Finds Edges.<br />You Make It Count.</span>
+        </div>
+
+        <div className="fm392-frame">
+          <header className="fm391-featured-head fm392-featured-head">
+            <div className="fm391-featured-title">
+              <span className="fm391-featured-pill"><UiIconV322 name="bolt" size={15} /> {lang === 'en' ? 'FEATURED MATCH' : 'FEATURED MATCH'}</span>
+              <span className="fm391-league"><UiIconV322 name="layers" size={15} /> {safeTextV158(match?.league, lang === 'en' ? 'Football' : 'Piłka nożna')}</span>
+            </div>
+            <div className="fm391-featured-meta">
+              <span><UiIconV322 name="calendar" size={14} /> {matchDateV322 || (lang === 'en' ? 'Match day' : 'Dzień meczu')} • {match?.time || '—'}</span>
+              <span><UiIconV322 name="stadium" size={14} /> {matchVenueNameV322 || (lang === 'en' ? 'Venue pending' : 'Stadion oczekuje')}</span>
+            </div>
+          </header>
+
+          <div className="fm391-featured-grid fm392-featured-grid">
+            <div className="fm392-left-stack">
+              <div className="fm391-team-comparison fm392-team-comparison">
+                <article className="home">
+                  <span className="fm391-team-logo">{match?.homeLogo ? <img src={match.homeLogo} alt="" /> : <b>{safeTextV158(match?.home, 'H').slice(0,1)}</b>}</span>
+                  <div>
+                    <strong>{safeTextV158(match?.home, '—')}</strong>
+                    <small>{lang === 'en' ? 'HOME SIDE' : 'GOSPODARZE'}</small>
+                    <div className="fm391-form">{featuredMatchV391.homeForm.length ? featuredMatchV391.homeForm.map((result,index)=><i key={`h-${index}`} className={`r-${result.toLowerCase()}`}>{result}</i>) : <em>{lang === 'en' ? 'form pending' : 'forma oczekuje'}</em>}</div>
+                  </div>
+                </article>
+                <span className="fm391-versus fm392-versus">VS</span>
+                <article className="away">
+                  <span className="fm391-team-logo">{match?.awayLogo ? <img src={match.awayLogo} alt="" /> : <b>{safeTextV158(match?.away, 'A').slice(0,1)}</b>}</span>
+                  <div>
+                    <strong>{safeTextV158(match?.away, '—')}</strong>
+                    <small>{lang === 'en' ? 'AWAY SIDE' : 'GOŚCIE'}</small>
+                    <div className="fm391-form">{featuredMatchV391.awayForm.length ? featuredMatchV391.awayForm.map((result,index)=><i key={`a-${index}`} className={`r-${result.toLowerCase()}`}>{result}</i>) : <em>{lang === 'en' ? 'form pending' : 'forma oczekuje'}</em>}</div>
+                  </div>
+                </article>
+              </div>
+
+              <nav className="fm391-analysis-tabs fm392-analysis-tabs" aria-label={lang === 'en' ? 'Match intelligence sections' : 'Sekcje analizy meczu'}>
+                <span className="active"><UiIconV322 name="bolt" size={14} /> AI Analysis</span>
+                <span><UiIconV322 name="chart" size={14} /> Team Stats</span>
+                <span><UiIconV322 name="target" size={14} /> H2H</span>
+                <span><UiIconV322 name="database" size={14} /> Betting Markets</span>
+                <span><UiIconV322 name="shield" size={14} /> Lineups</span>
+              </nav>
+
+              <article className="fm391-verdict-card fm392-verdict-card">
+                <div className="fm391-verdict-copy">
+                  <small><UiIconV322 name="target" size={15} /> AI VERDICT</small>
+                  <div className="fm391-verdict-line"><strong>{featuredMatchV391.verdict}</strong><span className={`tone-${featuredMatchV391.decisionTone}`}>{featuredMatchV391.recommended}</span></div>
+                  <p>{featuredMatchV391.verdictReason}</p>
+                  <div className="fm391-verdict-metrics">
+                    <span><b>{featuredMatchV391.fairOdds > 1 ? featuredMatchV391.fairOdds.toFixed(2) : '—'}</b><small>FAIR ODDS</small></span>
+                    <span><b>{featuredMatchV391.marketOdds > 1 ? featuredMatchV391.marketOdds.toFixed(2) : '—'}</b><small>{lang === 'en' ? 'MARKET ODDS' : 'MARKET ODDS'}</small></span>
+                    <span className={featuredMatchV391.edge != null && featuredMatchV391.edge >= 0 ? 'positive' : ''}><b>{featuredMatchV391.edge == null ? '—' : `${featuredMatchV391.edge > 0 ? '+' : ''}${featuredMatchV391.edge.toFixed(1)} pp`}</b><small>ODDS EDGE</small></span>
+                    <span><b>{featuredMatchV391.dataQuality}/100</b><small>HIGH VALUE</small></span>
+                  </div>
+                </div>
+                <div className="fm391-confidence fm392-confidence" style={{'--fm391-confidence':`${featuredMatchV391.confidence}%`}}>
+                  <div><b>{Math.round(featuredMatchV391.confidence)}%</b><small>CONFIDENCE</small></div>
+                </div>
+              </article>
+            </div>
+
+            <aside className="fm391-market-side fm392-market-side">
+              <section className="fm391-win-probability fm392-win-probability">
+                <header><strong>{lang === 'en' ? 'WIN PROBABILITY' : 'WIN PROBABILITY'}</strong><span>Powered by AI</span></header>
+                <div className="fm391-prob-grid fm392-prob-grid">
+                  <article><b>{featuredMatchV391.homeProbability.toFixed(0)}%</b><small>{safeTextV158(match?.home, '1')}</small><span><i style={{width:`${featuredMatchV391.homeProbability}%`}} /></span></article>
+                  <article><b>{featuredMatchV391.drawProbability.toFixed(0)}%</b><small>{lang === 'en' ? 'Draw' : 'Draw'}</small><span><i style={{width:`${featuredMatchV391.drawProbability}%`}} /></span></article>
+                  <article><b>{featuredMatchV391.awayProbability.toFixed(0)}%</b><small>{safeTextV158(match?.away, '2')}</small><span><i style={{width:`${featuredMatchV391.awayProbability}%`}} /></span></article>
+                </div>
+              </section>
+
+              <section className="fm391-key-markets fm392-key-markets">
+                <header><strong>{lang === 'en' ? 'KEY MARKETS' : 'KEY MARKETS'}</strong><small>{lang === 'en' ? 'Best Odds' : 'Best Odds'}</small></header>
+                <div>{featuredMatchV391.keyMarkets.map((item,index)=><article key={`${item.key}-${index}`}>
+                  <span className="fm392-market-icon"><UiIconV322 name={index === 0 ? 'target' : index === 1 ? 'ball' : index === 2 ? 'chart' : 'eye'} size={14} /></span>
+                  <div><strong>{item.label}</strong><small>{item.bookmaker || `${item.probability.toFixed(1)}% AI`}</small></div>
+                  <b>{item.odds > 1 ? item.odds.toFixed(2) : '—'}</b>
+                  <em className={((item.ev ?? item.edge) != null && (item.ev ?? item.edge) > 0) ? 'positive' : ''}>{item.ev != null ? `${item.ev > 0 ? '+' : ''}${item.ev.toFixed(0)}%` : item.edge != null ? `${item.edge > 0 ? '+' : ''}${item.edge.toFixed(1)} pp` : `${item.probability.toFixed(0)}%`}</em>
+                </article>)}</div>
+              </section>
+            </aside>
+          </div>
+        </div>
+
+        <footer className="fm392-footer-strip">
+          <div className="fm392-footer-points">
+            <article className="lead"><span className="fm392-footer-bars"><i /><i /><i /><i /></span><div><strong>Backed by Data.<br />Built for Better Bets.</strong></div></article>
+            <article><span><UiIconV322 name="layers" size={17} /></span><div><strong>300+ Leagues</strong><small>Global coverage</small></div></article>
+            <article><span><UiIconV322 name="target" size={17} /></span><div><strong>AI-Powered Models</strong><small>Trained on millions of matches</small></div></article>
+            <article><span><UiIconV322 name="shield" size={17} /></span><div><strong>Real-Time Updates</strong><small>Always one step ahead</small></div></article>
+          </div>
+          <button type="button" className="fm392-cta-button"><span>Get Winning Insights</span><UiIconV322 name="play" size={16} /></button>
+        </footer>
+      </section> : null}
 
       {quickSummaryV321 ? <section className={`sim-quick-summary-v321 sim-quick-summary-v322 decision-${quickSummaryV321.decision.toLowerCase().replace('_','-')}`}>
         <header className="sim-quick-head-v321 sim-quick-head-v322">
