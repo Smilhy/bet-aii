@@ -168,13 +168,13 @@ export function FmAiOpportunityBoardV377({ entries = [], lang = 'pl', timeZone =
 
     <header className="sim-v377-board-head sim-v378-board-head">
       <div className="sim-v378-head-copy">
-        <div className="sim-v378-board-kicker"><span className="sim-v378-live-dot"/><BoardIconV378 name="pulse" size={15}/><b>FM AI • V379</b><em>READABILITY BOARD</em></div>
-        <strong>{isEn ? 'Professional market board' : 'Czytelna tablica okazji rynkowych'}</strong>
-        <p>{isEn ? 'Clear, cleaner screen for price, AI probability, edge, EV and reliability — based on matches already scanned by FM AI.' : 'Czytelniejszy ekran z kursem, szansą AI, edge, EV i jakością — z meczów już przeskanowanych przez FM AI.'}</p>
+        <div className="sim-v378-board-kicker"><span className="sim-v378-live-dot"/><BoardIconV378 name="pulse" size={15}/><b>FM AI • V378</b><em>PRO OPPORTUNITY BOARD</em></div>
+        <strong>{isEn ? 'Professional market edge terminal' : 'Profesjonalny terminal okazji rynkowych'}</strong>
+        <p>{isEn ? 'One screen for price, AI probability, edge, EV and reliability — built from the matches FM AI already scanned.' : 'Jedno miejsce dla kursu, szansy AI, edge, EV i jakości — z meczów już przeskanowanych przez FM AI.'}</p>
         <div className="sim-v378-head-tags">
-          <span><BoardIconV378 name="shield" size={13}/>{isEn?'NO EXTRA API':'BEZ EXTRA API'}</span>
-          <span><BoardIconV378 name="layers" size={13}/>{isEn?'MARKET CONSENSUS':'KONSENSUS'}</span>
-          <span><BoardIconV378 name="clock" size={13}/>{isEn?'PRE-MATCH':'PRE-MATCH'}</span>
+          <span><BoardIconV378 name="shield" size={13}/>{isEn?'NO EXTRA API':'0 DODATKOWYCH API'}</span>
+          <span><BoardIconV378 name="layers" size={13}/>{isEn?'MARKET CONSENSUS':'KONSENSUS RYNKU'}</span>
+          <span><BoardIconV378 name="clock" size={13}/>{isEn?'PRE-MATCH FEED':'PRE-MATCH FEED'}</span>
         </div>
       </div>
       <div className="sim-v378-head-status">
@@ -184,16 +184,16 @@ export function FmAiOpportunityBoardV377({ entries = [], lang = 'pl', timeZone =
     </header>
 
     <div className="sim-v378-metric-strip">
-      <article><span className="sim-v378-metric-icon"><BoardIconV378 name="target"/></span><div><small>{isEn?'ACTIVE OPPORTUNITIES':'AKTYWNE OKAZJE'}</small><b>{rows.length}</b><em>{isEn?'after filters':'po filtrach'}</em></div></article>
-      <article><span className="sim-v378-metric-icon"><BoardIconV378 name="trophy"/></span><div><small>STRONG / VALUE</small><b>{boardMetrics.strong} <i>/</i> {boardMetrics.value}</b><em>{isEn?'mix decyzji':'rozkład decyzji'}</em></div></article>
-      <article><span className="sim-v378-metric-icon"><BoardIconV378 name="spark"/></span><div><small>{isEn?'AVG AI CHANCE':'ŚR. SZANSA AI'}</small><b>{boardMetrics.avgProbability.toFixed(1)}%</b><em>{isEn?'visible selections':'w widoku'}</em></div></article>
-      <article className={boardMetrics.topEdge >= 0 ? 'positive' : 'negative'}><span className="sim-v378-metric-icon"><BoardIconV378 name="chart"/></span><div><small>{isEn?'TOP EDGE':'TOP EDGE'}</small><b>{pp(boardMetrics.topEdge)}</b><em>{isEn?'best visible advantage':'maks. przewaga'}</em></div></article>
-      <article><span className="sim-v378-metric-icon"><BoardIconV378 name="shield"/></span><div><small>{isEn?'AVG RELIABILITY':'ŚR. JAKOŚĆ'}</small><b>{boardMetrics.avgReliability.toFixed(0)}<i>/100</i></b><em>{isEn?'quality score':'średnia jakość'}</em></div></article>
+      <article><span className="sim-v378-metric-icon"><BoardIconV378 name="target"/></span><div><small>{isEn?'ACTIVE OPPORTUNITIES':'AKTYWNE OKAZJE'}</small><b>{rows.length}</b><em>{isEn?'after current filters':'po aktualnych filtrach'}</em></div></article>
+      <article><span className="sim-v378-metric-icon"><BoardIconV378 name="trophy"/></span><div><small>STRONG / VALUE</small><b>{boardMetrics.strong} <i>/</i> {boardMetrics.value}</b><em>{isEn?'decision mix':'rozkład decyzji'}</em></div></article>
+      <article><span className="sim-v378-metric-icon"><BoardIconV378 name="spark"/></span><div><small>{isEn?'AVG AI CHANCE':'ŚR. SZANSA AI'}</small><b>{boardMetrics.avgProbability.toFixed(1)}%</b><em>{isEn?'visible selections':'widocznych typów'}</em></div></article>
+      <article className={boardMetrics.topEdge >= 0 ? 'positive' : 'negative'}><span className="sim-v378-metric-icon"><BoardIconV378 name="chart"/></span><div><small>{isEn?'TOP EDGE':'TOP EDGE'}</small><b>{pp(boardMetrics.topEdge)}</b><em>{isEn?'best visible advantage':'najwyższa przewaga'}</em></div></article>
+      <article><span className="sim-v378-metric-icon"><BoardIconV378 name="shield"/></span><div><small>{isEn?'AVG RELIABILITY':'ŚR. JAKOŚĆ'}</small><b>{boardMetrics.avgReliability.toFixed(0)}<i>/100</i></b><em>{isEn?'quality score':'ocena jakości'}</em></div></article>
     </div>
 
     <div className="sim-v378-filter-shell">
       <div className="sim-v378-filter-head">
-        <div><span><BoardIconV378 name="filter" size={16}/></span><p><b>{isEn?'MARKET CONTROLS':'STEROWANIE TABLICĄ'}</b><small>{isEn?'Filter results without re-running the scanner':'Filtruj wyniki bez ponownego uruchamiania skanera'}</small></p></div>
+        <div><span><BoardIconV378 name="filter" size={16}/></span><p><b>{isEn?'MARKET CONTROLS':'STEROWANIE TABLICĄ'}</b><small>{isEn?'Narrow the feed without re-running the scanner':'Zawężaj wyniki bez ponownego uruchamiania skanera'}</small></p></div>
         <button type="button" onClick={resetBoard}><BoardIconV378 name="reset" size={14}/>{isEn?'RESET':'RESETUJ'}</button>
       </div>
       <div className="sim-v377-board-tools sim-v378-board-tools">
@@ -206,7 +206,7 @@ export function FmAiOpportunityBoardV377({ entries = [], lang = 'pl', timeZone =
     </div>
 
     <div className="sim-v377-board-table-wrap sim-v378-board-table-wrap">
-      <div className="sim-v378-feed-head"><div><span className="sim-v378-feed-dot"/><b>{isEn?'OPPORTUNITY FEED':'OPPORTUNITY FEED'}</b><small>{isEn?'sorted by selected rule':'widok wg wybranego sortowania'}</small></div><em>{rows.length} {isEn?'visible':'widocznych'}</em></div>
+      <div className="sim-v378-feed-head"><div><span className="sim-v378-feed-dot"/><b>{isEn?'OPPORTUNITY FEED':'OPPORTUNITY FEED'}</b><small>{isEn?'ranked by your selected sort':'ranking wg wybranego sortowania'}</small></div><em>{rows.length} {isEn?'visible':'widocznych'}</em></div>
       <table><thead><tr><th>{isEn?'Match':'Mecz'}</th><th>{isEn?'Pick':'Typ'}</th><th>{isEn?'Best price':'Kurs'}</th><th>AI</th><th>EDGE</th><th>EV</th><th>REL.</th><th>{isEn?'Market':'Rynek'}</th><th></th></tr></thead><tbody>{rows.map((entry,rowIndex) => {
         const item = entry?.scan?.topFinal || {}
         const pulse = buildMarketPulseV377(entry, [])
