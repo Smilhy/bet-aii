@@ -88301,3 +88301,39 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
 
 .sim-v380-play-badge.tone-caution,
 .sim-v380-play-badge.tone-consider{white-space:nowrap}
+
+/* =====================================================================
+   V406 — OFFICIAL DECISION SEMANTICS
+   NO BET is not rendered as an official pick. Positive edge/EV on a
+   blocked candidate is shown as theoretical value, not a green play signal.
+   ===================================================================== */
+.sim-v378-board tr.v406-no-official-bet .sim-v378-pick-cell>b{
+  color:#f0a86d!important;
+  letter-spacing:.01em;
+}
+.sim-v406-candidate-note{
+  display:block;
+  margin-top:5px;
+  color:#8fa8ba!important;
+  font-size:11px!important;
+  font-weight:700;
+}
+.sim-v378-board td.v406-blocked-value b{
+  color:#e8b86b!important;
+  text-shadow:none!important;
+}
+.sim-v378-board td.v406-blocked-value .sim-v378-mini-track>i{
+  background:linear-gradient(90deg,#a27a38,#d6aa58)!important;
+  opacity:.72;
+}
+.fm398-shared-signal.v406-no-bet{
+  border-color:rgba(232,168,100,.25)!important;
+  background:linear-gradient(180deg,rgba(48,31,18,.64),rgba(24,18,13,.72))!important;
+}
+.fm398-shared-signal.v406-no-bet b{
+  color:#f0aa6b!important;
+  text-shadow:none!important;
+}
+.fm398-shared-signal.v406-no-bet span{
+  color:#d4b28f!important;
+}

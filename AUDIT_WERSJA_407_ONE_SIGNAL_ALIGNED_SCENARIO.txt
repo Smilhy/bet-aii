@@ -1,0 +1,27 @@
+WERSJA 407 — ONE SIGNAL / ALIGNED SCENARIO
+
+Cel:
+Usunąć wrażenie, że strona posiada trzy niezależne systemy typujące.
+
+Jedna logika prezentacyjna:
+1. FM AI wybiera/zamraża KANDYDATA rynku.
+2. Risk Guard nadaje oficjalną decyzję: BET / WATCH / NO BET.
+3. Rozkład 1X2 pozostaje informacją statystyczną i jest jawnie opisany jako NIE TYP.
+4. Symulacja LIVE pokazuje reprezentatywny przebieg zgodny z tym samym zamrożonym kandydatem.
+5. Dla NO BET wynik symulacji nadal może być zgodny z kandydatem, ale oficjalna decyzja pozostaje BRAK ZAKŁADU.
+
+Przykład:
+Kandydat: Wygra 2 @3.90, AI 34.6%, decyzja NO BET.
+=> tablica: Kandydat Wygra 2 / NO BET
+=> dolna karta: Kandydat Wygra 2 / NO BET
+=> LIVE: scenariusz kończy się wygraną gości
+=> status końcowy: BRAK ZAKŁADU • SCENARIUSZ ZGODNY Z KANDYDATEM
+
+WAŻNE:
+To jest scenariusz reprezentatywny/warunkowy, a nie niezależne losowanie wyniku. Dzięki temu UI nie komunikuje drugiego, sprzecznego typu.
+
+Test V407:
+- 11 obsługiwanych rynków
+- 3 decyzje: NO_BET / VALUE / STRONG_VALUE
+- 9 scenariuszy na każdy wariant
+- 297/297 wyników musi spełniać zamrożony market_key

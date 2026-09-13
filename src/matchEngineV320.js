@@ -1,4 +1,4 @@
-import { canonicalFmAiMarketKeyV367, scoreMatchesFmAiMarketV367, outcomeForFmAiMarketV367, fallbackScoreForConstraintV367, shouldHardGuardFmAiPickV367 } from './fmAiConsistencyV367.js'
+import { canonicalFmAiMarketKeyV367, scoreMatchesFmAiMarketV367, outcomeForFmAiMarketV367, fallbackScoreForConstraintV367, shouldHardGuardFmAiPickV367, shouldAlignScenarioToFmAiCandidateV407 } from './fmAiConsistencyV367.js'
 
 const MATCH_SECONDS = 90 * 60
 
@@ -330,7 +330,7 @@ export function buildRealisticMatchV320(data = {}, model = {}, simulationOrdinal
   const sharedKeyV367 = canonicalFmAiMarketKeyV367(sharedTopV367?.key || sharedTopV367?.rawKey || '')
   const sharedProbabilityV367 = num(sharedTopV367?.probability, 0)
   const sharedDecisionV367 = String(sharedTopV367?.decision || '').toUpperCase()
-  const sharedHardGuardV367 = false // V399: simulation stays probabilistic; canonical pick is context, never a forced outcome
+  const sharedHardGuardV367 = shouldAlignScenarioToFmAiCandidateV407(sharedTopV367) // V407: representative scenario follows the frozen FM AI candidate, including NO_BET candidates
   const forcedOutcomeV367 = sharedHardGuardV367 ? outcomeForFmAiMarketV367(sharedKeyV367) : ''
   const desiredOutcome = forcedOutcomeV367 || sampledOutcomeV367
   const targetFinalScore = sampleConditionalScoreWithSharedPickV367(targetXg, desiredOutcome, outcomeRandom, sharedKeyV367, sharedHardGuardV367)

@@ -329,19 +329,22 @@ export function FmAiOpportunityBoardV377({ entries = [], lang = 'pl', timeZone =
         const rel = clamp(reliability(entry), 0, 100)
         const tipSignal = buildTipSignalV380(entry, lang)
         const kickoffSignal = buildKickoffUrgencyV382(entry, timeZone, lang)
+        const isNoBetV406 = d === 'NO_BET' || d === 'NO_ODDS'
+        const candidateLabelV406 = simpleMarketLabel(marketKey(entry),lang)
+        const officialPickLabelV406 = isNoBetV406 ? (isEn ? 'NO OFFICIAL BET' : 'BRAK OFICJALNEGO TYPU') : candidateLabelV406
         const edgeBar = clamp(Math.abs(edge) * 4.2, 4, 100)
         const evBar = clamp(Math.abs(ev) * 1.65, 4, 100)
-        return <tr key={`v377-${entry?.key || entry?.match?.id || rowIndex}`} className={`decision-${d.toLowerCase()} ${rowIndex<3?'is-top-row':''} ${kickoffSignal.tone !== 'none' ? `urgency-${kickoffSignal.tone}` : ''}`}>
+        return <tr key={`v377-${entry?.key || entry?.match?.id || rowIndex}`} className={`decision-${d.toLowerCase()} ${isNoBetV406?'v406-no-official-bet':''} ${rowIndex<3?'is-top-row':''} ${kickoffSignal.tone !== 'none' ? `urgency-${kickoffSignal.tone}` : ''}`}>
           <td><div className="sim-v377-matchcell sim-v378-matchcell">
             <div className="sim-v378-match-meta"><span className="sim-v378-rank">{String(rowIndex+1).padStart(2,'0')}</span><small>{localKickoff(entry,timeZone)}</small><em>{entry?.match?.league || '—'}</em>{kickoffSignal.label ? <span className={`sim-v382-kickoff-badge tone-${kickoffSignal.tone}`}>{kickoffSignal.label}</span> : null}</div>
             <b>{entry?.match?.home || '—'} <i>vs</i> {entry?.match?.away || '—'}</b>
           </div></td>
-          <td><div className="sim-v378-pick-cell"><b>{simpleMarketLabel(marketKey(entry),lang)}</b><span className={`sim-v378-decision-pill tone-${d.toLowerCase()}`}>{d.replace('_',' ')}</span></div></td>
+          <td><div className="sim-v378-pick-cell"><b>{officialPickLabelV406}</b>{isNoBetV406 ? <small className="sim-v406-candidate-note">{isEn?'Value candidate':'Kandydat value'}: {candidateLabelV406}</small> : null}<span className={`sim-v378-decision-pill tone-${d.toLowerCase()}`}>{d.replace('_',' ')}</span></div></td>
           <td><div className={`sim-v380-signal-cell tone-${tipSignal.tone}`}><div className={`sim-v380-play-badge tone-${tipSignal.tone}`}><span className="sim-v380-play-icon"/>{tipSignal.actionLabel}</div><div className="sim-v380-stars" aria-label={`rating ${tipSignal.stars} of 5`}>{Array.from({ length: 5 }).map((_,i)=><span key={i} className={i < tipSignal.stars ? 'on' : ''}>★</span>)}</div><small>{tipSignal.confidenceLabel}</small><div className="sim-v380-confidence-track"><i style={{width:`${tipSignal.confidenceScore}%`}}/></div></div></td>
           <td><div className="sim-v378-price-cell"><b>{bestPrice>1?`${bestPrice.toFixed(2)}`:'—'}</b><span><i/>{bestBook || `${pulse.quotes.length} books`}</span></div></td>
           <td><div className="sim-v378-score-cell"><div><b>{probability.toFixed(1)}%</b><small>{n(item.fairOdds)>1?`fair ${n(item.fairOdds).toFixed(2)}`:'fair —'}</small></div><span className="sim-v378-mini-track ai"><i style={{width:`${probability}%`}}/></span></div></td>
-          <td className={edge>=0?'positive':'negative'}><div className="sim-v378-delta-cell"><b>{pp(edge)}</b><span className="sim-v378-mini-track edge"><i style={{width:`${edgeBar}%`}}/></span></div></td>
-          <td className={ev>=0?'positive':'negative'}><div className="sim-v378-delta-cell"><b>{pct(ev)}</b><span className="sim-v378-mini-track ev"><i style={{width:`${evBar}%`}}/></span></div></td>
+          <td className={isNoBetV406?'v406-blocked-value':(edge>=0?'positive':'negative')} title={isNoBetV406 ? (isEn?'Theoretical price edge; official decision is NO BET':'Teoretyczny edge ceny; oficjalna decyzja to NO BET') : ''}><div className="sim-v378-delta-cell"><b>{pp(edge)}</b><span className="sim-v378-mini-track edge"><i style={{width:`${edgeBar}%`}}/></span></div></td>
+          <td className={isNoBetV406?'v406-blocked-value':(ev>=0?'positive':'negative')} title={isNoBetV406 ? (isEn?'Theoretical EV; official decision is NO BET':'Teoretyczne EV; oficjalna decyzja to NO BET') : ''}><div className="sim-v378-delta-cell"><b>{pct(ev)}</b><span className="sim-v378-mini-track ev"><i style={{width:`${evBar}%`}}/></span></div></td>
           <td><div className="sim-v378-rel-cell"><div><b>{rel.toFixed(0)}<i>/100</i></b><small>bal. {n(item.dailyScore).toFixed(0)}</small></div><span className="sim-v378-mini-track rel"><i style={{width:`${rel}%`}}/></span></div></td>
           <td><div className="sim-v378-market-cell"><b className={`state-${pulse.priceState.toLowerCase()}`}>{pulse.priceState}</b><small>{pulse.quotes.length>=2?`${pulse.quotes.length} books • gap ${pulse.rangePct.toFixed(1)}%`:(isEn?'collecting prices':'zbieranie cen')}</small></div></td>
           <td><div className="sim-v377-row-actions sim-v378-row-actions"><button type="button" onClick={()=>onWhyAi?.(entry)}><BoardIconV378 name="spark" size={13}/>WHY AI?</button><button type="button" onClick={()=>onOpenAnalysis?.(entry)}>{isEn?'OPEN':'OTWÓRZ'}<BoardIconV378 name="arrow" size={13}/></button></div></td>

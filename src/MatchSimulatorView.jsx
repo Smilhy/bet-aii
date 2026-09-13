@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import RealisticMatchCanvasV320 from './RealisticMatchCanvasV320'
 import LiveAICoachV320 from './LiveAICoachV320'
 import { buildRealisticMatchV320, collectLiveStatsV320 } from './matchEngineV320'
-import { canonicalFmAiMarketKeyV367, scoreMatchesFmAiMarketV367, shouldHardGuardFmAiPickV367 } from './fmAiConsistencyV367'
+import { canonicalFmAiMarketKeyV367, scoreMatchesFmAiMarketV367, shouldHardGuardFmAiPickV367, shouldAlignScenarioToFmAiCandidateV407 } from './fmAiConsistencyV367'
 import { canonicalUiActionV402 } from './fmAiCanonicalPipelineV400'
 
 const MATCH_TOTAL_SECONDS = 90 * 60
@@ -812,7 +812,7 @@ function buildSimulationModel(data = {}) {
   const sharedKeyV365 = canonicalFmAiMarketKeyV367(sharedTopV365?.key || sharedTopV365?.rawKey || '')
   const sharedProbabilityV365 = Number(sharedTopV365?.probability || 0)
   const sharedDecisionV367 = String(sharedTopV365?.decision || '').toUpperCase()
-  const sharedHardGuardV367 = false // V399: simulation stays probabilistic; canonical pick is context, never a forced outcome
+  const sharedHardGuardV367 = shouldAlignScenarioToFmAiCandidateV407(sharedTopV365) // V407: same frozen candidate drives the representative scenario
   const scoreMatchesSharedPickV365 = (scoreText = '') => {
     const [home, away] = String(scoreText).split(':').map(Number)
     return scoreMatchesFmAiMarketV367({ home, away }, sharedKeyV365)
@@ -2140,8 +2140,11 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
           : liveDecisionV402 === 'BET'
             ? 'BET • SYGNAŁ GRYWALNY'
             : 'PROFIL MODELU'
+  const isOfficialNoBetV406 = liveDecisionV402 === 'NO_BET'
   const sharedSignalResultV398 = clockSec >= MATCH_TOTAL_SECONDS && model?.scenarioV365?.sharedKey
-    ? (scoreMatchesFmAiMarketV367({ home:currentScore.home, away:currentScore.away }, model.scenarioV365.sharedKey) ? 'TRAFIONY W TEJ SYMULACJI' : 'NIETRAFIONY W TEJ SYMULACJI')
+    ? (isOfficialNoBetV406
+        ? (model?.scenarioV365?.hardGuard ? 'BRAK ZAKŁADU • SCENARIUSZ ZGODNY Z KANDYDATEM' : 'BRAK ZAKŁADU')
+        : (scoreMatchesFmAiMarketV367({ home:currentScore.home, away:currentScore.away }, model.scenarioV365.sharedKey) ? 'TRAFIONY W TEJ SYMULACJI' : 'NIETRAFIONY W TEJ SYMULACJI'))
     : ''
   const homeLineupReady = (data?.lineups?.home?.startXI?.length || 0) >= 11
   const awayLineupReady = (data?.lineups?.away?.startXI?.length || 0) >= 11
@@ -2156,7 +2159,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
         <header className="fm119-scorebar">
           <div className="fm119-score-meta">
             <div><span>BET+AI SIMULATOR</span><em className={running ? 'live' : ''}>{running ? 'LIVE' : clockSec >= MATCH_TOTAL_SECONDS ? 'FT' : 'PAUZA'}</em>{data?.externalConsensus?.consensus?.available ? <em className="multi-source-v128">MULTI-SOURCE {data.externalConsensus.consensus.sourceCount}</em> : null}<em className="fm146-engine-badge">REALISTIC ENGINE V320</em>{model?.scenarioV365?.sharedKey ? <em className="fm365-consistency-badge">FM AI SNAPSHOT {Number(model.scenarioV365.sharedProbability || 0).toFixed(1)}%</em> : null}</div>
-            <small>{safeDisplayText(data.fixture?.league, 'Liga')} • {safeDisplayText(data.fixture?.round, 'Mecz')} {model?.scenarioV365?.hardGuard ? '• reprezentatywny scenariusz zgodny z głównym typem FM AI' : model?.scenarioV365?.sharedKey ? '• snapshot FM AI przekazany bez wymuszania wyniku' : ''}</small>
+            <small>{safeDisplayText(data.fixture?.league, 'Liga')} • {safeDisplayText(data.fixture?.round, 'Mecz')} {model?.scenarioV365?.hardGuard ? '• scenariusz reprezentatywny zgodny z kandydatem FM AI' : model?.scenarioV365?.sharedKey ? '• kandydat FM AI przekazany do symulacji' : ''}</small>
           </div>
           <div className="fm119-score-team home">
             <div><strong>{homeNameV390}</strong><TeamForm rows={data.recent.home} /><span className="fm390-team-fan"><b>{homeFanV390.nickname}</b><em>{homeFanV390.supporter}</em></span></div>
@@ -2174,11 +2177,11 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
         </header>
 
         <section className="fm390-prematch-continuity">
-          <div className="fm390-continuity-label"><small>PRE-MATCH → LIVE</small><strong>Ten sam zamrożony profil Bet+AI</strong><span>Symulacja nie tworzy nowej prognozy — wizualizuje przygotowany model.</span></div>
+          <div className="fm390-continuity-label"><small>PRE-MATCH → LIVE</small><strong>Jeden kandydat FM AI od analizy do symulacji</strong><span>Wynik symulacji jest reprezentatywnym scenariuszem zgodnym z zamrożonym kandydatem. Nie jest drugim, niezależnym typem.</span></div>
           <article><small>1X2 PRE-MATCH</small><b>{model.probabilities.home}% <i>/</i> {model.probabilities.draw}% <i>/</i> {model.probabilities.away}%</b><span>1 / X / 2</span></article>
           <article><small>xG PRE-MATCH</small><b>{model.xg.home.toFixed(2)} <i>–</i> {model.xg.away.toFixed(2)}</b><span>{homeNameV390} / {awayNameV390}</span></article>
-          <article className="favorite"><small>FAWORYT MODELU</small><b>{preFavouriteV390.label}</b><span>{preFavouriteV390.value.toFixed(1)}%</span></article>
-          <article className={`fm398-shared-signal ${sharedSignalProbabilityV398 < 40 ? 'high-risk' : sharedSignalProbabilityV398 < 55 ? 'watch' : 'normal'}`}><small>FM AI SIGNAL</small><b>{sharedPickLabelV390}</b><span>{sharedSignalProbabilityV398 ? `${sharedSignalProbabilityV398.toFixed(1)}% • ${sharedSignalRiskV398}` : 'profil modelu'}{sharedSignalResultV398 ? ` • ${sharedSignalResultV398}` : ''}</span></article>
+          <article className="favorite v407-info-only"><small>1X2 • INFORMACYJNIE, NIE TYP</small><b>{preFavouriteV390.label}</b><span>{preFavouriteV390.value.toFixed(1)}% • rozkład modelu</span></article>
+          <article className={`fm398-shared-signal ${isOfficialNoBetV406 ? 'v406-no-bet' : sharedSignalProbabilityV398 < 40 ? 'high-risk' : sharedSignalProbabilityV398 < 55 ? 'watch' : 'normal'}`}><small>FM AI DECYZJA</small><b>{isOfficialNoBetV406 ? 'NO BET' : sharedPickLabelV390}</b><span>{isOfficialNoBetV406 ? `Kandydat value: ${sharedPickLabelV390}${sharedSignalProbabilityV398 ? ` • AI ${sharedSignalProbabilityV398.toFixed(1)}%` : ''} • ZABLOKOWANY PRZEZ RISK GUARD` : (sharedSignalProbabilityV398 ? `${sharedSignalProbabilityV398.toFixed(1)}% • ${sharedSignalRiskV398}` : 'profil modelu')}{sharedSignalResultV398 ? ` • ${sharedSignalResultV398}` : ''}</span></article>
           <article><small>ATMOSFERA</small><b>{homeFanV390.nickname} vs {awayFanV390.nickname}</b><span>{homeFanV390.known || awayFanV390.known ? 'supporter identity rozpoznane' : 'profil stadionowy'}</span></article>
         </section>
 
@@ -2354,7 +2357,7 @@ export default function MatchSimulatorView({ lang = 'pl', selectedMatch = null, 
             </div>
             <div className="fm390-story-actions"><button disabled={!matchStoryV390.decisiveSecond} onClick={() => { if (!matchStoryV390.decisiveSecond) return; setRunning(false); tickRef.current = null; setClockSec(Math.max(0, matchStoryV390.decisiveSecond - 18)); window.setTimeout(() => setRunning(true), 120) }}>▶ REPLAY KLUCZOWEGO MOMENTU</button><button onClick={() => { setRunning(false); setClockSec(0); tickRef.current = null; autoStarted.current = true; setSimulationOrdinal(value => value + 1) }}>NOWY SCENARIUSZ</button></div>
           </section>
-          <footer>V390 wizualizuje zamrożony profil Bet+AI. LIVE AI Coach i Match Story opisują wyłącznie przebieg tej symulacji; pojedynczy scenariusz nie jest nową prognozą ani gwarancją wyniku.</footer>
+          <footer>V407: jedna zamrożona decyzja FM AI. Symulacja pokazuje reprezentatywny przebieg zgodny z tym samym kandydatem; NO BET nadal oznacza brak oficjalnego zakładu.</footer>
         </section> : null}
       </> : null}
     </section>

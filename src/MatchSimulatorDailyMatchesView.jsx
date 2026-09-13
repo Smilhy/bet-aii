@@ -2123,19 +2123,19 @@ export default function MatchSimulatorDailyMatchesView({ lang = 'pl', onSelectMa
                   {masterQuickV353 ? (
                     <div className="sim-card-best-market-v332 sim-master-quick-v353 has-real-odds-v332">
                       <div className="sim-card-market-head-v332">
-                        <small>MASTER CONSENSUS AI</small>
+                        <small>ROZKŁAD 1X2 • NIE JEST TYPEM</small>
                         <em>{masterQuickV353.agreement >= 70 ? 'ZGODNE' : masterQuickV353.agreement >= 55 ? 'UMIARKOWANE' : 'ROZBIEŻNE'}</em>
                       </div>
                       <div className="sim-card-market-main-v332">
                         <span>🤖</span>
-                        <b>{masterQuickV353.label}</b>
+                        <b>Najwyższe P(1X2): {masterQuickV353.label}</b>
                       </div>
                       <div className="sim-card-market-stats-v332 sim-master-triplet-v353">
                         <span><small>1</small><b>{masterQuickV353.oneXTwo.home}%</b></span>
                         <span><small>X</small><b>{masterQuickV353.oneXTwo.draw}%</b></span>
                         <span><small>2</small><b>{masterQuickV353.oneXTwo.away}%</b></span>
                       </div>
-                      <p><b>VALUE:</b> {masterQuickV353.valueLabel || 'brak sygnału'} • {scannerDecisionLabel(masterQuickV353.valueDecision)}{masterQuickV353.value?.bookmakerOdds > 1 ? ` @${Number(masterQuickV353.value.bookmakerOdds).toFixed(2)}` : ''}</p>
+                      <p><b>KANDYDAT FM AI:</b> {masterQuickV353.valueLabel || 'brak sygnału'} • {scannerDecisionLabel(masterQuickV353.valueDecision)}{masterQuickV353.value?.bookmakerOdds > 1 ? ` @${Number(masterQuickV353.value.bookmakerOdds).toFixed(2)}` : ''}</p>
                     </div>
                   ) : odds ? (
                     <div className="sim-pro-odds-wrap-v331" title={copy.odds}>

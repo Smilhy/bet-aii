@@ -1,0 +1,20 @@
+V406 — OFFICIAL DECISION SEMANTICS
+
+Problem ujawniony na screenie Chicago Fire vs New England Revolution:
+- kandydat rynku: 2 New England @ 3.90
+- AI probability: 34.6%
+- edge / EV dodatnie
+- oficjalna decyzja: NO BET / ODPUŚĆ
+
+Matematycznie dodatnie EV przy 34.6% może istnieć, bo kurs 3.90 implikuje ok. 25.6%.
+Błąd UX polegał na tym, że zablokowany kandydat był nadal prezentowany jak oficjalny "TYP / FM AI SIGNAL".
+
+Naprawa V406:
+1. Gdy decision = NO_BET/NO_ODDS, kolumna TYP pokazuje "BRAK OFICJALNEGO TYPU".
+2. Oryginalny rynek jest pokazany wyłącznie jako "Kandydat value".
+3. Edge i EV zablokowanego kandydata są bursztynowe/neutralne, a nie zielone jak rekomendacja.
+4. LIVE pokazuje "FM AI DECYZJA: NO BET", a nie nazwę rynku jako aktywny sygnał.
+5. Po FT NO BET nie jest rozliczany jako trafiony/nietrafiony zakład — wyświetla "BRAK ZAKŁADU".
+6. "FAWORYT MODELU" zmieniono na "NAJBARDZIEJ PRAWDOPODOBNY 1X2", aby odróżnić prognozę od value candidate.
+
+Canonical market lock z V405 pozostaje bez zmian.

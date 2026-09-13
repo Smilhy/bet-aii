@@ -27,6 +27,18 @@ export function isSupportedFmAiMarketKeyV367(value = '') {
   return FM_AI_SUPPORTED_MARKETS_V367.has(canonicalFmAiMarketKeyV367(value))
 }
 
+
+
+// V407 — one visual story from one frozen FM AI candidate.
+// This is intentionally broader than shouldHardGuardFmAiPickV367(): even a NO_BET
+// candidate can be visualised, as long as the UI clearly keeps the official
+// decision as NO BET. The simulation is then a representative scenario for the
+// candidate, not an independent second prediction.
+export function shouldAlignScenarioToFmAiCandidateV407(pick = null) {
+  if (!pick) return false
+  const key = canonicalFmAiMarketKeyV367(pick?.key || pick?.rawKey || '')
+  return isSupportedFmAiMarketKeyV367(key)
+}
 export function shouldHardGuardFmAiPickV367(pick = null) {
   if (!pick) return false
   const key = canonicalFmAiMarketKeyV367(pick?.key || pick?.rawKey || '')
