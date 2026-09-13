@@ -85,8 +85,8 @@ function localKickoff(entry = {}, timeZone = '') {
   }
 }
 function simpleMarketLabel(key = '', lang = 'pl') {
-  const pl = { home:'1 • Gospodarze', draw:'X • Remis', away:'2 • Goście', over15:'Over 1.5', under15:'Under 1.5', over25:'Over 2.5', under25:'Under 2.5', over35:'Over 3.5', under35:'Under 3.5', bttsYes:'BTTS • TAK', bttsNo:'BTTS • NIE' }
-  const en = { home:'1 • Home', draw:'X • Draw', away:'2 • Away', over15:'Over 1.5', under15:'Under 1.5', over25:'Over 2.5', under25:'Under 2.5', over35:'Over 3.5', under35:'Under 3.5', bttsYes:'BTTS • YES', bttsNo:'BTTS • NO' }
+  const pl = { home:'Wygra 1', draw:'Remis X', away:'Wygra 2', over15:'Over 1.5', under15:'Under 1.5', over25:'Over 2.5', under25:'Under 2.5', over35:'Over 3.5', under35:'Under 3.5', bttsYes:'BTTS • TAK', bttsNo:'BTTS • NIE' }
+  const en = { home:'Home win (1)', draw:'Draw (X)', away:'Away win (2)', over15:'Over 1.5', under15:'Under 1.5', over25:'Over 2.5', under25:'Under 2.5', over35:'Over 3.5', under35:'Under 3.5', bttsYes:'BTTS • YES', bttsNo:'BTTS • NO' }
   return (lang === 'en' ? en : pl)[key] || key || '—'
 }
 
@@ -143,6 +143,37 @@ function buildTipSignalV380(entry = {}, lang = 'pl') {
 }
 
 
+
+function isSameLocalDayV382(aMs, bMs, timeZone = '') {
+  try {
+    const fmt = new Intl.DateTimeFormat('en-CA', { timeZone:timeZone || undefined, year:'numeric', month:'2-digit', day:'2-digit' })
+    return fmt.format(new Date(aMs)) === fmt.format(new Date(bMs))
+  } catch (_) {
+    const a = new Date(aMs)
+    const b = new Date(bMs)
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+  }
+}
+
+function buildKickoffUrgencyV382(entry = {}, timeZone = '', lang = 'pl', nowMs = Date.now()) {
+  const isEn = lang === 'en'
+  const ms = kickoffMs(entry)
+  if (!ms) return { tone:'none', label:'', sort:9 }
+  const diffMinutes = Math.round((ms - nowMs) / 60000)
+  const sameDay = isSameLocalDayV382(ms, nowMs, timeZone)
+
+  if (diffMinutes >= 0 && diffMinutes <= 60) {
+    return { tone:'soon', label:isEn ? 'START < 1H' : 'START < 1H', sort:1 }
+  }
+  if (diffMinutes >= 0 && diffMinutes <= 180) {
+    return { tone:'next', label:isEn ? 'START < 3H' : 'START < 3H', sort:2 }
+  }
+  if (sameDay && diffMinutes > 180) {
+    return { tone:'today', label:isEn ? 'TODAY' : 'DZIŚ', sort:3 }
+  }
+  return { tone:'none', label:'', sort:9 }
+}
+
 function BoardIconV378({ name, size = 16 }) {
   const props = { width:size, height:size, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'1.85', strokeLinecap:'round', strokeLinejoin:'round', 'aria-hidden':true }
   const icons = {
@@ -166,7 +197,7 @@ export function FmAiOpportunityBoardV377({ entries = [], lang = 'pl', timeZone =
   const [decisionFilter, setDecisionFilter] = useState('actionable')
   const [leagueFilter, setLeagueFilter] = useState('all')
   const [marketFilter, setMarketFilter] = useState('all')
-  const [sortBy, setSortBy] = useState('balance')
+  const [sortBy, setSortBy] = useState('kickoff')
   const [minReliability, setMinReliability] = useState('0')
   const isEn = lang === 'en'
 
@@ -210,7 +241,7 @@ export function FmAiOpportunityBoardV377({ entries = [], lang = 'pl', timeZone =
     setDecisionFilter('actionable')
     setLeagueFilter('all')
     setMarketFilter('all')
-    setSortBy('balance')
+    setSortBy('kickoff')
     setMinReliability('0')
   }
 
@@ -220,7 +251,7 @@ export function FmAiOpportunityBoardV377({ entries = [], lang = 'pl', timeZone =
 
     <header className="sim-v377-board-head sim-v378-board-head">
       <div className="sim-v378-head-copy">
-        <div className="sim-v378-board-kicker"><span className="sim-v378-live-dot"/><BoardIconV378 name="pulse" size={15}/><b>FM AI • V380</b><em>SIGNAL BOARD</em></div>
+        <div className="sim-v378-board-kicker"><span className="sim-v378-live-dot"/><BoardIconV378 name="pulse" size={15}/><b>FM AI • V383</b><em>PICK LABEL FIX</em></div>
         <strong>{isEn ? 'Professional market signal board' : 'Tablica sygnałów typów'}</strong>
         <p>{isEn ? 'One screen for price, AI probability, edge, EV, play signal and match quality — built from the matches FM AI already scanned.' : 'Jedno miejsce dla kursu, szansy AI, edge, EV, sygnału gry i jakości meczu — z meczów już przeskanowanych przez FM AI.'}</p>
         <div className="sim-v378-head-tags">
@@ -253,12 +284,12 @@ export function FmAiOpportunityBoardV377({ entries = [], lang = 'pl', timeZone =
         <label><span><small>{isEn?'LEAGUE':'LIGA'}</small></span><select value={leagueFilter} onChange={e=>setLeagueFilter(e.target.value)}><option value="all">{isEn?'All leagues':'Wszystkie ligi'}</option>{leagues.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
         <label><span><small>{isEn?'MARKET':'RYNEK'}</small></span><select value={marketFilter} onChange={e=>setMarketFilter(e.target.value)}><option value="all">{isEn?'All markets':'Wszystkie rynki'}</option>{markets.map(x=><option key={x} value={x}>{simpleMarketLabel(x,lang)}</option>)}</select></label>
         <label><span><small>{isEn?'MIN QUALITY':'MIN. JAKOŚĆ'}</small></span><select value={minReliability} onChange={e=>setMinReliability(e.target.value)}><option value="0">0+</option><option value="70">70+</option><option value="80">80+</option><option value="90">90+</option></select></label>
-        <label><span><small>{isEn?'SORT':'SORTUJ'}</small></span><select value={sortBy} onChange={e=>setSortBy(e.target.value)}><option value="balance">Balance score</option><option value="ev">EV</option><option value="edge">EDGE</option><option value="probability">{isEn?'Probability':'Szansa AI'}</option><option value="reliability">Reliability</option><option value="kickoff">Kick-off</option></select></label>
+        <label><span><small>{isEn?'SORT':'SORTUJ'}</small></span><select value={sortBy} onChange={e=>setSortBy(e.target.value)}><option value="balance">Balance score</option><option value="ev">EV</option><option value="edge">EDGE</option><option value="probability">{isEn?'Probability':'Szansa AI'}</option><option value="reliability">Reliability</option><option value="kickoff">{isEn?'Kick-off (earliest first)':'Godzina meczu (od najwcześniej)'}</option></select></label>
       </div>
     </div>
 
     <div className="sim-v377-board-table-wrap sim-v378-board-table-wrap">
-      <div className="sim-v378-feed-head"><div><span className="sim-v378-feed-dot"/><b>{isEn?'OPPORTUNITY FEED':'OPPORTUNITY FEED'}</b><small>{isEn?'ranked by your selected sort':'ranking wg wybranego sortowania'}</small></div><em>{rows.length} {isEn?'visible':'widocznych'}</em></div>
+      <div className="sim-v378-feed-head"><div><span className="sim-v378-feed-dot"/><b>{isEn?'OPPORTUNITY FEED':'OPPORTUNITY FEED'}</b><small>{isEn?'ranked by your selected sort':'ranking wg wybranego sortowania'}</small><span className="sim-v382-kickoff-legend"><i className="tone-soon"/>{isEn?'<1h':'<1h'}<i className="tone-next"/>{isEn?'<3h':'<3h'}<i className="tone-today"/>{isEn?'today':'dziś'}</span></div><em>{rows.length} {isEn?'visible':'widocznych'}</em></div>
       <table><thead><tr><th>{isEn?'Match':'Mecz'}</th><th>{isEn?'Pick':'Typ'}</th><th>{isEn?'Signal':'Sygnał'}</th><th>{isEn?'Best price':'Kurs'}</th><th>AI</th><th>EDGE</th><th>EV</th><th>REL.</th><th>{isEn?'Market':'Rynek'}</th><th></th></tr></thead><tbody>{rows.map((entry,rowIndex) => {
         const item = entry?.scan?.topFinal || {}
         const pulse = buildMarketPulseV377(entry, [])
@@ -270,16 +301,17 @@ export function FmAiOpportunityBoardV377({ entries = [], lang = 'pl', timeZone =
         const ev = n(item.expectedValuePct)
         const rel = clamp(reliability(entry), 0, 100)
         const tipSignal = buildTipSignalV380(entry, lang)
+        const kickoffSignal = buildKickoffUrgencyV382(entry, timeZone, lang)
         const edgeBar = clamp(Math.abs(edge) * 4.2, 4, 100)
         const evBar = clamp(Math.abs(ev) * 1.65, 4, 100)
-        return <tr key={`v377-${entry?.key || entry?.match?.id || rowIndex}`} className={`decision-${d.toLowerCase()} ${rowIndex<3?'is-top-row':''}`}>
+        return <tr key={`v377-${entry?.key || entry?.match?.id || rowIndex}`} className={`decision-${d.toLowerCase()} ${rowIndex<3?'is-top-row':''} ${kickoffSignal.tone !== 'none' ? `urgency-${kickoffSignal.tone}` : ''}`}>
           <td><div className="sim-v377-matchcell sim-v378-matchcell">
-            <div className="sim-v378-match-meta"><span className="sim-v378-rank">{String(rowIndex+1).padStart(2,'0')}</span><small>{localKickoff(entry,timeZone)}</small><em>{entry?.match?.league || '—'}</em></div>
+            <div className="sim-v378-match-meta"><span className="sim-v378-rank">{String(rowIndex+1).padStart(2,'0')}</span><small>{localKickoff(entry,timeZone)}</small><em>{entry?.match?.league || '—'}</em>{kickoffSignal.label ? <span className={`sim-v382-kickoff-badge tone-${kickoffSignal.tone}`}>{kickoffSignal.label}</span> : null}</div>
             <b>{entry?.match?.home || '—'} <i>vs</i> {entry?.match?.away || '—'}</b>
           </div></td>
           <td><div className="sim-v378-pick-cell"><b>{simpleMarketLabel(marketKey(entry),lang)}</b><span className={`sim-v378-decision-pill tone-${d.toLowerCase()}`}>{d.replace('_',' ')}</span></div></td>
           <td><div className={`sim-v380-signal-cell tone-${tipSignal.tone}`}><div className={`sim-v380-play-badge tone-${tipSignal.tone}`}><span className="sim-v380-play-icon"/>{tipSignal.actionLabel}</div><div className="sim-v380-stars" aria-label={`rating ${tipSignal.stars} of 5`}>{Array.from({ length: 5 }).map((_,i)=><span key={i} className={i < tipSignal.stars ? 'on' : ''}>★</span>)}</div><small>{tipSignal.confidenceLabel}</small><div className="sim-v380-confidence-track"><i style={{width:`${tipSignal.confidenceScore}%`}}/></div></div></td>
-          <td><div className="sim-v378-price-cell"><b>{bestPrice>1?`@ ${bestPrice.toFixed(2)}`:'—'}</b><span><i/>{bestBook || `${pulse.quotes.length} books`}</span></div></td>
+          <td><div className="sim-v378-price-cell"><b>{bestPrice>1?`${bestPrice.toFixed(2)}`:'—'}</b><span><i/>{bestBook || `${pulse.quotes.length} books`}</span></div></td>
           <td><div className="sim-v378-score-cell"><div><b>{probability.toFixed(1)}%</b><small>{n(item.fairOdds)>1?`fair ${n(item.fairOdds).toFixed(2)}`:'fair —'}</small></div><span className="sim-v378-mini-track ai"><i style={{width:`${probability}%`}}/></span></div></td>
           <td className={edge>=0?'positive':'negative'}><div className="sim-v378-delta-cell"><b>{pp(edge)}</b><span className="sim-v378-mini-track edge"><i style={{width:`${edgeBar}%`}}/></span></div></td>
           <td className={ev>=0?'positive':'negative'}><div className="sim-v378-delta-cell"><b>{pct(ev)}</b><span className="sim-v378-mini-track ev"><i style={{width:`${evBar}%`}}/></span></div></td>
@@ -301,15 +333,15 @@ export function FmAiMarketPulseV377({ entry = {}, timeline = [], lang = 'pl', no
   return <section className="sim-v377-market-pulse">
     <header><div><small>V377 • MARKET PULSE + PRICE SHOP</small><strong>{isEn?'Model vs market + best available price':'Model vs rynek + najlepsza dostępna cena'}</strong></div><span className={`pressure-${pulse.pressure.toLowerCase()}`}>{pressureLabel}</span></header>
     <div className="sim-v377-pulse-kpis">
-      <article><small>{isEn?'BEST PRICE':'NAJLEPSZY KURS'}</small><b>{pulse.best?`@ ${pulse.best.odds.toFixed(2)}`:'—'}</b><span>{pulse.best?.bookmaker || (isEn?'no quote':'brak kursu')}</span></article>
-      <article><small>{isEn?'MEDIAN PRICE':'MEDIANA KURSU'}</small><b>{pulse.medianOdds>1?`@ ${pulse.medianOdds.toFixed(2)}`:'—'}</b><span>{pulse.quotes.length} {isEn?'books':'bukmacherów'}</span></article>
+      <article><small>{isEn?'BEST PRICE':'NAJLEPSZY KURS'}</small><b>{pulse.best?`${pulse.best.odds.toFixed(2)}`:'—'}</b><span>{pulse.best?.bookmaker || (isEn?'no quote':'brak kursu')}</span></article>
+      <article><small>{isEn?'MEDIAN PRICE':'MEDIANA KURSU'}</small><b>{pulse.medianOdds>1?`${pulse.medianOdds.toFixed(2)}`:'—'}</b><span>{pulse.quotes.length} {isEn?'books':'bukmacherów'}</span></article>
       <article className={pulse.bestVsMedianPct>0?'positive':''}><small>{isEn?'PRICE ADVANTAGE':'PRZEWAGA CENY'}</small><b>{pulse.bestVsMedianPct?pct(pulse.bestVsMedianPct):'—'}</b><span>{isEn?'best vs median payout':'best vs mediana wypłaty'}</span></article>
       <article className={pulse.modelVsMarket>=0?'positive':'negative'}><small>MODEL vs MARKET</small><b>{pp(pulse.modelVsMarket)}</b><span>{pulse.marketProbability>0?`${pulse.modelProbability.toFixed(1)}% vs ${pulse.marketProbability.toFixed(1)}%`:'—'}</span></article>
       <article><small>{isEn?'PRICE DISPERSION':'ROZJAZD CEN'}</small><b>{pulse.priceState}</b><span>{pulse.rangePct.toFixed(1)}%</span></article>
       <article><small>{isEn?'SIGNAL AGE':'WIEK SYGNAŁU'}</small><b>{pulse.freshnessMinutes==null?'—':pulse.freshnessMinutes<1?'<1m':`${pulse.freshnessMinutes}m`}</b><span>{isEn?'scanner freshness':'świeżość skanera'}</span></article>
     </div>
-    {pulse.quotes.length ? <div className="sim-v377-quote-ladder">{pulse.quotes.slice(0,8).map((quote,index)=><span key={`${quote.bookmaker}-${index}`} className={index===0?'best':''}><small>{index===0?(isEn?'BEST':'BEST'):(`#${index+1}`)}</small><b>{quote.bookmaker}</b><em>@ {quote.odds.toFixed(2)}</em></span>)}</div> : null}
-    <footer>{pulse.firstOdds>1 && pulse.lastOdds>1 ? <span>{isEn?'Price path':'Ruch ceny'}: <b>@ {pulse.firstOdds.toFixed(2)}</b> → <b>@ {pulse.lastOdds.toFixed(2)}</b> ({pct(pulse.movePct)})</span> : <span>{isEn?'Line history will fill automatically from existing T24H/T6H/T1H/T15M snapshots.':'Historia ceny uzupełni się automatycznie z istniejących snapshotów T24H/T6H/T1H/T15M.'}</span>}<span>{isEn?'A wide quote gap can indicate a shopping opportunity, not guaranteed value.':'Duży rozjazd kursów może oznaczać okazję do line shoppingu, a nie gwarantowane value.'}</span></footer>
+    {pulse.quotes.length ? <div className="sim-v377-quote-ladder">{pulse.quotes.slice(0,8).map((quote,index)=><span key={`${quote.bookmaker}-${index}`} className={index===0?'best':''}><small>{index===0?(isEn?'BEST':'BEST'):(`#${index+1}`)}</small><b>{quote.bookmaker}</b><em>{quote.odds.toFixed(2)}</em></span>)}</div> : null}
+    <footer>{pulse.firstOdds>1 && pulse.lastOdds>1 ? <span>{isEn?'Price path':'Ruch ceny'}: <b>{pulse.firstOdds.toFixed(2)}</b> → <b>{pulse.lastOdds.toFixed(2)}</b> ({pct(pulse.movePct)})</span> : <span>{isEn?'Line history will fill automatically from existing T24H/T6H/T1H/T15M snapshots.':'Historia ceny uzupełni się automatycznie z istniejących snapshotów T24H/T6H/T1H/T15M.'}</span>}<span>{isEn?'A wide quote gap can indicate a shopping opportunity, not guaranteed value.':'Duży rozjazd kursów może oznaczać okazję do line shoppingu, a nie gwarantowane value.'}</span></footer>
   </section>
 }
 
