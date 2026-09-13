@@ -90,6 +90,26 @@ function simpleMarketLabel(key = '', lang = 'pl') {
   return (lang === 'en' ? en : pl)[key] || key || '—'
 }
 
+
+function BoardIconV378({ name, size = 16 }) {
+  const props = { width:size, height:size, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'1.85', strokeLinecap:'round', strokeLinejoin:'round', 'aria-hidden':true }
+  const icons = {
+    pulse:<><path d="M3 12h4l2-5 4 10 2-5h6"/><path d="M20 6v3h-3"/></>,
+    filter:<><path d="M4 6h16"/><path d="M7 12h10"/><path d="M10 18h4"/></>,
+    trophy:<><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M6 6H4a3 3 0 0 0 3 3"/><path d="M18 6h2a3 3 0 0 1-3 3"/><path d="M12 13v4"/><path d="M9 21h6"/></>,
+    spark:<><path d="m13 2-2 7H5l5 4-2 9 7-10h5l-7-4Z"/></>,
+    chart:<><path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19V3"/></>,
+    shield:<><path d="M12 3 5 6v5c0 5 3.2 8.2 7 10 3.8-1.8 7-5 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></>,
+    target:<><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3"/><path d="M22 12h-3"/></>,
+    clock:<><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,
+    reset:<><path d="M4 10a8 8 0 1 1 2 7"/><path d="M4 4v6h6"/></>,
+    arrow:<><path d="M5 12h14"/><path d="m14 7 5 5-5 5"/></>,
+    info:<><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></>,
+    layers:<><path d="m12 3 8 4-8 4-8-4 8-4Z"/><path d="m4 12 8 4 8-4"/><path d="m4 17 8 4 8-4"/></>,
+  }
+  return <svg {...props}>{icons[name] || icons.info}</svg>
+}
+
 export function FmAiOpportunityBoardV377({ entries = [], lang = 'pl', timeZone = '', onWhyAi, onOpenAnalysis }) {
   const [decisionFilter, setDecisionFilter] = useState('actionable')
   const [leagueFilter, setLeagueFilter] = useState('all')
@@ -125,38 +145,97 @@ export function FmAiOpportunityBoardV377({ entries = [], lang = 'pl', timeZone =
     return [...filtered].sort((a,b) => score(b) - score(a)).slice(0, 30)
   }, [entries, decisionFilter, leagueFilter, marketFilter, sortBy, minReliability])
 
+  const boardMetrics = useMemo(() => {
+    const strong = rows.filter(entry => decision(entry) === 'STRONG_VALUE').length
+    const value = rows.filter(entry => decision(entry) === 'VALUE').length
+    const avgProbability = rows.length ? rows.reduce((sum, entry) => sum + n(entry?.scan?.topFinal?.probability), 0) / rows.length : 0
+    const avgReliability = rows.length ? rows.reduce((sum, entry) => sum + reliability(entry), 0) / rows.length : 0
+    const topEdge = rows.length ? Math.max(...rows.map(entry => n(entry?.scan?.topFinal?.edgePp))) : 0
+    return { strong, value, avgProbability, avgReliability, topEdge }
+  }, [rows])
+
+  const resetBoard = () => {
+    setDecisionFilter('actionable')
+    setLeagueFilter('all')
+    setMarketFilter('all')
+    setSortBy('balance')
+    setMinReliability('0')
+  }
+
   if (!entries.length) return null
-  return <section className="sim-v377-board">
-    <header className="sim-v377-board-head">
-      <div><small>FM AI • V377 • PRO OPPORTUNITY BOARD</small><strong>{isEn ? 'Filter the whole board like a pro odds screen' : 'Filtruj całą tablicę jak profesjonalny odds screen'}</strong><p>{isEn ? 'No new API calls: this view reuses the already-scanned FM AI matches and bookmaker consensus.' : 'Bez nowych requestów API: widok używa już przeskanowanych meczów FM AI i istniejącego konsensusu bukmacherów.'}</p></div>
-      <span>{rows.length}/{entries.length}</span>
+  return <section className="sim-v377-board sim-v378-board">
+    <div className="sim-v378-board-orbit" aria-hidden="true"><i/><i/><i/></div>
+
+    <header className="sim-v377-board-head sim-v378-board-head">
+      <div className="sim-v378-head-copy">
+        <div className="sim-v378-board-kicker"><span className="sim-v378-live-dot"/><BoardIconV378 name="pulse" size={15}/><b>FM AI • V378</b><em>PRO OPPORTUNITY BOARD</em></div>
+        <strong>{isEn ? 'Professional market edge terminal' : 'Profesjonalny terminal okazji rynkowych'}</strong>
+        <p>{isEn ? 'One screen for price, AI probability, edge, EV and reliability — built from the matches FM AI already scanned.' : 'Jedno miejsce dla kursu, szansy AI, edge, EV i jakości — z meczów już przeskanowanych przez FM AI.'}</p>
+        <div className="sim-v378-head-tags">
+          <span><BoardIconV378 name="shield" size={13}/>{isEn?'NO EXTRA API':'0 DODATKOWYCH API'}</span>
+          <span><BoardIconV378 name="layers" size={13}/>{isEn?'MARKET CONSENSUS':'KONSENSUS RYNKU'}</span>
+          <span><BoardIconV378 name="clock" size={13}/>{isEn?'PRE-MATCH FEED':'PRE-MATCH FEED'}</span>
+        </div>
+      </div>
+      <div className="sim-v378-head-status">
+        <span className="sim-v378-screen-state"><i/>{isEn?'LIVE MARKET SCREEN':'LIVE MARKET SCREEN'}</span>
+        <div className="sim-v378-result-count"><small>{isEn?'ON BOARD':'NA TABLICY'}</small><b>{rows.length}</b><em>/ {entries.length}</em></div>
+      </div>
     </header>
-    <div className="sim-v377-board-tools">
-      <label><small>{isEn?'DECISION':'DECYZJA'}</small><select value={decisionFilter} onChange={e=>setDecisionFilter(e.target.value)}><option value="all">{isEn?'All':'Wszystkie'}</option><option value="actionable">VALUE + STRONG</option><option value="strong">STRONG VALUE</option><option value="value">VALUE</option><option value="watch">SMALL EDGE</option><option value="nobet">NO BET</option></select></label>
-      <label><small>{isEn?'LEAGUE':'LIGA'}</small><select value={leagueFilter} onChange={e=>setLeagueFilter(e.target.value)}><option value="all">{isEn?'All leagues':'Wszystkie ligi'}</option>{leagues.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
-      <label><small>{isEn?'MARKET':'RYNEK'}</small><select value={marketFilter} onChange={e=>setMarketFilter(e.target.value)}><option value="all">{isEn?'All markets':'Wszystkie rynki'}</option>{markets.map(x=><option key={x} value={x}>{simpleMarketLabel(x,lang)}</option>)}</select></label>
-      <label><small>{isEn?'MIN QUALITY':'MIN. JAKOŚĆ'}</small><select value={minReliability} onChange={e=>setMinReliability(e.target.value)}><option value="0">0+</option><option value="70">70+</option><option value="80">80+</option><option value="90">90+</option></select></label>
-      <label><small>{isEn?'SORT':'SORTUJ'}</small><select value={sortBy} onChange={e=>setSortBy(e.target.value)}><option value="balance">{isEn?'Balance score':'Balance score'}</option><option value="ev">EV</option><option value="edge">EDGE</option><option value="probability">{isEn?'Probability':'Szansa AI'}</option><option value="reliability">Reliability</option><option value="kickoff">Kick-off</option></select></label>
+
+    <div className="sim-v378-metric-strip">
+      <article><span className="sim-v378-metric-icon"><BoardIconV378 name="target"/></span><div><small>{isEn?'ACTIVE OPPORTUNITIES':'AKTYWNE OKAZJE'}</small><b>{rows.length}</b><em>{isEn?'after current filters':'po aktualnych filtrach'}</em></div></article>
+      <article><span className="sim-v378-metric-icon"><BoardIconV378 name="trophy"/></span><div><small>STRONG / VALUE</small><b>{boardMetrics.strong} <i>/</i> {boardMetrics.value}</b><em>{isEn?'decision mix':'rozkład decyzji'}</em></div></article>
+      <article><span className="sim-v378-metric-icon"><BoardIconV378 name="spark"/></span><div><small>{isEn?'AVG AI CHANCE':'ŚR. SZANSA AI'}</small><b>{boardMetrics.avgProbability.toFixed(1)}%</b><em>{isEn?'visible selections':'widocznych typów'}</em></div></article>
+      <article className={boardMetrics.topEdge >= 0 ? 'positive' : 'negative'}><span className="sim-v378-metric-icon"><BoardIconV378 name="chart"/></span><div><small>{isEn?'TOP EDGE':'TOP EDGE'}</small><b>{pp(boardMetrics.topEdge)}</b><em>{isEn?'best visible advantage':'najwyższa przewaga'}</em></div></article>
+      <article><span className="sim-v378-metric-icon"><BoardIconV378 name="shield"/></span><div><small>{isEn?'AVG RELIABILITY':'ŚR. JAKOŚĆ'}</small><b>{boardMetrics.avgReliability.toFixed(0)}<i>/100</i></b><em>{isEn?'quality score':'ocena jakości'}</em></div></article>
     </div>
-    <div className="sim-v377-board-table-wrap"><table><thead><tr><th>{isEn?'Match':'Mecz'}</th><th>{isEn?'Pick':'Typ'}</th><th>{isEn?'Best price':'Kurs'}</th><th>AI</th><th>EDGE</th><th>EV</th><th>REL.</th><th>{isEn?'Market':'Rynek'}</th><th></th></tr></thead><tbody>{rows.map((entry,rowIndex) => {
-      const item = entry?.scan?.topFinal || {}
-      const pulse = buildMarketPulseV377(entry, [])
-      const bestPrice = pulse.best?.odds || n(item.bookmakerOdds)
-      const bestBook = pulse.best?.bookmaker || item.bookmaker || ''
-      const d = decision(entry)
-      return <tr key={`v377-${entry?.key || entry?.match?.id || rowIndex}`} className={`decision-${d.toLowerCase()}`}>
-        <td><div className="sim-v377-matchcell"><small>{localKickoff(entry,timeZone)} • {entry?.match?.league || '—'}</small><b>{entry?.match?.home || '—'} <i>vs</i> {entry?.match?.away || '—'}</b></div></td>
-        <td><b>{simpleMarketLabel(marketKey(entry),lang)}</b><small>{d}</small></td>
-        <td><b>{bestPrice>1?`@ ${bestPrice.toFixed(2)}`:'—'}</b><small>{bestBook || `${pulse.quotes.length} books`}</small></td>
-        <td><b>{n(item.probability).toFixed(1)}%</b><small>{n(item.fairOdds)>1?`fair ${n(item.fairOdds).toFixed(2)}`:'fair —'}</small></td>
-        <td className={n(item.edgePp)>=0?'positive':'negative'}><b>{pp(item.edgePp)}</b></td>
-        <td className={n(item.expectedValuePct)>=0?'positive':'negative'}><b>{pct(item.expectedValuePct)}</b></td>
-        <td><b>{reliability(entry).toFixed(0)}/100</b><small>bal. {n(item.dailyScore).toFixed(0)}</small></td>
-        <td><b>{pulse.priceState}</b><small>{pulse.quotes.length>=2?`${pulse.quotes.length} books • gap ${pulse.rangePct.toFixed(1)}%`:(isEn?'collecting prices':'zbieranie cen')}</small></td>
-        <td><div className="sim-v377-row-actions"><button type="button" onClick={()=>onWhyAi?.(entry)}>WHY AI?</button><button type="button" onClick={()=>onOpenAnalysis?.(entry)}>{isEn?'OPEN':'OTWÓRZ'}</button></div></td>
-      </tr>
-    })}</tbody></table></div>
-    {!rows.length ? <div className="sim-v377-empty">{isEn?'No matches meet the selected filters.':'Brak meczów spełniających wybrane filtry.'}</div> : null}
+
+    <div className="sim-v378-filter-shell">
+      <div className="sim-v378-filter-head">
+        <div><span><BoardIconV378 name="filter" size={16}/></span><p><b>{isEn?'MARKET CONTROLS':'STEROWANIE TABLICĄ'}</b><small>{isEn?'Narrow the feed without re-running the scanner':'Zawężaj wyniki bez ponownego uruchamiania skanera'}</small></p></div>
+        <button type="button" onClick={resetBoard}><BoardIconV378 name="reset" size={14}/>{isEn?'RESET':'RESETUJ'}</button>
+      </div>
+      <div className="sim-v377-board-tools sim-v378-board-tools">
+        <label><span><small>{isEn?'DECISION':'DECYZJA'}</small></span><select value={decisionFilter} onChange={e=>setDecisionFilter(e.target.value)}><option value="all">{isEn?'All':'Wszystkie'}</option><option value="actionable">VALUE + STRONG</option><option value="strong">STRONG VALUE</option><option value="value">VALUE</option><option value="watch">SMALL EDGE</option><option value="nobet">NO BET</option></select></label>
+        <label><span><small>{isEn?'LEAGUE':'LIGA'}</small></span><select value={leagueFilter} onChange={e=>setLeagueFilter(e.target.value)}><option value="all">{isEn?'All leagues':'Wszystkie ligi'}</option>{leagues.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
+        <label><span><small>{isEn?'MARKET':'RYNEK'}</small></span><select value={marketFilter} onChange={e=>setMarketFilter(e.target.value)}><option value="all">{isEn?'All markets':'Wszystkie rynki'}</option>{markets.map(x=><option key={x} value={x}>{simpleMarketLabel(x,lang)}</option>)}</select></label>
+        <label><span><small>{isEn?'MIN QUALITY':'MIN. JAKOŚĆ'}</small></span><select value={minReliability} onChange={e=>setMinReliability(e.target.value)}><option value="0">0+</option><option value="70">70+</option><option value="80">80+</option><option value="90">90+</option></select></label>
+        <label><span><small>{isEn?'SORT':'SORTUJ'}</small></span><select value={sortBy} onChange={e=>setSortBy(e.target.value)}><option value="balance">Balance score</option><option value="ev">EV</option><option value="edge">EDGE</option><option value="probability">{isEn?'Probability':'Szansa AI'}</option><option value="reliability">Reliability</option><option value="kickoff">Kick-off</option></select></label>
+      </div>
+    </div>
+
+    <div className="sim-v377-board-table-wrap sim-v378-board-table-wrap">
+      <div className="sim-v378-feed-head"><div><span className="sim-v378-feed-dot"/><b>{isEn?'OPPORTUNITY FEED':'OPPORTUNITY FEED'}</b><small>{isEn?'ranked by your selected sort':'ranking wg wybranego sortowania'}</small></div><em>{rows.length} {isEn?'visible':'widocznych'}</em></div>
+      <table><thead><tr><th>{isEn?'Match':'Mecz'}</th><th>{isEn?'Pick':'Typ'}</th><th>{isEn?'Best price':'Kurs'}</th><th>AI</th><th>EDGE</th><th>EV</th><th>REL.</th><th>{isEn?'Market':'Rynek'}</th><th></th></tr></thead><tbody>{rows.map((entry,rowIndex) => {
+        const item = entry?.scan?.topFinal || {}
+        const pulse = buildMarketPulseV377(entry, [])
+        const bestPrice = pulse.best?.odds || n(item.bookmakerOdds)
+        const bestBook = pulse.best?.bookmaker || item.bookmaker || ''
+        const d = decision(entry)
+        const probability = clamp(n(item.probability), 0, 100)
+        const edge = n(item.edgePp)
+        const ev = n(item.expectedValuePct)
+        const rel = clamp(reliability(entry), 0, 100)
+        const edgeBar = clamp(Math.abs(edge) * 4.2, 4, 100)
+        const evBar = clamp(Math.abs(ev) * 1.65, 4, 100)
+        return <tr key={`v377-${entry?.key || entry?.match?.id || rowIndex}`} className={`decision-${d.toLowerCase()} ${rowIndex<3?'is-top-row':''}`}>
+          <td><div className="sim-v377-matchcell sim-v378-matchcell">
+            <div className="sim-v378-match-meta"><span className="sim-v378-rank">{String(rowIndex+1).padStart(2,'0')}</span><small>{localKickoff(entry,timeZone)}</small><em>{entry?.match?.league || '—'}</em></div>
+            <b>{entry?.match?.home || '—'} <i>vs</i> {entry?.match?.away || '—'}</b>
+          </div></td>
+          <td><div className="sim-v378-pick-cell"><b>{simpleMarketLabel(marketKey(entry),lang)}</b><span className={`sim-v378-decision-pill tone-${d.toLowerCase()}`}>{d.replace('_',' ')}</span></div></td>
+          <td><div className="sim-v378-price-cell"><b>{bestPrice>1?`@ ${bestPrice.toFixed(2)}`:'—'}</b><span><i/>{bestBook || `${pulse.quotes.length} books`}</span></div></td>
+          <td><div className="sim-v378-score-cell"><div><b>{probability.toFixed(1)}%</b><small>{n(item.fairOdds)>1?`fair ${n(item.fairOdds).toFixed(2)}`:'fair —'}</small></div><span className="sim-v378-mini-track ai"><i style={{width:`${probability}%`}}/></span></div></td>
+          <td className={edge>=0?'positive':'negative'}><div className="sim-v378-delta-cell"><b>{pp(edge)}</b><span className="sim-v378-mini-track edge"><i style={{width:`${edgeBar}%`}}/></span></div></td>
+          <td className={ev>=0?'positive':'negative'}><div className="sim-v378-delta-cell"><b>{pct(ev)}</b><span className="sim-v378-mini-track ev"><i style={{width:`${evBar}%`}}/></span></div></td>
+          <td><div className="sim-v378-rel-cell"><div><b>{rel.toFixed(0)}<i>/100</i></b><small>bal. {n(item.dailyScore).toFixed(0)}</small></div><span className="sim-v378-mini-track rel"><i style={{width:`${rel}%`}}/></span></div></td>
+          <td><div className="sim-v378-market-cell"><b className={`state-${pulse.priceState.toLowerCase()}`}>{pulse.priceState}</b><small>{pulse.quotes.length>=2?`${pulse.quotes.length} books • gap ${pulse.rangePct.toFixed(1)}%`:(isEn?'collecting prices':'zbieranie cen')}</small></div></td>
+          <td><div className="sim-v377-row-actions sim-v378-row-actions"><button type="button" onClick={()=>onWhyAi?.(entry)}><BoardIconV378 name="spark" size={13}/>WHY AI?</button><button type="button" onClick={()=>onOpenAnalysis?.(entry)}>{isEn?'OPEN':'OTWÓRZ'}<BoardIconV378 name="arrow" size={13}/></button></div></td>
+        </tr>
+      })}</tbody></table>
+    </div>
+    {!rows.length ? <div className="sim-v377-empty sim-v378-empty"><span><BoardIconV378 name="filter" size={18}/></span><div><b>{isEn?'No matches meet the selected filters.':'Brak meczów spełniających wybrane filtry.'}</b><small>{isEn?'Change filters or reset the board.':'Zmień filtry albo zresetuj tablicę.'}</small></div><button type="button" onClick={resetBoard}>{isEn?'RESET':'RESETUJ'}</button></div> : null}
   </section>
 }
 
