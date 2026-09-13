@@ -21347,6 +21347,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     odds: 20,
   })
   const [selectedLeagueDetail, setSelectedLeagueDetail] = useState(null)
+  const [engineScopeV408, setEngineScopeV408] = useState('v408')
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return
@@ -21473,18 +21474,21 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     return predictionRaw ? `${marketRaw || 'Typ AI'} — ${predictionRaw}` : (marketRaw || 'Typ AI')
   }
 
-  const sportOptions = ['All Sports', ...Array.from(new Set([...ADD_TIP_SPORT_OPTIONS, ...(tips || []).map(t => t.sport || t.sport_key).filter(Boolean)]))]
+  const scopeTipsV408 = engineScopeV408 === 'v408'
+    ? (tips || []).filter(t => String(t?.source || t?.ai_source || t?.ai_model_version || '').toLowerCase().includes('v408') || String(t?.source || '').toLowerCase() === BETAI_AI_ENGINE_SOURCE_V408)
+    : (tips || [])
+  const sportOptions = ['All Sports', ...Array.from(new Set([...ADD_TIP_SPORT_OPTIONS, ...scopeTipsV408.map(t => t.sport || t.sport_key).filter(Boolean)]))]
   const divisionOptions = ['All Divisions', ...Array.from(new Set([
     ...savedLeagues
       .filter(item => sportFilter === 'All Sports' || item.sport === sportFilter)
       .map(item => item.league),
-    ...(tips || [])
+    ...scopeTipsV408
       .filter(t => sportFilter === 'All Sports' || (t.sport || t.sport_key) === sportFilter)
       .map(t => t.league || t.league_name || t.country),
   ].filter(Boolean))).sort()]
   const betTypeOptions = ['All Types', ...Array.from(new Set([
     ...getAiStatsDefaultBetTypes(sportFilter),
-    ...(tips || [])
+    ...scopeTipsV408
       .filter(t => sportFilter === 'All Sports' || (t.sport || t.sport_key) === sportFilter)
       .map(t => getDetailedBetType(t))
       .filter(Boolean),
@@ -21498,7 +21502,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     if (timeFilter === 'year') return date >= new Date(now.getFullYear(), 0, 1)
     return true
   }
-  const filtered = (tips || []).filter(t => {
+  const filtered = scopeTipsV408.filter(t => {
     const sport = t.sport || t.sport_key || 'Inne'
     const division = t.league || t.league_name || t.country || 'Inne'
     const betType = getDetailedBetType(t)
@@ -21790,7 +21794,10 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
         <label><span>Sport</span><select value={sportFilter} onChange={e=>{setSportFilter(e.target.value);setDivisionFilter('All Divisions');setBetTypeFilter('All Types')}}>{sportOptions.map(o=><option key={o}>{o}</option>)}</select></label>
         <label><span>Liga</span><select value={divisionFilter} onChange={e=>setDivisionFilter(e.target.value)}>{divisionOptions.map(o=><option key={o}>{o}</option>)}</select></label>
         <label><span>Rodzaj typu</span><select value={betTypeFilter} onChange={e=>setBetTypeFilter(e.target.value)}>{betTypeOptions.map(o=><option key={o}>{o}</option>)}</select></label>
-        <div className="ai-profile-periods-v1459"><button className="active" type="button" onClick={()=>setTimeFilter('all')}>Wszystko</button></div>
+        <div className="ai-profile-periods-v1459">
+          <button className={engineScopeV408 === 'v408' ? 'active' : ''} type="button" onClick={()=>setEngineScopeV408('v408')}>V408 od teraz</button>
+          <button className={engineScopeV408 === 'history' ? 'active' : ''} type="button" onClick={()=>setEngineScopeV408('history')}>Historia</button>
+        </div>
       </div>
 
       <div className="ai-profile-balance-card-v1459">
@@ -22143,6 +22150,8 @@ function getBetAiKickoffLabelV1051(state = 'prematch') {
 
 
 
+
+const BETAI_AI_ENGINE_SOURCE_V408 = 'betai_strict_value_v408'
 
 const BETAI_FOOTBALL_HINTS_V1052 = [
   'premier league','la liga','serie a','bundesliga','ligue 1','ekstraklasa','major league soccer','mls',
@@ -22630,18 +22639,28 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const rawScore = Number(t.ai_score || t.ai_confidence || t.confidence || baseQuality.aiScore || 60)
     const rawProbability = Number(t.probability || t.ai_probability || t.ai_confidence || rawScore || 60)
     const rawEv = Number(t.value_score ?? t.ev ?? baseQuality.ev ?? 0)
-    const normalized = normalizeBetAiValueV1438({
-      odds,
-      probability: rawProbability,
-      ev: rawEv,
-      aiScore: rawScore,
-      seed: `${t.ai_external_key || t.external_fixture_id || t.id || index}-${homeTeamV1490}-${awayTeamV1490}-${t.market}-${t.selection || t.pick || t.prediction}`,
-      market: t.market || t.bet_type,
-      selection: t.selection || t.pick || t.prediction,
-      home: homeTeamV1490,
-      away: awayTeamV1490,
-      league: t.league || t.league_name || t.country
-    })
+    const isStrictV408 = String(t.source || t.ai_source || t.ai_model_version || '').toLowerCase().includes('v408') || String(t.source || '').toLowerCase() === BETAI_AI_ENGINE_SOURCE_V408
+    const normalized = isStrictV408
+      ? (() => {
+          const probability = Math.max(0, Math.min(100, rawProbability))
+          const ev = Math.max(-100, Math.min(200, rawEv))
+          const aiScore = Math.max(0, Math.min(100, rawScore))
+          const risk = probability >= 62 && ev >= 5 ? 'Niskie' : probability >= 52 && ev >= 3 ? 'Średnie' : 'Podwyższone'
+          const confidenceText = aiScore >= 84 && probability >= 60 && ev >= 5 ? 'TOP VALUE V408' : aiScore >= 72 ? 'DOBRY TYP V408' : 'SELEKCJA V408'
+          return { probability, ev, aiScore, risk, confidenceText }
+        })()
+      : normalizeBetAiValueV1438({
+          odds,
+          probability: rawProbability,
+          ev: rawEv,
+          aiScore: rawScore,
+          seed: `${t.ai_external_key || t.external_fixture_id || t.id || index}-${homeTeamV1490}-${awayTeamV1490}-${t.market}-${t.selection || t.pick || t.prediction}`,
+          market: t.market || t.bet_type,
+          selection: t.selection || t.pick || t.prediction,
+          home: homeTeamV1490,
+          away: awayTeamV1490,
+          league: t.league || t.league_name || t.country
+        })
 
     return {
       id: String(t.ai_external_key || t.external_fixture_id || t.id || index),
@@ -22899,7 +22918,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }, [selectedCard, selectedId])
 
   const stats = useMemo(() => {
-    const statsCards = resultCards
+    // V408: górne KPI mierzą wyłącznie nowy silnik. Historia V407 i starsza
+    // zostaje w Mecze Result/Statystyki, ale nie zanieczyszcza oceny nowej strategii.
+    const statsCards = resultCards.filter(card => String(card?.source || '').toLowerCase().includes('betai_strict_value_v408'))
     const normalizeStatus = c => String(c?.result || c?.status || 'pending').toLowerCase()
     const readStake = c => Number(c?.stake || c?.bet_amount || c?.amount || 100) || 100
     const readOdds = c => Number(c?.odds || c?.course || 1.8) || 1.8
@@ -23330,6 +23351,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     params.set('mode', mode)
     params.set('limit', String(limit))
     if (journal) params.set('journal', '1')
+    else params.set('source', BETAI_AI_ENGINE_SOURCE_V408)
     const response = await fetch(`/.netlify/functions/get-ai-bets?${params.toString()}`, { cache: 'no-store' })
     const json = await response.json().catch(() => ({}))
     if (!response.ok) throw new Error(json?.error || `get-ai-bets HTTP ${response.status}`)
@@ -23382,6 +23404,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         const { data, error } = await supabase
           .from('ai_bets').select('*')
           .eq('match_date', today)
+          .eq('source', BETAI_AI_ENGINE_SOURCE_V408)
           .order('match_time', { ascending: true })
           .limit(150)
         if (error) throw error
@@ -23444,18 +23467,18 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       // awaryjny tryb minimum dziennego, którego używa watchdog Netlify.
       // Dzięki temu kliknięcie „Odśwież dziś” nie kończy się pustą zakładką
       // tylko dlatego, że ścisły value scan chwilowo nie znalazł kandydata.
-      days: '7',
-      min_minutes_before_start: '5',
-      max_hours_ahead: '168',
-      daily_force: '1',
-      force_daily: '1',
-      min_books: '2',
-      min_odds: '1.50',
-      max_odds: '5.00',
-      min_probability: '0.18',
-      min_edge: '0.005',
-      max_probability_spread: '0.10',
-      max_odds_outlier_ratio: '1.15',
+      days: '3',
+      min_minutes_before_start: '15',
+      max_hours_ahead: '72',
+      min_books: '3',
+      min_odds: '1.45',
+      max_odds: '3.20',
+      betai_min_books: '3',
+      betai_min_odds: '1.45',
+      betai_max_odds: '3.20',
+      betai_min_probability_pct: '52',
+      betai_min_edge_pct: '3',
+      betai_max_spread_pct: '8',
       manual: '1'
     })
     const url = `/.netlify/functions/publish-betai-multisport-ai?${params.toString()}`
@@ -23571,10 +23594,15 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         setSelectedId('')
         return
       } catch (endpointError) {
-        console.warn('V1690 saved endpoint failed, fallback to legacy scanner:', endpointError?.message || endpointError)
-        setStatusText(`Endpoint zapisujący nie odpowiedział: ${endpointError?.message || endpointError}. Próbuję awaryjny skan lokalny.`)
+        console.warn('V408 strict endpoint failed; local/hash fallback disabled:', endpointError?.message || endpointError)
+        setLiveCards([])
+        setSelectedId('')
+        setStatusText(`Skan V408 nie odpowiedział: ${endpointError?.message || endpointError}. Nie tworzę sztucznego ani lokalnego typu. Spróbuj ponownie później.`)
+        return
       }
 
+      // V408: poniższy legacy scanner pozostaje wyłącznie jako kod historyczny.
+      // Flow produkcyjny kończy się wyżej i nigdy nie publikuje hash/synthetic picków.
       const sportsToFetch = ['Piłka nożna']
       const collected = []
       const debug = []
@@ -23804,7 +23832,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     <section className="ai-center-page-v747">
       <header className="ai-lite-hero" aria-label={t('Typy AI Premium Hero')}>
         <div className="ai-lite-copy">
-          <div className="ai-lite-kicker">{t('SPORTY • VALUE • LIVE AI')}</div>
+          <div className="ai-lite-kicker">V408 STRICT • VALUE • NO BET ALLOWED</div>
           <h1>{t('Typy AI')}</h1>
           <div className="ai-lite-feature-row">
             <div className="ai-lite-feature"><span>⚡</span><div><b>{t('Szybkie skanowanie')}</b><small>{t('Top mecze, live i najlepsze value')}</small></div></div>
@@ -23817,9 +23845,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           <div className="ai-lite-ball">⚽</div>
           <div className="ai-lite-scanner">
             <span>AI SCANNER</span>
-            <strong>{stats.avgScore}%</strong>
-            <small>{t('średnia ocena modeli')}</small>
-            <i style={{ width: `${Math.max(24, Math.min(100, stats.avgScore || 0))}%` }} />
+            <strong>{stats.avgScore ? `${stats.avgScore}%` : '—'}</strong>
+            <small>średnia jakość V408</small>
+            <i style={{ width: `${stats.avgScore ? Math.max(12, Math.min(100, stats.avgScore)) : 0}%` }} />
           </div>
           <div className="ai-lite-badge ai-lite-badge-top">TOP VALUE</div>
           <div className="ai-lite-badge ai-lite-badge-live">LIVE</div>
@@ -23828,7 +23856,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       <section className="ai-stat-strip-v1443" aria-label={t('Statystyki Typy AI')}>
         <article className={`ai-stat-card-v1443 is-yield ${stats.yieldValue >= 0 ? 'is-positive' : 'is-negative'}`}><div><span>Yield</span><strong>{stats.yieldValue}%</strong><small>{t('Zwrot z rozliczonych AI')}</small></div><i>◔</i></article>
         <article className={`ai-stat-card-v1443 is-profit ${stats.profit >= 0 ? 'is-positive' : 'is-negative'}`}><div><span>Profit</span><strong>{stats.profit >= 0 ? '+' : ''}{stats.profit.toFixed(2)}</strong><small>{t('Bilans Typy AI')}</small></div><i>₿</i></article>
-        <article className="ai-stat-card-v1443 is-total"><div><span>Typy AI</span><strong>{stats.total}</strong><small>{t('Wszystkie zapisane')}</small></div><i>↗</i></article>
+        <article className="ai-stat-card-v1443 is-total"><div><span>Typy AI</span><strong>{stats.total}</strong><small>V408 od teraz</small></div><i>↗</i></article>
         <article className="ai-stat-card-v1443 is-won"><div><span>{t('Wygrane')}</span><strong>{stats.won}</strong><small>{t('Rozliczone na plus')}</small></div><i>🏆</i></article>
         <article className="ai-stat-card-v1443 is-lost"><div><span>{t('Przegrane')}</span><strong>{stats.lost}</strong><small>{t('Rozliczone na minus')}</small></div><i>☹</i></article>
         <article className="ai-stat-card-v1443 is-pending"><div><span>Pending</span><strong>{stats.pending}</strong><small>{t('Czekają na wynik')}</small></div><i>◷</i></article>

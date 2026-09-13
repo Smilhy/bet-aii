@@ -41,6 +41,7 @@ exports.handler = async function(event) {
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
   let query = supabase.from('ai_bets').select('*')
   if (!journal) query = query.eq('match_date', date)
+  if (params.source) query = query.eq('source', String(params.source))
   query = query.order('match_date', { ascending: true }).order('match_time', { ascending: true }).limit(limit)
 
   const { data, error } = await query

@@ -1,0 +1,45 @@
+AUDIT V408 — STRICT AI PICKS ENGINE
+
+Testy nowego silnika:
+- 28/28 PASS — TEST_WERSJA_408_STRICT_AI_PICKS_ENGINE.cjs
+
+Zakres testu V408:
+- source/version isolation
+- parser Double Chance
+- parser O/U 1.5 / 2.5 / 3.5
+- strict thresholds
+- minimum 3 books
+- probability gate
+- EV/edge gate
+- spread gate
+- quality gate
+- max odds gate
+- API confirmation required
+- contradictory API rejected
+- 1X2 API probability extraction
+- X2 probability = X + 2
+- independent probability recalibration
+- proper Double Chance no-vig math from 1X2
+- frontend parameter names
+- no daily_force / force_daily in Typy AI manual scan
+- no local/hash fallback publishing
+- active source isolation V408
+- raw server probability/EV preserved in UI
+- settlement recognizes V408 source
+- database duplicate lookup isolated by source
+- V408 KPI/statistics separated from legacy history
+- get-ai-bets exact source filter
+
+Regresje kluczowego FM AI pipeline:
+- V407 aligned scenario: 297/297 PASS
+- V405 no silent market switch: 121 transitions PASS
+- V402 market lock matrix: 11 markets / 77 lock assertions / 539 settlement comparisons PASS
+- V403 stress matrix: 100000 policy / 50000 canonical / 2816 settlement PASS
+
+Syntax:
+- Netlify Functions: 122/122 PASS
+- JSX files: 14/14 PASS
+
+Uwaga:
+Nie wykonywano pełnego builda Vite, ponieważ paczka robocza nie zawiera node_modules.
+Testy logiki wykonywano z minimalnym lokalnym stubem @supabase/supabase-js, który usunięto przed spakowaniem.

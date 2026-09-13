@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-407-one-signal-aligned-scenario",
-  "version": "407.0.0",
+  "name": "betai-wersja-408-strict-ai-picks-engine",
+  "version": "408.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
@@ -38,7 +38,8 @@
     "test:v404": "node TEST_WERSJA_404_DIRECT_CANONICAL_RECOVERY.cjs",
     "test:v404-prematch": "node TEST_WERSJA_404_PREMATCH_CANONICAL_LOCK.cjs",
     "test:v405": "node TEST_WERSJA_405_NO_SILENT_MARKET_SWITCH.mjs",
-    "test:v407": "node TEST_WERSJA_407_ONE_SIGNAL_ALIGNED_SCENARIO.mjs"
+    "test:v407": "node TEST_WERSJA_407_ONE_SIGNAL_ALIGNED_SCENARIO.mjs",
+    "test:v408": "node TEST_WERSJA_408_STRICT_AI_PICKS_ENGINE.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.3",

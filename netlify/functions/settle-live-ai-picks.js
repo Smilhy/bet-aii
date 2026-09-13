@@ -483,6 +483,7 @@ function isBetaiMultisportRowV1764(row = {}) {
     'betaimultisport',
     'multisportai',
     'betaiindependentvalue',
+    'betaistrictvalue',
     'betaivalue',
     'dailyai',
     '1703realapifootballoddsstrictfulltime',

@@ -1,12 +1,12 @@
 const { createClient } = require('@supabase/supabase-js')
 
 const AUTHORS = {
-  betai: { name: 'BetAI MultiSport AI', username: 'betai-multisport-ai', source: 'betai_independent_value_v1867_9', mirrorAiBets: true, tipsTable: false },
+  betai: { name: 'BetAI MultiSport AI', username: 'betai-multisport-ai', source: 'betai_strict_value_v408', mirrorAiBets: true, tipsTable: false },
   typer: { name: 'Typer Expert', username: 'typer-expert', source: 'typer_expert_progression_v1867_9', mirrorAiBets: false },
   ograc: { name: 'Ograć Buka', username: 'ograc-buka', source: 'ograc_buka_independent_v1867_9', mirrorAiBets: false }
 }
 
-const VERSION = '1898.0-typer-expert-policy-rate-limit-fix-v68'
+const VERSION = '408.0-strict-independent-value-engine'
 const DEFAULT_BOTS = ['betai', 'typer', 'ograc']
 
 // Każdy bot działa niezależnie. Nie ma wspólnej rotacji.
@@ -15,21 +15,26 @@ const DEFAULT_BOTS = ['betai', 'typer', 'ograc']
 // poprzedniego typu, ponieważ następna stawka wynika z progresji.
 const BOT_POLICIES = {
   betai: {
-    strategyName: 'Szeroki silnik value',
+    strategyName: 'V408 Strict Independent Value',
     cooldownHours: 0,
     blockWhilePending: false,
     progression: null,
-    minOdds: 1.50,
-    maxOdds: 5.00,
-    minBooks: 1,
-    minProbability: 12,
-    minEdge: -4.0,
-    maxSpread: 25,
-    fallback: { minBooks: 1, minProbability: 9, minEdge: -9.0, maxSpread: 40 },
-    openFallback: { minBooks: 1, minProbability: 8, minEdge: -12.0, maxSpread: 50 },
-    allowedMarkets: ['match_winner', 'goals_2_5', 'btts'],
-    allowedSelections: ['home', 'away', 'over_2_5', 'yes'],
-    predictionLookups: 0
+    // V408: system ma prawo zwrócić NO BET. Nie publikujemy typu tylko po to,
+    // żeby zakładka nie była pusta. Priorytetem jest jakość, nie liczba typów.
+    minOdds: 1.45,
+    maxOdds: 3.20,
+    minBooks: 3,
+    minProbability: 52,
+    minEdge: 3.0,
+    maxSpread: 8,
+    minQuality: 68,
+    strictOnly: true,
+    requireApiEvidence: true,
+    fallback: null,
+    openFallback: null,
+    allowedMarkets: ['match_winner', 'double_chance', 'goals_1_5', 'goals_2_5', 'goals_3_5', 'btts'],
+    allowedSelections: ['home', 'draw', 'away', 'one_x', 'x_two', 'one_two', 'over_1_5', 'under_1_5', 'over_2_5', 'under_2_5', 'over_3_5', 'under_3_5', 'yes', 'no'],
+    predictionLookups: 10
   },
   typer: {
     strategyName: 'Rynek + prognoza API-Football + progresja',
@@ -241,10 +246,16 @@ async function fetchFixtures(context, settings, dates) {
 }
 
 function normalizeName(value) { return clean(value).toLowerCase().replace(',', '.').replace(/\s+/g, ' ') }
-function parseMarket(betName, values = []) {
+
+// V408: jeden bet API może zawierać kilka niezależnych linii O/U.
+// Zwracamy więc tablicę grup rynkowych zamiast traktować wszystkie linie jak
+// jeden rynek wzajemnie wykluczających się outcome'ów.
+function parseMarketsV408(betName, values = []) {
   const bet = normalizeName(betName)
-  const outcomes = {}
+  const groups = []
+
   if (['match winner', 'fulltime result', 'full time result', '1x2', 'result'].includes(bet)) {
+    const outcomes = {}
     values.forEach(value => {
       const name = normalizeName(value?.value)
       const odd = number(value?.odd, 0)
@@ -252,38 +263,76 @@ function parseMarket(betName, values = []) {
       else if (name === 'draw' || name === 'x') outcomes.draw = odd
       else if (name === 'away' || name === '2') outcomes.away = odd
     })
-    return Object.keys(outcomes).length === 3 ? { marketKey: 'match_winner', outcomes } : null
+    if (Object.keys(outcomes).length === 3) groups.push({ marketKey: 'match_winner', outcomes })
+    return groups
   }
+
+  if (['double chance', 'doublechance', 'double chance full time'].includes(bet)) {
+    const outcomes = {}
+    values.forEach(value => {
+      const name = normalizeName(value?.value).replace(/\s+/g, ' ')
+      const compact = name.replace(/[^a-z0-9]/g, '')
+      const odd = number(value?.odd, 0)
+      if (['1x', 'homedraw', 'homeordraw'].includes(compact)) outcomes.one_x = odd
+      else if (['x2', 'drawaway', 'draworaway'].includes(compact)) outcomes.x_two = odd
+      else if (['12', 'homeaway', 'homeoraway'].includes(compact)) outcomes.one_two = odd
+    })
+    if (Object.keys(outcomes).length >= 2) groups.push({ marketKey: 'double_chance', outcomes })
+    return groups
+  }
+
   if (['goals over/under', 'over/under', 'total goals', 'match goals', 'goals'].includes(bet)) {
+    const byLine = new Map()
     values.forEach(value => {
       const name = normalizeName(value?.value)
+      const match = name.match(/^(over|under)\s*(1\.5|2\.5|3\.5)$/)
+      if (!match) return
+      const direction = match[1]
+      const line = match[2]
+      const key = line.replace('.', '_')
       const odd = number(value?.odd, 0)
-      if (/^over\s*2\.5$/.test(name)) outcomes.over_2_5 = odd
-      else if (/^under\s*2\.5$/.test(name)) outcomes.under_2_5 = odd
+      if (!byLine.has(line)) byLine.set(line, {})
+      byLine.get(line)[`${direction}_${key}`] = odd
     })
-    return Object.keys(outcomes).length === 2 ? { marketKey: 'goals_2_5', outcomes } : null
+    for (const [line, outcomes] of byLine.entries()) {
+      if (Object.keys(outcomes).length !== 2) continue
+      groups.push({ marketKey: `goals_${line.replace('.', '_')}`, outcomes })
+    }
+    return groups
   }
+
   if (['both teams score', 'both teams to score', 'btts'].includes(bet)) {
+    const outcomes = {}
     values.forEach(value => {
       const name = normalizeName(value?.value)
       const odd = number(value?.odd, 0)
       if (name === 'yes') outcomes.yes = odd
       else if (name === 'no') outcomes.no = odd
     })
-    return Object.keys(outcomes).length === 2 ? { marketKey: 'btts', outcomes } : null
+    if (Object.keys(outcomes).length === 2) groups.push({ marketKey: 'btts', outcomes })
+    return groups
   }
-  return null
+
+  return groups
 }
+
+// Zachowanie zgodności dla starszych testów / importów helpera.
+function parseMarket(betName, values = []) {
+  const groups = parseMarketsV408(betName, values)
+  return groups.find(group => group.marketKey === 'goals_2_5') || groups[0] || null
+}
+
 function oddsGroupsFromRow(row) {
   const groups = []
   ;(Array.isArray(row?.bookmakers) ? row.bookmakers : []).forEach(bookmaker => {
     const bookmakerName = clean(bookmaker?.name, 'Bukmacher')
     ;(Array.isArray(bookmaker?.bets) ? bookmaker.bets : []).forEach(bet => {
-      const parsed = parseMarket(bet?.name, Array.isArray(bet?.values) ? bet.values : [])
-      if (!parsed) return
-      const values = Object.values(parsed.outcomes)
-      if (!values.length || values.some(value => !Number.isFinite(value) || value < 1.01 || value > 25)) return
-      groups.push({ bookmaker: bookmakerName, ...parsed })
+      const parsedGroups = parseMarketsV408(bet?.name, Array.isArray(bet?.values) ? bet.values : [])
+      parsedGroups.forEach(parsed => {
+        const values = Object.values(parsed.outcomes)
+        if (!values.length || values.some(value => !Number.isFinite(value) || value < 1.01 || value > 25)) return
+        groups.push({ bookmaker: bookmakerName, ...parsed })
+      })
     })
   })
   return groups
@@ -316,9 +365,15 @@ function labelFor(event, marketKey, selectionKey) {
     if (selectionKey === 'draw') return { market: '1X2', prediction: 'Remis' }
     if (selectionKey === 'away') return { market: '1X2', prediction: `${event.away} wygra` }
   }
-  if (marketKey === 'goals_2_5') {
-    if (selectionKey === 'over_2_5') return { market: 'Gole', prediction: 'Powyżej 2.5 gola' }
-    if (selectionKey === 'under_2_5') return { market: 'Gole', prediction: 'Poniżej 2.5 gola' }
+  if (marketKey === 'double_chance') {
+    if (selectionKey === 'one_x') return { market: 'Podwójna szansa', prediction: '1X' }
+    if (selectionKey === 'x_two') return { market: 'Podwójna szansa', prediction: 'X2' }
+    if (selectionKey === 'one_two') return { market: 'Podwójna szansa', prediction: '12' }
+  }
+  if (/^goals_[123]_5$/.test(marketKey)) {
+    const line = marketKey.replace('goals_', '').replace('_', '.')
+    if (selectionKey === `over_${marketKey.slice(-3)}`) return { market: 'Gole', prediction: `Powyżej ${line} gola` }
+    if (selectionKey === `under_${marketKey.slice(-3)}`) return { market: 'Gole', prediction: `Poniżej ${line} gola` }
   }
   if (marketKey === 'btts') {
     if (selectionKey === 'yes') return { market: 'BTTS', prediction: 'Obie drużyny strzelą: TAK' }
@@ -335,14 +390,38 @@ function buildCandidates(events, oddsMap, settings) {
       acc[group.marketKey].push(group)
       return acc
     }, {})
+    // V408: podwójna szansa nie jest rynkiem z trzema wzajemnie wykluczającymi
+    // się outcome'ami. Prawdopodobieństwo 1X/X2/12 liczymy z no-vig 1X2 tego
+    // samego bukmachera, a kurs bierzemy z rynku Double Chance.
+    const matchWinnerFairByBook = new Map()
+    ;(byMarket.match_winner || []).forEach(group => {
+      const entries = Object.entries(group.outcomes || {}).filter(([, odd]) => number(odd, 0) > 1)
+      const overround = entries.reduce((sum, [, odd]) => sum + (1 / number(odd, 1)), 0)
+      if (!overround) return
+      const fair = {}
+      entries.forEach(([key, odd]) => { fair[key] = (1 / number(odd, 1)) / overround })
+      matchWinnerFairByBook.set(group.bookmaker, fair)
+    })
+
     Object.entries(byMarket).forEach(([marketKey, marketGroups]) => {
       const selections = [...new Set(marketGroups.flatMap(group => Object.keys(group.outcomes || {})))]
       selections.forEach(selectionKey => {
         const perBook = marketGroups.map(group => {
+          const selectedOdd = number(group.outcomes?.[selectionKey], 0)
+          if (!selectedOdd) return null
+          if (marketKey === 'double_chance') {
+            const oneXTwo = matchWinnerFairByBook.get(group.bookmaker)
+            if (!oneXTwo) return null
+            let fair = null
+            if (selectionKey === 'one_x') fair = number(oneXTwo.home) + number(oneXTwo.draw)
+            else if (selectionKey === 'x_two') fair = number(oneXTwo.draw) + number(oneXTwo.away)
+            else if (selectionKey === 'one_two') fair = number(oneXTwo.home) + number(oneXTwo.away)
+            if (!fair) return null
+            return { bookmaker: group.bookmaker, odd: selectedOdd, fair }
+          }
           const entries = Object.entries(group.outcomes || {}).filter(([, odd]) => number(odd, 0) > 1)
           const overround = entries.reduce((sum, [, odd]) => sum + (1 / number(odd, 1)), 0)
-          const selectedOdd = number(group.outcomes?.[selectionKey], 0)
-          if (!selectedOdd || !overround) return null
+          if (!overround) return null
           return { bookmaker: group.bookmaker, odd: selectedOdd, fair: (1 / selectedOdd) / overround }
         }).filter(Boolean)
         if (perBook.length < settings.minBooks) return
@@ -371,6 +450,7 @@ function buildCandidates(events, oddsMap, settings) {
           odds: round(best.odd, 2),
           bookmaker: best.bookmaker,
           probability: round(probabilityPct, 1),
+          marketProbability: round(probabilityPct, 1),
           implied: round((1 / best.odd) * 100, 2),
           edge: round(edgePct, 2),
           booksCount: perBook.length,
@@ -449,8 +529,10 @@ function candidateTier(candidate, policy) {
   const strict = candidate.booksCount >= policy.minBooks &&
     candidate.probability >= policy.minProbability &&
     candidate.edge >= policy.minEdge &&
-    candidate.spread <= policy.maxSpread
+    candidate.spread <= policy.maxSpread &&
+    number(candidate.quality, 0) >= number(policy.minQuality, 0)
   if (strict) return 'strict'
+  if (policy.strictOnly) return ''
   const fallback = policy.fallback || {}
   const relaxed = candidate.booksCount >= number(fallback.minBooks, policy.minBooks) &&
     candidate.probability >= number(fallback.minProbability, policy.minProbability) &&
@@ -475,10 +557,16 @@ function scoreCandidate(candidate, bot) {
   const apiBonus = api.supported ? 16 : api.unavailable ? 0 : api.contrary ? -18 : -4
   const tierBonus = candidate.strategyTier === 'strict' ? 8 : candidate.strategyTier === 'fallback' ? 3 : -4
 
-  // BetAI: szeroko szuka realnego value i konsensusu wielu bukmacherów.
+  // V408 BetAI: nie liczymy drugi raz tych samych składowych przez candidate.quality.
+  // Ranking premiuje wysokie prawdopodobieństwo, dodatnie EV, szeroki konsensus
+  // i zgodność z niezależną prognozą; wysokie kursy dostają karę za wariancję.
   if (bot === 'betai') {
-    const marketBonus = candidate.marketKey === 'match_winner' ? 3 : candidate.marketKey === 'goals_2_5' ? 2 : 1
-    return edge * 4.2 + probability * 0.65 + books * 3.2 - spread * 1.35 + candidate.quality + marketBonus + tierBonus
+    const evidence = candidate.apiEvidence || {}
+    const apiBonusV408 = evidence.supported ? 14 : evidence.contrary ? -30 : evidence.unavailable ? -12 : -6
+    const highOddsPenalty = Math.max(0, odds - 2.35) * 10
+    const stableOddsBonus = odds >= 1.45 && odds <= 2.20 ? 7 : 0
+    const marketBonus = candidate.marketKey === 'double_chance' ? 5 : candidate.marketKey === 'btts' ? 2 : 3
+    return probability * 1.25 + edge * 2.25 + books * 3.0 - spread * 2.6 + apiBonusV408 + stableOddsBonus + marketBonus + tierBonus - highOddsPenalty
   }
 
   // Typer Expert: najwyżej ocenia stabilność, prawdopodobieństwo i potwierdzenie API.
@@ -495,11 +583,15 @@ function scoreCandidate(candidate, bot) {
   return edge * 4.4 + probability * 1.05 + books * 4.4 - spread * 3.1 + candidate.quality + apiBonus + preferredOddsBonus + tierBonus
 }
 
-function apiStrategyPass(candidate, bot) {
-  if (bot === 'betai') return true
+function apiStrategyPass(candidate, bot, policy = BOT_POLICIES[bot] || BOT_POLICIES.betai) {
   const api = candidate.apiEvidence || { unavailable: true }
-  // W 1867.7 prognoza API jest sygnałem rankingowym, a nie twardą blokadą publikacji.
-  // Dzięki temu każdy bot zachowuje inną taktykę, ale brak /predictions nie zeruje całej puli.
+  if (bot === 'betai') {
+    // V408: BetAI publikuje wyłącznie strict candidate potwierdzony drugim źródłem.
+    // Brak /predictions = NO BET, a nie wymuszony typ.
+    return candidateTier(candidate, policy) === 'strict' && api.supported === true && api.contrary !== true
+  }
+  // W 1867.7 prognoza API jest sygnałem rankingowym, a nie twardą blokadą publikacji
+  // dla pozostałych botów.
   if (api.supported || api.unavailable || !api.available) return true
   if (bot === 'typer') {
     return !api.contrary || candidate.probability >= 16 || candidate.booksCount >= 2
@@ -514,13 +606,13 @@ function rankBotCandidates(candidates, bot, policy) {
     .sort((a, b) => scoreCandidate(b, bot) - scoreCandidate(a, bot))
 }
 
-function selectDistinct(shortlists, bots) {
+function selectDistinct(shortlists, bots, policies = {}) {
   const selected = {}
   bots.forEach(bot => {
+    const policy = policies[bot] || BOT_POLICIES[bot] || BOT_POLICIES.betai
     const ranked = (shortlists[bot] || [])
-      .filter(candidate => apiStrategyPass(candidate, bot))
+      .filter(candidate => apiStrategyPass(candidate, bot, policy))
       .sort((a, b) => scoreCandidate(b, bot) - scoreCandidate(a, bot))
-    // Każdy bot wybiera własny najlepszy mecz. Brak zależności od wyborów innych botów.
     const pick = ranked[0] || null
     if (pick) selected[bot] = pick
   })
@@ -535,6 +627,8 @@ function syntheticDailySelectionKey(event, bot) {
 }
 
 function buildSyntheticDailyCandidate(event, bot, policy = {}) {
+  // V408: BetAI nigdy nie tworzy syntetycznego typu bez realnych kursów.
+  if (bot === 'betai') return null
   if (!event) return null
   let marketKey = 'match_winner'
   let selectionKey = syntheticDailySelectionKey(event, bot)
@@ -582,6 +676,7 @@ function withinBotPickWindowV67(event, bot, policy = {}) {
 }
 
 function selectDailyEmergencyCandidate({ candidates = [], events = [], bot, policy = {}, ownRecentFixtures = new Set() }) {
+  if (bot === 'betai') return null
   const relaxed = (candidates || [])
     .filter(candidate => candidate?.event?.fixtureId && !ownRecentFixtures.has(candidate.event.fixtureId))
     .filter(candidate => withinBotPickWindowV67(candidate.event, bot, policy))
@@ -609,26 +704,57 @@ function selectDailyEmergencyCandidate({ candidates = [], events = [], bot, poli
   return buildSyntheticDailyCandidate(event, bot, policy)
 }
 
+function apiPctV408(value) {
+  const parsed = Number(String(value == null ? '' : value).replace('%', '').replace(',', '.'))
+  return Number.isFinite(parsed) ? clamp(parsed, 0, 100) : null
+}
+
 function predictionSupport(candidate, row) {
   const predictions = row?.predictions || {}
   const winner = clean(predictions?.winner?.name).toLowerCase()
   const home = candidate.event.home.toLowerCase()
   const away = candidate.event.away.toLowerCase()
   const underOver = clean(predictions?.under_over).toLowerCase()
-  const percent = row?.predictions?.percent || row?.comparison || {}
+  const percent = row?.predictions?.percent || {}
+  const pctHome = apiPctV408(percent?.home)
+  const pctDraw = apiPctV408(percent?.draw)
+  const pctAway = apiPctV408(percent?.away)
   let supported = false
   let contrary = false
   let detail = ''
+  let apiProbability = null
+
   if (candidate.marketKey === 'match_winner') {
-    if (candidate.selectionKey === 'home') supported = Boolean(winner && (winner.includes(home) || home.includes(winner)))
-    if (candidate.selectionKey === 'away') supported = Boolean(winner && (winner.includes(away) || away.includes(winner)))
-    if (candidate.selectionKey === 'draw') supported = Boolean(predictions?.win_or_draw) && !winner
-    contrary = Boolean(winner) && !supported
+    if (candidate.selectionKey === 'home') { supported = Boolean(winner && (winner.includes(home) || home.includes(winner))); apiProbability = pctHome }
+    if (candidate.selectionKey === 'away') { supported = Boolean(winner && (winner.includes(away) || away.includes(winner))); apiProbability = pctAway }
+    if (candidate.selectionKey === 'draw') { apiProbability = pctDraw; supported = pctDraw != null && pctDraw >= Math.max(pctHome || 0, pctAway || 0) }
+    contrary = Boolean(winner) && !supported && candidate.selectionKey !== 'draw'
     detail = winner ? `Prognoza API wskazuje: ${predictions?.winner?.name}.` : ''
-  } else if (candidate.marketKey === 'goals_2_5') {
-    if (candidate.selectionKey === 'over_2_5') supported = /\+?2\.5|over/.test(underOver)
-    if (candidate.selectionKey === 'under_2_5') supported = /-?2\.5|under/.test(underOver)
-    contrary = Boolean(underOver) && !supported
+  } else if (candidate.marketKey === 'double_chance') {
+    if (pctHome != null && pctDraw != null && pctAway != null) {
+      if (candidate.selectionKey === 'one_x') apiProbability = pctHome + pctDraw
+      if (candidate.selectionKey === 'x_two') apiProbability = pctDraw + pctAway
+      if (candidate.selectionKey === 'one_two') apiProbability = pctHome + pctAway
+      apiProbability = apiProbability == null ? null : clamp(apiProbability, 0, 100)
+      supported = apiProbability != null && apiProbability >= 58
+      contrary = apiProbability != null && apiProbability < 52
+      detail = apiProbability != null ? `API probability dla podwójnej szansy: ${round(apiProbability, 1)}%.` : ''
+    }
+  } else if (/^goals_[123]_5$/.test(candidate.marketKey)) {
+    const line = candidate.marketKey.replace('goals_', '').replace('_', '.')
+    const apiOver = /\+|over/.test(underOver)
+    const apiUnder = /-|under/.test(underOver)
+    const apiLineMatch = underOver.match(/([123]\.5)/)
+    const apiLine = apiLineMatch ? Number(apiLineMatch[1]) : null
+    const lineN = Number(line)
+    const isOver = candidate.selectionKey.startsWith('over_')
+    if (apiLine != null) {
+      supported = isOver ? (apiOver && lineN <= apiLine) : (apiUnder && lineN >= apiLine)
+      contrary = isOver ? (apiUnder && lineN >= apiLine) : (apiOver && lineN <= apiLine)
+    } else {
+      supported = isOver ? apiOver : apiUnder
+      contrary = isOver ? apiUnder : apiOver
+    }
     detail = underOver ? `Prognoza goli API: ${predictions?.under_over}.` : ''
   } else if (candidate.marketKey === 'btts') {
     const goals = predictions?.goals || {}
@@ -638,13 +764,34 @@ function predictionSupport(candidate, row) {
     supported = candidate.selectionKey === 'yes' ? h > 0 && a > 0 : h === 0 || a === 0
     contrary = Boolean(hasGoalsEvidence) && !supported
   }
-  return { supported, contrary, available: true, detail, advice: clean(predictions?.advice), percent }
+  return { supported, contrary, available: true, unavailable: false, detail, advice: clean(predictions?.advice), percent, probability: apiProbability }
+}
+
+function recalibrateCandidateV408(candidate) {
+  const evidence = candidate.apiEvidence || { unavailable: true }
+  const marketProbability = number(candidate.marketProbability, candidate.probability)
+  const apiProbability = Number.isFinite(Number(evidence.probability)) ? Number(evidence.probability) : null
+  let finalProbability = marketProbability
+  if (apiProbability != null) finalProbability = marketProbability * 0.58 + apiProbability * 0.42
+  else if (evidence.supported) finalProbability = marketProbability + 2.5
+  else if (evidence.contrary) finalProbability = marketProbability - 10
+  finalProbability = clamp(finalProbability, 5, 95)
+  const edge = ((finalProbability / 100) * number(candidate.odds, 1) - 1) * 100
+  const evidenceBonus = evidence.supported ? 9 : evidence.contrary ? -14 : -8
+  const quality = clamp(42 + finalProbability * 0.36 + Math.max(-5, edge) * 0.72 + Math.min(15, number(candidate.booksCount) * 2.5) - number(candidate.spread) * 1.7 + evidenceBonus, 0, 96)
+  candidate.marketProbability = round(marketProbability, 1)
+  candidate.apiProbability = apiProbability == null ? null : round(apiProbability, 1)
+  candidate.probability = round(finalProbability, 1)
+  candidate.edge = round(edge, 2)
+  candidate.quality = Math.round(quality)
+  candidate.mode = edge >= 3 ? 'strict_value_v408' : 'no_value_v408'
+  return candidate
 }
 
 async function enrichPredictionShortlists(context, shortlists) {
   const targets = []
   const seen = new Set()
-  ;['typer', 'ograc'].forEach(bot => {
+  ;['betai', 'typer', 'ograc'].forEach(bot => {
     const policy = BOT_POLICIES[bot]
     ;(shortlists[bot] || []).slice(0, policy.predictionLookups || 0).forEach(candidate => {
       const key = candidate.event.fixtureId
@@ -664,12 +811,13 @@ async function enrichPredictionShortlists(context, shortlists) {
     }
     predictionRowsByFixture.set(candidate.event.fixtureId, result.value?.[0] || null)
   })
-  ;['typer', 'ograc'].forEach(bot => {
+  ;['betai', 'typer', 'ograc'].forEach(bot => {
     ;(shortlists[bot] || []).forEach(candidate => {
       const row = predictionRowsByFixture.get(candidate.event.fixtureId)
       candidate.apiEvidence = row
         ? predictionSupport(candidate, row)
-        : { supported: false, contrary: false, unavailable: true, available: false, detail: '', advice: '' }
+        : { supported: false, contrary: false, unavailable: true, available: false, detail: '', advice: '', probability: null }
+      if (bot === 'betai') recalibrateCandidateV408(candidate)
     })
   })
 }
@@ -744,14 +892,14 @@ function buildTipRow(candidate, bot, progressionState = null, policy = null) {
     ? progressionForOdds(progressionState || {}, candidate.odds, policy?.progression || BOT_POLICIES.typer.progression)
     : null
   const strategyText = bot === 'betai'
-    ? 'BetAI MultiSport AI: szeroki silnik value, realne kursy i konsensus bukmacherów.'
+    ? 'BetAI MultiSport AI V408: selektywny silnik value, realne kursy, minimum 3 bukmacherów i niezależne potwierdzenie API.'
     : bot === 'typer'
       ? 'Typer Expert: konserwatywna selekcja, stabilność rynku, potwierdzenie modelu i własna progresja stawki.'
       : 'Ograć Buka: selektywny model API-Football, dodatnie value i stała stawka bez progresji.'
   const analysisParts = [
     strategyText,
     `${candidate.mode === 'value' ? 'Model value' : 'Konsensus rynku'}: ${candidate.prediction}.`,
-    candidate.syntheticDaily ? `Kurs awaryjny/modelowy ${candidate.odds} (${candidate.bookmaker}) — użyty tylko, żeby bot dodał minimum 1 typ dziennie.` : `Realny kurs ${candidate.odds} u ${candidate.bookmaker}.`,
+    candidate.syntheticDaily ? `Kurs awaryjny/modelowy ${candidate.odds} (${candidate.bookmaker}).` : `Realny kurs ${candidate.odds} u ${candidate.bookmaker}.`,
     `Konsensus ${candidate.probability}% z ${candidate.booksCount} bukmacherów; szacowane value ${candidate.edge}%.`,
     `Poziom selekcji: ${candidate.strategyTier === 'strict' ? 'główny' : candidate.strategyTier === 'fallback' ? 'rezerwowy' : 'otwarty awaryjny'}.`,
     evidence?.detail || '',
@@ -858,7 +1006,7 @@ function buildAiBetRow(tip) {
     status: 'pending',
     result: null,
     profit: 0,
-    source: AUTHORS.betai.source
+    source: tip.source || AUTHORS.betai.source
   }
 }
 
@@ -875,6 +1023,7 @@ async function loadRecentBotTips(supabase, bots) {
     const { data: aiRows, error: aiError } = await supabase
       .from('ai_bets')
       .select('*')
+      .eq('source', AUTHORS.betai.source)
       .gte('created_at', since)
       .order('created_at', { ascending: false })
       .limit(150)
@@ -1203,7 +1352,7 @@ function progressionForOdds(state, odds, settings = {}) {
 }
 async function mirrorAiBet(supabase, tip) {
   const row = buildAiBetRow(tip)
-  const { data: existing, error: findError } = await supabase.from('ai_bets').select('id,status,result').eq('external_fixture_id', row.external_fixture_id).eq('market', row.market).eq('prediction', row.prediction).limit(1)
+  const { data: existing, error: findError } = await supabase.from('ai_bets').select('id,status,result').eq('external_fixture_id', row.external_fixture_id).eq('market', row.market).eq('prediction', row.prediction).eq('source', row.source).limit(1)
   if (findError) throw findError
   if (existing?.[0]?.id) {
     const updateRow = { ...row }
@@ -1253,7 +1402,7 @@ async function runAiBotCycle(event = {}, options = {}) {
     minOdds: clamp(query.min_odds || 1.50, 1.2, 5),
     maxOdds: clamp(query.max_odds || 5.00, 1.5, 5),
     minProbability: 0.08,
-    minBooks: 1
+    minBooks: Math.round(clamp(query.min_books || 1, 1, 8))
   }
   const botPolicies = Object.fromEntries(bots.map(bot => [bot, getBotPolicy(bot, settings, query)]))
   const context = { apiKey: env.apiKey, apiCalls: 0, apiRemaining: null, apiDurations: [], errors: [] }
@@ -1406,11 +1555,15 @@ async function runAiBotCycle(event = {}, options = {}) {
     }
   })
   await enrichPredictionShortlists(context, shortlists)
-  const selected = selectDistinct(shortlists, botsToRun)
+  const selected = selectDistinct(shortlists, botsToRun, botPolicies)
   const forcedDailySelections = {}
   if (dailyForce) {
     botsToRun.forEach(bot => {
       if (selected[bot]) return
+      if (bot === 'betai') {
+        forcedDailySelections[bot] = 'disabled_v408_strict_no_forced_pick'
+        return
+      }
       const emergency = selectDailyEmergencyCandidate({
         candidates,
         events,
@@ -1563,4 +1716,4 @@ function createHandler(options = {}) {
   }
 }
 
-module.exports = { AUTHORS, VERSION, BOT_POLICIES, runAiBotCycle, repairTyperPendingProgression, readTyperProgressionState, loadTyperExpertHistoryV67, createHandler, json, _test: { parseMarket, buildCandidates, scoreCandidate, labelFor, candidateTier, rankBotCandidates, apiStrategyPass, getBotPolicy, normalizeTipStatus, rowTipStatus, profitFromTip, progressionForOdds, repairTyperPendingProgression, isTyperExpertRowV26, loadTyperExpertHistoryV67, withinBotPickWindowV67 } }
+module.exports = { AUTHORS, VERSION, BOT_POLICIES, runAiBotCycle, repairTyperPendingProgression, readTyperProgressionState, loadTyperExpertHistoryV67, createHandler, json, _test: { parseMarket, parseMarketsV408, buildCandidates, scoreCandidate, labelFor, candidateTier, rankBotCandidates, apiStrategyPass, predictionSupport, recalibrateCandidateV408, selectDistinct, getBotPolicy, normalizeTipStatus, rowTipStatus, profitFromTip, progressionForOdds, repairTyperPendingProgression, isTyperExpertRowV26, loadTyperExpertHistoryV67, withinBotPickWindowV67 } }
