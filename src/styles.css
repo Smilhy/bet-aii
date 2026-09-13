@@ -88056,3 +88056,202 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
 .sim-v368-table-wrap td.negative,
 .sim-v375-segment-table td.negative,
 .sim-v374-league-detail-table td.negative{color:var(--fm395-negative)!important;text-shadow:none!important}
+
+/* =====================================================================
+   V396 — FEATURED MATCH EMBEDDED POLISH
+   Remove artificial side-scene look and blend the featured section into
+   the page with a single premium framed module.
+   ===================================================================== */
+.fm392-featured-match{
+  margin:12px 0 20px!important;
+  padding:8px 0 0!important;
+  border:none!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+.fm392-featured-match::before,
+.fm392-featured-match::after,
+.fm392-scene,
+.fm392-scene-copy,
+.fm392-scribble{
+  display:none!important;
+  content:none!important;
+}
+.fm392-featured-match > *{z-index:auto!important}
+
+/* Keep only the frame and make it feel native to the FM AI page */
+.fm392-hero-copy{
+  max-width:1280px;
+  margin:0 auto 14px!important;
+  padding:0 16px 14px!important;
+  text-align:center;
+}
+.fm392-hero-copy small{
+  color:#92b8cc!important;
+  font-size:12px!important;
+  letter-spacing:.42em!important;
+}
+.fm392-hero-copy strong{
+  margin-top:10px!important;
+  font-size:56px!important;
+  line-height:1.02!important;
+  color:#f4fbff!important;
+}
+.fm392-hero-copy strong i{color:#47efc4!important}
+.fm392-hero-copy p{
+  max-width:760px!important;
+  margin:14px auto 0!important;
+  color:#96b2c5!important;
+  font-size:17px!important;
+  line-height:1.5!important;
+}
+
+.fm392-frame{
+  max-width:1280px!important;
+  margin:0 auto!important;
+  padding:0 0 18px!important;
+  border-radius:34px!important;
+  border:1px solid rgba(72,139,182,.28)!important;
+  background:
+    radial-gradient(circle at 70% 56%, rgba(66,228,177,.08), transparent 22%),
+    linear-gradient(180deg, rgba(7,22,38,.98), rgba(5,15,27,.985))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 0 0 1px rgba(74,145,188,.08),
+    0 16px 36px rgba(0,0,0,.18)!important;
+  overflow:hidden!important;
+}
+.fm391-featured-head{
+  padding:16px 20px!important;
+  background:linear-gradient(90deg, rgba(9,33,49,.72), rgba(5,20,31,.35) 64%, rgba(8,28,44,.62))!important;
+  border-bottom:1px solid rgba(67,138,176,.14)!important;
+}
+.fm391-featured-title{gap:16px!important}
+.fm391-featured-pill{
+  min-height:40px!important;
+  padding:0 16px!important;
+  border-radius:12px!important;
+  background:linear-gradient(180deg, rgba(23,98,92,.34), rgba(12,54,57,.28))!important;
+  border:1px solid rgba(76,217,196,.16)!important;
+  color:#9eeed9!important;
+  box-shadow:none!important;
+}
+.fm391-league{
+  color:#d3e1ee!important;
+  font-size:16px!important;
+  font-weight:800!important;
+}
+.fm391-featured-meta{
+  color:#88a8bb!important;
+  font-size:13px!important;
+}
+
+.fm392-featured-grid{
+  gap:20px!important;
+  padding:20px 18px 0!important;
+  grid-template-columns:minmax(0,1fr) 460px!important;
+}
+.fm392-team-comparison{
+  min-height:164px!important;
+  border-radius:24px!important;
+  border:1px solid rgba(73,132,173,.18)!important;
+  background:linear-gradient(180deg, rgba(5,19,34,.94), rgba(4,14,25,.96))!important;
+}
+.fm391-team-comparison article strong{font-size:20px!important}
+.fm391-team-comparison article small{color:#b2c4d2!important}
+.fm392-analysis-tabs{
+  border-radius:18px!important;
+  border:1px solid rgba(73,132,173,.16)!important;
+  background:linear-gradient(180deg, rgba(5,18,31,.9), rgba(4,14,24,.92))!important;
+}
+.fm392-analysis-tabs>span{color:#a0b6c8!important}
+.fm392-analysis-tabs>span.active{
+  background:linear-gradient(180deg, rgba(28,66,129,.72), rgba(18,44,93,.82))!important;
+  border:1px solid rgba(97,181,255,.18)!important;
+}
+
+.fm392-verdict-card{
+  min-height:286px!important;
+  padding:26px 26px 22px!important;
+  border-radius:24px!important;
+  border:1px solid rgba(66,216,184,.18)!important;
+  background:radial-gradient(circle at 76% 50%, rgba(81,252,191,.12), transparent 22%), linear-gradient(135deg, rgba(6,23,37,.98), rgba(7,21,34,.96))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.02)!important;
+}
+.fm391-verdict-line>strong{font-size:54px!important}
+.fm391-verdict-copy>p{color:#9bb4c6!important}
+.fm391-verdict-metrics>span{
+  min-height:100px!important;
+  border:1px solid rgba(77,125,159,.14)!important;
+  background:linear-gradient(180deg, rgba(10,29,45,.82), rgba(8,23,37,.86))!important;
+}
+.fm392-confidence{
+  width:184px!important;
+  height:184px!important;
+  box-shadow:0 0 40px rgba(73,236,178,.10)!important;
+}
+
+.fm392-win-probability,
+.fm392-key-markets{
+  border-radius:24px!important;
+  border:1px solid rgba(73,132,173,.18)!important;
+  background:linear-gradient(180deg, rgba(8,22,37,.96), rgba(6,17,30,.97))!important;
+}
+.fm392-win-probability header strong,
+.fm392-key-markets header strong{color:#f1f8ff!important}
+.fm392-win-probability header>span{
+  background:rgba(39,77,126,.34)!important;
+  color:#bbd5f1!important;
+  border:1px solid rgba(113,155,255,.16)!important;
+}
+.fm392-prob-grid article>span{background:#22324f!important}
+.fm392-key-markets article{
+  border:1px solid rgba(73,132,173,.14)!important;
+  background:linear-gradient(180deg, rgba(10,27,43,.78), rgba(7,20,32,.82))!important;
+}
+.fm392-key-markets article>div strong{color:#edf6ff!important}
+.fm392-key-markets article>div small{color:#94acbe!important}
+.fm392-key-markets article>em{background:rgba(49,74,93,.28)!important;color:#9fd7d8!important}
+.fm392-key-markets article>em.positive{background:rgba(30,109,85,.24)!important;color:#78efbe!important}
+
+/* Footer visually attached and less separate */
+.fm392-footer-strip{
+  max-width:1280px!important;
+  margin:14px auto 0!important;
+  padding:16px 20px!important;
+  border-radius:22px!important;
+  border:1px solid rgba(73,132,173,.16)!important;
+  background:linear-gradient(180deg, rgba(7,21,35,.9), rgba(6,18,30,.94))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.02)!important;
+}
+.fm392-footer-points article strong{color:#ebf6ff!important}
+.fm392-footer-points article small{color:#8faabd!important}
+.fm392-cta-button{
+  min-width:260px!important;
+  height:66px!important;
+  border-radius:18px!important;
+  background:linear-gradient(90deg,#56f1a8,#52efbe)!important;
+  color:#071f14!important;
+  box-shadow:0 12px 26px rgba(82,239,190,.18)!important;
+}
+
+@media (max-width: 1460px){
+  .fm392-featured-grid{grid-template-columns:minmax(0,1fr) 400px!important}
+}
+@media (max-width: 1180px){
+  .fm392-featured-grid{grid-template-columns:1fr!important}
+  .fm392-hero-copy strong{font-size:44px!important}
+}
+@media (max-width: 820px){
+  .fm392-hero-copy{padding:0 10px 12px!important}
+  .fm392-hero-copy small{font-size:10px!important;letter-spacing:.28em!important}
+  .fm392-hero-copy strong{font-size:30px!important}
+  .fm392-hero-copy p{font-size:13px!important}
+  .fm392-frame{border-radius:22px!important}
+  .fm391-featured-head{padding:14px!important}
+  .fm392-featured-grid{padding:14px 14px 0!important}
+  .fm392-footer-strip{padding:14px!important;border-radius:18px!important}
+  .fm392-cta-button{width:100%!important;min-width:0!important;height:58px!important;font-size:18px!important}
+}
