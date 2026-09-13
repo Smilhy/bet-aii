@@ -88255,3 +88255,31 @@ html body #root .sim-day-page-v98 .sim-pro-action-v328.sim-pro-action-v330 butto
   .fm392-footer-strip{padding:14px!important;border-radius:18px!important}
   .fm392-cta-button{width:100%!important;min-width:0!important;height:58px!important;font-size:18px!important}
 }
+
+/* =====================================================================
+   V397 — FEATURED MATCH CLEAN FRAME
+   Remove top hero headline block and bottom promo strip.
+   Keep only the main framed module.
+   ===================================================================== */
+.fm392-hero-copy,
+.fm392-footer-strip{
+  display:none!important;
+}
+
+.fm392-featured-match{
+  margin:8px 0 16px!important;
+  padding:0!important;
+}
+
+.fm392-frame{
+  margin:0 auto!important;
+  max-width:1280px!important;
+}
+
+.fm392-featured-grid{
+  padding:18px 18px 18px!important;
+}
+
+@media (max-width: 820px){
+  .fm392-featured-grid{padding:14px!important}
+}
