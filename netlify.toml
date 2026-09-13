@@ -172,3 +172,12 @@
 # V368 — settle frozen FM AI paper picks every hour.
 [functions."settle-fm-ai-system-picks"]
   schedule = "26 * * * *"
+
+# V374 — autonomous FM AI paper tracker.
+# Every hour it scans today's approved FM AI leagues even when nobody opens the page.
+# The scheduled wrapper starts a Background Function; first VALUE/STRONG VALUE remains frozen by fixture_id.
+[functions."scheduled-fm-ai-auto-tracker"]
+  schedule = "6 * * * *"
+
+[functions."fm-ai-auto-tracker-background"]
+  background = true

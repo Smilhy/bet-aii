@@ -56,7 +56,7 @@ exports.handler = async (event={}) => {
     stake_pln:10,
     model_version:'V368',
     last_seen_at:new Date().toISOString(),
-    display_snapshot:{ probability:num(body.aiProbability||serverCandidate.probability), rawProbability:num(serverCandidate.probability), odds:serverOdds, decision, reliability:num(body.reliabilityScore), dailyScore:num(body.dailyScore), recordedFrom:'FM_AI_DAILY_UI_V368' }
+    display_snapshot:{ probability:num(body.aiProbability||serverCandidate.probability), rawProbability:num(serverCandidate.probability), odds:serverOdds, decision, reliability:num(body.reliabilityScore), dailyScore:num(body.dailyScore), recordedFrom:clean(body.recordedFrom||body.recorded_from||'FM_AI_DAILY_UI_V368') }
   }
 
   const {data:existing}=await s.from(TABLE).select('id,fixture_id,market_key,decision,published_at').eq('fixture_id',fixtureId).maybeSingle()

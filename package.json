@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-372-topbar-flags-size-fix",
-  "version": "372.0.0",
+  "name": "betai-wersja-377-fm-ai-pro-market-edge-suite",
+  "version": "377.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",
@@ -22,7 +22,10 @@
     "test:v320": "node TEST_WERSJA_320_REALISTIC_MATCH_ENGINE.mjs",
     "test:fm-ai-v347": "node TEST_WERSJA_347_FM_AI_MODEL_INTELLIGENCE.cjs",
     "test:fm-ai-v352": "node TEST_WERSJA_352_FM_AI_PERSISTENT_CACHE.cjs",
-    "test:fm-ai-v353": "node TEST_WERSJA_353_MASTER_CONSENSUS.cjs"
+    "test:fm-ai-v353": "node TEST_WERSJA_353_MASTER_CONSENSUS.cjs",
+    "test:fm-ai-v375": "node TEST_WERSJA_375_FM_AI_SEGMENT_VALIDATION_LAB.cjs",
+    "test:fm-ai-v376": "node TEST_WERSJA_376_FM_AI_VERIFIED_RECORD_PASSPORT.cjs",
+    "test:fm-ai-v377": "node TEST_WERSJA_377_FM_AI_PRO_MARKET_EDGE_SUITE.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.3",
