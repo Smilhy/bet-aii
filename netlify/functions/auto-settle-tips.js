@@ -302,6 +302,21 @@ function inferPolishSettlementKeysV1723(tip) {
     if ((pickC.includes('ponizej') || pickC.includes('under')) && (pickC.includes('gola') || pickC.includes('goal'))) return { market: 'team_total_goals', selection: side + '_under_' + onlyLine(pickText || t) }
   }
 
+  // Strzelec gola w dowolnym momencie / Anytime goalscorer
+  if (
+    c.includes('strzelecgolaw dowolnymmomencie'.replace(/\s+/g, '')) ||
+    c.includes('anytimegoalscorer') ||
+    c.includes('anytimegoalscorer') ||
+    c.includes('playertoscoreatanytime') ||
+    c.includes('toscoreanytime') ||
+    c.includes('strzeligola')
+  ) {
+    const player = String(pickText || '')
+      .replace(/\s*[—-]\s*(?:strzeli gola|to score anytime)\s*$/i, '')
+      .trim()
+    if (player) return { market: 'anytime_goalscorer', selection: player }
+  }
+
   // "Powyżej 2.5 gola" / "Ponizej 3.5 gola"
   if (pickC.includes('powyzej') || pickC.includes('over')) {
     return { market: 'goals_over_under', selection: 'over_' + onlyLine(pickText || t) }
@@ -391,7 +406,31 @@ function onlyLine(text) {
   return out ? out.replace('.', '_') : ''
 }
 
-function settleByKeys(tip, homeGoals, awayGoals, fixtureStats, periodScores = {}) {
+function normalizePlayerNameV409(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function anytimeGoalscorerWonV409(playerName, fixtureEvents = []) {
+  const target = normalizePlayerNameV409(playerName)
+  if (!target) return false
+  return (Array.isArray(fixtureEvents) ? fixtureEvents : []).some(event => {
+    const type = norm(event?.type)
+    const detail = norm(event?.detail)
+    if (type !== 'goal') return false
+    if (detail.includes('own goal') || detail.includes('samoboj')) return false
+    const scorer = normalizePlayerNameV409(event?.player?.name || event?.player_name || event?.player || '')
+    if (!scorer) return false
+    return scorer === target || scorer.includes(target) || target.includes(scorer)
+  })
+}
+
+function settleByKeys(tip, homeGoals, awayGoals, fixtureStats, periodScores = {}, fixtureEvents = []) {
   const keys = fallbackKeys(tip)
   const market = norm(keys.market)
   const selection = norm(keys.selection)
@@ -424,6 +463,15 @@ function settleByKeys(tip, homeGoals, awayGoals, fixtureStats, periodScores = {}
       status: chosenWon ? 'won' : 'lost',
       reason: 'Wygra jedna z polow ' + selection + ', 1H=' + halfHome + ':' + halfAway + ', 2H=' + secondHome + ':' + secondAway
     }
+  }
+
+  if (market === 'anytime_goalscorer') {
+    const player = String(keys.selection || tip?.bet_type || tip?.prediction || tip?.pick || '')
+      .replace(/\s*[—-]\s*(?:strzeli gola|to score anytime)\s*$/i, '')
+      .trim()
+    if (!player) return { status: 'pending_admin_review', reason: 'Anytime goalscorer: brak nazwy zawodnika' }
+    const won = anytimeGoalscorerWonV409(player, fixtureEvents)
+    return { status: won ? 'won' : 'lost', reason: `Anytime goalscorer: ${player} ${won ? 'strzelił gola' : 'nie strzelił gola'}` }
   }
 
   if (market === 'match_winner') {
@@ -536,7 +584,7 @@ async function settleTip(tip) {
   const keys = fallbackKeys(tip)
   let stats = []
   if (norm(keys.market).includes('corner') || norm(keys.market).includes('card')) stats = await fetchStats(id)
-  return settleByKeys(tip, sc.h, sc.a, stats, periods)
+  return settleByKeys(tip, sc.h, sc.a, stats, periods, fix?.events || [])
 }
 
 function isAkoTip(tip) {
@@ -630,7 +678,7 @@ async function settleAkoLeg(leg) {
   let stats = []
   if (norm(keys.market).includes('corner') || norm(keys.market).includes('card')) stats = await fetchStats(id)
 
-  const res = settleByKeys(normalizedLeg, sc.h, sc.a, stats, periods)
+  const res = settleByKeys(normalizedLeg, sc.h, sc.a, stats, periods, fix?.events || [])
   const finalStatus = ['won','lost','void'].includes(res.status) ? res.status : 'pending'
   return {
     ...leg,

@@ -720,6 +720,7 @@ exports.handler = async function(event) {
     'Dokładny wynik',
     'Rogi',
     'Kartki',
+    'Strzelec gola w dowolnym momencie',
   ])
 
   const isAllowedFootballMarketV1663 = (market) => allowedFootballMarketsV1663.has(String(market || '').trim())
@@ -1420,6 +1421,14 @@ exports.handler = async function(event) {
     // Złożone/połowowe warianty BTTS zostają pod oryginalną nazwą i są odrzucane
     // przez listę dozwolonych rynków. Nie wolno ich scalać ze standardowym BTTS.
     if (lower.includes('both teams score') || lower.includes('both teams to score') || lower.includes('btts')) return name || 'Rynek'
+    if (
+      lower.includes('anytime goalscorer') ||
+      lower.includes('anytime goal scorer') ||
+      lower.includes('player to score at any time') ||
+      lower.includes('player to score anytime') ||
+      lower.includes('to score at any time') ||
+      lower.includes('to score anytime')
+    ) return 'Strzelec gola w dowolnym momencie'
     if (lower.includes('goals over/under') || lower.includes('over/under')) return 'Gole'
     if (lower.includes('draw no bet')) return 'DNB / Remis nie ma zakładu'
     if (lower.includes('handicap')) return 'Handicap'
@@ -1461,6 +1470,11 @@ exports.handler = async function(event) {
       if (lower === 'home/draw') return '1X'
       if (lower === 'home/away') return '12'
       if (lower === 'draw/away') return 'X2'
+    }
+    if (market === 'Strzelec gola w dowolnym momencie') {
+      const player = value.replace(/\s+/g, ' ').trim()
+      if (!player || ['yes', 'no', 'tak', 'nie'].includes(player.toLowerCase())) return ''
+      return `${player} — strzeli gola`
     }
     if (market === 'BTTS') {
       if (lower === 'yes') return 'Obie drużyny strzelą: TAK'
@@ -1571,7 +1585,7 @@ exports.handler = async function(event) {
       })
     })
 
-    const marketOrder = ['1X2', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Podwójna szansa', 'Gole', 'Gole w 1. połowie', 'Team Total Goals', 'BTTS', 'Handicap', 'DNB / Remis nie ma zakładu', 'Dokładny wynik', 'Rogi', 'Kartki']
+    const marketOrder = ['1X2', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Podwójna szansa', 'Gole', 'Gole w 1. połowie', 'Team Total Goals', 'BTTS', 'Handicap', 'DNB / Remis nie ma zakładu', 'Dokładny wynik', 'Rogi', 'Kartki', 'Strzelec gola w dowolnym momencie']
     return normalized.sort((a, b) => {
       const ma = marketOrder.indexOf(a.market)
       const mb = marketOrder.indexOf(b.market)
