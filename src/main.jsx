@@ -450,6 +450,7 @@ const BETAI_FULL_TRANSLATIONS_V1824 = {
     "Poprzedni slajd": "Previous slide",
     "Następny slajd": "Next slide",
     "Nowy hero dashboardu Bet+AI": "New Bet+AI dashboard hero",
+    "Strzelec gola w dowolnym momencie": "Anytime goalscorer",
     "Darmowy typ": "Free pick",
     "Typ premium": "Premium pick",
     "FORMA": "FORM",
@@ -870,6 +871,7 @@ function translateBetaiDynamicTemplateV1850(value, lang) {
 
   if (lang === 'en') {
     let match
+    if ((match = text.match(/^(.+?)\s*[—-]\s*strzeli gola$/i))) return `${match[1]} — to score anytime`
     if ((match = text.match(/^Pokazano\s+(\d+)\s+z\s+(\d+)\s+typów$/i))) return `Showing ${match[1]} of ${match[2]} picks`
     if ((match = text.match(/^Pokazano\s+(\d+)\s+z\s+(\d+)\s+typerów$/i))) return `Showing ${match[1]} of ${match[2]} tipsters`
     if ((match = text.match(/^Pokaż kolejne\s+(\d+)\s+typy\s+\((\d+)\s+pozostało\)$/i))) return `Show next ${match[1]} picks (${match[2]} remaining)`
@@ -3070,6 +3072,7 @@ function normalizeBetTypeForStats(marketValue = '', pickValue = '', source = {})
     if (hasAny('over', 'powyżej', 'więcej')) return line ? `Over ${line} rożnych` : 'Over rożne'
     return 'Rzuty rożne'
   }
+  if (hasAny('strzelec gola w dowolnym momencie', 'anytime goalscorer', 'anytime goal scorer', 'player to score at any time', 'to score anytime')) return 'Strzelec gola w dowolnym momencie'
   if (hasAny('kartk', 'żółt', 'yellow card', 'cards')) {
     if (hasAny('under', 'poniżej', 'mniej')) return line ? `Under ${line} kartek` : 'Under kartki'
     if (hasAny('over', 'powyżej', 'więcej')) return line ? `Over ${line} kartek` : 'Over kartki'
@@ -8972,6 +8975,7 @@ const BETAI_ALLOWED_FOOTBALL_MARKETS_V1663 = new Set([
   'Dokładny wynik',
   'Rogi',
   'Kartki',
+  'Strzelec gola w dowolnym momencie',
 ])
 
 function betaiStripAccentsV1663(value = '') {
@@ -9117,6 +9121,15 @@ function betaiCanonicalMarketLabelV1663(rawMarket = '', rawPick = '') {
   if (text === '1x2' || text.includes('match winner') || text.includes('wynik') || text.includes('winner')) return '1X2'
   if (text.includes('podwojna') || text.includes('double chance')) return 'Podwójna szansa'
   if (text.includes('both teams') || text.includes('btts') || text.includes('obie')) return 'BTTS'
+  if (
+    text.includes('anytime goalscorer') ||
+    text.includes('anytime goal scorer') ||
+    text.includes('player to score at any time') ||
+    text.includes('player to score anytime') ||
+    text.includes('to score at any time') ||
+    text.includes('to score anytime') ||
+    text.includes('strzelec gola w dowolnym momencie')
+  ) return 'Strzelec gola w dowolnym momencie'
   if (text.includes('over/under') || text.includes('goals') || text.includes('gole') || text.includes('bram')) return 'Gole'
   if (text.includes('handicap')) return 'Handicap'
   if (text.includes('corner') || text.includes('corners') || text.includes('rogi') || text.includes('roznych') || text.includes('rożnych')) return 'Rogi'
@@ -9456,6 +9469,12 @@ function betaiBuildSettlementKeysV1663(market = '', pick = '', home = '', away =
     if (compact.includes('1x') || compact.includes('homedraw')) selectionKey = '1x'
     else if (compact.includes('x2') || compact.includes('drawaway')) selectionKey = 'x2'
     else if (compact.includes('12') || compact.includes('homeaway')) selectionKey = '12'
+  } else if (label === 'Strzelec gola w dowolnym momencie') {
+    marketKey = 'anytime_goalscorer'
+    const playerName = String(pick || '')
+      .replace(/\s*[—-]\s*(?:strzeli gola|to score anytime)\s*$/i, '')
+      .trim()
+    selectionKey = playerName || 'unknown'
   } else if (label === 'Gole') {
     marketKey = 'goals_total'
     selectionKey = `${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${unsignedLine || ''}`
@@ -13808,7 +13827,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const isBasketball = sportLabel.includes('koszyk') || sportLabel.includes('basketball') || sportLabel.includes('nba') || sportLabel.includes('ncaa basketball')
     const isHockey = sportLabel.includes('hokej') || sportLabel.includes('hockey') || sportLabel.includes('nhl')
 
-    const footballOnlyMarkets = ['BTTS', 'Kartki', 'Rogi', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Gole w 1. połowie', 'Team Total Goals', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Handicap', 'Dokładny wynik', 'Połowy', 'Połowa']
+    const footballOnlyMarkets = ['BTTS', 'Kartki', 'Rogi', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Gole w 1. połowie', 'Team Total Goals', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Handicap', 'Dokładny wynik', 'Strzelec gola w dowolnym momencie', 'Połowy', 'Połowa']
     const base = (Array.isArray(sourceMarkets) ? sourceMarkets : [])
       .map(item => {
         const rawPick = item.pick || item.value || item.name || ''
@@ -13985,13 +14004,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   if (selectedMatch && selectedIsFootballV43 && !Object.prototype.hasOwnProperty.call(groupedMarketOptions, 'Team Total Goals')) {
     groupedMarketOptions['Team Total Goals'] = []
   }
+  if (selectedMatch && selectedIsFootballV43 && !Object.prototype.hasOwnProperty.call(groupedMarketOptions, 'Strzelec gola w dowolnym momencie')) {
+    groupedMarketOptions['Strzelec gola w dowolnym momencie'] = []
+  }
   if (Array.isArray(groupedMarketOptions.BTTS)) {
     groupedMarketOptions.BTTS.sort((a, b) => {
       const order = value => betaiStripAccentsV1663(value).includes('tak') ? 0 : betaiStripAccentsV1663(value).includes('nie') ? 1 : 2
       return order(a.pick) - order(b.pick)
     })
   }
-  const marketGroupOrder = ['1X2', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Podwójna szansa', 'Gole', 'Gole w 1. połowie', 'Team Total Goals', 'BTTS', 'Handicap', 'DNB / Remis nie ma zakładu', 'Dokładny wynik', 'Rogi', 'Kartki']
+  const marketGroupOrder = ['1X2', 'Wynik do przerwy', 'Drużyna wygra jedną z połów', 'Podwójna szansa', 'Gole', 'Gole w 1. połowie', 'Team Total Goals', 'BTTS', 'Handicap', 'DNB / Remis nie ma zakładu', 'Dokładny wynik', 'Rogi', 'Kartki', 'Strzelec gola w dowolnym momencie']
   const orderedMarketGroups = Object.entries(groupedMarketOptions).sort(([a], [b]) => {
     const ai = marketGroupOrder.indexOf(a)
     const bi = marketGroupOrder.indexOf(b)
@@ -16002,7 +16024,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                         className={`betfolio-market-option ${active ? 'active' : ''}`}
                         onClick={() => chooseMarket(value)}
                       >
-                        <span>{item.pick}</span>
+                        <span>{groupLabel === 'Strzelec gola w dowolnym momencie' ? (lang === 'en' ? `${String(item.pick || '').replace(/\s*[—-]\s*strzeli gola\s*$/i, '').trim()} to score anytime` : `${String(item.pick || '').replace(/\s*[—-]\s*(?:strzeli gola|to score anytime)\s*$/i, '').trim()} — strzeli gola`) : item.pick}</span>
                         <b>{Number(item.odds || 0).toFixed(2)}</b>
                       </button>
                     )
@@ -16042,7 +16064,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                   return (
                     <div key={groupLabel} className={`betfolio-market-accordion ${expanded ? 'expanded' : ''} ${isGoalsGroup ? 'goals-split-ready-v1704' : ''} ${isTeamTotalGroup ? 'team-total-ready-v1711' : ''}`}>
                       <button type="button" className="betfolio-market-accordion-head" onClick={() => setExpandedMarketGroup(expanded ? '' : groupLabel)}>
-                        <span>{groupLabel}</span>
+                        <span>{groupLabel === 'Strzelec gola w dowolnym momencie' ? t(groupLabel) : groupLabel}</span>
                         <b>{(isTeamTotalGroup && teamTotalItemsV1711.length) ? teamTotalItemsV1711.length : items.length} opcji {expanded ? '⌃' : '⌄'}</b>
                       </button>
                       {expanded && (
@@ -16117,6 +16139,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                                 </div>
                               </div>
                             ) : null}
+                          </div>
+                        ) : groupLabel === 'Strzelec gola w dowolnym momencie' && !items.length ? (
+                          <div className="betfolio-empty-state no-fake-empty">
+                            <strong>{lang === 'en' ? 'No anytime goalscorer odds' : 'Brak kursów na strzelców gola'}</strong>
+                            <span>{lang === 'en' ? 'This market stays at the bottom and will show players as soon as API-FOOTBALL returns real pre-match odds.' : 'Rynek pozostaje na samym dole i pokaże zawodników, gdy API-FOOTBALL zwróci realne kursy pre-match.'}</span>
                           </div>
                         ) : (
                           <div className="betfolio-market-options board-options">
