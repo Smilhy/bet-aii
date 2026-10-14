@@ -36,7 +36,6 @@ import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 import './mobile-fix-v1.css'
 import AlgorithmView from './AlgorithmView'
-import CasinoView from './CasinoView'
 import MatchSimulatorFlowView from './MatchSimulatorFlowView'
 import achievementFanatykV1772 from './assets/achievements-v1772/fanatyk.svg'
 import achievementWinnerV1772 from './assets/achievements-v1772/prawdziwy-wygrany.svg'
@@ -5200,7 +5199,6 @@ const staticTips = []
 const LOCKED_SIDEBAR_ITEMS_V1130 = Object.freeze([
   Object.freeze({ id: 'dashboard', label: '⌂ Dashboard', activeViews: Object.freeze(['dashboard']), clearTipster: true }),
   Object.freeze({ id: 'add', label: '＋ Dodaj typ', activeViews: Object.freeze(['add']) }),
-  Object.freeze({ id: 'casino', label: '🎲 Kasyno', activeViews: Object.freeze(['casino']) }),
   Object.freeze({ id: 'wallet', label: '💼 Portfel', activeViews: Object.freeze(['wallet', 'deposits', 'payouts', 'payments', 'subscriptions', 'earnings']) }),
   Object.freeze({ id: 'profile', label: '👤 Mój profil', activeViews: Object.freeze(['profile']) }),
   Object.freeze({ id: 'topTipsters', label: '♕ Top typerzy', activeViews: Object.freeze(['topTipsters']) }),
@@ -39761,8 +39759,6 @@ function App() {
             </button>
           </div>
         </header>
-
-        {view === 'casino' && <CasinoView />}
 
         {view === 'add' && (
           <AddTipForm
